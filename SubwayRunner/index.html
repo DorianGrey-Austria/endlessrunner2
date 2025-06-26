@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Runner 3D - Challenge</title>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            max-width: 133.33vh; /* 4:3 aspect ratio */
+            max-height: 75vw;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-align: right;
+            z-index: 100;
+        }
+        
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            z-index: 200;
+            min-width: 300px;
+        }
+        
+        #menu h1 {
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+        
+        #menu button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        #menu button:hover {
+            background: #45a049;
+        }
+        
+        #timer {
+            font-size: 20px;
+            margin-top: 5px;
+        }
+        
+        .timer-warning {
+            color: #FF4444 !important;
+            animation: pulse 0.5s infinite;
+        }
+        
+        .timer-critical {
+            color: #FF0000 !important;
+            animation: fastPulse 0.2s infinite;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes fastPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        .name-input-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            z-index: 300;
+            text-align: center;
+            min-width: 350px;
+            border: 2px solid #4CAF50;
+        }
+        
+        .name-input-dialog input {
+            width: 200px;
+            padding: 10px;
+            margin: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .name-input-dialog button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .name-input-dialog button:hover {
+            background: #45a049;
+        }
+        
+        .name-input-dialog button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .highscore-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 100;
+            min-width: 200px;
+            font-size: 12px;
+        }
+        
+        .highscore-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .highscore-entry.current-player {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div>Score: <span id="score">0</span></div>
+            <div>Speed: <span id="speed">100</span></div>
+            <div>❤️ Leben: <span id="lives">3</span></div>
+            <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🎮 Steuerung:</strong></div>
+            <div>A/D: Spurwechsel</div>
+            <div>Leertaste/W: Springen 🦘</div>
+            <div>S: Ducken 🦆</div>
+            <div><strong>💡 Tipps:</strong></div>
+            <div>🟠 Orange/Braun: Überspringen!</div>
+            <div>🔵 Blau/Grau oben: Ducken!</div>
+            <div>🔴 Stacheln: Beides möglich!</div>
+        </div>
+        
+        <div id="menu">
+            <h1>🚇 Subway Runner 3D</h1>
+            <h2>⏱️ 60-Sekunden Challenge!</h2>
+            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
+            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
+            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
+            <p><strong>🎮 Steuerung:</strong></p>
+            <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
+            <button onclick="startGame()">🎮 Challenge starten!</button>
+        </div>
+        
+        <div id="highscorePanel" class="highscore-panel">
+            <div style="font-weight: bold; margin-bottom: 10px;">🏆 TOP 10</div>
+            <div id="highscoreList">Lade Bestenliste...</div>
+        </div>
+        
+        <div id="nameInputDialog" class="name-input-dialog" style="display: none;">
+            <h2>🎉 Neuer Highscore!</h2>
+            <p>Gib deinen Namen ein:</p>
+            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="20">
+            <br>
+            <button onclick="submitHighscore()">💾 Speichern</button>
+            <button onclick="skipHighscore()">⏭️ Überspringen</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio System
+        class AudioManager {
+            constructor() {
+                this.audioContext = null;
+                this.sounds = {};
+                this.masterVolume = 0.3;
+                this.initAudio();
+            }
+
+            async initAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.masterGain = this.audioContext.createGain();
+                    this.masterGain.gain.value = this.masterVolume;
+                    this.masterGain.connect(this.audioContext.destination);
+                    this.createSounds();
+                } catch (error) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            createTone(frequency, duration, type = 'sine', fadeOut = true) {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                oscillator.type = type;
+                
+                if (fadeOut) {
+                    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                } else {
+                    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                }
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+
+            createNoise(duration, filterFreq = 1000) {
+                if (!this.audioContext) return;
+                
+                const bufferSize = this.audioContext.sampleRate * duration;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const source = this.audioContext.createBufferSource();
+                const filter = this.audioContext.createBiquadFilter();
+                const gainNode = this.audioContext.createGain();
+                
+                source.buffer = buffer;
+                filter.type = 'lowpass';
+                filter.frequency.value = filterFreq;
+                
+                source.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                source.start();
+            }
+
+            createSounds() {
+                this.sounds = {
+                    jump: () => {
+                        this.createTone(200, 0.1, 'square');
+                        setTimeout(() => this.createTone(300, 0.05, 'square'), 50);
+                    },
+                    
+                    land: () => {
+                        this.createNoise(0.1, 500);
+                    },
+                    
+                    duck: () => {
+                        this.createTone(150, 0.2, 'sawtooth');
+                    },
+                    
+                    success: () => {
+                        this.createTone(400, 0.1, 'sine');
+                        setTimeout(() => this.createTone(600, 0.1, 'sine'), 100);
+                        setTimeout(() => this.createTone(800, 0.15, 'sine'), 200);
+                    },
+                    
+                    collision: () => {
+                        this.createNoise(0.3, 2000);
+                        this.createTone(100, 0.5, 'sawtooth', false);
+                    },
+                    
+                    coin: () => {
+                        this.createTone(800, 0.1, 'sine');
+                        setTimeout(() => this.createTone(1000, 0.1, 'sine'), 50);
+                    },
+                    
+                    whoosh: () => {
+                        this.createNoise(0.2, 3000);
+                    },
+                    
+                    powerup: () => {
+                        for (let i = 0; i < 5; i++) {
+                            setTimeout(() => {
+                                this.createTone(400 + i * 100, 0.1, 'sine');
+                            }, i * 50);
+                        }
+                    }
+                };
+            }
+
+            play(soundName) {
+                if (this.sounds[soundName]) {
+                    this.sounds[soundName]();
+                }
+            }
+
+            resume() {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+            }
+        }
+
+        const audioManager = new AudioManager();
+
+        // Supabase Configuration - Disabled for now to fix startup issue
+        const SUPABASE_URL = 'https://xyzcompany.supabase.co' // Replace with your URL
+        const SUPABASE_ANON_KEY = 'your-anon-key-here' // Replace with your anon key
+        
+        // Initialize Supabase client
+        let supabase = null;
+        let highscores = [];
+        let currentScore = 0;
+        let currentSurvivalTime = 0;
+
+        // Disable Supabase for now to fix the startup issue
+        console.log('Supabase disabled for debugging - running in offline mode only');
+
+        // Highscore Management System
+        class HighscoreManager {
+            constructor() {
+                this.localStorageKey = 'subwayRunner_highscores';
+                this.loadHighscores();
+            }
+
+            async loadHighscores() {
+                try {
+                    if (supabase) {
+                        const { data, error } = await supabase
+                            .from('subway_runner_scores')
+                            .select('*')
+                            .order('score', { ascending: false })
+                            .limit(10);
+                        
+                        if (!error && data) {
+                            highscores = data;
+                        } else {
+                            throw new Error('Supabase error');
+                        }
+                    } else {
+                        throw new Error('No Supabase connection');
+                    }
+                } catch (error) {
+                    // Fallback to localStorage
+                    const localScores = localStorage.getItem(this.localStorageKey);
+                    highscores = localScores ? JSON.parse(localScores) : [];
+                }
+                this.displayHighscores();
+            }
+
+            async submitScore(playerName, score, survivalTime, isVictory) {
+                const scoreEntry = {
+                    player_name: playerName,
+                    score: score,
+                    survival_time: survivalTime,
+                    is_victory: isVictory,
+                    created_at: new Date().toISOString()
+                };
+
+                try {
+                    if (supabase) {
+                        const { data, error } = await supabase
+                            .from('subway_runner_scores')
+                            .insert([scoreEntry])
+                            .select();
+                        
+                        if (error) throw error;
+                    } else {
+                        throw new Error('No Supabase connection');
+                    }
+                } catch (error) {
+                    // Fallback to localStorage
+                    highscores.push(scoreEntry);
+                    highscores.sort((a, b) => b.score - a.score);
+                    highscores = highscores.slice(0, 10); // Keep only top 10
+                    localStorage.setItem(this.localStorageKey, JSON.stringify(highscores));
+                }
+
+                await this.loadHighscores();
+            }
+
+            isHighscore(score) {
+                if (highscores.length < 10) return true;
+                return score > highscores[9].score;
+            }
+
+            displayHighscores() {
+                const list = document.getElementById('highscoreList');
+                if (highscores.length === 0) {
+                    list.innerHTML = 'Keine Scores vorhanden';
+                    return;
+                }
+
+                let html = '';
+                highscores.forEach((score, index) => {
+                    const rank = index + 1;
+                    const victoryIcon = score.is_victory ? '🏆' : '';
+                    const timeText = score.is_victory ? '60s' : `${score.survival_time}s`;
+                    
+                    html += `<div class="highscore-entry">
+                        ${rank}. ${score.player_name} ${victoryIcon}<br>
+                        <small>${score.score} pts - ${timeText}</small>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+        }
+
+        const highscoreManager = new HighscoreManager();
+
+        // Make functions globally available for onclick handlers
+        window.startGame = function() {
+            console.log('startGame called');
+            try {
+                startGameInternal();
+            } catch (error) {
+                console.error('Error in startGame:', error);
+            }
+        };
+
+        window.submitHighscore = function() {
+            console.log('submitHighscore called');
+            submitHighscoreInternal();
+        };
+
+        window.skipHighscore = function() {
+            console.log('skipHighscore called');
+            skipHighscoreInternal();
+        };
+
+        // Game state
+        let gameState = {
+            isPlaying: false,
+            isGameOver: false,
+            isVictory: false,
+            score: 0,
+            speed: 0.08, // Langsamerer Start
+            baseSpeed: 0.08,
+            maxSpeed: 0.45, // Sehr schnell am Ende!
+            lives: 3,
+            gameTime: 60, // 60 Sekunden
+            timeRemaining: 60,
+            gameStartTime: 0,
+            playerLane: 1, // 0=left, 1=center, 2=right
+            playerAction: 'running', // running, jumping, ducking
+            playerY: 0,
+            jumpVelocity: 0,
+            obstacles: [],
+            invulnerable: false,
+            invulnerabilityTime: 0,
+            timeScale: 1.0,
+            cameraShakeIntensity: 0,
+            cameraZoom: 1.0,
+            slowMotionActive: false
+        };
+
+        // Three.js setup
+        let scene, camera, renderer, player, track, obstacles = [];
+        const LANE_POSITIONS = [-2, 0, 2];
+
+        function init() {
+            console.log('Initializing Three.js scene...');
+            try {
+                // Scene
+                scene = new THREE.Scene();
+                scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
+
+            // Camera (Subway Surfers perspective)
+            camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
+            camera.position.set(0, 3, 8);
+
+            // Renderer
+            const canvas = document.getElementById('gameCanvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setClearColor(0x87CEEB);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Modern lighting system
+            // Ambient light for overall illumination
+            const ambientLight = new THREE.AmbientLight(0x404080, 0.4);
+            scene.add(ambientLight);
+
+            // Main directional light (sun)
+            const directionalLight = new THREE.DirectionalLight(0xFFE4B5, 1.2);
+            directionalLight.position.set(10, 15, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -20;
+            directionalLight.shadow.camera.right = 20;
+            directionalLight.shadow.camera.top = 20;
+            directionalLight.shadow.camera.bottom = -20;
+            directionalLight.shadow.bias = -0.0005;
+            scene.add(directionalLight);
+
+            // Atmospheric hemisphere light for sky gradient
+            const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
+            scene.add(hemisphereLight);
+
+            // Rim lighting for urban atmosphere
+            const rimLight = new THREE.DirectionalLight(0x4A90E2, 0.3);
+            rimLight.position.set(-5, 8, -10);
+            scene.add(rimLight);
+
+            // Enhance renderer for better visuals
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+            // Create player
+            createPlayer();
+            
+            // Create track
+            createTrack();
+            
+            // Create environment
+            createEnvironment();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+                // Start render loop
+                animate();
+                console.log('Three.js initialization complete');
+            } catch (error) {
+                console.error('Error initializing Three.js:', error);
+            }
+        }
+
+        function createPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Player body (torso)
+            const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4A90E2
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.7;
+            body.castShadow = true;
+            playerGroup.add(body);
+
+            // Player head
+            const headGeometry = new THREE.SphereGeometry(0.25);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xF5B041
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.35;
+            head.castShadow = true;
+            playerGroup.add(head);
+
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.05);
+            const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.08, 1.4, 0.2);
+            playerGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.08, 1.4, 0.2);
+            playerGroup.add(rightEye);
+
+            // Arms
+            const armGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6);
+            const armMaterial = new THREE.MeshLambertMaterial({ color: 0xF5B041 });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.4, 0.8, 0);
+            leftArm.rotation.z = 0.3;
+            leftArm.castShadow = true;
+            playerGroup.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.4, 0.8, 0);
+            rightArm.rotation.z = -0.3;
+            rightArm.castShadow = true;
+            playerGroup.add(rightArm);
+
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.6);
+            const legMaterial = new THREE.MeshLambertMaterial({ color: 0x2C3E50 });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.15, 0.0, 0);
+            leftLeg.castShadow = true;
+            playerGroup.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.15, 0.0, 0);
+            rightLeg.castShadow = true;
+            playerGroup.add(rightLeg);
+
+            // Shoes
+            const shoeGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.4);
+            const shoeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+            
+            const leftShoe = new THREE.Mesh(shoeGeometry, shoeMaterial);
+            leftShoe.position.set(-0.15, -0.35, 0.1);
+            leftShoe.castShadow = true;
+            playerGroup.add(leftShoe);
+            
+            const rightShoe = new THREE.Mesh(shoeGeometry, shoeMaterial);
+            rightShoe.position.set(0.15, -0.35, 0.1);
+            rightShoe.castShadow = true;
+            playerGroup.add(rightShoe);
+
+            // Backpack
+            const backpackGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.2);
+            const backpackMaterial = new THREE.MeshLambertMaterial({ color: 0xE74C3C });
+            const backpack = new THREE.Mesh(backpackGeometry, backpackMaterial);
+            backpack.position.set(0, 0.7, -0.25);
+            backpack.castShadow = true;
+            playerGroup.add(backpack);
+
+            // Cap
+            const capGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1);
+            const capMaterial = new THREE.MeshLambertMaterial({ color: 0xFF6B35 });
+            const cap = new THREE.Mesh(capGeometry, capMaterial);
+            cap.position.y = 1.55;
+            cap.castShadow = true;
+            playerGroup.add(cap);
+
+            // Cap visor
+            const visorGeometry = new THREE.CylinderGeometry(0.35, 0.4, 0.02);
+            const visorMaterial = new THREE.MeshLambertMaterial({ color: 0xFF4500 });
+            const visor = new THREE.Mesh(visorGeometry, visorMaterial);
+            visor.position.set(0, 1.48, 0.2);
+            visor.rotation.x = -0.3;
+            visor.castShadow = true;
+            playerGroup.add(visor);
+
+            playerGroup.position.set(LANE_POSITIONS[gameState.playerLane], 0, 0);
+            
+            // FIX: Player should look forward (negative Z direction)
+            playerGroup.rotation.y = Math.PI;
+            
+            scene.add(playerGroup);
+            player = playerGroup;
+        }
