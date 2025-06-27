@@ -97,6 +97,23 @@ jobs:
         echo "📁 Deployment structure:"
         ls -la deploy/
         
+    - name: Check Secrets Configuration
+      run: |
+        echo "🔍 Checking deployment configuration..."
+        if [ -z "${{ secrets.FTP_SERVER }}" ]; then
+          echo "❌ FTP_SERVER secret is missing!"
+          exit 1
+        fi
+        if [ -z "${{ secrets.FTP_USERNAME }}" ]; then
+          echo "❌ FTP_USERNAME secret is missing!"
+          exit 1
+        fi
+        if [ -z "${{ secrets.FTP_PASSWORD }}" ]; then
+          echo "❌ FTP_PASSWORD secret is missing!"
+          exit 1
+        fi
+        echo "✅ All FTP secrets are configured"
+        
     - name: Deploy to Hostinger via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
@@ -105,6 +122,8 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./deploy/
         server-dir: /public_html/pushup-panic/
+        dry-run: false
+        log-level: verbose
         exclude: |
           **/.git*
           **/.git*/**
