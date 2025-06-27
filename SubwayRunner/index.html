@@ -300,6 +300,7 @@
 
             async preloadBackgroundMusic() {
                 try {
+                    console.log('🎵 Starting background music preload...');
                     // Try to load background music file (multiple formats)
                     const musicPaths = [
                         'sounds/background/background.mp3',
@@ -314,19 +315,33 @@
                         try {
                             console.log(`🎵 Trying to load background music: ${path}`);
                             const audio = new Audio(path);
-                            audio.preload = 'auto';
+                            audio.preload = 'metadata'; // Changed from 'auto' for large files
                             audio.loop = true;
                             audio.volume = 0; // Start silent
+                            audio.crossOrigin = 'anonymous'; // Fix CORS issues
                             
                             // Test if file exists by trying to load it
                             await new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => {
+                                    console.log(`⏰ Timeout loading: ${path}`);
+                                    reject(new Error('Timeout'));
+                                }, 10000); // 10 second timeout for large files
+                                
                                 audio.addEventListener('canplaythrough', () => {
+                                    clearTimeout(timeout);
                                     console.log(`✅ Background music loaded: ${path}`);
                                     this.backgroundMusic = audio;
                                     this.musicLoaded = true;
                                     resolve();
                                 });
-                                audio.addEventListener('error', reject);
+                                audio.addEventListener('loadedmetadata', () => {
+                                    console.log(`📊 Music metadata loaded: ${path} (${audio.duration}s)`);
+                                });
+                                audio.addEventListener('error', (e) => {
+                                    clearTimeout(timeout);
+                                    console.log(`❌ Audio error for ${path}:`, e);
+                                    reject(e);
+                                });
                                 audio.load();
                             });
                             break; // If successful, stop trying other files
@@ -701,10 +716,17 @@
 
         // Initialize Supabase connection
         try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase initialized successfully');
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase initialized successfully');
+                console.log('🔗 Database URL:', SUPABASE_URL);
+                console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+            } else {
+                throw new Error('Supabase library not loaded');
+            }
         } catch (error) {
             console.log('⚠️ Supabase initialization failed, using offline mode:', error);
+            supabase = null;
         }
 
         // Highscore Management System
@@ -715,8 +737,10 @@
             }
 
             async loadHighscores() {
+                console.log('📊 Loading highscores...');
                 try {
                     if (supabase) {
+                        console.log('🔄 Fetching from Supabase...');
                         const { data, error } = await supabase
                             .from('subway_runner_scores')
                             .select('*')
@@ -724,17 +748,21 @@
                             .limit(10);
                         
                         if (!error && data) {
+                            console.log(`✅ Loaded ${data.length} scores from Supabase:`, data);
                             highscores = data;
                         } else {
-                            throw new Error('Supabase error');
+                            console.log('❌ Supabase error:', error);
+                            throw new Error('Supabase error: ' + (error?.message || 'Unknown'));
                         }
                     } else {
                         throw new Error('No Supabase connection');
                     }
                 } catch (error) {
+                    console.log('⚠️ Falling back to localStorage:', error.message);
                     // Fallback to localStorage
                     const localScores = localStorage.getItem(this.localStorageKey);
                     highscores = localScores ? JSON.parse(localScores) : [];
+                    console.log(`📱 Loaded ${highscores.length} local scores:`, highscores);
                 }
                 this.displayHighscores();
             }
@@ -748,23 +776,33 @@
                     created_at: new Date().toISOString()
                 };
 
+                console.log('💾 Submitting score:', scoreEntry);
+
                 try {
                     if (supabase) {
+                        console.log('🔄 Inserting to Supabase...');
                         const { data, error } = await supabase
                             .from('subway_runner_scores')
                             .insert([scoreEntry])
                             .select();
                         
-                        if (error) throw error;
+                        if (error) {
+                            console.log('❌ Supabase insert error:', error);
+                            throw error;
+                        }
+                        
+                        console.log('✅ Score submitted to Supabase:', data);
                     } else {
                         throw new Error('No Supabase connection');
                     }
                 } catch (error) {
+                    console.log('⚠️ Supabase submit failed, using localStorage:', error.message);
                     // Fallback to localStorage
                     highscores.push(scoreEntry);
                     highscores.sort((a, b) => b.score - a.score);
                     highscores = highscores.slice(0, 10); // Keep only top 10
                     localStorage.setItem(this.localStorageKey, JSON.stringify(highscores));
+                    console.log('📱 Score saved locally');
                 }
 
                 await this.loadHighscores();
