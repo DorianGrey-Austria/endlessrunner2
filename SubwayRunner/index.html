@@ -251,7 +251,7 @@
                     this.masterGain = this.audioContext.createGain();
                     this.masterGain.gain.value = this.masterVolume;
                     this.masterGain.connect(this.audioContext.destination);
-                    this.createSounds();
+                    this.createAdvancedSounds();
                 } catch (error) {
                     console.log('Audio not supported');
                 }
@@ -309,54 +309,204 @@
                 source.start();
             }
 
-            createSounds() {
+            createAdvancedSounds() {
+                // Enhanced realistic sounds using multiple layers
                 this.sounds = {
                     jump: () => {
-                        this.createTone(200, 0.1, 'square');
-                        setTimeout(() => this.createTone(300, 0.05, 'square'), 50);
+                        // Multi-layered jump sound: impact + whoosh + landing prep
+                        this.createTone(180, 0.08, 'sine'); // Base thump
+                        setTimeout(() => this.createTone(320, 0.12, 'triangle'), 20); // Whoosh up
+                        setTimeout(() => this.createNoise(0.06, 4000), 40); // Air resistance
+                        this.createReverbEffect(240, 0.15, 0.3); // Echo for depth
                     },
                     
                     land: () => {
-                        this.createNoise(0.1, 500);
+                        // Heavy landing with ground impact and dust
+                        this.createTone(80, 0.15, 'square'); // Deep thud
+                        this.createNoise(0.12, 800); // Ground crunch
+                        setTimeout(() => this.createNoise(0.08, 1500), 50); // Dust settle
+                        this.createReverbEffect(120, 0.2, 0.4); // Ground echo
                     },
                     
                     duck: () => {
-                        this.createTone(150, 0.2, 'sawtooth');
+                        // Quick duck sound with fabric/wind
+                        this.createTone(140, 0.15, 'sawtooth');
+                        this.createNoise(0.1, 3500); // Wind resistance
+                        setTimeout(() => this.createTone(110, 0.1, 'sine'), 80); // Body movement
                     },
                     
                     success: () => {
-                        this.createTone(400, 0.1, 'sine');
-                        setTimeout(() => this.createTone(600, 0.1, 'sine'), 100);
-                        setTimeout(() => this.createTone(800, 0.15, 'sine'), 200);
+                        // Triumphant success with harmonic progression
+                        const notes = [400, 500, 630, 800, 1000];
+                        notes.forEach((freq, i) => {
+                            setTimeout(() => {
+                                this.createTone(freq, 0.2, 'sine');
+                                this.createReverbEffect(freq, 0.15, 0.6); // Rich reverb
+                            }, i * 80);
+                        });
+                        // Add sparkle effect
+                        setTimeout(() => {
+                            for (let j = 0; j < 8; j++) {
+                                setTimeout(() => this.createTone(1200 + j * 100, 0.05, 'sine'), j * 25);
+                            }
+                        }, 400);
                     },
                     
                     collision: () => {
-                        this.createNoise(0.3, 2000);
-                        this.createTone(100, 0.5, 'sawtooth', false);
+                        // Dramatic collision with multiple impact layers
+                        this.createNoise(0.4, 1200); // Main crash
+                        this.createTone(60, 0.6, 'sawtooth', false); // Low rumble
+                        setTimeout(() => this.createNoise(0.25, 2500), 100); // Glass/debris
+                        setTimeout(() => this.createTone(200, 0.3, 'square'), 150); // Metal impact
+                        this.createReverbEffect(150, 0.8, 0.7); // Long echo
+                        
+                        // Add screen shake intensity based on collision
+                        if (window.gameState) {
+                            gameState.cameraShakeIntensity = Math.max(gameState.cameraShakeIntensity, 0.3);
+                        }
                     },
                     
                     coin: () => {
-                        this.createTone(800, 0.1, 'sine');
-                        setTimeout(() => this.createTone(1000, 0.1, 'sine'), 50);
+                        // Magical coin collection with sparkle
+                        this.createTone(800, 0.12, 'sine');
+                        setTimeout(() => this.createTone(1200, 0.1, 'sine'), 40);
+                        setTimeout(() => this.createTone(1600, 0.08, 'triangle'), 80);
+                        this.createReverbEffect(1000, 0.2, 0.5); // Magical echo
+                        // Add subtle high-frequency shimmer
+                        setTimeout(() => {
+                            for (let k = 0; k < 4; k++) {
+                                setTimeout(() => this.createTone(2000 + k * 200, 0.03, 'sine'), k * 15);
+                            }
+                        }, 120);
                     },
                     
                     whoosh: () => {
-                        this.createNoise(0.2, 3000);
+                        // Enhanced lane change with speed-dependent pitch
+                        const speedMultiplier = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.5;
+                        const baseFreq = 2000 + speedMultiplier * 2000;
+                        this.createNoise(0.15 + speedMultiplier * 0.1, baseFreq);
+                        this.createTone(250 + speedMultiplier * 100, 0.1, 'triangle');
                     },
                     
                     powerup: () => {
-                        for (let i = 0; i < 5; i++) {
+                        // Epic power-up activation sequence
+                        const powerChord = [400, 500, 600, 750, 900];
+                        powerChord.forEach((freq, i) => {
                             setTimeout(() => {
-                                this.createTone(400 + i * 100, 0.1, 'sine');
-                            }, i * 50);
+                                this.createTone(freq, 0.25, 'sine');
+                                this.createReverbEffect(freq, 0.2, 0.8);
+                            }, i * 60);
+                        });
+                        
+                        // Add ascending energy effect
+                        setTimeout(() => {
+                            for (let m = 0; m < 12; m++) {
+                                setTimeout(() => {
+                                    this.createTone(1000 + m * 50, 0.04, 'triangle');
+                                }, m * 30);
+                            }
+                        }, 300);
+                    },
+                    
+                    // NEW: Ambient city sounds
+                    ambient: () => {
+                        if (!this.ambientPlaying) {
+                            this.ambientPlaying = true;
+                            this.playAmbientLoop();
                         }
+                    },
+                    
+                    // NEW: Speed-based engine sound
+                    engine: () => {
+                        const speedMultiplier = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.3;
+                        const engineFreq = 40 + speedMultiplier * 60;
+                        this.createTone(engineFreq, 0.2, 'sawtooth', false);
+                    },
+                    
+                    // NEW: Near miss bonus sound
+                    nearmiss: () => {
+                        this.createTone(600, 0.08, 'sine');
+                        setTimeout(() => this.createTone(800, 0.06, 'triangle'), 30);
+                        this.createNoise(0.05, 5000); // Subtle whoosh
                     }
                 };
             }
 
+            // Enhanced reverb effect for depth
+            createReverbEffect(frequency, duration, intensity) {
+                if (!this.audioContext) return;
+                
+                const delay = this.audioContext.createDelay(0.3);
+                const feedback = this.audioContext.createGain();
+                const wetGain = this.audioContext.createGain();
+                
+                delay.delayTime.value = 0.1;
+                feedback.gain.value = intensity * 0.4;
+                wetGain.gain.value = intensity * 0.3;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(delay);
+                delay.connect(feedback);
+                feedback.connect(delay);
+                delay.connect(wetGain);
+                wetGain.connect(this.masterGain);
+                
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+            
+            // Ambient city soundscape
+            playAmbientLoop() {
+                if (!this.audioContext || !this.ambientPlaying) return;
+                
+                // Distant traffic rumble
+                const trafficFreq = 60 + Math.random() * 20;
+                this.createTone(trafficFreq, 2.0, 'sawtooth', false);
+                
+                // Occasional distant sounds
+                if (Math.random() > 0.7) {
+                    setTimeout(() => {
+                        this.createNoise(0.05, 800 + Math.random() * 1000);
+                    }, Math.random() * 1000);
+                }
+                
+                // Continue ambient loop
+                setTimeout(() => this.playAmbientLoop(), 2000);
+            }
+            
+            stopAmbient() {
+                this.ambientPlaying = false;
+            }
+            
+            // Dynamic sound based on game speed
+            playSpeedDependentSound(soundName, speedMultiplier = 1) {
+                const originalVolume = this.masterGain.gain.value;
+                const speedVolume = Math.min(originalVolume * (0.8 + speedMultiplier * 0.4), 1.0);
+                
+                this.masterGain.gain.value = speedVolume;
+                this.play(soundName);
+                
+                // Restore original volume
+                setTimeout(() => {
+                    this.masterGain.gain.value = originalVolume;
+                }, 200);
+            }
+            
             play(soundName) {
                 if (this.sounds[soundName]) {
-                    this.sounds[soundName]();
+                    try {
+                        this.sounds[soundName]();
+                    } catch (error) {
+                        console.warn('Audio playback error:', error);
+                    }
                 }
             }
 
@@ -368,6 +518,10 @@
         }
 
         const audioManager = new AudioManager();
+        audioManager.ambientPlaying = false;
+        
+        // Auto-start ambient sounds when game starts
+        let ambientStarted = false;
 
         // Supabase Configuration - Disabled for now to fix startup issue
         const SUPABASE_URL = 'https://xyzcompany.supabase.co' // Replace with your URL
@@ -1123,6 +1277,110 @@
                     
                     height = 1.3; // Höhe der Lücke
                     break;
+                    
+                case 'rotatingblade':
+                    // NEW: Rotating blade obstacle
+                    const bladeGroup = new THREE.Group();
+                    
+                    // Central hub
+                    const hubGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.4);
+                    const hubMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                    const hub = new THREE.Mesh(hubGeometry, hubMaterial);
+                    hub.position.y = 1;
+                    bladeGroup.add(hub);
+                    
+                    // Rotating blades
+                    for (let i = 0; i < 3; i++) {
+                        const bladeGeometry = new THREE.BoxGeometry(2, 0.1, 0.2);
+                        const bladeMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0x8B0000,
+                            emissive: 0x220000
+                        });
+                        const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
+                        blade.position.y = 1;
+                        blade.rotation.y = (i * Math.PI * 2) / 3;
+                        blade.castShadow = true;
+                        bladeGroup.add(blade);
+                    }
+                    
+                    // Add warning lights
+                    for (let j = 0; j < 2; j++) {
+                        const warnLight = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.06),
+                            new THREE.MeshLambertMaterial({ 
+                                color: 0xFF0000,
+                                emissive: 0x330000
+                            })
+                        );
+                        warnLight.position.set(j === 0 ? -1.2 : 1.2, 1.5, 0);
+                        bladeGroup.add(warnLight);
+                    }
+                    
+                    obstacleGroup.add(bladeGroup);
+                    height = 2;
+                    break;
+                    
+                case 'swinginghammer':
+                    // NEW: Swinging hammer obstacle
+                    const hammerGroup = new THREE.Group();
+                    
+                    // Support structure
+                    const supportGeometry = new THREE.BoxGeometry(0.2, 3, 0.2);
+                    const supportMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+                    const support = new THREE.Mesh(supportGeometry, supportMaterial);
+                    support.position.y = 1.5;
+                    support.castShadow = true;
+                    hammerGroup.add(support);
+                    
+                    // Swinging arm
+                    const armGroup = new THREE.Group();
+                    const armGeometry = new THREE.BoxGeometry(0.1, 1.5, 0.1);
+                    const armMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                    const arm = new THREE.Mesh(armGeometry, armMaterial);
+                    arm.position.y = -0.75;
+                    arm.castShadow = true;
+                    armGroup.add(arm);
+                    
+                    // Hammer head
+                    const hammerGeometry = new THREE.BoxGeometry(0.8, 0.4, 0.6);
+                    const hammerMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                    const hammerHead = new THREE.Mesh(hammerGeometry, hammerMaterial);
+                    hammerHead.position.y = -1.4;
+                    hammerHead.castShadow = true;
+                    armGroup.add(hammerHead);
+                    
+                    armGroup.position.y = 3;
+                    hammerGroup.add(armGroup);
+                    obstacleGroup.add(hammerGroup);
+                    height = 1.8;
+                    break;
+                    
+                case 'movingwall':
+                    // NEW: Side-to-side moving wall
+                    const wallGeometry = new THREE.BoxGeometry(0.3, 2, 1);
+                    const wallMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x708090,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const movingWall = new THREE.Mesh(wallGeometry, wallMaterial);
+                    movingWall.position.y = 1;
+                    movingWall.castShadow = true;
+                    
+                    // Add warning stripes
+                    for (let k = 0; k < 4; k++) {
+                        const stripeGeometry = new THREE.PlaneGeometry(0.35, 0.2);
+                        const stripeMaterial = new THREE.MeshLambertMaterial({ 
+                            color: k % 2 === 0 ? 0xFFFF00 : 0xFF0000
+                        });
+                        const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+                        stripe.position.set(0.16, 0.5 + k * 0.4, 0);
+                        movingWall.add(stripe);
+                    }
+                    
+                    obstacleGroup.add(movingWall);
+                    height = 2;
+                    break;
             }
             
             // Für einfache Hindernisse
@@ -1145,18 +1403,49 @@
             
             scene.add(obstacleGroup);
             
-            obstacles.push({
+            // Enhanced obstacle data with animation properties
+            const obstacleData = {
                 mesh: obstacleGroup,
                 type: type,
                 lane: lane,
                 z: z,
-                height: height
-            });
+                height: height,
+                animationTime: 0,
+                rotationSpeed: 0,
+                swingAmplitude: 0,
+                swingSpeed: 0,
+                movementRange: 0,
+                movementSpeed: 0,
+                initialX: LANE_POSITIONS[lane]
+            };
+            
+            // Set animation properties for moving obstacles
+            switch (type) {
+                case 'rotatingblade':
+                    obstacleData.rotationSpeed = 3 + Math.random() * 2; // Random rotation speed
+                    break;
+                case 'swinginghammer':
+                    obstacleData.swingAmplitude = Math.PI / 3; // 60 degree swing
+                    obstacleData.swingSpeed = 2 + Math.random(); // Random swing speed
+                    break;
+                case 'movingwall':
+                    obstacleData.movementRange = 3; // Movement range across lanes
+                    obstacleData.movementSpeed = 1.5 + Math.random() * 0.5;
+                    break;
+            }
+            
+            obstacles.push(obstacleData);
         }
 
         function startGameInternal() {
             // Resume audio context
             audioManager.resume();
+            
+            // Start ambient city sounds
+            if (!ambientStarted) {
+                audioManager.play('ambient');
+                ambientStarted = true;
+            }
             
             gameState.isPlaying = true;
             gameState.isGameOver = false;
@@ -1191,6 +1480,10 @@
             gameState.isPlaying = false;
             gameState.isGameOver = true;
             
+            // Stop ambient sounds
+            audioManager.stopAmbient();
+            ambientStarted = false;
+            
             currentScore = gameState.score;
             currentSurvivalTime = Math.max(0, gameState.gameTime - Math.ceil(gameState.timeRemaining));
             
@@ -1205,6 +1498,10 @@
         function victoryGame() {
             gameState.isPlaying = false;
             gameState.isVictory = true;
+            
+            // Stop ambient sounds
+            audioManager.stopAmbient();
+            ambientStarted = false;
             
             currentScore = gameState.score;
             currentSurvivalTime = 60; // Full 60 seconds survived!
@@ -1358,7 +1655,8 @@
                     event.preventDefault();
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
-                        audioManager.play('whoosh');
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
                     break;
                 case 'ArrowRight':
@@ -1366,7 +1664,8 @@
                     event.preventDefault();
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
-                        audioManager.play('whoosh');
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
                     break;
                 case 'ArrowUp':
@@ -1377,8 +1676,9 @@
                         gameState.playerAction = 'jumping';
                         gameState.jumpVelocity = 10; // Höherer Sprung
                         
-                        // Audio & Visual Feedback
-                        audioManager.play('jump');
+                        // Audio & Visual Feedback with speed dynamics
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
                         
                         // Sprung-Partikel
@@ -1394,7 +1694,8 @@
                     event.preventDefault();
                     if (gameState.playerAction === 'running') {
                         gameState.playerAction = 'ducking';
-                        audioManager.play('duck');
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('duck', speedMultiplier);
                     }
                     break;
             }
@@ -1588,28 +1889,37 @@
             animateRing();
         }
 
+        // Enhanced collision detection with precise bounding boxes and near-miss system
         function checkCollisions() {
             if (gameState.invulnerable) return;
             
-            const playerX = LANE_POSITIONS[gameState.playerLane];
-            const playerY = gameState.playerY;
-            const playerHeight = gameState.playerAction === 'ducking' ? 0.5 : 1.5;
+            // Player bounding box calculation
+            const playerBBox = calculatePlayerBoundingBox();
             
             obstacles.forEach((obstacle, index) => {
-                const distance = Math.abs(obstacle.z - 0); // Player is at z=0
-                const laneMatch = Math.abs(obstacle.mesh.position.x - playerX) < 0.7;
+                // Calculate obstacle bounding box
+                const obstacleBBox = calculateObstacleBoundingBox(obstacle);
                 
-                if (distance < 0.8 && laneMatch) {
+                // Check for actual collision using 3D bounding box intersection
+                const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
+                
+                // Near-miss detection (close but not colliding)
+                const nearMissDistance = 0.3; // Units for near-miss threshold
+                const isNearMiss = !isColliding && boundingBoxDistance(playerBBox, obstacleBBox) < nearMissDistance;
+                
+                if (isColliding) {
+                    // Check if player can avoid this collision
                     let canAvoid = false;
                     let avoidanceType = '';
                     
-                    // Verbesserte Kollisionserkennung basierend auf Hindernistyp
+                    // Enhanced avoidance logic with precise hitbox checking
                     switch (obstacle.type) {
                         case 'lowbarrier':
                         case 'jumpblock':
                         case 'hurdleset':
-                            // Muss übersprungen werden
-                            if (gameState.playerAction === 'jumping' && playerY > obstacle.height * 0.8) {
+                            // Must be jumped - check if player is high enough to clear
+                            if (gameState.playerAction === 'jumping' && 
+                                playerBBox.min.y > obstacleBBox.max.y - 0.2) {
                                 canAvoid = true;
                                 avoidanceType = 'jump';
                             }
@@ -1618,104 +1928,375 @@
                         case 'highbarrier':
                         case 'duckbeam':
                         case 'wallgap':
-                            // Muss unterduckt werden
-                            if (gameState.playerAction === 'ducking') {
+                            // Must be ducked - check if player is low enough to pass under
+                            if (gameState.playerAction === 'ducking' && 
+                                playerBBox.max.y < obstacleBBox.min.y + 0.2) {
                                 canAvoid = true;
                                 avoidanceType = 'duck';
                             }
                             break;
                             
                         case 'spikes':
-                            // Kann übersprungen oder unterduckt werden
-                            if ((gameState.playerAction === 'jumping' && playerY > obstacle.height * 0.8) ||
-                                gameState.playerAction === 'ducking') {
+                            // Flexible - can jump over or duck under
+                            if ((gameState.playerAction === 'jumping' && playerBBox.min.y > obstacleBBox.max.y - 0.2) ||
+                                (gameState.playerAction === 'ducking' && playerBBox.max.y < obstacleBBox.min.y + 0.2)) {
                                 canAvoid = true;
                                 avoidanceType = gameState.playerAction === 'jumping' ? 'jump' : 'duck';
+                            }
+                            break;
+                            
+                        case 'rotatingblade':
+                            // Rotating blades - can only be ducked under
+                            if (gameState.playerAction === 'ducking' && playerBBox.max.y < 0.8) {
+                                canAvoid = true;
+                                avoidanceType = 'duck';
+                            }
+                            break;
+                            
+                        case 'swinginghammer':
+                            // Swinging hammer - timing-based avoidance
+                            // Check if hammer is in safe position
+                            const hammerAngle = Math.sin(obstacle.animationTime * obstacle.swingSpeed) * obstacle.swingAmplitude;
+                            const isSafePosition = Math.abs(hammerAngle) < obstacle.swingAmplitude * 0.3; // Safe zone
+                            
+                            if (isSafePosition) {
+                                canAvoid = true;
+                                avoidanceType = 'timing';
+                            } else if (gameState.playerAction === 'ducking' && Math.abs(hammerAngle) > obstacle.swingAmplitude * 0.7) {
+                                // Can duck under when hammer is at extreme positions
+                                canAvoid = true;
+                                avoidanceType = 'duck';
+                            }
+                            break;
+                            
+                        case 'movingwall':
+                            // Moving wall - must time movement or jump
+                            const wallPosition = obstacle.mesh.position.x;
+                            const playerPosition = LANE_POSITIONS[gameState.playerLane];
+                            const wallDistance = Math.abs(wallPosition - playerPosition);
+                            
+                            if (wallDistance > 1.0) {
+                                // Wall is far enough away
+                                canAvoid = true;
+                                avoidanceType = 'dodge';
+                            } else if (gameState.playerAction === 'jumping' && playerBBox.min.y > 1.5) {
+                                // Can jump over the wall
+                                canAvoid = true;
+                                avoidanceType = 'jump';
                             }
                             break;
                     }
                     
                     if (canAvoid) {
-                        // Erfolgreiche Ausweichung!
+                        // SUCCESSFUL AVOIDANCE!
                         let bonusScore = 50;
-                        if (avoidanceType === 'jump') bonusScore = 75; // Bonus für Sprünge
+                        
+                        // Precision bonus - closer calls get more points
+                        const precision = 1 - (boundingBoxDistance(playerBBox, obstacleBBox) / nearMissDistance);
+                        bonusScore += Math.floor(precision * 25);
+                        
+                        if (avoidanceType === 'jump') bonusScore += 25; // Jump bonus
                         
                         gameState.score += bonusScore;
                         
-                        // Audio feedback
-                        audioManager.play('success');
-                        
-                        // Multiple Partikeleffekte für spektakulären Erfolg
-                        createParticleEffect(
-                            obstacle.mesh.position.clone(),
-                            avoidanceType === 'jump' ? 0x00FF00 : 0x00FFFF,
-                            'success'
-                        );
-                        
-                        // Zusätzliche Sterne-Partikel
-                        createParticleEffect(
-                            obstacle.mesh.position.clone().add(new THREE.Vector3(0, 1, 0)),
-                            0xFFD700,
-                            'success'
-                        );
-                        
-                        // Camera zoom für wichtige Erfolge
-                        if (bonusScore >= 75) {
-                            cameraZoomEffect(1.15, 300);
+                        // Enhanced audio feedback with precision
+                        if (precision > 0.8) {
+                            audioManager.play('success'); // Perfect avoidance
+                        } else {
+                            audioManager.playSpeedDependentSound('coin', gameState.speed / gameState.maxSpeed);
                         }
                         
-                        // Score-Popup anzeigen
-                        showScorePopup(bonusScore, obstacle.mesh.position.clone());
+                        // Spectacular success particle effects
+                        const effectPos = obstacle.mesh.position.clone();
+                        const effectColor = avoidanceType === 'jump' ? 0x00FF00 : 0x00FFFF;
+                        
+                        createParticleEffect(effectPos, effectColor, 'success');
+                        
+                        // Precision-based additional effects
+                        if (precision > 0.8) {
+                            // Perfect execution - extra sparkles
+                            createParticleEffect(
+                                effectPos.clone().add(new THREE.Vector3(0, 1, 0)),
+                                0xFFD700,
+                                'success'
+                            );
+                            // Mini camera zoom for perfect execution
+                            cameraZoomEffect(1.1, 200);
+                        }
+                        
+                        // Score popup with precision indicator
+                        showScorePopup(bonusScore, effectPos, precision > 0.8 ? 'PERFECT!' : 'NICE!');
                         
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
+                        
                     } else {
-                        // SPEKTAKULÄRE KOLLISION!
-                        
-                        // Slow Motion für dramatischen Effekt
-                        startSlowMotion(1000);
-                        
-                        // Audio
-                        audioManager.play('collision');
-                        
-                        // Leben verlieren
-                        loseLife();
-                        
-                        // Massive Explosion mit mehreren Effekten
-                        const collisionPos = obstacle.mesh.position.clone();
-                        
-                        // Haupt-Explosion
-                        createParticleEffect(collisionPos, 0xFF4444, 'explosion');
-                        
-                        // Sekundäre Explosionen
-                        setTimeout(() => {
-                            createParticleEffect(
-                                collisionPos.clone().add(new THREE.Vector3(1, 0.5, 0)),
-                                0xFF6644,
-                                'explosion'
-                            );
-                        }, 100);
-                        
-                        setTimeout(() => {
-                            createParticleEffect(
-                                collisionPos.clone().add(new THREE.Vector3(-1, 0.5, 0)),
-                                0xFF8844,
-                                'explosion'
-                            );
-                        }, 200);
-                        
-                        // Explosion Ring
-                        createExplosionRing(collisionPos);
-                        
-                        // Intensiver Screen Shake
-                        screenShake(0.4, 600);
-                        
-                        // Kamera Zoom für Impact
-                        cameraZoomEffect(1.3, 400);
-                        
+                        // COLLISION DETECTED!
+                        handleCollision(obstacle, obstacleBBox);
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
                     }
+                    
+                } else if (isNearMiss) {
+                    // NEAR MISS BONUS!
+                    handleNearMiss(obstacle, playerBBox, obstacleBBox);
+                }
+            });
+        }
+        
+        // Calculate precise player bounding box based on current action
+        function calculatePlayerBoundingBox() {
+            const playerX = LANE_POSITIONS[gameState.playerLane];
+            const playerY = gameState.playerY;
+            
+            let width = 0.8;  // Player width
+            let height = 1.5; // Player height
+            let depth = 0.6;  // Player depth
+            
+            // Adjust hitbox based on action
+            if (gameState.playerAction === 'ducking') {
+                height = 0.6;
+                depth = 0.8; // Slightly larger depth when ducking
+            } else if (gameState.playerAction === 'jumping') {
+                // Tighter hitbox when jumping for more precise collision
+                width = 0.7;
+                depth = 0.5;
+            }
+            
+            return {
+                min: new THREE.Vector3(
+                    playerX - width/2,
+                    playerY,
+                    -depth/2
+                ),
+                max: new THREE.Vector3(
+                    playerX + width/2,
+                    playerY + height,
+                    depth/2
+                )
+            };
+        }
+        
+        // Calculate obstacle bounding box based on type and mesh
+        function calculateObstacleBoundingBox(obstacle) {
+            const pos = obstacle.mesh.position;
+            let width, height, depth;
+            
+            // Obstacle-specific bounding box dimensions
+            switch (obstacle.type) {
+                case 'lowbarrier':
+                    width = 1.5; height = 0.8; depth = 0.3;
+                    break;
+                case 'highbarrier':
+                    width = 1.8; height = 0.4; depth = 0.3;
+                    // Position is higher up
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 1.8, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.8 + height, pos.z + depth/2)
+                    };
+                case 'jumpblock':
+                    width = 1.2; height = 1.2; depth = 1.2;
+                    break;
+                case 'spikes':
+                    width = 0.5; height = 0.6; depth = 0.5;
+                    break;
+                case 'duckbeam':
+                    width = 2.2; height = 0.3; depth = 0.8;
+                    // Position is higher up
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 1.8, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.8 + height, pos.z + depth/2)
+                    };
+                case 'hurdleset':
+                    width = 1.4; height = 0.7; depth = 1.5; // Covers multiple hurdles
+                    break;
+                case 'wallgap':
+                    width = 1.8; height = 1.3; depth = 0.4;
+                    // Gap height consideration
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 1.3, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 2.5, pos.z + depth/2)
+                    };
+                case 'rotatingblade':
+                    // Dynamic hitbox based on rotation - always dangerous
+                    width = 2.2; height = 2; depth = 0.4;
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 0, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, height, pos.z + depth/2)
+                    };
+                case 'swinginghammer':
+                    // Dynamic hitbox for swinging hammer - wider danger zone
+                    width = 2.5; height = 1.8; depth = 0.8;
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 0, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, height, pos.z + depth/2)
+                    };
+                case 'movingwall':
+                    // Moving wall uses actual position
+                    width = 0.4; height = 2; depth = 1;
+                    break;
+                default:
+                    width = 1.0; height = 1.0; depth = 1.0;
+            }
+            
+            return {
+                min: new THREE.Vector3(
+                    pos.x - width/2,
+                    pos.y,
+                    pos.z - depth/2
+                ),
+                max: new THREE.Vector3(
+                    pos.x + width/2,
+                    pos.y + height,
+                    pos.z + depth/2
+                )
+            };
+        }
+        
+        // Check if two 3D bounding boxes intersect
+        function boundingBoxIntersection(bbox1, bbox2) {
+            return (bbox1.min.x <= bbox2.max.x && bbox1.max.x >= bbox2.min.x) &&
+                   (bbox1.min.y <= bbox2.max.y && bbox1.max.y >= bbox2.min.y) &&
+                   (bbox1.min.z <= bbox2.max.z && bbox1.max.z >= bbox2.min.z);
+        }
+        
+        // Calculate minimum distance between two bounding boxes
+        function boundingBoxDistance(bbox1, bbox2) {
+            const dx = Math.max(0, Math.max(bbox1.min.x - bbox2.max.x, bbox2.min.x - bbox1.max.x));
+            const dy = Math.max(0, Math.max(bbox1.min.y - bbox2.max.y, bbox2.min.y - bbox1.max.y));
+            const dz = Math.max(0, Math.max(bbox1.min.z - bbox2.max.z, bbox2.min.z - bbox1.max.z));
+            
+            return Math.sqrt(dx*dx + dy*dy + dz*dz);
+        }
+        
+        // Enhanced collision handling with type-specific effects
+        function handleCollision(obstacle, obstacleBBox) {
+            // Slow motion for dramatic effect
+            startSlowMotion(1000);
+            
+            // Type-specific collision audio
+            audioManager.play('collision');
+            
+            // Lose life
+            loseLife();
+            
+            // Enhanced collision effects based on obstacle material
+            const collisionPos = obstacle.mesh.position.clone();
+            let effectColor = 0xFF4444;
+            
+            switch (obstacle.type) {
+                case 'jumpblock':
+                case 'wallgap':
+                    effectColor = 0x888888; // Concrete dust
+                    break;
+                case 'duckbeam':
+                    effectColor = 0x4682B4; // Metal sparks
+                    break;
+                case 'spikes':
+                    effectColor = 0xFF4500; // Fire/sparks
+                    break;
+            }
+            
+            // Main explosion with material-appropriate color
+            createParticleEffect(collisionPos, effectColor, 'explosion');
+            
+            // Multiple secondary explosions for dramatic effect
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const offset = new THREE.Vector3(
+                        (Math.random() - 0.5) * 2,
+                        Math.random() * 1,
+                        (Math.random() - 0.5) * 1
+                    );
+                    createParticleEffect(
+                        collisionPos.clone().add(offset),
+                        effectColor,
+                        'explosion'
+                    );
+                }, i * 150);
+            }
+            
+            // Screen shake intensity based on obstacle size
+            const shakeIntensity = Math.min(0.5, (obstacleBBox.max.y - obstacleBBox.min.y) * 0.3);
+            screenShake(shakeIntensity, 600);
+            
+            // Camera zoom for impact
+            cameraZoomEffect(1.25, 400);
+        }
+        
+        // Near-miss detection and bonus system
+        function handleNearMiss(obstacle, playerBBox, obstacleBBox) {
+            // Prevent multiple near-miss triggers for same obstacle
+            if (obstacle.nearMissTriggered) return;
+            obstacle.nearMissTriggered = true;
+            
+            // Calculate how close the call was
+            const distance = boundingBoxDistance(playerBBox, obstacleBBox);
+            const nearMissBonus = Math.floor((0.3 - distance) * 100); // Closer = more points
+            
+            gameState.score += nearMissBonus;
+            
+            // Near-miss audio feedback
+            audioManager.play('nearmiss');
+            
+            // Visual feedback for near miss
+            const effectPos = obstacle.mesh.position.clone();
+            createParticleEffect(effectPos, 0xFFFF00, 'nearmiss'); // Yellow sparkles
+            
+            // Show near-miss popup
+            showScorePopup(nearMissBonus, effectPos, 'CLOSE!');
+        }
+        
+        // Update animations for moving obstacles
+        function updateMovingObstacles(deltaTime) {
+            obstacles.forEach(obstacle => {
+                obstacle.animationTime += deltaTime * 0.001; // Convert to seconds
+                
+                switch (obstacle.type) {
+                    case 'rotatingblade':
+                        // Rotate the blade group
+                        const bladeGroup = obstacle.mesh.children.find(child => child.type === 'Group');
+                        if (bladeGroup) {
+                            bladeGroup.rotation.y += obstacle.rotationSpeed * deltaTime * 0.001;
+                            
+                            // Add warning sound for fast rotating blades
+                            if (obstacle.rotationSpeed > 4 && Math.random() > 0.98) {
+                                audioManager.createNoise(0.02, 800 + Math.random() * 400);
+                            }
+                        }
+                        break;
+                        
+                    case 'swinginghammer':
+                        // Swing the hammer arm
+                        const hammerGroup = obstacle.mesh.children.find(child => child.type === 'Group');
+                        if (hammerGroup) {
+                            const armGroup = hammerGroup.children.find(child => child.type === 'Group');
+                            if (armGroup) {
+                                const swingAngle = Math.sin(obstacle.animationTime * obstacle.swingSpeed) * obstacle.swingAmplitude;
+                                armGroup.rotation.z = swingAngle;
+                                
+                                // Add swoosh sound at swing extremes
+                                if (Math.abs(swingAngle) > obstacle.swingAmplitude * 0.8 && Math.random() > 0.95) {
+                                    audioManager.createNoise(0.03, 1200 + Math.abs(swingAngle) * 500);
+                                }
+                            }
+                        }
+                        break;
+                        
+                    case 'movingwall':
+                        // Move the wall side to side
+                        const movingWall = obstacle.mesh.children[0];
+                        if (movingWall) {
+                            const movement = Math.sin(obstacle.animationTime * obstacle.movementSpeed) * obstacle.movementRange;
+                            obstacle.mesh.position.x = obstacle.initialX + movement;
+                            
+                            // Add mechanical sound when changing direction
+                            const prevMovement = Math.sin((obstacle.animationTime - deltaTime * 0.001) * obstacle.movementSpeed) * obstacle.movementRange;
+                            if (Math.sign(movement) !== Math.sign(prevMovement) && Math.random() > 0.9) {
+                                audioManager.createTone(150, 0.1, 'square');
+                            }
+                        }
+                        break;
                 }
             });
         }
@@ -1821,6 +2402,32 @@
                     }
                 });
             });
+        }
+        
+        // Dynamic audio system that responds to speed
+        let lastEngineTime = 0;
+        function updateDynamicAudio() {
+            const currentTime = performance.now();
+            const speedRatio = gameState.speed / gameState.maxSpeed;
+            
+            // Engine sound every 800ms, pitch increases with speed
+            if (currentTime - lastEngineTime > 800) {
+                audioManager.play('engine');
+                lastEngineTime = currentTime;
+            }
+            
+            // High-speed wind effects
+            if (speedRatio > 0.7 && Math.random() > 0.95) {
+                // Occasional high-speed wind whoosh
+                audioManager.createNoise(0.08, 4000 + speedRatio * 2000);
+            }
+            
+            // Master volume adjustment based on speed for intensity
+            const baseVolume = 0.3;
+            const speedVolume = baseVolume * (0.8 + speedRatio * 0.4);
+            if (audioManager.audioContext && audioManager.masterGain) {
+                audioManager.masterGain.gain.setValueAtTime(speedVolume, audioManager.audioContext.currentTime);
+            }
         }
         
         // Enhanced motion blur effect at high speeds
@@ -1956,18 +2563,26 @@
                     const jumpObstacles = ['lowbarrier', 'jumpblock', 'hurdleset'];
                     const duckObstacles = ['highbarrier', 'duckbeam', 'wallgap'];
                     const flexibleObstacles = ['spikes'];
+                    const movingObstacles = ['rotatingblade', 'swinginghammer', 'movingwall'];
                     
                     let type;
                     const rand = Math.random();
+                    const speedRatio = gameState.speed / gameState.maxSpeed;
                     
-                    if (rand < 0.4) {
-                        // 40% Sprung-Hindernisse
+                    // Increase moving obstacle chance as speed increases
+                    const movingChance = 0.05 + speedRatio * 0.15; // 5% to 20% chance
+                    
+                    if (rand < movingChance) {
+                        // Moving obstacles (more frequent at higher speeds)
+                        type = movingObstacles[Math.floor(Math.random() * movingObstacles.length)];
+                    } else if (rand < 0.4 + movingChance) {
+                        // Jump obstacles
                         type = jumpObstacles[Math.floor(Math.random() * jumpObstacles.length)];
-                    } else if (rand < 0.8) {
-                        // 40% Duck-Hindernisse  
+                    } else if (rand < 0.8 + movingChance) {
+                        // Duck obstacles
                         type = duckObstacles[Math.floor(Math.random() * duckObstacles.length)];
                     } else {
-                        // 20% Flexible Hindernisse
+                        // Flexible obstacles
                         type = flexibleObstacles[Math.floor(Math.random() * flexibleObstacles.length)];
                     }
                     
@@ -2013,6 +2628,12 @@
                 
                 // Update visual effects based on speed
                 updateVisualEffects();
+                
+                // Update dynamic audio based on speed
+                updateDynamicAudio();
+                
+                // Update moving obstacles animations
+                updateMovingObstacles(deltaTime);
                 
                 // Check collisions
                 checkCollisions();
