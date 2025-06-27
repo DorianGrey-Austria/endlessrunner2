@@ -196,6 +196,33 @@
             <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
+            
+            <!-- NEW: Power-Up & Coins UI -->
+            <div id="coinCounter" style="color: #FFD700; font-weight: bold;">
+                🪙 <span id="coinCount">0</span>
+            </div>
+            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
+                COMBO x<span id="comboMultiplier">1</span>!
+            </div>
+            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
+                <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
+            </div>
+            
+            <!-- NEW: Skill Combo UI -->
+            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                <span id="skillComboIcon">🔥</span> SKILL COMBO x<span id="skillComboCount">1</span>! 
+                <div style="font-size: 14px; color: #FFD700;"><span id="skillComboBonus">+100</span> Punkte!</div>
+            </div>
+            
+            <!-- NEW: Environment Display -->
+            <div id="environmentDisplay" style="color: #87CEEB; font-weight: bold; margin-top: 10px;">
+                🏙️ <span id="currentEnvironment">Straße</span>
+            </div>
+            
+            <!-- NEW: Difficulty Progress Display -->
+            <div id="difficultyDisplay" style="color: #FFB347; font-weight: bold; margin-top: 5px; font-size: 14px;">
+                📈 Schwierigkeit: <span id="difficultyLevel">Leicht</span>
+            </div>
         </div>
         
         <div id="instructions">
@@ -671,12 +698,80 @@
             timeScale: 1.0,
             cameraShakeIntensity: 0,
             cameraZoom: 1.0,
-            slowMotionActive: false
+            slowMotionActive: false,
+            
+            // NEW: Power-Up & Coins System
+            powerUps: [],              // Spawned power-ups in world
+            coins: [],                 // Spawned coins in world  
+            collectedCoins: 0,         // Current session coins
+            totalCoins: 0,             // Lifetime coins
+            activePowerUp: null,       // Currently active power-up
+            powerUpTimeRemaining: 0,   // Time left for active power-up
+            magnetActive: false,       // Magnet power-up state
+            shieldActive: false,       // Shield power-up state
+            speedBoostActive: false,   // Speed boost power-up state
+            coinCombo: 0,              // Current coin collection combo
+            comboMultiplier: 1,        // Score multiplier from combos
+            lastCoinTime: 0,           // For combo timeout
+            
+            // NEW: Advanced Skill & Combo System
+            skillCombo: 0,             // Current skill move combo (dodge sequences)
+            lastSkillTime: 0,          // Time of last skill move
+            moveSequence: [],          // Track recent moves for combo detection
+            consecutiveAvoidances: 0,  // Count of consecutive obstacle avoidances
+            lastAvoidanceTime: 0,      // Time of last successful avoidance
+            lastAction: 'running',     // Track last player action for sequences
+            rapidMoveBonus: 0,         // Bonus for rapid direction changes
+            perfectTimingCount: 0,     // Count of perfect timing moves
+            skillMultiplier: 1,        // Score multiplier for skill moves
+            comboActive: false,        // Visual indicator for active combo
+            
+            // Environment state
+            currentEnvironment: 'street', // 'street', 'tunnel', 'tunnel_entrance', 'tunnel_exit'
+            environmentTransition: false,
+            tunnelProgress: 0,
+            tunnelStartTime: 0,
+            tunnelDuration: 15000, // 15 seconds in tunnel
+            nextTunnelTime: 20000, // First tunnel after 20 seconds
+            tunnelCooldown: 30000, // 30 seconds between tunnels
+            lastTunnelExit: 0,
+            tunnelSegments: [], // Tunnel wall/ceiling segments
+            tunnelLights: [], // Tunnel lighting
+            ambientLightIntensity: 1.0 // For tunnel dimming effect
         };
 
         // Three.js setup
         let scene, camera, renderer, player, track, obstacles = [];
         const LANE_POSITIONS = [-2, 0, 2];
+        
+        // Power-Up and Coin arrays for tracking
+        let powerUps = [];
+        let coins = [];
+        
+        // Power-Up configuration
+        const POWER_UP_TYPES = {
+            magnet: {
+                name: 'Magnet',
+                icon: '🧲',
+                color: 0xFFD700,
+                duration: 15000, // 15 seconds
+                effect: 'magnetActive'
+            },
+            shield: {
+                name: 'Shield', 
+                icon: '🛡️',
+                color: 0x4ECDC4,
+                duration: 10000, // 10 seconds
+                effect: 'shieldActive'
+            },
+            speedboost: {
+                name: 'Speed Boost',
+                icon: '⚡',
+                color: 0xFF6B35,
+                duration: 8000, // 8 seconds
+                effect: 'speedBoostActive'
+            }
+        };
         
         // Environment object tracking for parallax movement
         let environmentObjects = {
@@ -1670,6 +1765,9 @@
             } else {
                 timerElement.className = '';
             }
+            
+            // Update difficulty progress display
+            updateDifficultyUI();
         }
 
         function showNameInputDialog(isVictory) {
@@ -1776,6 +1874,9 @@
                         gameState.playerLane--;
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        
+                        // Track lane movement for skill combos
+                        trackPlayerMove('left', gameState.playerLane);
                     }
                     break;
                 case 'ArrowRight':
@@ -1785,6 +1886,9 @@
                         gameState.playerLane++;
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        
+                        // Track lane movement for skill combos
+                        trackPlayerMove('right', gameState.playerLane);
                     }
                     break;
                 case 'ArrowUp':
@@ -1806,6 +1910,9 @@
                             0xFFFF00,
                             'jump'
                         );
+                        
+                        // Track jump for skill combos
+                        trackPlayerMove('jumping');
                     }
                     break;
                 case 'ArrowDown':
@@ -1815,6 +1922,9 @@
                         gameState.playerAction = 'ducking';
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                        
+                        // Track duck for skill combos
+                        trackPlayerMove('ducking');
                     }
                     break;
             }
@@ -2134,7 +2244,7 @@
                     }
                     
                     if (canAvoid) {
-                        // SUCCESSFUL AVOIDANCE!
+                        // SUCCESSFUL AVOIDANCE! - ENHANCED SKILL SYSTEM
                         let bonusScore = 50;
                         
                         // Precision bonus - closer calls get more points
@@ -2143,7 +2253,126 @@
                         
                         if (avoidanceType === 'jump') bonusScore += 25; // Jump bonus
                         
-                        gameState.score += bonusScore;
+                        // ==================== ADVANCED SKILL TRACKING ====================
+                        
+                        const currentTime = performance.now();
+                        
+                        // Track consecutive avoidances for combo system
+                        if (currentTime - gameState.lastAvoidanceTime < 3000) { // 3 second window
+                            gameState.consecutiveAvoidances++;
+                        } else {
+                            gameState.consecutiveAvoidances = 1;
+                        }
+                        gameState.lastAvoidanceTime = currentTime;
+                        
+                        // Record this move in sequence for combo detection
+                        const currentMove = `${avoidanceType}_${gameState.playerLane}`;
+                        gameState.moveSequence.push({
+                            move: currentMove,
+                            action: avoidanceType,
+                            lane: gameState.playerLane,
+                            time: currentTime,
+                            precision: precision
+                        });
+                        
+                        // Keep only last 5 moves for combo detection
+                        if (gameState.moveSequence.length > 5) {
+                            gameState.moveSequence.shift();
+                        }
+                        
+                        // ==================== COMBO DETECTION & REWARDS ====================
+                        
+                        let skillBonus = 0;
+                        let comboMessage = '';
+                        
+                        // RAPID SEQUENCE BONUS (quick consecutive moves)
+                        if (gameState.consecutiveAvoidances >= 2) {
+                            const timeSinceLastMove = currentTime - gameState.lastSkillTime;
+                            if (timeSinceLastMove < 1500) { // Less than 1.5 seconds = rapid!
+                                skillBonus += gameState.consecutiveAvoidances * 30;
+                                comboMessage = `RAPID x${gameState.consecutiveAvoidances}!`;
+                                
+                                // Extra bonus for very fast sequences
+                                if (timeSinceLastMove < 800) {
+                                    skillBonus += 50;
+                                    comboMessage = `LIGHTNING FAST x${gameState.consecutiveAvoidances}!`;
+                                }
+                            }
+                        }
+                        
+                        // LANE SWITCHING COMBO (left-right-left sequences)
+                        if (gameState.moveSequence.length >= 3) {
+                            const lastThree = gameState.moveSequence.slice(-3);
+                            const lanes = lastThree.map(m => m.lane);
+                            const actions = lastThree.map(m => m.action);
+                            
+                            // Check for lane switching patterns
+                            if (lanes[0] !== lanes[1] && lanes[1] !== lanes[2] && lanes[0] !== lanes[2]) {
+                                // Perfect zigzag pattern!
+                                skillBonus += 100;
+                                comboMessage = 'ZIGZAG MASTER!';
+                                
+                                // Check if it includes different actions (jump + duck + lane switch)
+                                const uniqueActions = [...new Set(actions)];
+                                if (uniqueActions.length >= 2) {
+                                    skillBonus += 75;
+                                    comboMessage = 'MIXED STYLE COMBO!';
+                                }
+                            }
+                        }
+                        
+                        // PERFECT TIMING BONUS (high precision sequences)
+                        if (precision > 0.85) {
+                            gameState.perfectTimingCount++;
+                            if (gameState.perfectTimingCount >= 3) {
+                                skillBonus += 150;
+                                comboMessage = 'PERFECT TIMING STREAK!';
+                                gameState.perfectTimingCount = 0; // Reset for next streak
+                            }
+                        } else {
+                            gameState.perfectTimingCount = 0; // Reset on imperfect timing
+                        }
+                        
+                        // HIGH DIFFICULTY OBSTACLE BONUS
+                        const difficultyBonus = {
+                            'rotatingblade': 40,
+                            'swinginghammer': 50,
+                            'movingwall': 45,
+                            'bouncingball': 35,
+                            'spinninglaser': 60
+                        };
+                        
+                        if (difficultyBonus[obstacle.type]) {
+                            skillBonus += difficultyBonus[obstacle.type];
+                            if (!comboMessage) comboMessage = 'SKILL MOVE!';
+                        }
+                        
+                        // SPEED-BASED DIFFICULTY MULTIPLIER
+                        const speedRatio = gameState.speed / gameState.maxSpeed;
+                        if (speedRatio > 0.7) { // High speed bonus
+                            const speedMultiplier = 1 + speedRatio;
+                            skillBonus = Math.floor(skillBonus * speedMultiplier);
+                            bonusScore = Math.floor(bonusScore * speedMultiplier);
+                            if (comboMessage) comboMessage += ' @HIGH SPEED!';
+                        }
+                        
+                        // Apply skill combo multiplier
+                        if (gameState.consecutiveAvoidances >= 3) {
+                            gameState.skillMultiplier = Math.min(3, 1 + (gameState.consecutiveAvoidances - 2) * 0.5);
+                            skillBonus = Math.floor(skillBonus * gameState.skillMultiplier);
+                        }
+                        
+                        gameState.lastSkillTime = currentTime;
+                        
+                        // ==================== APPLY REWARDS ====================
+                        
+                        const totalBonus = bonusScore + skillBonus;
+                        gameState.score += totalBonus;
+                        
+                        // Show skill combo UI if we got a bonus
+                        if (skillBonus > 0) {
+                            showSkillCombo(skillBonus, comboMessage);
+                        }
                         
                         // Enhanced audio feedback with precision
                         if (precision > 0.8) {
@@ -2186,6 +2415,88 @@
                 } else if (isNearMiss) {
                     // NEAR MISS BONUS!
                     handleNearMiss(obstacle, playerBBox, obstacleBBox);
+                }
+            });
+            
+            // ==================== POWER-UP COLLISION DETECTION ====================
+            
+            gameState.powerUps.forEach((powerUp, index) => {
+                const powerUpBBox = {
+                    min: {
+                        x: powerUp.mesh.position.x - 0.4,
+                        y: powerUp.mesh.position.y - 0.4,
+                        z: powerUp.mesh.position.z - 0.4
+                    },
+                    max: {
+                        x: powerUp.mesh.position.x + 0.4,
+                        y: powerUp.mesh.position.y + 0.4,
+                        z: powerUp.mesh.position.z + 0.4
+                    }
+                };
+                
+                const isCollecting = boundingBoxIntersection(playerBBox, powerUpBBox);
+                
+                if (isCollecting && !powerUp.collected) {
+                    powerUp.collected = true;
+                    scene.remove(powerUp.mesh);
+                    gameState.powerUps.splice(index, 1);
+                    
+                    // Activate the power-up
+                    activatePowerUp(powerUp.type);
+                }
+            });
+            
+            // ==================== COIN COLLISION DETECTION ====================
+            
+            gameState.coins.forEach((coin, index) => {
+                const coinBBox = {
+                    min: {
+                        x: coin.mesh.position.x - 0.3,
+                        y: coin.mesh.position.y - 0.3,
+                        z: coin.mesh.position.z - 0.3
+                    },
+                    max: {
+                        x: coin.mesh.position.x + 0.3,
+                        y: coin.mesh.position.y + 0.3,
+                        z: coin.mesh.position.z + 0.3
+                    }
+                };
+                
+                // Magnet Power-Up Effect
+                if (gameState.magnetActive) {
+                    const magnetRange = 2.5; // Magnet attraction range
+                    const distance = Math.sqrt(
+                        Math.pow(coin.mesh.position.x - player.position.x, 2) +
+                        Math.pow(coin.mesh.position.y - player.position.y, 2) +
+                        Math.pow(coin.mesh.position.z - player.position.z, 2)
+                    );
+                    
+                    if (distance < magnetRange && !coin.collected) {
+                        // Attract coin towards player
+                        const attractionSpeed = 0.15;
+                        const direction = new THREE.Vector3()
+                            .subVectors(player.position, coin.mesh.position)
+                            .normalize()
+                            .multiplyScalar(attractionSpeed);
+                        
+                        coin.mesh.position.add(direction);
+                        
+                        // Visual effect for magnet attraction
+                        if (Math.random() > 0.8) {
+                            createParticleEffect(
+                                coin.mesh.position.clone(),
+                                0x00FFFF,
+                                'magnet'
+                            );
+                        }
+                    }
+                }
+                
+                const isCollecting = boundingBoxIntersection(playerBBox, coinBBox);
+                
+                if (isCollecting && !coin.collected) {
+                    collectCoin(coin);
+                    gameState.coins.splice(index, 1);
                 }
             });
         }
@@ -2332,6 +2643,29 @@
         
         // Enhanced collision handling with type-specific effects
         function handleCollision(obstacle, obstacleBBox) {
+            // Check if shield is active
+            if (gameState.shieldActive) {
+                // Shield absorbs the hit!
+                deactivatePowerUp(); // Remove shield after one hit
+                
+                // Shield absorption effects
+                const shieldPos = player.position.clone();
+                createParticleEffect(shieldPos, 0x00AAFF, 'shield');
+                
+                // Shield audio feedback
+                audioManager.createTone(600, 0.2, 'square');
+                audioManager.createTone(400, 0.3, 'square');
+                
+                // Mild screen flash for shield activation
+                screenShake(0.1, 200);
+                
+                // Show protection message
+                showScorePopup(0, shieldPos, 'PROTECTED!');
+                
+                console.log('Shield absorbed collision!');
+                return; // Exit early - no damage taken
+            }
+            
             // Slow motion for dramatic effect
             startSlowMotion(1000);
             
@@ -2384,6 +2718,796 @@
             // Camera zoom for impact
             cameraZoomEffect(1.25, 400);
         }
+        
+        // ==================== POWER-UP SYSTEM ====================
+        
+        function createPowerUp(type, lane, z) {
+            const powerUpConfig = POWER_UP_TYPES[type];
+            const powerUpGroup = new THREE.Group();
+            
+            // Main power-up body - rotating cube
+            const powerUpGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const powerUpMaterial = new THREE.MeshLambertMaterial({ 
+                color: powerUpConfig.color,
+                emissive: powerUpConfig.color,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.9
+            });
+            const powerUpMesh = new THREE.Mesh(powerUpGeometry, powerUpMaterial);
+            powerUpMesh.position.y = 1.5; // Floating height
+            powerUpMesh.castShadow = true;
+            powerUpGroup.add(powerUpMesh);
+            
+            // Glowing ring around power-up
+            const ringGeometry = new THREE.RingGeometry(0.6, 0.8);
+            const ringMaterial = new THREE.MeshLambertMaterial({ 
+                color: powerUpConfig.color,
+                transparent: true,
+                opacity: 0.5
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.1;
+            powerUpGroup.add(ring);
+            
+            // Particle effect (simulated with small spheres)
+            for (let i = 0; i < 8; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.05);
+                const particleMaterial = new THREE.MeshLambertMaterial({ 
+                    color: powerUpConfig.color,
+                    emissive: powerUpConfig.color,
+                    emissiveIntensity: 0.8
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                const angle = (i / 8) * Math.PI * 2;
+                particle.position.set(
+                    Math.cos(angle) * 1.2,
+                    1.5 + Math.sin(i) * 0.3,
+                    Math.sin(angle) * 1.2
+                );
+                powerUpGroup.add(particle);
+            }
+            
+            powerUpGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            scene.add(powerUpGroup);
+            
+            // Store power-up data
+            const powerUpData = {
+                mesh: powerUpGroup,
+                type: type,
+                lane: lane,
+                z: z,
+                animationTime: 0,
+                collected: false
+            };
+            
+            powerUps.push(powerUpData);
+            return powerUpData;
+        }
+        
+        function createCoin(lane, z, pattern = 'single') {
+            const coinGroup = new THREE.Group();
+            
+            // Main coin geometry
+            const coinGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1);
+            const coinMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFD700,
+                emissive: 0x664400,
+                emissiveIntensity: 0.3
+            });
+            const coinMesh = new THREE.Mesh(coinGeometry, coinMaterial);
+            coinMesh.position.y = 1.2; // Floating height
+            coinMesh.castShadow = true;
+            coinGroup.add(coinMesh);
+            
+            // Glitter effect
+            for (let i = 0; i < 4; i++) {
+                const glitterGeometry = new THREE.SphereGeometry(0.02);
+                const glitterMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0xFFFFFF,
+                    emissive: 0xFFFFFF,
+                    emissiveIntensity: 0.8
+                });
+                const glitter = new THREE.Mesh(glitterGeometry, glitterMaterial);
+                
+                const angle = (i / 4) * Math.PI * 2;
+                glitter.position.set(
+                    Math.cos(angle) * 0.4,
+                    1.2 + Math.sin(i) * 0.1,
+                    Math.sin(angle) * 0.4
+                );
+                coinGroup.add(glitter);
+            }
+            
+            coinGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            scene.add(coinGroup);
+            
+            // Store coin data
+            const coinData = {
+                mesh: coinGroup,
+                lane: lane,
+                z: z,
+                pattern: pattern,
+                animationTime: 0,
+                collected: false
+            };
+            
+            coins.push(coinData);
+            return coinData;
+        }
+        
+        function createCoinPattern(type, baseZ) {
+            switch (type) {
+                case 'line':
+                    // 3 coins in a horizontal line
+                    for (let i = 0; i < 3; i++) {
+                        createCoin(i, baseZ, 'line');
+                    }
+                    break;
+                case 'arc':
+                    // 5 coins in a vertical arc
+                    for (let i = 0; i < 5; i++) {
+                        const lane = Math.floor(Math.random() * 3);
+                        createCoin(lane, baseZ - i * 2, 'arc');
+                    }
+                    break;
+                case 'single':
+                default:
+                    // Single coin
+                    const lane = Math.floor(Math.random() * 3);
+                    createCoin(lane, baseZ, 'single');
+                    break;
+            }
+        }
+        
+        function activatePowerUp(type) {
+            const config = POWER_UP_TYPES[type];
+            
+            // Deactivate any existing power-up
+            if (gameState.activePowerUp) {
+                deactivatePowerUp();
+            }
+            
+            // Activate new power-up
+            gameState.activePowerUp = type;
+            gameState.powerUpTimeRemaining = config.duration;
+            gameState[config.effect] = true;
+            
+            // Visual feedback
+            createParticleEffect(
+                player.position.clone(),
+                config.color,
+                'powerup'
+            );
+            
+            // Audio feedback
+            audioManager.play('powerup');
+            
+            // Screen flash effect
+            screenShake(0.15, 200);
+            
+            // Update UI
+            updatePowerUpUI();
+            
+            console.log(`Activated ${config.name} for ${config.duration/1000} seconds`);
+        }
+        
+        function deactivatePowerUp() {
+            if (!gameState.activePowerUp) return;
+            
+            const config = POWER_UP_TYPES[gameState.activePowerUp];
+            gameState[config.effect] = false;
+            gameState.activePowerUp = null;
+            gameState.powerUpTimeRemaining = 0;
+            
+            // Update UI
+            updatePowerUpUI();
+            
+            console.log(`Deactivated ${config.name}`);
+        }
+        
+        function updatePowerUpUI() {
+            const powerUpDisplay = document.getElementById('powerUpDisplay');
+            const powerUpIcon = document.getElementById('powerUpIcon');
+            const powerUpName = document.getElementById('powerUpName');
+            const powerUpTime = document.getElementById('powerUpTime');
+            
+            if (gameState.activePowerUp) {
+                const config = POWER_UP_TYPES[gameState.activePowerUp];
+                powerUpDisplay.style.display = 'block';
+                powerUpIcon.textContent = config.icon;
+                powerUpName.textContent = config.name;
+                powerUpTime.textContent = Math.ceil(gameState.powerUpTimeRemaining / 1000);
+            } else {
+                powerUpDisplay.style.display = 'none';
+            }
+        }
+        
+        function collectCoin(coinData) {
+            if (coinData.collected) return;
+            
+            coinData.collected = true;
+            scene.remove(coinData.mesh);
+            
+            // Update coin count
+            gameState.collectedCoins++;
+            gameState.totalCoins++;
+            
+            // Handle combo system
+            const currentTime = performance.now();
+            if (currentTime - gameState.lastCoinTime < 2000) { // 2 second combo window
+                gameState.coinCombo++;
+            } else {
+                gameState.coinCombo = 1;
+            }
+            gameState.lastCoinTime = currentTime;
+            
+            // Calculate score with combo multiplier
+            const baseScore = 10;
+            const comboBonus = gameState.coinCombo > 1 ? (gameState.coinCombo - 1) * 5 : 0;
+            const totalScore = baseScore + comboBonus;
+            
+            gameState.score += totalScore;
+            
+            // Show combo UI
+            updateComboUI();
+            
+            // Audio feedback with pitch variation
+            const pitchVariation = 1 + (gameState.coinCombo * 0.1);
+            audioManager.createTone(800 * pitchVariation, 0.1, 'sine');
+            
+            // Particle effect
+            createParticleEffect(
+                coinData.mesh.position.clone(),
+                0xFFD700,
+                'coin'
+            );
+            
+            // Update UI
+            updateCoinUI();
+            
+            console.log(`Collected coin! Combo: ${gameState.coinCombo}, Score: +${totalScore}`);
+        }
+        
+        function updateComboUI() {
+            const comboDisplay = document.getElementById('comboDisplay');
+            const comboMultiplier = document.getElementById('comboMultiplier');
+            
+            if (gameState.coinCombo > 1) {
+                comboDisplay.style.display = 'block';
+                comboMultiplier.textContent = gameState.coinCombo;
+                
+                // Hide after 2 seconds
+                setTimeout(() => {
+                    comboDisplay.style.display = 'none';
+                }, 2000);
+            } else {
+                comboDisplay.style.display = 'none';
+            }
+        }
+        
+        function updateCoinUI() {
+            const coinCount = document.getElementById('coinCount');
+            coinCount.textContent = gameState.collectedCoins;
+        }
+        
+        function updateEnvironmentUI() {
+            const environmentDisplay = document.getElementById('currentEnvironment');
+            if (environmentDisplay) {
+                switch (gameState.currentEnvironment) {
+                    case 'street':
+                        environmentDisplay.innerHTML = '🏙️ Straße';
+                        break;
+                    case 'tunnel_entrance':
+                        environmentDisplay.innerHTML = '🚇 Tunnel Eingang';
+                        break;
+                    case 'tunnel':
+                        environmentDisplay.innerHTML = '🚇 Tunnel';
+                        break;
+                    case 'tunnel_exit':
+                        environmentDisplay.innerHTML = '🌅 Tunnel Ausgang';
+                        break;
+                    default:
+                        environmentDisplay.innerHTML = '🏙️ Straße';
+                }
+            }
+        }
+        
+        function updateDifficultyUI() {
+            const difficultyLevel = document.getElementById('difficultyLevel');
+            if (difficultyLevel) {
+                const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime);
+                
+                if (gameProgress < 0.2) {
+                    difficultyLevel.textContent = 'Leicht';
+                    difficultyLevel.style.color = '#90EE90';
+                } else if (gameProgress < 0.4) {
+                    difficultyLevel.textContent = 'Mittel';
+                    difficultyLevel.style.color = '#FFD700';
+                } else if (gameProgress < 0.6) {
+                    difficultyLevel.textContent = 'Schwer';
+                    difficultyLevel.style.color = '#FFA500';
+                } else if (gameProgress < 0.8) {
+                    difficultyLevel.textContent = 'Extrem';
+                    difficultyLevel.style.color = '#FF4500';
+                } else {
+                    difficultyLevel.textContent = 'Wahnsinn!';
+                    difficultyLevel.style.color = '#FF0000';
+                }
+            }
+        }
+        
+        // ==================== SKILL COMBO SYSTEM ====================
+        
+        function showSkillCombo(bonusPoints, comboMessage) {
+            const skillComboDisplay = document.getElementById('skillComboDisplay');
+            const skillComboCount = document.getElementById('skillComboCount');
+            const skillComboBonus = document.getElementById('skillComboBonus');
+            const skillComboIcon = document.getElementById('skillComboIcon');
+            
+            if (skillComboDisplay) {
+                skillComboDisplay.style.display = 'block';
+                skillComboCount.textContent = gameState.consecutiveAvoidances;
+                skillComboBonus.textContent = `+${bonusPoints}`;
+                
+                // Dynamic icon based on combo type
+                if (comboMessage.includes('ZIGZAG')) {
+                    skillComboIcon.textContent = '⚡';
+                } else if (comboMessage.includes('LIGHTNING')) {
+                    skillComboIcon.textContent = '⚡';
+                } else if (comboMessage.includes('PERFECT')) {
+                    skillComboIcon.textContent = '💎';
+                } else if (comboMessage.includes('RAPID')) {
+                    skillComboIcon.textContent = '🔥';
+                } else {
+                    skillComboIcon.textContent = '⭐';
+                }
+                
+                // Update combo message in UI
+                const comboTextElement = skillComboDisplay.querySelector('div');
+                if (comboTextElement) {
+                    comboTextElement.innerHTML = `<span style="color: #FFD700;">+${bonusPoints} ${comboMessage}</span>`;
+                }
+                
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    skillComboDisplay.style.display = 'none';
+                }, 3000);
+                
+                // Enhanced audio for combos
+                if (bonusPoints > 200) {
+                    audioManager.createTone(880, 0.3, 'sine'); // High achievement sound
+                    audioManager.createTone(660, 0.4, 'sine'); // Chord
+                } else if (bonusPoints > 100) {
+                    audioManager.createTone(660, 0.2, 'sine'); // Medium achievement
+                } else {
+                    audioManager.createTone(440, 0.15, 'sine'); // Basic skill sound
+                }
+                
+                console.log(`SKILL COMBO: ${comboMessage} - +${bonusPoints} points`);
+            }
+        }
+        
+        function trackPlayerMove(moveType, lane = null) {
+            const currentTime = performance.now();
+            const actualLane = lane !== null ? lane : gameState.playerLane;
+            
+            // Track movement for rapid move detection
+            if (gameState.lastAction !== moveType) {
+                const timeSinceLastMove = currentTime - gameState.lastSkillTime;
+                
+                // Award rapid movement bonus (not collision-based)
+                if (timeSinceLastMove < 1000 && gameState.rapidMoveBonus < 5) { // Max 5 rapid moves
+                    gameState.rapidMoveBonus++;
+                    const rapidBonus = gameState.rapidMoveBonus * 10;
+                    gameState.score += rapidBonus;
+                    
+                    // Show rapid move feedback
+                    if (gameState.rapidMoveBonus >= 3) {
+                        showSkillCombo(rapidBonus, `RAPID MOVES x${gameState.rapidMoveBonus}!`);
+                    }
+                } else if (timeSinceLastMove > 2000) {
+                    gameState.rapidMoveBonus = 0; // Reset if too slow
+                }
+                
+                gameState.lastAction = moveType;
+                gameState.lastSkillTime = currentTime;
+            }
+        }
+        
+        // ==================== END SKILL COMBO SYSTEM ====================
+        
+        // ==================== SIMPLIFIED BRIDGE/UNDERPASS SYSTEM ====================
+        
+        function createBridgeSegment(z) {
+            const bridgeGroup = new THREE.Group();
+            
+            // Bridge deck (road above)
+            const bridgeGeometry = new THREE.BoxGeometry(12, 0.5, 10);
+            const bridgeMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+            
+            const bridge = new THREE.Mesh(bridgeGeometry, bridgeMaterial);
+            bridge.position.set(0, 6.5, z);
+            bridgeGroup.add(bridge);
+            
+            // Support pillars
+            const pillarGeometry = new THREE.BoxGeometry(0.8, 6, 0.8);
+            const pillarMaterial = new THREE.MeshLambertMaterial({ color: 0x555555 });
+            
+            for (let x of [-4, 4]) {
+                const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+                pillar.position.set(x, 3, z);
+                bridgeGroup.add(pillar);
+            }
+            
+            // Bridge railings
+            const railingGeometry = new THREE.BoxGeometry(12, 0.3, 0.2);
+            const railingMaterial = new THREE.MeshLambertMaterial({ color: 0x888888 });
+            
+            for (let side of [-4.5, 4.5]) {
+                const railing = new THREE.Mesh(railingGeometry, railingMaterial);
+                railing.position.set(0, 7.2, z + side);
+                bridgeGroup.add(railing);
+            }
+            
+            // Cars on bridge (decorative)
+            if (Math.random() > 0.7) {
+                const carGeometry = new THREE.BoxGeometry(1.5, 0.5, 3);
+                const carMaterial = new THREE.MeshLambertMaterial({ 
+                    color: Math.random() > 0.5 ? 0xFF0000 : 0x0000FF 
+                });
+                
+                const car = new THREE.Mesh(carGeometry, carMaterial);
+                car.position.set(
+                    (Math.random() - 0.5) * 8, 
+                    7, 
+                    z + (Math.random() - 0.5) * 8
+                );
+                bridgeGroup.add(car);
+            }
+            
+            return bridgeGroup;
+        }
+        
+        function createSimpleCoin(lane, z) {
+            const coinGroup = new THREE.Group();
+            
+            // Main coin
+            const coinGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 12);
+            const coinMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFD700,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            const coin = new THREE.Mesh(coinGeometry, coinMaterial);
+            coin.rotation.z = Math.PI / 2; // Flat orientation
+            coinGroup.add(coin);
+            
+            // Simple glow effect
+            const glowGeometry = new THREE.SphereGeometry(0.25, 8, 8);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFF00,
+                transparent: true,
+                opacity: 0.3
+            });
+            
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            coinGroup.add(glow);
+            
+            // Position
+            const LANE_POSITIONS = [-2, 0, 2];
+            coinGroup.position.set(LANE_POSITIONS[lane], 1, z);
+            
+            scene.add(coinGroup);
+            
+            return {
+                mesh: coinGroup,
+                type: 'coin',
+                lane: lane,
+                z: z,
+                collected: false,
+                animationTime: 0,
+                baseY: 1
+            };
+        }
+        
+        function createSimplePowerUp(type, lane, z) {
+            const powerUpGroup = new THREE.Group();
+            
+            // Main power-up crystal
+            const crystalGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.4);
+            const crystalMaterial = new THREE.MeshBasicMaterial({ 
+                color: POWER_UP_TYPES[type].color,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+            powerUpGroup.add(crystal);
+            
+            // Power-up glow
+            const glowGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: POWER_UP_TYPES[type].color,
+                transparent: true,
+                opacity: 0.2
+            });
+            
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            powerUpGroup.add(glow);
+            
+            // Position
+            const LANE_POSITIONS = [-2, 0, 2];
+            powerUpGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            
+            scene.add(powerUpGroup);
+            
+            return {
+                mesh: powerUpGroup,
+                type: type,
+                lane: lane,
+                z: z,
+                collected: false,
+                animationTime: 0,
+                baseY: 1.5
+            };
+        }
+        
+        function createTunnelSegment(z) {
+            const tunnelGroup = new THREE.Group();
+            
+            // Tunnel walls (left and right)
+            const wallGeometry = new THREE.BoxGeometry(0.3, 6, 8);
+            const wallMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x444444,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            // Left wall
+            const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
+            leftWall.position.set(-4, 3, z);
+            tunnelGroup.add(leftWall);
+            
+            // Right wall  
+            const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
+            rightWall.position.set(4, 3, z);
+            tunnelGroup.add(rightWall);
+            
+            // Tunnel ceiling
+            const ceilingGeometry = new THREE.BoxGeometry(8, 0.3, 8);
+            const ceilingMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x333333,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+            ceiling.position.set(0, 5.5, z);
+            tunnelGroup.add(ceiling);
+            
+            // Tunnel floor stripes (more industrial look)
+            const stripeGeometry = new THREE.BoxGeometry(8, 0.05, 0.2);
+            const stripeMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFF00 });
+            
+            for (let i = 0; i < 3; i++) {
+                const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+                stripe.position.set(0, 0.05, z + (i * 2 - 2));
+                tunnelGroup.add(stripe);
+            }
+            
+            // Tunnel support beams
+            const beamGeometry = new THREE.BoxGeometry(0.1, 5.5, 0.2);
+            const beamMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+            
+            for (let side of [-3.8, 3.8]) {
+                const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+                beam.position.set(side, 2.75, z);
+                tunnelGroup.add(beam);
+            }
+            
+            // Add tunnel lighting
+            const lightGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const lightMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFAA,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const tunnelLight = new THREE.Mesh(lightGeometry, lightMaterial);
+            tunnelLight.position.set(0, 5, z);
+            tunnelGroup.add(tunnelLight);
+            
+            // Add light glow effect
+            const glowGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFAA,
+                transparent: true,
+                opacity: 0.2
+            });
+            
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.set(0, 5, z);
+            tunnelGroup.add(glow);
+            
+            return tunnelGroup;
+        }
+        
+        function createTunnelEntrance(z) {
+            const entranceGroup = new THREE.Group();
+            
+            // Tunnel entrance arch
+            const archGeometry = new THREE.CylinderGeometry(4.5, 4.5, 0.5, 16, 1, false, 0, Math.PI);
+            const archMaterial = new THREE.MeshLambertMaterial({ color: 0x555555 });
+            
+            const arch = new THREE.Mesh(archGeometry, archMaterial);
+            arch.position.set(0, 4.5, z);
+            arch.rotation.z = Math.PI;
+            entranceGroup.add(arch);
+            
+            // Entrance signs
+            const signGeometry = new THREE.BoxGeometry(2, 0.5, 0.1);
+            const signMaterial = new THREE.MeshLambertMaterial({ color: 0x2E86AB });
+            
+            const sign = new THREE.Mesh(signGeometry, signMaterial);
+            sign.position.set(0, 6, z);
+            entranceGroup.add(sign);
+            
+            // Warning lights
+            for (let x of [-1.5, 1.5]) {
+                const warningLight = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.15, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: 0xFF4500 })
+                );
+                warningLight.position.set(x, 5.5, z);
+                entranceGroup.add(warningLight);
+            }
+            
+            return entranceGroup;
+        }
+        
+        function checkBridgeSpawning() {
+            const currentTime = performance.now();
+            const gameTime = (currentTime - gameState.gameStartTime);
+            
+            // Progressive bridge spawning (longer intervals at start, shorter later)
+            if (gameTime > gameState.nextTunnelTime) {
+                const bridge = createBridgeSegment(-40);
+                scene.add(bridge);
+                gameState.tunnelSegments.push(bridge);
+                
+                // Audio effect for bridge
+                audioManager.createTone(300, 0.2, 'sine');
+                
+                // Progressive bridge frequency
+                const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime);
+                const baseInterval = 25000; // 25 seconds at start
+                const minInterval = 12000; // 12 seconds at end
+                const currentInterval = baseInterval - (baseInterval - minInterval) * gameProgress;
+                const randomVariation = Math.random() * 5000; // ±2.5 seconds
+                
+                gameState.nextTunnelTime = gameTime + currentInterval + randomVariation;
+                
+                console.log(`Bridge spawned! Next in ${(currentInterval + randomVariation)/1000}s`);
+            }
+        }
+        
+        function startTunnelTransition() {
+            console.log('Entering tunnel...');
+            gameState.currentEnvironment = 'tunnel_entrance';
+            gameState.environmentTransition = true;
+            gameState.tunnelStartTime = performance.now();
+            
+            // Update UI
+            updateEnvironmentUI();
+            
+            // Create tunnel entrance
+            const entrance = createTunnelEntrance(-25);
+            scene.add(entrance);
+            gameState.tunnelSegments.push(entrance);
+            
+            // Audio effect for tunnel entrance
+            audioManager.createTone(200, 0.5, 'sine');
+            
+            // Dim ambient lighting
+            gameState.ambientLightIntensity = 0.3;
+            if (scene.children.find(child => child.type === 'AmbientLight')) {
+                scene.children.find(child => child.type === 'AmbientLight').intensity = 0.3;
+            }
+            
+            // Create initial tunnel segments
+            for (let i = 0; i < 8; i++) {
+                const segment = createTunnelSegment(-30 - (i * 8));
+                scene.add(segment);
+                gameState.tunnelSegments.push(segment);
+            }
+            
+            // Transition to full tunnel after 2 seconds
+            setTimeout(() => {
+                gameState.currentEnvironment = 'tunnel';
+                gameState.environmentTransition = false;
+                updateEnvironmentUI();
+                console.log('Now in tunnel!');
+            }, 2000);
+        }
+        
+        function exitTunnelTransition() {
+            console.log('Exiting tunnel...');
+            gameState.currentEnvironment = 'tunnel_exit';
+            gameState.environmentTransition = true;
+            gameState.lastTunnelExit = performance.now();
+            
+            // Update UI
+            updateEnvironmentUI();
+            
+            // Schedule next tunnel
+            const currentTime = performance.now();
+            const gameTime = (currentTime - gameState.gameStartTime);
+            gameState.nextTunnelTime = gameTime + gameState.tunnelCooldown;
+            
+            // Audio effect for tunnel exit
+            audioManager.createTone(400, 0.3, 'sine');
+            
+            // Restore ambient lighting gradually
+            gameState.ambientLightIntensity = 1.0;
+            if (scene.children.find(child => child.type === 'AmbientLight')) {
+                scene.children.find(child => child.type === 'AmbientLight').intensity = 1.0;
+            }
+            
+            // Clean up tunnel segments gradually
+            setTimeout(() => {
+                cleanupTunnelSegments();
+                gameState.currentEnvironment = 'street';
+                gameState.environmentTransition = false;
+                updateEnvironmentUI();
+                console.log('Back to street!');
+            }, 3000);
+        }
+        
+        function updateBridgeEnvironment(deltaTime) {
+            // Move bridge segments
+            gameState.tunnelSegments.forEach((segment, index) => {
+                segment.position.z += visualSpeed;
+                
+                // Remove segments that have passed the player
+                if (segment.position.z > 15) {
+                    scene.remove(segment);
+                    gameState.tunnelSegments.splice(index, 1);
+                }
+            });
+            
+            // Animate cars on bridges
+            gameState.tunnelSegments.forEach(segment => {
+                segment.children.forEach(child => {
+                    if (child.material && child.material.color && 
+                        (child.material.color.r > 0.8 || child.material.color.b > 0.8)) { // Car objects
+                        child.position.x += (Math.random() - 0.5) * 0.01; // Slight car movement
+                    }
+                });
+            });
+        }
+        
+        function cleanupTunnelSegments() {
+            gameState.tunnelSegments.forEach(segment => {
+                scene.remove(segment);
+            });
+            gameState.tunnelSegments = [];
+        }
+        
+        function getTunnelSpecificObstacles() {
+            // Tunnel-specific obstacles that make sense in confined space
+            return [
+                'lowbarrier', 'duckbeam', 'wallgap', 'spikes',
+                'rotatingblade', 'swinginghammer' // Moving obstacles work well in tunnels
+            ];
+        }
+        
+        // ==================== END TUNNEL ENVIRONMENT SYSTEM ====================
+        
+        // ==================== END POWER-UP SYSTEM ====================
         
         // Near-miss detection and bonus system
         function handleNearMiss(obstacle, playerBBox, obstacleBBox) {
@@ -2771,12 +3895,34 @@
                     }
                 });
                 
-                // Spawn obstacles - increase frequency with speed
-                const baseSpawnRate = 0.012;
-                const spawnSpeedMultiplier = 1 + (gameState.speed / gameState.maxSpeed) * 1.5; // Up to 2.5x spawn rate
-                const spawnRate = baseSpawnRate * spawnSpeedMultiplier;
+                // ==================== BRIDGE SPAWNING CHECK ====================
+                checkBridgeSpawning();
+                
+                // ==================== ENVIRONMENT-SPECIFIC OBSTACLE SPAWNING ====================
+                
+                // ==================== PROGRESSIVE DIFFICULTY SYSTEM ====================
+                
+                // Calculate game progress (0 to 1)
+                const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 at start, 1 at end
+                
+                // Progressive obstacle spawning - starts low, increases smoothly
+                const baseSpawnRate = 0.005; // Lower starting rate
+                const maxSpawnRate = 0.018; // Maximum rate at end
+                const progressiveSpawnRate = baseSpawnRate + (maxSpawnRate - baseSpawnRate) * Math.pow(gameProgress, 1.2);
+                
+                // Add speed-based multiplier on top of progression
+                const speedRatio = gameState.speed / gameState.maxSpeed;
+                const spawnSpeedMultiplier = 1 + speedRatio * 0.3; // Less aggressive speed scaling
+                
+                let spawnRate = progressiveSpawnRate * spawnSpeedMultiplier;
+                
+                // Reduce spawn rate during bridge transitions
+                if (gameState.environmentTransition) {
+                    spawnRate *= 0.3;
+                }
                 
                 if (Math.random() < spawnRate) {
+                    // Simplified obstacle spawning
                     const jumpObstacles = ['lowbarrier', 'jumpblock', 'hurdleset'];
                     const duckObstacles = ['highbarrier', 'duckbeam', 'wallgap'];
                     const flexibleObstacles = ['spikes'];
@@ -2784,28 +3930,181 @@
                     
                     let type;
                     const rand = Math.random();
-                    const speedRatio = gameState.speed / gameState.maxSpeed;
                     
-                    // Increase moving obstacle chance as speed increases
-                    const movingChance = 0.05 + speedRatio * 0.15; // 5% to 20% chance
+                    // Progressive difficulty for obstacle types
+                    // Early game: mostly simple obstacles
+                    // Late game: more complex moving obstacles
+                    let movingChance, complexChance;
+                    
+                    if (gameProgress < 0.3) {
+                        // First 30% of game: mostly basic obstacles
+                        movingChance = 0.02; // Very few moving obstacles
+                        complexChance = 0.1; // Few complex obstacles
+                    } else if (gameProgress < 0.6) {
+                        // Middle 30%: gradually introduce moving obstacles
+                        movingChance = 0.02 + (gameProgress - 0.3) * 0.3; // 2% to 11%
+                        complexChance = 0.3;
+                    } else {
+                        // Final 40%: more challenging obstacles
+                        movingChance = 0.11 + (gameProgress - 0.6) * 0.225; // 11% to 20%
+                        complexChance = 0.5;
+                    }
                     
                     if (rand < movingChance) {
-                        // Moving obstacles (more frequent at higher speeds)
+                        // Moving obstacles (progressive introduction)
                         type = movingObstacles[Math.floor(Math.random() * movingObstacles.length)];
-                    } else if (rand < 0.4 + movingChance) {
-                        // Jump obstacles
+                    } else if (rand < movingChance + complexChance) {
+                        // Complex static obstacles (hurdleset, highbarrier)
+                        const complexObstacles = ['hurdleset', 'highbarrier'];
+                        type = complexObstacles[Math.floor(Math.random() * complexObstacles.length)];
+                    } else if (rand < movingChance + complexChance + 0.3) {
+                        // Jump obstacles (basic)
                         type = jumpObstacles[Math.floor(Math.random() * jumpObstacles.length)];
-                    } else if (rand < 0.8 + movingChance) {
-                        // Duck obstacles
+                    } else if (rand < movingChance + complexChance + 0.6) {
+                        // Duck obstacles (basic)
                         type = duckObstacles[Math.floor(Math.random() * duckObstacles.length)];
                     } else {
-                        // Flexible obstacles
+                        // Flexible obstacles (easiest)
                         type = flexibleObstacles[Math.floor(Math.random() * flexibleObstacles.length)];
                     }
                     
                     const lane = Math.floor(Math.random() * 3);
                     createObstacle(type, lane, -30);
                 }
+                
+                // ==================== PROGRESSIVE POWER-UP & COIN SPAWNING ====================
+                
+                // Progressive Power-Up spawning (rare at start, more frequent later)
+                const basePowerUpRate = 0.001; // Very low at start
+                const maxPowerUpRate = 0.006; // Higher at end
+                const progressivePowerUpRate = basePowerUpRate + (maxPowerUpRate - basePowerUpRate) * Math.pow(gameProgress, 1.5);
+                
+                if (Math.random() < progressivePowerUpRate && !gameState.activePowerUp) {
+                    const powerUpTypes = Object.keys(POWER_UP_TYPES);
+                    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                    const lane = Math.floor(Math.random() * 3);
+                    
+                    const powerUp = createSimplePowerUp(randomType, lane, -35);
+                    gameState.powerUps.push(powerUp);
+                }
+                
+                // Progressive Coin spawning (few at start, many later)
+                const baseCoinRate = 0.003; // Low starting rate
+                const maxCoinRate = 0.015; // Higher end rate
+                const progressiveCoinRate = baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1);
+                
+                if (Math.random() < progressiveCoinRate) {
+                    // Progressive coin pattern complexity
+                    let pattern;
+                    const patternRand = Math.random();
+                    
+                    if (gameProgress < 0.3) {
+                        // Early game: mostly single coins
+                        pattern = patternRand < 0.8 ? 'single' : 'line';
+                    } else if (gameProgress < 0.6) {
+                        // Mid game: introduce more patterns
+                        if (patternRand < 0.5) {
+                            pattern = 'single';
+                        } else if (patternRand < 0.8) {
+                            pattern = 'line';
+                        } else {
+                            pattern = 'arc';
+                        }
+                    } else {
+                        // Late game: more complex patterns, more rewards
+                        if (patternRand < 0.3) {
+                            pattern = 'single';
+                        } else if (patternRand < 0.6) {
+                            pattern = 'line';
+                        } else {
+                            pattern = 'arc';
+                        }
+                    }
+                    
+                    if (pattern === 'single') {
+                        const lane = Math.floor(Math.random() * 3);
+                        const coin = createSimpleCoin(lane, -35);
+                        gameState.coins.push(coin);
+                    } else if (pattern === 'line') {
+                        // Spawn coins in a line across lanes
+                        for (let lane = 0; lane < 3; lane++) {
+                            const coin = createSimpleCoin(lane, -35 - (lane * 2)); // Stagger them slightly
+                            gameState.coins.push(coin);
+                        }
+                    } else if (pattern === 'arc') {
+                        // Spawn coins in arc pattern - more generous in late game
+                        const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
+                        lanes.forEach((lane, index) => {
+                            const coin = createSimpleCoin(lane, -35 - (index * 1.5));
+                            gameState.coins.push(coin);
+                        });
+                    }
+                }
+                
+                // Update Power-Ups
+                gameState.powerUps.forEach((powerUp, index) => {
+                    powerUp.mesh.position.z += visualSpeed;
+                    powerUp.z = powerUp.mesh.position.z;
+                    
+                    // Remove if passed player
+                    if (powerUp.z > 10) {
+                        scene.remove(powerUp.mesh);
+                        gameState.powerUps.splice(index, 1);
+                    }
+                    
+                    // Animate power-up rotation and floating
+                    powerUp.animationTime += deltaTime * 0.001;
+                    powerUp.mesh.rotation.y += 0.02;
+                    powerUp.mesh.position.y = powerUp.baseY + Math.sin(powerUp.animationTime * 3) * 0.3;
+                    
+                    // Update particle effects
+                    if (powerUp.particles) {
+                        powerUp.particles.rotation.y += 0.01;
+                    }
+                });
+                
+                // Update Coins
+                gameState.coins.forEach((coin, index) => {
+                    coin.mesh.position.z += visualSpeed;
+                    coin.z = coin.mesh.position.z;
+                    
+                    // Remove if passed player
+                    if (coin.z > 10) {
+                        scene.remove(coin.mesh);
+                        gameState.coins.splice(index, 1);
+                    }
+                    
+                    // Animate coin rotation and subtle floating
+                    coin.animationTime += deltaTime * 0.001;
+                    coin.mesh.rotation.y += 0.05; // Spin faster than power-ups
+                    coin.mesh.position.y = coin.baseY + Math.sin(coin.animationTime * 4) * 0.1;
+                    
+                    // Update glitter effects
+                    if (coin.glitter) {
+                        coin.glitter.rotation.y -= 0.02; // Counter-rotate
+                        coin.glitter.children.forEach((particle, pIndex) => {
+                            particle.rotation.x += 0.01;
+                            particle.rotation.z += 0.01;
+                        });
+                    }
+                });
+                
+                // Handle Power-Up Time Remaining
+                if (gameState.activePowerUp && gameState.powerUpTimeRemaining > 0) {
+                    gameState.powerUpTimeRemaining -= deltaTime;
+                    if (gameState.powerUpTimeRemaining <= 0) {
+                        deactivatePowerUp();
+                    }
+                    updatePowerUpUI();
+                }
+                
+                // ==================== END POWER-UP & COIN SPAWNING ====================
+                
+                // ==================== BRIDGE ENVIRONMENT UPDATE ====================
+                
+                updateBridgeEnvironment(deltaTime);
+                
+                // ==================== END BRIDGE ENVIRONMENT UPDATE ====================
                 
                 // Update camera with shake effect
                 const baseX = player.position.x * 0.3;
@@ -2836,7 +4135,13 @@
                 
                 // Progressive speed increase - exponential curve for dramatic effect
                 const timeProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 to 1
-                const speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
+                let speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
+                
+                // Apply Speed Boost Power-Up multiplier
+                if (gameState.speedBoostActive) {
+                    speedMultiplier *= 1.5; // 50% speed increase
+                }
+                
                 gameState.speed = gameState.baseSpeed * speedMultiplier;
                 gameState.speed = Math.min(gameState.speed, gameState.maxSpeed);
                 
