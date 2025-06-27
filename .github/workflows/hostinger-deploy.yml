@@ -115,7 +115,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./deploy/
-        server-dir: /domains/ki-revolution.at/public_html/subwayrunner/
+        server-dir: /domains/ki-revolution.at/public_html/
         dry-run: false
         log-level: verbose
         exclude: |
@@ -130,7 +130,7 @@ jobs:
         echo "🎯 SubwayRunner 3D Deployment completed successfully!"
         echo ""
         echo "🌐 Game is now live at:"
-        echo "https://ki-revolution.at/subwayrunner/"
+        echo "https://ki-revolution.at/"
         echo ""
         echo "🎮 Features deployed:"
         echo "• ✅ Progressive Difficulty System (5 levels)"
