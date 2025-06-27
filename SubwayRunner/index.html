@@ -2137,14 +2137,42 @@
                 // Check for actual collision using 3D bounding box intersection
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
-                // Debug duck obstacles specifically
-                if (obstacle.type === 'duckbeam') {
-                    console.log(`DUCKBEAM DEBUG:
+                // ENHANCED DUCK COLLISION DETECTION
+                if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier') {
+                    console.log(`🔍 DUCK OBSTACLE CHECK:
+                        Type: ${obstacle.type}
                         Action: ${gameState.playerAction}
                         Player Y: ${gameState.playerY}
                         Player BBox: min(${playerBBox.min.x.toFixed(2)}, ${playerBBox.min.y.toFixed(2)}, ${playerBBox.min.z.toFixed(2)}) max(${playerBBox.max.x.toFixed(2)}, ${playerBBox.max.y.toFixed(2)}, ${playerBBox.max.z.toFixed(2)})
                         Obstacle BBox: min(${obstacleBBox.min.x.toFixed(2)}, ${obstacleBBox.min.y.toFixed(2)}, ${obstacleBBox.min.z.toFixed(2)}) max(${obstacleBBox.max.x.toFixed(2)}, ${obstacleBBox.max.y.toFixed(2)}, ${obstacleBBox.max.z.toFixed(2)})
                         isColliding: ${isColliding}`);
+                    
+                    // FORCE collision detection for duck obstacles using simplified logic
+                    const playerX = LANE_POSITIONS[gameState.playerLane];
+                    const obstacleX = obstacle.mesh.position.x;
+                    const obstacleZ = obstacle.mesh.position.z;
+                    
+                    // Check if player is in same lane (X axis)
+                    const inSameLane = Math.abs(playerX - obstacleX) < 1.0;
+                    
+                    // Check if obstacle is close enough in Z direction (approaching or passing)
+                    const inCollisionZone = obstacleZ > -2 && obstacleZ < 2;
+                    
+                    // Check if player is too high (not ducking properly)
+                    const playerHeight = gameState.playerAction === 'ducking' ? 0.6 : 1.5;
+                    const obstacleHeight = 1.8; // Duck obstacles are at this height
+                    const needsToDuck = playerHeight > 1.0; // If player is taller than 1.0, must duck
+                    
+                    console.log(`🎯 Duck Logic: inSameLane=${inSameLane}, inCollisionZone=${inCollisionZone}, needsToDuck=${needsToDuck}, playerHeight=${playerHeight}`);
+                    
+                    if (inSameLane && inCollisionZone && needsToDuck) {
+                        console.log(`💥 DUCK COLLISION TRIGGERED! Player failed to duck.`);
+                        handleCollision(obstacle, obstacleBBox);
+                        return; // Exit after collision
+                    } else if (inSameLane && inCollisionZone && !needsToDuck) {
+                        console.log(`✅ DUCK SUCCESS! Player ducked properly.`);
+                        // Give bonus points for successful ducking (handled in avoidance logic)
+                    }
                 }
                 
                 // Near-miss detection (close but not colliding)
