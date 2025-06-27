@@ -550,9 +550,9 @@
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
 
-        // Supabase Configuration - Disabled for now to fix startup issue
-        const SUPABASE_URL = 'https://xyzcompany.supabase.co' // Replace with your URL
-        const SUPABASE_ANON_KEY = 'your-anon-key-here' // Replace with your anon key
+        // Supabase Configuration - Using working credentials
+        const SUPABASE_URL = 'https://umvrurelsxpxmyzcvrcd.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdnJ1cmVsc3hweG15emN2cmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ5OTYsImV4cCI6MjA1MDkxMDk5Nn0.xpBgJ0BQN86JqhNtKzKNl1kchO1IU_oXI7SYpgfLBJU'
         
         // Initialize Supabase client
         let supabase = null;
@@ -560,8 +560,13 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // Disable Supabase for now to fix the startup issue
-        console.log('Supabase disabled for debugging - running in offline mode only');
+        // Initialize Supabase connection
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase initialized successfully');
+        } catch (error) {
+            console.log('⚠️ Supabase initialization failed, using offline mode:', error);
+        }
 
         // Highscore Management System
         class HighscoreManager {
