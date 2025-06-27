@@ -2137,6 +2137,16 @@
                 // Check for actual collision using 3D bounding box intersection
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
+                // Debug duck obstacles specifically
+                if (obstacle.type === 'duckbeam') {
+                    console.log(`DUCKBEAM DEBUG:
+                        Action: ${gameState.playerAction}
+                        Player Y: ${gameState.playerY}
+                        Player BBox: min(${playerBBox.min.x.toFixed(2)}, ${playerBBox.min.y.toFixed(2)}, ${playerBBox.min.z.toFixed(2)}) max(${playerBBox.max.x.toFixed(2)}, ${playerBBox.max.y.toFixed(2)}, ${playerBBox.max.z.toFixed(2)})
+                        Obstacle BBox: min(${obstacleBBox.min.x.toFixed(2)}, ${obstacleBBox.min.y.toFixed(2)}, ${obstacleBBox.min.z.toFixed(2)}) max(${obstacleBBox.max.x.toFixed(2)}, ${obstacleBBox.max.y.toFixed(2)}, ${obstacleBBox.max.z.toFixed(2)})
+                        isColliding: ${isColliding}`);
+                }
+                
                 // Near-miss detection (close but not colliding)
                 const nearMissDistance = 0.3; // Units for near-miss threshold
                 const isNearMiss = !isColliding && boundingBoxDistance(playerBBox, obstacleBBox) < nearMissDistance;
