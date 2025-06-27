@@ -1,4 +1,4 @@
-name: Deploy SubwayRunner 3D to Hostinger
+name: Deploy PushUp Panic to Hostinger
 
 on:
   push:
@@ -20,13 +20,16 @@ jobs:
         
     - name: Prepare Production Files
       run: |
-        echo "🚀 Preparing SubwayRunner 3D for production..."
+        echo "🚀 Preparing PushUp Panic for production..."
+        
+        # Copy production HTML as main index
+        cp SubwayRunner/index.html index.html
         
         # Create deployment directory
         mkdir -p deploy
         
-        # Copy SubwayRunner main game file
-        cp SubwayRunner/index.html deploy/
+        # Copy all necessary files
+        cp index.html deploy/
         
         # Create .htaccess for production security and performance
         cat > deploy/.htaccess << 'EOF'
@@ -112,7 +115,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./deploy/
-        server-dir: /public_html/pushup-panic/
+        server-dir: /domains/ki-revolution.at/public_html/subwayrunner/
         dry-run: false
         log-level: verbose
         exclude: |
@@ -127,7 +130,7 @@ jobs:
         echo "🎯 SubwayRunner 3D Deployment completed successfully!"
         echo ""
         echo "🌐 Game is now live at:"
-        echo "https://aiworkflows.at/pushup-panic/"
+        echo "https://ki-revolution.at/subwayrunner/"
         echo ""
         echo "🎮 Features deployed:"
         echo "• ✅ Progressive Difficulty System (5 levels)"
