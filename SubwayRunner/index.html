@@ -300,11 +300,14 @@
 
             async preloadBackgroundMusic() {
                 try {
-                    // Try to load background music file
+                    // Try to load background music file (multiple formats)
                     const musicPaths = [
                         'sounds/background/background.mp3',
+                        'sounds/background/background.wav',
                         'sounds/background/game-music.mp3',
-                        'sounds/background/subway-theme.mp3'
+                        'sounds/background/game-music.wav',
+                        'sounds/background/subway-theme.mp3',
+                        'sounds/background/subway-theme.wav'
                     ];
                     
                     for (let path of musicPaths) {
