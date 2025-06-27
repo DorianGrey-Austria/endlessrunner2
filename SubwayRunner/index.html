@@ -1381,11 +1381,121 @@
                     obstacleGroup.add(movingWall);
                     height = 2;
                     break;
+                    
+                case 'bouncingball':
+                    // NEW: Bouncing ball obstacle - bounces up and down
+                    const ballGroup = new THREE.Group();
+                    
+                    // Main bouncing ball
+                    const ballGeometry = new THREE.SphereGeometry(0.6);
+                    const ballMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xFF6B35,
+                        emissive: 0x331100
+                    });
+                    const bouncingBall = new THREE.Mesh(ballGeometry, ballMaterial);
+                    bouncingBall.position.y = 1.5; // Starting height
+                    bouncingBall.castShadow = true;
+                    ballGroup.add(bouncingBall);
+                    
+                    // Shadow indicator on ground
+                    const shadowGeometry = new THREE.CircleGeometry(0.4);
+                    const shadowMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x000000,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const ballShadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+                    ballShadow.rotation.x = -Math.PI / 2;
+                    ballShadow.position.y = 0.01; // Just above ground
+                    ballGroup.add(ballShadow);
+                    
+                    // Warning ring around bounce area
+                    const ringGeometry = new THREE.RingGeometry(0.8, 1.0);
+                    const ringMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xFFFF00,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    const warningRing = new THREE.Mesh(ringGeometry, ringMaterial);
+                    warningRing.rotation.x = -Math.PI / 2;
+                    warningRing.position.y = 0.02;
+                    ballGroup.add(warningRing);
+                    
+                    obstacleGroup.add(ballGroup);
+                    height = 3; // Max bounce height
+                    break;
+                    
+                case 'spinninglaser':
+                    // NEW: Spinning laser beam obstacle
+                    const laserGroup = new THREE.Group();
+                    
+                    // Central hub
+                    const laserHubGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.6);
+                    const laserHubMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x333333,
+                        emissive: 0x110011
+                    });
+                    const laserHub = new THREE.Mesh(laserHubGeometry, laserHubMaterial);
+                    laserHub.position.y = 1.2;
+                    laserHub.castShadow = true;
+                    laserGroup.add(laserHub);
+                    
+                    // Spinning laser beam (multiple segments for effect)
+                    const laserBeamGroup = new THREE.Group();
+                    for (let i = 0; i < 2; i++) {
+                        const beamGeometry = new THREE.BoxGeometry(3, 0.1, 0.1);
+                        const beamMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xFF0044,
+                            emissive: 0x660022,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const laserBeam = new THREE.Mesh(beamGeometry, beamMaterial);
+                        laserBeam.position.y = 1.2;
+                        laserBeam.rotation.y = i * Math.PI; // 180 degrees apart
+                        laserBeam.castShadow = true;
+                        laserBeamGroup.add(laserBeam);
+                        
+                        // Add glowing effect with smaller inner beam
+                        const innerBeamGeometry = new THREE.BoxGeometry(3, 0.05, 0.05);
+                        const innerBeamMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xFFFFFF,
+                            emissive: 0xFF0044
+                        });
+                        const innerBeam = new THREE.Mesh(innerBeamGeometry, innerBeamMaterial);
+                        innerBeam.position.copy(laserBeam.position);
+                        innerBeam.rotation.copy(laserBeam.rotation);
+                        laserBeamGroup.add(innerBeam);
+                    }
+                    
+                    laserGroup.add(laserBeamGroup);
+                    
+                    // Warning lights at corners
+                    for (let j = 0; j < 4; j++) {
+                        const angle = (j * Math.PI) / 2;
+                        const lightGeometry = new THREE.SphereGeometry(0.08);
+                        const lightMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xFF0000,
+                            emissive: 0x440000
+                        });
+                        const warningLight = new THREE.Mesh(lightGeometry, lightMaterial);
+                        warningLight.position.set(
+                            Math.cos(angle) * 1.8,
+                            0.2,
+                            Math.sin(angle) * 1.8
+                        );
+                        laserGroup.add(warningLight);
+                    }
+                    
+                    obstacleGroup.add(laserGroup);
+                    height = 1.4; // Laser height
+                    break;
             }
             
             // Für einfache Hindernisse (nicht die komplexen oder neuen Typen)
             if (type !== 'hurdleset' && type !== 'wallgap' && 
-                type !== 'rotatingblade' && type !== 'swinginghammer' && type !== 'movingwall') {
+                type !== 'rotatingblade' && type !== 'swinginghammer' && type !== 'movingwall' &&
+                type !== 'bouncingball' && type !== 'spinninglaser') {
                 const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
                 obstacle.castShadow = true;
                 
@@ -1432,6 +1542,14 @@
                 case 'movingwall':
                     obstacleData.movementRange = 3; // Movement range across lanes
                     obstacleData.movementSpeed = 1.5 + Math.random() * 0.5;
+                    break;
+                case 'bouncingball':
+                    obstacleData.bounceHeight = 2.5; // Max bounce height
+                    obstacleData.bounceSpeed = 3 + Math.random() * 1.5; // Bounce frequency
+                    break;
+                case 'spinninglaser':
+                    obstacleData.rotationSpeed = 2 + Math.random() * 1.5; // Laser spin speed
+                    obstacleData.pulseSpeed = 4; // Warning light pulse
                     break;
             }
             
@@ -1986,6 +2104,33 @@
                                 avoidanceType = 'jump';
                             }
                             break;
+                            
+                        case 'bouncingball':
+                            // Bouncing ball - timing-based avoidance or ducking
+                            const ballHeight = 0.6 + Math.abs(Math.sin(obstacle.animationTime * obstacle.bounceSpeed)) * obstacle.bounceHeight;
+                            
+                            if (ballHeight < 0.8) {
+                                // Ball is low - can run through
+                                canAvoid = true;
+                                avoidanceType = 'timing';
+                            } else if (gameState.playerAction === 'ducking' && ballHeight > 1.5) {
+                                // Ball is high, player is ducking
+                                canAvoid = true;
+                                avoidanceType = 'duck';
+                            } else if (gameState.playerAction === 'jumping' && ballHeight < 1.2 && playerBBox.min.y > ballHeight + 0.3) {
+                                // Ball is medium height, player jumps over
+                                canAvoid = true;
+                                avoidanceType = 'jump';
+                            }
+                            break;
+                            
+                        case 'spinninglaser':
+                            // Spinning laser - only ducking helps
+                            if (gameState.playerAction === 'ducking' && playerBBox.max.y < 1.1) {
+                                canAvoid = true;
+                                avoidanceType = 'duck';
+                            }
+                            break;
                     }
                     
                     if (canAvoid) {
@@ -2136,6 +2281,21 @@
                     // Moving wall uses actual position
                     width = 0.4; height = 2; depth = 1;
                     break;
+                case 'bouncingball':
+                    // Dynamic hitbox based on ball position
+                    const ballHeight = 0.6 + Math.abs(Math.sin(obstacle.animationTime * obstacle.bounceSpeed)) * obstacle.bounceHeight;
+                    width = 1.2; height = ballHeight + 0.6; depth = 1.2;
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 0, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, height, pos.z + depth/2)
+                    };
+                case 'spinninglaser':
+                    // Laser beam danger zone - wider when spinning
+                    width = 3.2; height = 1.4; depth = 3.2;
+                    return {
+                        min: new THREE.Vector3(pos.x - width/2, 1.1, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.3, pos.z + depth/2)
+                    };
                 default:
                     width = 1.0; height = 1.0; depth = 1.0;
             }
@@ -2295,6 +2455,62 @@
                             const prevMovement = Math.sin((obstacle.animationTime - deltaTime * 0.001) * obstacle.movementSpeed) * obstacle.movementRange;
                             if (Math.sign(movement) !== Math.sign(prevMovement) && Math.random() > 0.9) {
                                 audioManager.createTone(150, 0.1, 'square');
+                            }
+                        }
+                        break;
+                        
+                    case 'bouncingball':
+                        // Bounce the ball up and down with realistic physics
+                        const ballGroup = obstacle.mesh.children[0];
+                        if (ballGroup) {
+                            const ball = ballGroup.children[0]; // The actual ball
+                            const shadow = ballGroup.children[1]; // Ground shadow
+                            const ring = ballGroup.children[2]; // Warning ring
+                            
+                            if (ball && shadow && ring) {
+                                // Bouncing motion using sine wave with gravity simulation
+                                const bouncePhase = obstacle.animationTime * obstacle.bounceSpeed;
+                                const bounceHeight = Math.abs(Math.sin(bouncePhase)) * obstacle.bounceHeight;
+                                ball.position.y = 0.6 + bounceHeight; // 0.6 is ball radius
+                                
+                                // Scale shadow based on height (higher = smaller shadow)
+                                const shadowScale = 1 - (bounceHeight / obstacle.bounceHeight) * 0.3;
+                                shadow.scale.set(shadowScale, 1, shadowScale);
+                                
+                                // Pulse warning ring
+                                const ringPulse = 1 + Math.sin(obstacle.animationTime * 8) * 0.2;
+                                ring.scale.set(ringPulse, 1, ringPulse);
+                                
+                                // Add bounce sound at impact
+                                if (bounceHeight < 0.2 && Math.random() > 0.97) {
+                                    audioManager.createTone(200 + Math.random() * 100, 0.1, 'square');
+                                }
+                            }
+                        }
+                        break;
+                        
+                    case 'spinninglaser':
+                        // Spin the laser beams and pulse warning lights
+                        const laserGroup = obstacle.mesh.children[0];
+                        if (laserGroup) {
+                            const laserBeamGroup = laserGroup.children.find(child => child.type === 'Group');
+                            
+                            if (laserBeamGroup) {
+                                // Rotate laser beams
+                                laserBeamGroup.rotation.y += obstacle.rotationSpeed * deltaTime * 0.001;
+                                
+                                // Pulse warning lights
+                                const pulseFactor = (Math.sin(obstacle.animationTime * obstacle.pulseSpeed) + 1) / 2;
+                                laserGroup.children.forEach(child => {
+                                    if (child.geometry && child.geometry.type === 'SphereGeometry') {
+                                        child.material.emissive.setHex(pulseFactor > 0.5 ? 0x440000 : 0x220000);
+                                    }
+                                });
+                                
+                                // Add laser whir sound
+                                if (obstacle.rotationSpeed > 2.5 && Math.random() > 0.98) {
+                                    audioManager.createNoise(0.02, 1500 + Math.random() * 500);
+                                }
                             }
                         }
                         break;
@@ -2564,7 +2780,7 @@
                     const jumpObstacles = ['lowbarrier', 'jumpblock', 'hurdleset'];
                     const duckObstacles = ['highbarrier', 'duckbeam', 'wallgap'];
                     const flexibleObstacles = ['spikes'];
-                    const movingObstacles = ['rotatingblade', 'swinginghammer', 'movingwall'];
+                    const movingObstacles = ['rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball', 'spinninglaser'];
                     
                     let type;
                     const rand = Math.random();
