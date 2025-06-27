@@ -1357,13 +1357,13 @@
                     
                 case 'movingwall':
                     // NEW: Side-to-side moving wall
-                    const wallGeometry = new THREE.BoxGeometry(0.3, 2, 1);
-                    const wallMaterial = new THREE.MeshLambertMaterial({ 
+                    const movingWallGeometry = new THREE.BoxGeometry(0.3, 2, 1);
+                    const movingWallMaterial = new THREE.MeshLambertMaterial({ 
                         color: 0x708090,
                         transparent: true,
                         opacity: 0.9
                     });
-                    const movingWall = new THREE.Mesh(wallGeometry, wallMaterial);
+                    const movingWall = new THREE.Mesh(movingWallGeometry, movingWallMaterial);
                     movingWall.position.y = 1;
                     movingWall.castShadow = true;
                     
@@ -1383,8 +1383,9 @@
                     break;
             }
             
-            // Für einfache Hindernisse
-            if (type !== 'hurdleset' && type !== 'wallgap') {
+            // Für einfache Hindernisse (nicht die komplexen oder neuen Typen)
+            if (type !== 'hurdleset' && type !== 'wallgap' && 
+                type !== 'rotatingblade' && type !== 'swinginghammer' && type !== 'movingwall') {
                 const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
                 obstacle.castShadow = true;
                 

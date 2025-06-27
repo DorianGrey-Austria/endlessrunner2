@@ -1,3 +1,9 @@
-
-# YoYo AI version control directory
-.yoyo/
+# Git Ignore
+.DS_Store
+node_modules/
+*.log
+dist/
+.env
+.vite/
+*.tmp
+Thumbs.db
