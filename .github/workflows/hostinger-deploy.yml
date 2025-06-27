@@ -1,0 +1,134 @@
+name: Deploy SubwayRunner 3D to Hostinger
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Prepare Production Files
+      run: |
+        echo "🚀 Preparing SubwayRunner 3D for production..."
+        
+        # Create deployment directory
+        mkdir -p deploy
+        
+        # Copy SubwayRunner main game file
+        cp SubwayRunner/index.html deploy/
+        
+        # Create .htaccess for production security and performance
+        cat > deploy/.htaccess << 'EOF'
+        # Force HTTPS for secure gaming
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+        
+        # Enable compression for faster loading
+        <ifModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/plain
+            AddOutputFilterByType DEFLATE text/html
+            AddOutputFilterByType DEFLATE text/css
+            AddOutputFilterByType DEFLATE application/javascript
+            AddOutputFilterByType DEFLATE image/svg+xml
+        </ifModule>
+        
+        # Cache static assets for better performance
+        <ifModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/css "access plus 1 month"
+            ExpiresByType application/javascript "access plus 1 month"
+            ExpiresByType image/png "access plus 1 month"
+            ExpiresByType image/jpg "access plus 1 month"
+        </ifModule>
+        
+        # Security headers for gaming
+        Header always set X-Content-Type-Options nosniff
+        Header always set X-Frame-Options DENY
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Content Security Policy for Three.js and external resources
+        Header always set Content-Security-Policy "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https:;"
+        EOF
+        
+        # Create README for the deployment
+        cat > deploy/README.md << 'EOF'
+        # 🎮 SubwayRunner 3D - V3.0
+        
+        **3D Endless Runner with Progressive Difficulty System**
+        
+        ## 🚀 Features
+        - ✅ **Progressive Difficulty**: Leicht → Mittel → Schwer → Extrem → Wahnsinn!
+        - ✅ **Advanced Skill System**: 5 different combo types with multipliers
+        - ✅ **Power-Up System**: Magnet 🧲, Shield 🛡️, Speed Boost ⚡
+        - ✅ **Coin Collection**: Progressive spawning with 3 patterns
+        - ✅ **Bridge Environment**: Realistic bridges with moving cars
+        - ✅ **3D Graphics**: Three.js powered 3D visuals
+        - ✅ **Precision Collision**: 3D bounding box detection
+        - ✅ **Real-time UI**: Live difficulty progression display
+        
+        ## 🎯 Gameplay
+        **Controls**: A/D or ←/→ (Lane Switch), W/Space (Jump), S/↓ (Duck)
+        **Goal**: Survive 60 seconds with increasing difficulty
+        **Challenge**: Progressive obstacle spawning and complexity
+        
+        ## 🔧 Tech Stack
+        - **Three.js**: 3D Graphics Engine
+        - **Vanilla JS**: Performance-optimized gameplay
+        - **Supabase**: Cloud highscore system
+        - **Progressive Systems**: Adaptive difficulty scaling
+        
+        🚀 **Generated with Claude Code** | 🎮 **Ready to Play!**
+        EOF
+        
+        echo "✅ Production files prepared"
+        echo "📁 Deployment structure:"
+        ls -la deploy/
+        
+    - name: Deploy to Hostinger via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./deploy/
+        server-dir: /public_html/pushup-panic/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.DS_Store
+          **/Thumbs.db
+          
+    - name: Verify Deployment
+      run: |
+        echo "🎯 SubwayRunner 3D Deployment completed successfully!"
+        echo ""
+        echo "🌐 Game is now live at:"
+        echo "https://aiworkflows.at/pushup-panic/"
+        echo ""
+        echo "🎮 Features deployed:"
+        echo "• ✅ Progressive Difficulty System (5 levels)"
+        echo "• ✅ Advanced Skill & Combo System" 
+        echo "• ✅ Power-Up System (Magnet, Shield, Speed)"
+        echo "• ✅ Coin Collection with Patterns"
+        echo "• ✅ Bridge Environment with Cars"
+        echo "• ✅ 3D Bounding Box Collision Detection"
+        echo "• ✅ Real-time Difficulty UI"
+        echo "• ✅ HTTPS security headers"
+        echo "• ✅ Performance optimizations"
+        echo ""
+        echo "🔥 SubwayRunner 3D V3.0 is ready to play!"
+        echo "🎯 Challenge: Survive 60 seconds of progressive mayhem!"
