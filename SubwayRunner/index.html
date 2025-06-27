@@ -269,6 +269,11 @@
                 this.audioContext = null;
                 this.sounds = {};
                 this.masterVolume = 0.3;
+                this.backgroundMusic = null;
+                this.musicVolume = 0.15; // Lower volume for background music
+                this.musicGain = null;
+                this.musicLoaded = false;
+                this.musicPlaying = false;
                 this.initAudio();
             }
 
@@ -278,9 +283,140 @@
                     this.masterGain = this.audioContext.createGain();
                     this.masterGain.gain.value = this.masterVolume;
                     this.masterGain.connect(this.audioContext.destination);
+                    
+                    // Create separate gain node for background music
+                    this.musicGain = this.audioContext.createGain();
+                    this.musicGain.gain.value = this.musicVolume;
+                    this.musicGain.connect(this.audioContext.destination);
+                    
                     this.createAdvancedSounds();
+                    
+                    // Preload background music (but don't play yet)
+                    this.preloadBackgroundMusic();
                 } catch (error) {
                     console.log('Audio not supported');
+                }
+            }
+
+            async preloadBackgroundMusic() {
+                try {
+                    // Try to load background music file
+                    const musicPaths = [
+                        'sounds/background/background.mp3',
+                        'sounds/background/game-music.mp3',
+                        'sounds/background/subway-theme.mp3'
+                    ];
+                    
+                    for (let path of musicPaths) {
+                        try {
+                            console.log(`🎵 Trying to load background music: ${path}`);
+                            const audio = new Audio(path);
+                            audio.preload = 'auto';
+                            audio.loop = true;
+                            audio.volume = 0; // Start silent
+                            
+                            // Test if file exists by trying to load it
+                            await new Promise((resolve, reject) => {
+                                audio.addEventListener('canplaythrough', () => {
+                                    console.log(`✅ Background music loaded: ${path}`);
+                                    this.backgroundMusic = audio;
+                                    this.musicLoaded = true;
+                                    resolve();
+                                });
+                                audio.addEventListener('error', reject);
+                                audio.load();
+                            });
+                            break; // If successful, stop trying other files
+                        } catch (error) {
+                            console.log(`❌ Failed to load: ${path}`);
+                            continue; // Try next file
+                        }
+                    }
+                    
+                    if (!this.musicLoaded) {
+                        console.log('🎵 No background music found - running without music');
+                    }
+                } catch (error) {
+                    console.log('Background music preload failed:', error);
+                }
+            }
+
+            startBackgroundMusic() {
+                if (!this.backgroundMusic || !this.musicLoaded || this.musicPlaying) return;
+                
+                try {
+                    this.backgroundMusic.currentTime = 0;
+                    this.backgroundMusic.volume = this.musicVolume;
+                    this.backgroundMusic.play();
+                    this.musicPlaying = true;
+                    
+                    // Fade in effect
+                    this.fadeInMusic();
+                    console.log('🎵 Background music started');
+                } catch (error) {
+                    console.log('Failed to start background music:', error);
+                }
+            }
+
+            stopBackgroundMusic() {
+                if (!this.backgroundMusic || !this.musicPlaying) return;
+                
+                try {
+                    this.fadeOutMusic(() => {
+                        this.backgroundMusic.pause();
+                        this.backgroundMusic.currentTime = 0;
+                        this.musicPlaying = false;
+                        console.log('🎵 Background music stopped');
+                    });
+                } catch (error) {
+                    console.log('Failed to stop background music:', error);
+                }
+            }
+
+            fadeInMusic(duration = 2000) {
+                if (!this.backgroundMusic) return;
+                
+                const startVolume = 0;
+                const endVolume = this.musicVolume;
+                const steps = 20;
+                const stepDuration = duration / steps;
+                const volumeStep = (endVolume - startVolume) / steps;
+                
+                this.backgroundMusic.volume = startVolume;
+                
+                for (let i = 0; i <= steps; i++) {
+                    setTimeout(() => {
+                        if (this.backgroundMusic && this.musicPlaying) {
+                            this.backgroundMusic.volume = Math.min(startVolume + (volumeStep * i), endVolume);
+                        }
+                    }, stepDuration * i);
+                }
+            }
+
+            fadeOutMusic(callback, duration = 1000) {
+                if (!this.backgroundMusic) return;
+                
+                const startVolume = this.backgroundMusic.volume;
+                const steps = 20;
+                const stepDuration = duration / steps;
+                const volumeStep = startVolume / steps;
+                
+                for (let i = 0; i <= steps; i++) {
+                    setTimeout(() => {
+                        if (this.backgroundMusic) {
+                            this.backgroundMusic.volume = Math.max(startVolume - (volumeStep * i), 0);
+                            if (i === steps && callback) {
+                                callback();
+                            }
+                        }
+                    }, stepDuration * i);
+                }
+            }
+
+            setMusicVolume(volume) {
+                this.musicVolume = Math.max(0, Math.min(1, volume));
+                if (this.backgroundMusic) {
+                    this.backgroundMusic.volume = this.musicVolume;
                 }
             }
 
@@ -1660,6 +1796,9 @@
             // Resume audio context
             audioManager.resume();
             
+            // Start background music
+            audioManager.startBackgroundMusic();
+            
             // Start ambient city sounds
             if (!ambientStarted) {
                 audioManager.play('ambient');
@@ -1699,7 +1838,8 @@
             gameState.isPlaying = false;
             gameState.isGameOver = true;
             
-            // Stop ambient sounds
+            // Stop background music and ambient sounds
+            audioManager.stopBackgroundMusic();
             audioManager.stopAmbient();
             ambientStarted = false;
             
