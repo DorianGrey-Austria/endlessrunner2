@@ -32,3 +32,6 @@ build/
 
 # Local development
 .local/
+
+# Vite
+.vite/
