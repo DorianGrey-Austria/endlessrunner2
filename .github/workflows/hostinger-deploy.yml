@@ -115,7 +115,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./deploy/
-        server-dir: /domains/ki-revolution.at/public_html/
+        server-dir: /public_html/
         dry-run: false
         log-level: verbose
         exclude: |
