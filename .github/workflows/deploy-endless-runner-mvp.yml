@@ -26,36 +26,31 @@ jobs:
     - name: Prepare Production Files
       run: |
         echo "🚀 Preparing EndlessRunner MVP with Head Tracking for production..."
+        echo "📁 Repository structure:"
+        ls -la
+        echo ""
         
         # Create deployment directory
         mkdir -p deploy
         
-        # Find and copy the EndlessRunner MVP files
-        # Check if files are in root or subdirectory
-        if [ -f "index.html" ]; then
-          echo "Files found in root directory"
-          cp index.html deploy/
-          cp style.css deploy/
-          cp script.js deploy/
-          cp game-loader.js deploy/ || true
-          cp compatibility.js deploy/ || true
-          cp sw.js deploy/ || true
-          cp headTrackingController.js deploy/ || true
-          cp head-tracking-demo.html deploy/ || true
-          cp HEAD_TRACKING_README.md deploy/ || true
-        elif [ -f "EndlessRunner-MVP/index.html" ]; then
-          echo "Files found in EndlessRunner-MVP directory"
-          cp EndlessRunner-MVP/index.html deploy/
-          cp EndlessRunner-MVP/style.css deploy/
-          cp EndlessRunner-MVP/script.js deploy/
-          cp EndlessRunner-MVP/game-loader.js deploy/ || true
-          cp EndlessRunner-MVP/compatibility.js deploy/ || true
-          cp EndlessRunner-MVP/sw.js deploy/ || true
-          cp EndlessRunner-MVP/headTrackingController.js deploy/ || true
-          cp EndlessRunner-MVP/head-tracking-demo.html deploy/ || true
-          cp EndlessRunner-MVP/HEAD_TRACKING_README.md deploy/ || true
-        else
-          echo "Error: Could not find index.html"
+        # Copy files directly (they should be in root)
+        echo "📋 Copying main game files..."
+        cp index.html deploy/ && echo "✅ index.html copied" || echo "❌ index.html not found"
+        cp style.css deploy/ && echo "✅ style.css copied" || echo "❌ style.css not found"
+        cp script.js deploy/ && echo "✅ script.js copied" || echo "❌ script.js not found"
+        cp headTrackingController.js deploy/ && echo "✅ headTrackingController.js copied" || echo "❌ headTrackingController.js not found"
+        cp head-tracking-demo.html deploy/ && echo "✅ head-tracking-demo.html copied" || echo "❌ head-tracking-demo.html not found"
+        
+        # Optional files
+        cp game-loader.js deploy/ 2>/dev/null && echo "✅ game-loader.js copied" || echo "⚠️ game-loader.js not found (optional)"
+        cp compatibility.js deploy/ 2>/dev/null && echo "✅ compatibility.js copied" || echo "⚠️ compatibility.js not found (optional)"
+        cp HEAD_TRACKING_README.md deploy/ 2>/dev/null && echo "✅ HEAD_TRACKING_README.md copied" || echo "⚠️ README not found (optional)"
+        
+        # Check if we have any core files
+        if [ ! -f "deploy/index.html" ]; then
+          echo "❌ CRITICAL ERROR: No index.html found!"
+          echo "📁 Available files:"
+          find . -name "*.html" -o -name "*.js" -o -name "*.css" | head -20
           exit 1
         fi
         
@@ -119,6 +114,10 @@ jobs:
         echo "✅ Production files prepared with head tracking support"
         echo "📁 Files to deploy:"
         ls -la deploy/
+        echo ""
+        echo "📊 File sizes:"
+        du -h deploy/*
+        echo ""
         
     - name: Deploy to Hostinger via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
