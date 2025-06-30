@@ -1,0 +1,132 @@
+name: Deploy EndlessRunner to ki-revolution.at
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Prepare Production Files
+      run: |
+        echo "🚀 Preparing EndlessRunner with Head Tracking for production..."
+        
+        # Create deployment directory
+        mkdir -p deploy
+        
+        # Copy all necessary files
+        cp index.html deploy/
+        cp style.css deploy/
+        cp script.js deploy/
+        cp game-loader.js deploy/
+        cp compatibility.js deploy/
+        cp sw.js deploy/
+        cp headTrackingController.js deploy/
+        cp head-tracking-demo.html deploy/
+        cp HEAD_TRACKING_README.md deploy/
+        
+        # Copy assets if they exist
+        if [ -d "assets" ]; then
+          cp -r assets deploy/
+        fi
+        
+        # Copy sounds if they exist
+        if [ -d "sounds" ]; then
+          cp -r sounds deploy/
+        fi
+        
+        # Create .htaccess for production with HTTPS enforcement
+        cat > deploy/.htaccess << 'EOF'
+        # Force HTTPS for webcam/head tracking functionality
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+        
+        # Enable compression
+        <ifModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/plain
+            AddOutputFilterByType DEFLATE text/html
+            AddOutputFilterByType DEFLATE text/css
+            AddOutputFilterByType DEFLATE application/javascript
+            AddOutputFilterByType DEFLATE application/json
+            AddOutputFilterByType DEFLATE image/svg+xml
+        </ifModule>
+        
+        # Cache static assets
+        <ifModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/css "access plus 1 month"
+            ExpiresByType application/javascript "access plus 1 month"
+            ExpiresByType image/png "access plus 1 month"
+            ExpiresByType image/jpg "access plus 1 month"
+            ExpiresByType audio/wav "access plus 1 month"
+            ExpiresByType audio/mp3 "access plus 1 month"
+        </ifModule>
+        
+        # Security headers
+        Header always set X-Content-Type-Options nosniff
+        Header always set X-Frame-Options SAMEORIGIN
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Permissions Policy for camera access
+        Header always set Permissions-Policy "camera=(self), microphone=()"
+        
+        # CORS headers for MediaPipe CDN
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type"
+        EOF
+        
+        echo "✅ Production files prepared with head tracking support"
+        echo "📁 Files to deploy:"
+        ls -la deploy/
+        
+    - name: Deploy to Hostinger via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./deploy/
+        server-dir: /public_html/endless-runner-mobile/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.DS_Store
+          **/Thumbs.db
+          **/*.md
+          
+    - name: Verify Deployment
+      run: |
+        echo "🎯 Deployment completed successfully!"
+        echo ""
+        echo "🌐 Game is now live at:"
+        echo "https://ki-revolution.at/endless-runner-mobile/"
+        echo ""
+        echo "🎮 Features deployed:"
+        echo "• ✅ Mobile-optimized Endless Runner"
+        echo "• ✅ Head Tracking with MediaPipe Face Mesh (Beta)"
+        echo "• ✅ Kalman filtering for smooth gesture detection"
+        echo "• ✅ Touch controls with automatic fallback"
+        echo "• ✅ Progressive difficulty system"
+        echo "• ✅ Achievements and daily challenges"
+        echo "• ✅ Service Worker for offline play"
+        echo "• ✅ HTTPS security headers for camera access"
+        echo ""
+        echo "📱 Head Tracking Demo:"
+        echo "https://ki-revolution.at/endless-runner-mobile/head-tracking-demo.html"
+        echo ""
+        echo "🔥 Ready to play with your head movements!"

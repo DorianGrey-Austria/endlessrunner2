@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Head Tracking Demo - Endless Runner</title>
+    
+    <!-- MediaPipe Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .demo-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        #videoCanvas {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border-radius: 10px;
+            margin: 0 auto;
+            display: block;
+            background: #000;
+        }
+        
+        .gesture-display {
+            text-align: center;
+            font-size: 3em;
+            margin: 20px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status.ready { background: rgba(76, 175, 80, 0.3); }
+        .status.tracking { background: rgba(33, 150, 243, 0.3); }
+        .status.error { background: rgba(244, 67, 54, 0.3); }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h2 {
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .gesture-display {
+                font-size: 2em;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Head Tracking Demo</h1>
+        
+        <div class="status" id="status">Initialisiere...</div>
+        
+        <div class="instructions">
+            <h2>📖 Anleitung</h2>
+            <ul>
+                <li>👈 Kopf nach Links = "LEFT"</li>
+                <li>👉 Kopf nach Rechts = "RIGHT"</li>
+                <li>👆 Kopf nach Oben/Augenbrauen hoch = "JUMP"</li>
+                <li>👇 Kopf nach Unten = "DUCK"</li>
+                <li>➡️ Kopf gerade = "CENTER"</li>
+            </ul>
+        </div>
+        
+        <div class="demo-area">
+            <canvas id="videoCanvas"></canvas>
+            <div class="gesture-display" id="gestureDisplay">-</div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Tracking</button>
+            <button id="stopBtn" disabled>Stop Tracking</button>
+            <button id="calibrateBtn" disabled>Kalibrieren</button>
+            <button id="toggleDebugBtn">Debug Toggle</button>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-label">FPS</div>
+                <div class="metric-value" id="fpsValue">0</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Yaw (°)</div>
+                <div class="metric-value" id="yawValue">0</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Pitch (°)</div>
+                <div class="metric-value" id="pitchValue">0</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Confidence</div>
+                <div class="metric-value" id="confidenceValue">0%</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="headTrackingController.js"></script>
+    <script>
+        // Demo-specific code
+        let headTracker = null;
+        let isTracking = false;
+        let debugMode = false;
+        const canvas = document.getElementById('videoCanvas');
+        const canvasCtx = canvas.getContext('2d');
+        
+        // UI Elements
+        const statusEl = document.getElementById('status');
+        const gestureDisplay = document.getElementById('gestureDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const calibrateBtn = document.getElementById('calibrateBtn');
+        const toggleDebugBtn = document.getElementById('toggleDebugBtn');
+        
+        // Metrics
+        const fpsValue = document.getElementById('fpsValue');
+        const yawValue = document.getElementById('yawValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const confidenceValue = document.getElementById('confidenceValue');
+        
+        // Mock game controller for demo
+        const mockGameController = {
+            jump: () => showGesture('JUMP 🦘'),
+            handleSlide: () => showGesture('DUCK 🦆'),
+            moveLeft: () => showGesture('LEFT ⬅️'),
+            moveRight: () => showGesture('RIGHT ➡️'),
+            moveCenter: () => showGesture('CENTER ⏸️'),
+            settings: { hapticFeedback: true },
+            showTouchControls: () => console.log('Fallback to touch controls')
+        };
+        
+        function showGesture(gesture) {
+            gestureDisplay.textContent = gesture;
+            gestureDisplay.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                gestureDisplay.style.transform = 'scale(1)';
+            }, 200);
+        }
+        
+        function updateStatus(message, type = 'ready') {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+        
+        // Override HeadTrackingController methods for demo
+        class DemoHeadTrackingController extends HeadTrackingController {
+            onFaceMeshResults(results) {
+                // Call parent method
+                super.onFaceMeshResults(results);
+                
+                // Draw on canvas
+                canvasCtx.save();
+                canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+                canvasCtx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+                
+                if (results.multiFaceLandmarks && debugMode) {
+                    for (const landmarks of results.multiFaceLandmarks) {
+                        // Draw face mesh
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION,
+                            {color: '#C0C0C070', lineWidth: 1});
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYE,
+                            {color: '#FF3030'});
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYE,
+                            {color: '#30FF30'});
+                        drawConnectors(canvasCtx, landmarks, FACEMESH_FACE_OVAL,
+                            {color: '#E0E0E0'});
+                    }
+                }
+                
+                canvasCtx.restore();
+            }
+            
+            processLandmarks(landmarks) {
+                const result = super.processLandmarks(landmarks);
+                
+                // Update metrics display
+                const leftEye = landmarks[33];
+                const rightEye = landmarks[263];
+                const noseTip = landmarks[1];
+                const forehead = landmarks[10];
+                
+                const yaw = this.calculateYaw(leftEye, rightEye, noseTip);
+                const pitch = this.calculatePitch(noseTip, forehead);
+                
+                yawValue.textContent = yaw.toFixed(1);
+                pitchValue.textContent = pitch.toFixed(1);
+                
+                return result;
+            }
+            
+            updatePerformanceMetrics() {
+                super.updatePerformanceMetrics();
+                fpsValue.textContent = Math.round(this.fps);
+                
+                const confidence = (this.performanceMetrics.successCount / 
+                    Math.max(1, this.performanceMetrics.totalCount) * 100);
+                confidenceValue.textContent = confidence.toFixed(0) + '%';
+            }
+        }
+        
+        // Initialize
+        async function init() {
+            try {
+                updateStatus('Initialisiere Head Tracking...', 'ready');
+                
+                // Set canvas size
+                canvas.width = 640;
+                canvas.height = 480;
+                
+                headTracker = new DemoHeadTrackingController(mockGameController);
+                
+                // Override camera setup to show video
+                const originalSetupCamera = headTracker.setupCamera.bind(headTracker);
+                headTracker.setupCamera = async function() {
+                    await originalSetupCamera();
+                    // Connect video to canvas
+                    const camera = new Camera(this.camera, {
+                        onFrame: async () => {
+                            await this.faceMesh.send({image: this.camera});
+                        },
+                        width: 640,
+                        height: 480
+                    });
+                    await camera.start();
+                };
+                
+                const initialized = await headTracker.initialize();
+                
+                if (initialized) {
+                    updateStatus('Bereit - Klicke "Start Tracking"', 'ready');
+                    calibrateBtn.disabled = false;
+                } else {
+                    updateStatus('Fehler: Kamera nicht verfügbar', 'error');
+                }
+            } catch (error) {
+                console.error('Init error:', error);
+                updateStatus('Fehler: ' + error.message, 'error');
+            }
+        }
+        
+        // Event Listeners
+        startBtn.addEventListener('click', async () => {
+            if (!headTracker) return;
+            
+            try {
+                await headTracker.start();
+                isTracking = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                updateStatus('Tracking aktiv', 'tracking');
+            } catch (error) {
+                updateStatus('Fehler beim Starten: ' + error.message, 'error');
+            }
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            if (!headTracker) return;
+            
+            headTracker.stop();
+            isTracking = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            updateStatus('Tracking gestoppt', 'ready');
+            gestureDisplay.textContent = '-';
+        });
+        
+        calibrateBtn.addEventListener('click', async () => {
+            if (!headTracker) return;
+            
+            await headTracker.startCalibration();
+        });
+        
+        toggleDebugBtn.addEventListener('click', () => {
+            debugMode = !debugMode;
+            toggleDebugBtn.textContent = debugMode ? 'Debug aus' : 'Debug an';
+        });
+        
+        // Start initialization
+        init();
+    </script>
+</body>
+</html>
