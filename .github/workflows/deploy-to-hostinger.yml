@@ -1,4 +1,4 @@
-name: Deploy EndlessRunner to ki-revolution.at
+name: Deploy PushUp Panic to Hostinger
 
 on:
   push:
@@ -100,7 +100,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./deploy/
-        server-dir: /public_html/endless-runner-mobile/
+        server-dir: /public_html/endless-runner-head-tracking/
         exclude: |
           **/.git*
           **/.git*/**
@@ -114,7 +114,7 @@ jobs:
         echo "🎯 Deployment completed successfully!"
         echo ""
         echo "🌐 Game is now live at:"
-        echo "https://ki-revolution.at/endless-runner-mobile/"
+        echo "https://ki-revolution.at/endless-runner-head-tracking/"
         echo ""
         echo "🎮 Features deployed:"
         echo "• ✅ Mobile-optimized Endless Runner"
@@ -127,6 +127,6 @@ jobs:
         echo "• ✅ HTTPS security headers for camera access"
         echo ""
         echo "📱 Head Tracking Demo:"
-        echo "https://ki-revolution.at/endless-runner-mobile/head-tracking-demo.html"
+        echo "https://ki-revolution.at/endless-runner-head-tracking/head-tracking-demo.html"
         echo ""
         echo "🔥 Ready to play with your head movements!"
