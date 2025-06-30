@@ -314,24 +314,29 @@ Die grünen Häkchen in Cursor motivieren enorm! ✅
   - [x] Supabase Integration für Highscores
   - [x] Git Versionskontrolle
 
-### **🎯 NÄCHSTE SCHRITTE - Version 2.0**
-- [ ] **PHASE 1: Sound System Overhaul**
+### **🎯 NÄCHSTE SCHRITTE - Version 3.1**
+- [x] **PHASE 1: Deployment Fix**
+  - [x] GitHub Action server-dir korrigiert
+  - [x] Erfolgreiche Hostinger-Bereitstellung
+  - [x] Version Info Display hinzugefügt
+
+- [ ] **PHASE 2: Kritische Fixes**
+  - [ ] **🚨 OVERHEAD OBSTACLES FIX**: Ducken-Kollision reparieren
+  - [ ] Tunnel-Hindernisse sind durchfahrbar - muss gefixt werden
+  - [ ] Collision Detection für hängende Hindernisse
+  - [ ] Bessere Hitbox-Anpassungen
+
+- [ ] **PHASE 3: Gestensteuerung Integration**
+  - [ ] MediaPipe aus GestureRunnerPro portieren
+  - [ ] WebCam-Zugriff für SubwayRunner
+  - [ ] Basis-Gesten (Links/Rechts, Jump, Duck)
+  - [ ] Gesture Tutorial und Kalibrierung
+
+- [ ] **PHASE 4: Sound System Overhaul**
+  - [x] Background Music implementiert (✅ bereits done)
   - [ ] Realistische Audio-Samples statt einfache Töne
   - [ ] Dynamic Audio basierend auf Geschwindigkeit
   - [ ] 3D Audio und Ambiente-Sounds
-  - [ ] Sound-Layering für realistischere Effekte
-
-- [ ] **PHASE 2: Collision Enhancement**
-  - [ ] Präzise Bounding-Box Kollisionen
-  - [ ] Near-Miss Bonus-System
-  - [ ] Verbesserte Collision-Feedback (Partikel, Effects)
-  - [ ] Collision Prediction Warnings
-
-- [ ] **PHASE 3: Neue Hindernisse**
-  - [ ] Bewegliche/rotierende Hindernisse
-  - [ ] Multi-Lane Obstacles
-  - [ ] Umwelt-Hazards (Löcher, hängende Schilder)
-  - [ ] Sequenz-basierte Hindernis-Patterns
 
 - [ ] **PHASE 4: Visual Effects**
   - [ ] Advanced Particle Systems

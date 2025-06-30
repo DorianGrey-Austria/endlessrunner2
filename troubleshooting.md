@@ -1,6 +1,23 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **FUNKTIONSFÄHIG** - Version 2.0 läuft stabil
+## **Aktueller Status**: ✅ **FUNKTIONSFÄHIG** - Version 3.1 erfolgreich deployed
+
+---
+
+## ✅ **Deployment-Problem behoben** - 30. Juni 2025
+
+### **Problem**: GitHub Action deployte nicht zu korrektem Verzeichnis
+
+#### **Lösung**:
+```yaml
+# Vorher: Falscher Pfad
+server-dir: /domains/ki-revolution.at/public_html/
+
+# Nachher: Korrekter Root-Pfad
+server-dir: /
+```
+
+**Ergebnis**: ✅ Erfolgreiches Deployment zu Hostinger mit sofortiger Aktualisierung
 
 ---
 

@@ -47,6 +47,22 @@
             z-index: 100;
         }
         
+        #versionInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #FFD700;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 101;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,215,0,0.3);
+            max-width: 200px;
+        }
+        
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -190,6 +206,12 @@
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
+        
+        <!-- Version Info Display -->
+        <div id="versionInfo">
+            🚀 Version 3.1 - Deployment Fix<br>
+            📅 Aktualisiert: 30.06.2025
+        </div>
         
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
