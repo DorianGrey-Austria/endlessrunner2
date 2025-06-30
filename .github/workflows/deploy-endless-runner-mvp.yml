@@ -1,8 +1,13 @@
-name: Deploy EndlessRunner to ki-revolution.at
+name: Deploy EndlessRunner MVP with Head Tracking
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**.js'
+      - '**.html'
+      - '**.css'
+      - '**.md'
   workflow_dispatch:
 
 jobs:
@@ -20,30 +25,52 @@ jobs:
         
     - name: Prepare Production Files
       run: |
-        echo "🚀 Preparing EndlessRunner with Head Tracking for production..."
+        echo "🚀 Preparing EndlessRunner MVP with Head Tracking for production..."
         
         # Create deployment directory
         mkdir -p deploy
         
-        # Copy all necessary files
-        cp index.html deploy/
-        cp style.css deploy/
-        cp script.js deploy/
-        cp game-loader.js deploy/
-        cp compatibility.js deploy/
-        cp sw.js deploy/
-        cp headTrackingController.js deploy/
-        cp head-tracking-demo.html deploy/
-        cp HEAD_TRACKING_README.md deploy/
+        # Find and copy the EndlessRunner MVP files
+        # Check if files are in root or subdirectory
+        if [ -f "index.html" ]; then
+          echo "Files found in root directory"
+          cp index.html deploy/
+          cp style.css deploy/
+          cp script.js deploy/
+          cp game-loader.js deploy/ || true
+          cp compatibility.js deploy/ || true
+          cp sw.js deploy/ || true
+          cp headTrackingController.js deploy/ || true
+          cp head-tracking-demo.html deploy/ || true
+          cp HEAD_TRACKING_README.md deploy/ || true
+        elif [ -f "EndlessRunner-MVP/index.html" ]; then
+          echo "Files found in EndlessRunner-MVP directory"
+          cp EndlessRunner-MVP/index.html deploy/
+          cp EndlessRunner-MVP/style.css deploy/
+          cp EndlessRunner-MVP/script.js deploy/
+          cp EndlessRunner-MVP/game-loader.js deploy/ || true
+          cp EndlessRunner-MVP/compatibility.js deploy/ || true
+          cp EndlessRunner-MVP/sw.js deploy/ || true
+          cp EndlessRunner-MVP/headTrackingController.js deploy/ || true
+          cp EndlessRunner-MVP/head-tracking-demo.html deploy/ || true
+          cp EndlessRunner-MVP/HEAD_TRACKING_README.md deploy/ || true
+        else
+          echo "Error: Could not find index.html"
+          exit 1
+        fi
         
         # Copy assets if they exist
         if [ -d "assets" ]; then
           cp -r assets deploy/
+        elif [ -d "EndlessRunner-MVP/assets" ]; then
+          cp -r EndlessRunner-MVP/assets deploy/
         fi
         
         # Copy sounds if they exist
         if [ -d "sounds" ]; then
           cp -r sounds deploy/
+        elif [ -d "EndlessRunner-MVP/sounds" ]; then
+          cp -r EndlessRunner-MVP/sounds deploy/
         fi
         
         # Create .htaccess for production with HTTPS enforcement
@@ -107,7 +134,6 @@ jobs:
           **/node_modules/**
           **/.DS_Store
           **/Thumbs.db
-          **/*.md
           
     - name: Verify Deployment
       run: |
