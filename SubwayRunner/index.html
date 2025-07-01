@@ -2342,7 +2342,7 @@
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
                 // ENHANCED DUCK COLLISION DETECTION
-                if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier') {
+                if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier' || obstacle.type === 'wallgap') {
                     console.log(`🔍 DUCK OBSTACLE CHECK:
                         Type: ${obstacle.type}
                         Action: ${gameState.playerAction}
@@ -2364,10 +2364,16 @@
                     
                     // Check if player is too high (not ducking properly)
                     const playerHeight = gameState.playerAction === 'ducking' ? 0.6 : 1.5;
-                    const obstacleHeight = 1.8; // Duck obstacles are at this height
-                    const needsToDuck = playerHeight > 1.0; // If player is taller than 1.0, must duck
+                    let obstacleHeight = 1.8; // Default duck obstacles height
                     
-                    console.log(`🎯 Duck Logic: inSameLane=${inSameLane}, inCollisionZone=${inCollisionZone}, needsToDuck=${needsToDuck}, playerHeight=${playerHeight}`);
+                    // Adjust for wallgap (gap height is at 1.3)
+                    if (obstacle.type === 'wallgap') {
+                        obstacleHeight = 1.3;
+                    }
+                    
+                    const needsToDuck = playerHeight > (obstacleHeight - 0.1); // Must duck to fit under obstacle
+                    
+                    console.log(`🎯 Duck Logic: type=${obstacle.type}, inSameLane=${inSameLane}, inCollisionZone=${inCollisionZone}, needsToDuck=${needsToDuck}, playerHeight=${playerHeight}, obstacleHeight=${obstacleHeight}`);
                     
                     if (inSameLane && inCollisionZone && needsToDuck) {
                         console.log(`💥 DUCK COLLISION TRIGGERED! Player failed to duck.`);
