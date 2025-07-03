@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endless Runner - Working Version</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+        }
+        .ui {
+            position: absolute;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        #score { top: 20px; left: 20px; }
+        #instructions { bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <div class="ui" id="score">Score: 0</div>
+        <div class="ui" id="instructions">Press SPACE or CLICK to jump!</div>
+    </div>
+
+    <script>
+    // FUNKTIONIERENDES ENDLESS RUNNER SPIEL - ES5 Compatible
+    (function() {
+        'use strict';
+        
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+        var scoreEl = document.getElementById('score');
+        
+        // Game State
+        var game = {
+            score: 0,
+            speed: 2,
+            running: true
+        };
+        
+        var player = {
+            x: 100,
+            y: 300,
+            width: 30,
+            height: 40,
+            velocityY: 0,
+            jumping: false,
+            color: '#ff6b6b'
+        };
+        
+        var obstacles = [];
+        var particles = [];
+        var ground = { y: 340, height: 60 };
+        
+        // Particle System für Fun-Effekte
+        function createParticles(x, y, color, count) {
+            for (var i = 0; i < count; i++) {
+                particles.push({
+                    x: x + Math.random() * 20 - 10,
+                    y: y + Math.random() * 20 - 10,
+                    vx: Math.random() * 6 - 3,
+                    vy: Math.random() * 6 - 3,
+                    life: 1.0,
+                    color: color || '#ffff00'
+                });
+            }
+        }
+        
+        // Perfect Timing System
+        var lastJumpTime = 0;
+        var perfectTimingWindow = 300; // ms
+        
+        function jump() {
+            if (!player.jumping) {
+                var now = Date.now();
+                var isPerfect = (now - lastJumpTime) < perfectTimingWindow && lastJumpTime > 0;
+                
+                player.jumping = true;
+                player.velocityY = isPerfect ? -18 : -15; // Bonus für perfect timing
+                lastJumpTime = now;
+                
+                if (isPerfect) {
+                    createParticles(player.x, player.y, '#gold', 10);
+                    game.score += 50; // Bonus score
+                    console.log('PERFECT JUMP! +50 bonus');
+                } else {
+                    createParticles(player.x, player.y, '#00ff88', 5);
+                }
+            }
+        }
+        
+        function updatePlayer() {
+            if (player.jumping) {
+                player.velocityY += 0.8; // gravity
+                player.y += player.velocityY;
+                
+                if (player.y >= ground.y - player.height) {
+                    player.y = ground.y - player.height;
+                    player.jumping = false;
+                    player.velocityY = 0;
+                }
+            }
+        }
+        
+        function updateObstacles() {
+            // Move obstacles
+            for (var i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= game.speed;
+                
+                if (obstacles[i].x < -50) {
+                    obstacles.splice(i, 1);
+                    game.score += 10;
+                }
+            }
+            
+            // Spawn new obstacles
+            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 200) {
+                if (Math.random() < 0.7) {
+                    obstacles.push({
+                        x: canvas.width,
+                        y: ground.y - 60,
+                        width: 20,
+                        height: 60,
+                        color: '#8B4513'
+                    });
+                }
+            }
+            
+            // Collision detection
+            for (var i = 0; i < obstacles.length; i++) {
+                var obs = obstacles[i];
+                if (player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y) {
+                    
+                    // Game over
+                    game.running = false;
+                    createParticles(player.x, player.y, '#ff0000', 20);
+                    alert('Game Over! Final Score: ' + game.score);
+                    location.reload();
+                }
+            }
+        }
+        
+        function updateParticles() {
+            for (var i = particles.length - 1; i >= 0; i--) {
+                var p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                p.vy += 0.1; // gravity for particles
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+        
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, ground.y, canvas.width, ground.height);
+            
+            // Draw player with animation
+            ctx.fillStyle = player.color;
+            ctx.shadowColor = player.color;
+            ctx.shadowBlur = player.jumping ? 15 : 5;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.shadowBlur = 0;
+            
+            // Draw obstacles
+            for (var i = 0; i < obstacles.length; i++) {
+                var obs = obstacles[i];
+                ctx.fillStyle = obs.color;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            }
+            
+            // Draw particles (fun effects!)
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+            }
+            ctx.globalAlpha = 1.0;
+            
+            // Update score display
+            scoreEl.textContent = 'Score: ' + game.score;
+        }
+        
+        function gameLoop() {
+            if (!game.running) return;
+            
+            updatePlayer();
+            updateObstacles();
+            updateParticles();
+            draw();
+            
+            // Increase speed gradually
+            game.speed = Math.min(5, 2 + game.score * 0.001);
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Controls
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        canvas.addEventListener('click', jump);
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            jump();
+        });
+        
+        // Start game
+        console.log('Simple Endless Runner started!');
+        gameLoop();
+        
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Endless Runner MVP</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- MediaPipe Face Mesh for Head Tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <!-- Head Tracking Controller -->
+    <script src="headTrackingController.js"></script>
+    <!-- Browser Compatibility -->
+    <script src="compatibility.js"></script>
+    <!-- Fallback für ältere Browser -->
+    <script>
+        // Error Handler für bessere Debugging
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('Global Error:', msg, 'at', url + ':' + line);
+            document.body.innerHTML = '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px; text-align: center; font-family: Arial, sans-serif; min-height: 100vh;"><div style="max-width: 600px; margin: 0 auto;"><h1>🎮 Game Loading Error</h1><p>Your browser might not support all required features.<br>Please try refreshing the page or using a modern browser.</p><button onclick="location.reload()" style="background: #4ECDC4; border: none; color: white; padding: 15px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; margin-top: 20px;">Retry</button><details style="margin-top: 30px; text-align: left;"><summary>Technical Details</summary><pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-top: 10px; font-size: 12px;">' + msg + '\nLine: ' + line + '\nColumn: ' + col + '</pre></details></div></div>';
+            return true;
+        };
+    </script>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="hud">
+                <div id="score">Score: <span id="scoreValue">0</span></div>
+                <div id="distance">Distance: <span id="distanceValue">0</span>m</div>
+                <div id="speed">Speed: <span id="speedValue">1.0</span>x</div>
+                <div id="combo" class="hidden">Combo: <span id="comboValue">0</span>x</div>
+                <div id="level">Level: <span id="levelValue">1</span></div>
+            </div>
+            
+            <div id="powerupStatus">
+                <!-- Active powerups will be displayed here -->
+            </div>
+            
+            <div id="achievementNotification" class="hidden">
+                <div class="achievement-content">
+                    <h3 id="achievementTitle">Achievement Unlocked!</h3>
+                    <p id="achievementDescription"></p>
+                </div>
+            </div>
+            
+            <div id="dailyChallenges" class="info-panel">
+                <div class="panel-header">📅 Daily Challenges</div>
+                <div id="challengesList" class="panel-content"></div>
+            </div>
+            
+            <div id="performanceStats" class="info-panel">
+                <div class="panel-header">⚡ Performance</div>
+                <div id="performanceDisplay" class="panel-content"></div>
+            </div>
+            
+            <div id="startScreen" class="screen">
+                <div class="screen-content">
+                    <h1 class="game-title">Endless Runner</h1>
+                    <p class="game-subtitle">Tap to jump, hold to slide</p>
+                    <div class="menu-buttons">
+                        <button id="startButton" class="btn-primary">Start Game</button>
+                        <button id="openSettings" class="btn-secondary">Settings</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="gameOverScreen" class="screen hidden">
+                <div class="screen-content">
+                    <h2 class="game-over-title">Game Over</h2>
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-label">Final Score</span>
+                            <span class="stat-value" id="finalScore">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value" id="finalDistance">0m</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Best Score</span>
+                            <span class="stat-value" id="bestScore">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Max Combo</span>
+                            <span class="stat-value" id="maxCombo">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Level Reached</span>
+                            <span class="stat-value" id="levelReached">1</span>
+                        </div>
+                    </div>
+                    <button id="restartButton" class="btn-primary">Play Again</button>
+                </div>
+            </div>
+            
+            <div id="pauseScreen" class="screen hidden">
+                <div class="screen-content">
+                    <h2>Paused</h2>
+                    <button id="resumeButton" class="btn-secondary">Resume</button>
+                    <button id="menuButton" class="btn-secondary">Main Menu</button>
+                </div>
+            </div>
+            
+            <!-- INTERACTIVE ONBOARDING SYSTEM -->
+            <div id="onboardingOverlay" class="onboarding-overlay hidden">
+                <div class="onboarding-backdrop"></div>
+                <div class="onboarding-spotlight"></div>
+                <div class="onboarding-tooltip">
+                    <div class="tooltip-content">
+                        <h3 id="onboardingTitle">Welcome!</h3>
+                        <p id="onboardingText">Let's learn how to play!</p>
+                        <div class="onboarding-controls">
+                            <button id="onboardingSkip" class="btn-skip">Skip Tutorial</button>
+                            <button id="onboardingNext" class="btn-primary">Next</button>
+                        </div>
+                        <div class="onboarding-progress">
+                            <div class="progress-dots">
+                                <span class="dot active"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                            <span class="progress-text">1 of 5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODERN SETTINGS PANEL -->
+        <div id="settingsPanel" class="settings-panel hidden">
+            <div class="settings-backdrop"></div>
+            <div class="settings-content">
+                <div class="settings-header">
+                    <h2>⚙️ Settings</h2>
+                    <button id="closeSettings" class="close-btn">×</button>
+                </div>
+                
+                <div class="settings-body">
+                    <div class="setting-category">
+                        <h3>🎮 Gameplay</h3>
+                        <div class="setting-item">
+                            <label>Difficulty</label>
+                            <select id="difficultySelect">
+                                <option value="easy">Easy</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Auto-Jump Assist</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="autoJumpToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-category">
+                        <h3>🎨 Graphics</h3>
+                        <div class="setting-item">
+                            <label>Graphics Quality</label>
+                            <div class="quality-buttons">
+                                <button class="quality-btn" data-quality="low">Low</button>
+                                <button class="quality-btn active" data-quality="medium">Medium</button>
+                                <button class="quality-btn" data-quality="high">High</button>
+                                <button class="quality-btn" data-quality="ultra">Ultra</button>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label>Particle Effects</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="particlesToggle" checked>
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label>Screen Shake</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="shakeToggle" checked>
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-category">
+                        <h3>🔧 Performance</h3>
+                        <div class="setting-item">
+                            <label>FPS Counter</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="fpsToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label>Performance Mode</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="performanceModeToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-category">
+                        <h3>🎮 Controls</h3>
+                        <div class="setting-item">
+                            <label>Head Tracking (Beta)</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="headTrackingToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label>Show Camera Preview</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="cameraPreviewToggle" disabled>
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <button id="calibrateHeadTracking" class="btn-secondary" disabled>Calibrate Head Tracking</button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-category">
+                        <h3>♿ Accessibility</h3>
+                        <div class="setting-item">
+                            <label>Reduced Motion</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="reducedMotionToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label>High Contrast</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="highContrastToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-footer">
+                    <button id="resetSettings" class="btn-secondary">Reset to Default</button>
+                    <button id="saveSettings" class="btn-primary">Save Settings</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <div id="jumpArea" class="control-area">TAP / ⬆️ SWIPE</div>
+            <div id="slideArea" class="control-area">HOLD / ⬇️ SWIPE</div>
+            <div id="boostArea" class="control-area">➡️ BOOST</div>
+            <div id="wallArea" class="control-area">⬅️ WALL</div>
+        </div>
+        
+        <div id="particles"></div>
+        
+        <!-- DEBUG DASHBOARD -->
+        <div id="debugDashboard" class="debug-dashboard hidden">
+            <div class="debug-header">
+                <h3>🔧 Debug Dashboard</h3>
+                <button id="closeDebug" class="debug-close">×</button>
+            </div>
+            
+            <div class="debug-tabs">
+                <button class="debug-tab active" data-tab="performance">Performance</button>
+                <button class="debug-tab" data-tab="objects">Objects</button>
+                <button class="debug-tab" data-tab="systems">Systems</button>
+                <button class="debug-tab" data-tab="analytics">Analytics</button>
+                <button class="debug-tab" data-tab="console">Console</button>
+            </div>
+            
+            <div class="debug-content">
+                <div id="debugPerformance" class="debug-panel active">
+                    <div class="debug-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">FPS:</span>
+                            <span id="debugFPS" class="metric-value">60</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Frame Time:</span>
+                            <span id="debugFrameTime" class="metric-value">16ms</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Draw Calls:</span>
+                            <span id="debugDrawCalls" class="metric-value">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Memory:</span>
+                            <span id="debugMemory" class="metric-value">0MB</span>
+                        </div>
+                    </div>
+                    <canvas id="debugChart" width="300" height="100"></canvas>
+                </div>
+                
+                <div id="debugObjects" class="debug-panel">
+                    <div class="object-counter">
+                        <div class="counter-item">Particles: <span id="debugParticleCount">0</span></div>
+                        <div class="counter-item">Obstacles: <span id="debugObstacleCount">0</span></div>
+                        <div class="counter-item">Powerups: <span id="debugPowerupCount">0</span></div>
+                        <div class="counter-item">Pooled Objects: <span id="debugPooledCount">0</span></div>
+                    </div>
+                </div>
+                
+                <div id="debugSystems" class="debug-panel">
+                    <div class="system-status">
+                        <div class="system-item">Physics: <span class="status-indicator green"></span></div>
+                        <div class="system-item">Renderer: <span class="status-indicator green"></span></div>
+                        <div class="system-item">Audio: <span class="status-indicator green"></span></div>
+                        <div class="system-item">UI: <span class="status-indicator green"></span></div>
+                    </div>
+                </div>
+                
+                <div id="debugAnalytics" class="debug-panel">
+                    <div class="analytics-section">
+                        <h4>🎯 Fun Metrics</h4>
+                        <div class="fun-metrics">
+                            <div class="metric-bar">
+                                <span>Fun Score:</span>
+                                <div class="progress-bar"><div id="funScore" class="progress-fill" style="width: 0%"></div></div>
+                                <span id="funScoreValue">0</span>
+                            </div>
+                            <div class="metric-bar">
+                                <span>Engagement:</span>
+                                <div class="progress-bar"><div id="engagement" class="progress-fill" style="width: 0%"></div></div>
+                                <span id="engagementValue">0</span>
+                            </div>
+                            <div class="metric-bar">
+                                <span>Flow State:</span>
+                                <div class="progress-bar"><div id="flowState" class="progress-fill" style="width: 0%"></div></div>
+                                <span id="flowStateValue">0</span>
+                            </div>
+                            <div class="metric-bar">
+                                <span>Frustration:</span>
+                                <div class="progress-bar"><div id="frustration" class="progress-fill danger" style="width: 0%"></div></div>
+                                <span id="frustrationValue">0</span>
+                            </div>
+                        </div>
+                        
+                        <h4>🎮 Play Style</h4>
+                        <div class="play-style">
+                            <div class="style-item">Aggressive: <span id="aggressiveStyle">0%</span></div>
+                            <div class="style-item">Explorer: <span id="explorerStyle">0%</span></div>
+                            <div class="style-item">Achiever: <span id="achieverStyle">0%</span></div>
+                        </div>
+                        
+                        <h4>🔮 Predictions</h4>
+                        <div class="predictions">
+                            <div class="prediction-item">Churn Risk: <span id="churnRisk" class="danger">0%</span></div>
+                            <div class="prediction-item">Optimal Difficulty: <span id="optimalDifficulty">3</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="debugConsole" class="debug-panel">
+                    <div id="debugLog" class="debug-log"></div>
+                    <input id="debugInput" class="debug-input" placeholder="Enter command...">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Verbesserte Game Initialisierung -->
+    <script>
+        // Teste Browser-Features vor dem Laden
+        function checkBrowserSupport() {
+            var features = {
+                canvas: !!document.createElement('canvas').getContext,
+                localStorage: typeof Storage !== 'undefined',
+                requestAnimationFrame: !!(window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame),
+                audioContext: !!(window.AudioContext || window.webkitAudioContext)
+            };
+            
+            var missing = [];
+            for (var feature in features) {
+                if (!features[feature]) {
+                    missing.push(feature);
+                }
+            }
+            
+            if (missing.length > 0) {
+                console.warn('Missing browser features:', missing);
+                // Das Spiel lädt trotzdem, aber mit reduzierten Features
+            }
+            
+            return missing.length === 0;
+        }
+        
+        // Initialisiere das Spiel sicher
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                checkBrowserSupport();
+                
+                // Lade den sicheren Game Loader statt direktes Script
+                var script = document.createElement('script');
+                script.src = 'game-loader.js';
+                script.onerror = function() {
+                    document.body.innerHTML = '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px; text-align: center; font-family: Arial, sans-serif; min-height: 100vh;"><div style="max-width: 600px; margin: 0 auto;"><h1>🎮 Script Loading Error</h1><p>Could not load the game loader.<br>Check console for details.</p><button onclick="location.reload()" style="background: #4ECDC4; border: none; color: white; padding: 15px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; margin-top: 20px;">Retry</button></div></div>';
+                };
+                document.head.appendChild(script);
+                
+            } catch (e) {
+                console.error('Initialization error:', e);
+                document.body.innerHTML = '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px; text-align: center; font-family: Arial, sans-serif; min-height: 100vh;"><div style="max-width: 600px; margin: 0 auto;"><h1>🎮 Initialization Error</h1><p>Failed to initialize the game.<br>Your browser might be too old.</p><button onclick="location.reload()" style="background: #4ECDC4; border: none; color: white; padding: 15px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; margin-top: 20px;">Retry</button></div></div>';
+            }
+        });
+    </script>
+</body>
+</html>

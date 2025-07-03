@@ -6,22 +6,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a collection of endless runner game projects built with different technologies:
 
-- **SubwayRunner**: React + Three.js + TypeScript (modern web-based 3D runner)
-- **Endless3D**: Vanilla JavaScript + Three.js (perspective-based 3D runner)
+- **SubwayRunner**: Vanilla JavaScript + Three.js (main production game, deployed via GitHub Actions)
+- **Endless3D**: Vanilla JavaScript + Three.js (perspective-based 3D runner with world system)
 - **EndlessRunner-MVP**: Pure JavaScript (feature-rich browser runner)
-- **GestureRunnerPro**: Godot 4.3 (gesture-controlled runner with WebCam)
+- **GestureRunnerPro**: Godot 4.3 (gesture-controlled runner with MediaPipe WebCam integration)
 - **godot-mcp**: Godot MCP server for AI integration
+
+**Primary Project**: SubwayRunner is the main production game with automated deployment to Hostinger.
 
 ## Common Development Commands
 
-### SubwayRunner (React/TypeScript/Three.js)
+### SubwayRunner (Vanilla JS/Three.js) - Primary Project
 ```bash
 cd SubwayRunner
-npm install          # Install dependencies
-npm run dev          # Start development server (port 3001)
-npm run build        # Build for production
-npm run lint         # Run ESLint
-npm run preview      # Preview production build
+# Serve locally for development
+python -m http.server 8001
+# Navigate to localhost:8001
+
+# Deployment (automatic via GitHub Actions)
+git add . && git commit -m "message" && git push
+# Deploys to https://ki-revolution.at/ via Hostinger FTP
 ```
 
 ### Endless3D (Vanilla JS/Three.js)
@@ -64,13 +68,15 @@ npm run inspector    # Run MCP inspector
 
 ## Architecture Overview
 
-### SubwayRunner Architecture
-- **Component-based React**: Each game element is a separate React component
-- **Three.js Integration**: Using @react-three/fiber for React-Three.js bridge
-- **State Management**: Zustand for lightweight global state
-- **Performance**: Object pooling, frame-based updates via useFrame
-- **Collision System**: Real-time 3D collision detection
-- **Obstacle Types**: 5 distinct obstacle types (barrier, spike, wall, block, tunnel)
+### SubwayRunner Architecture (Primary Project)
+- **Single HTML File**: Complete game in SubwayRunner/index.html with embedded CSS/JS
+- **Three.js Direct**: Direct Three.js usage without React wrapper
+- **Vanilla JS**: Performance-optimized pure JavaScript implementation
+- **Game Loop**: RequestAnimationFrame-based game loop with delta time
+- **Obstacle System**: 7+ obstacle types including tunnels, barriers, spikes, walls
+- **Audio System**: Background music with WAV format support
+- **Deployment**: GitHub Actions automatic deployment to Hostinger via FTP
+- **Version Display**: UI shows current version and deployment date
 
 ### Endless3D Architecture
 - **Modular World System**: JSON-configurable environments and themes
@@ -89,9 +95,11 @@ npm run inspector    # Run MCP inspector
 ### GestureRunnerPro Architecture
 - **Godot Scene System**: Modular scenes for UI, gameplay, effects
 - **Autoloaded Singletons**: GameCore, AudioManager, SaveSystem, Analytics
-- **WebCam Integration**: MediaPipe gesture recognition for browser
-- **State Machine**: Player states (running, jumping, ducking, etc.)
-- **Object Pooling**: Godot-optimized obstacle and effect recycling
+- **MediaPipe Integration**: Real-time gesture recognition via JavaScript bridge
+- **WebCam Support**: Browser webcam access with pose landmark detection
+- **Gesture System**: 6 supported gestures (move left/right, jump, duck, shield, magnet)
+- **Cross-Platform Bridge**: JavaScriptBridge for web export gesture communication
+- **State Machine**: Player states with gesture-driven transitions
 
 ### godot-mcp Architecture
 - **MCP Protocol**: Model Context Protocol server for Godot integration
@@ -133,12 +141,26 @@ npm run inspector    # Run MCP inspector
 - **Godot projects**: Test in Godot editor and exported builds
 - **MCP server**: Test with MCP inspector tool
 
+## Deployment & CI/CD
+
+### GitHub Actions Workflow
+- **Trigger**: Push to main branch or manual workflow_dispatch
+- **Process**: Copies SubwayRunner/index.html to root, creates deployment package
+- **Target**: Hostinger FTP deployment to root directory (server-dir: /)
+- **Secrets Required**: FTP_SERVER, FTP_USERNAME, FTP_PASSWORD
+- **Live URL**: https://ki-revolution.at/
+
+### Known Issues
+- **Overhead Obstacles**: Tunnel collision detection needs fixing (ducking allows pass-through)
+- **Version Display**: UI version info should appear bottom-left but may need CSS fixes
+
 ## Project-Specific Notes
 
-### SubwayRunner
-- Uses port 3001 by default to avoid conflicts
-- Optimized for 4:3 aspect ratio desktop viewing
-- Obstacle types designed for easy Blender integration
+### SubwayRunner (Primary Project)
+- **Development Port**: 8001 (python -m http.server)
+- **Production**: Single HTML file deployment
+- **Current Version**: 3.1 with deployment fixes
+- **Critical Bug**: Overhead/tunnel obstacles passable when ducking
 
 ### Endless3D
 - Fully modular world system - add new worlds via JSON config
@@ -151,9 +173,11 @@ npm run inspector    # Run MCP inspector
 - UI/UX first development philosophy
 
 ### GestureRunnerPro
-- Requires webcam permissions for gesture control
-- WebGL compatibility mode for broader browser support
-- MediaPipe integration for gesture recognition
+- **MediaPipe Version**: 0.10.0 from CDN for pose detection
+- **Gesture Recognition**: 240x180 video preview with real-time skeleton overlay
+- **Browser Requirements**: WebRTC (getUserMedia), WebGL, HTTPS for camera access
+- **Key Files**: systems/gesture/GestureInterface.gd, web_export/mediapipe/gesture_bridge.html
+- **Gesture Thresholds**: 15% torso height for lean, 30% above shoulders for jump
 
 ### godot-mcp
 - Requires Godot editor to be running for full functionality

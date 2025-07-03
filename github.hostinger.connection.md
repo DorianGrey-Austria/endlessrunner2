@@ -542,6 +542,32 @@ Local Development → Git Push → GitHub Actions → FTP Upload → Live Game
 
 ---
 
+## 🔧 **16. Deployment-Fix Update** - 30. Juni 2025
+
+### **Problem gelöst**: GitHub Action deployte zu falschem Verzeichnis
+
+#### **Fehlerkonfiguration**:
+```yaml
+# ❌ Falsch: Verschachtelte public_html Ordner
+server-dir: /domains/ki-revolution.at/public_html/
+server-dir: /public_html/
+```
+
+#### **Korrekte Lösung**:
+```yaml
+# ✅ Richtig: Deployment ins Root-Verzeichnis
+server-dir: /
+```
+
+### **Ergebnis**:
+- **✅ Sofortige Datei-Aktualisierung** auf Hostinger
+- **✅ Korrekte Deployment-Struktur** ohne verschachtelte Ordner
+- **✅ Version 3.1** mit Version-Info erfolgreich deployed
+- **✅ Basis für Gestensteuerung-Tests** vorbereitet
+
+---
+
 **📅 Erstellt**: 23. Juni 2025  
+**📅 Aktualisiert**: 30. Juni 2025 - Deployment Fix  
 **🤖 Generated with**: Claude Code (https://claude.ai/code)  
-**🔗 Live Demo**: https://aiworkflows.at/pushup-panic/
+**🔗 Live Demo**: https://ki-revolution.at/

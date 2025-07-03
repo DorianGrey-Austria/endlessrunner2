@@ -1,9 +1,37 @@
-# Git Ignore
-.DS_Store
+# Dependencies
 node_modules/
-*.log
-dist/
-.env
-.vite/
-*.tmp
+
+# System files
+.DS_Store
 Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# Build outputs
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Backup files
+*.backup
+*.bak
+
+# Local development
+.local/
+
+# Vite
+.vite/

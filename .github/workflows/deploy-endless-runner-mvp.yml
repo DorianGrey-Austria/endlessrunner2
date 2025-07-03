@@ -1,0 +1,157 @@
+name: Deploy EndlessRunner MVP with Head Tracking
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.js'
+      - '**.html'
+      - '**.css'
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Prepare Production Files
+      run: |
+        echo "🚀 Preparing EndlessRunner MVP with Head Tracking for production..."
+        echo "📁 Repository structure:"
+        ls -la
+        echo ""
+        
+        # Create deployment directory
+        mkdir -p deploy
+        
+        # Copy files directly (they should be in root)
+        echo "📋 Copying main game files..."
+        cp index.html deploy/ && echo "✅ index.html copied" || echo "❌ index.html not found"
+        cp style.css deploy/ && echo "✅ style.css copied" || echo "❌ style.css not found"
+        cp script.js deploy/ && echo "✅ script.js copied" || echo "❌ script.js not found"
+        cp headTrackingController.js deploy/ && echo "✅ headTrackingController.js copied" || echo "❌ headTrackingController.js not found"
+        cp head-tracking-demo.html deploy/ && echo "✅ head-tracking-demo.html copied" || echo "❌ head-tracking-demo.html not found"
+        
+        # Optional files
+        cp game-loader.js deploy/ 2>/dev/null && echo "✅ game-loader.js copied" || echo "⚠️ game-loader.js not found (optional)"
+        cp compatibility.js deploy/ 2>/dev/null && echo "✅ compatibility.js copied" || echo "⚠️ compatibility.js not found (optional)"
+        cp HEAD_TRACKING_README.md deploy/ 2>/dev/null && echo "✅ HEAD_TRACKING_README.md copied" || echo "⚠️ README not found (optional)"
+        
+        # Check if we have any core files
+        if [ ! -f "deploy/index.html" ]; then
+          echo "❌ CRITICAL ERROR: No index.html found!"
+          echo "📁 Available files:"
+          find . -name "*.html" -o -name "*.js" -o -name "*.css" | head -20
+          exit 1
+        fi
+        
+        # Copy assets if they exist
+        if [ -d "assets" ]; then
+          cp -r assets deploy/
+        elif [ -d "EndlessRunner-MVP/assets" ]; then
+          cp -r EndlessRunner-MVP/assets deploy/
+        fi
+        
+        # Copy sounds if they exist
+        if [ -d "sounds" ]; then
+          cp -r sounds deploy/
+        elif [ -d "EndlessRunner-MVP/sounds" ]; then
+          cp -r EndlessRunner-MVP/sounds deploy/
+        fi
+        
+        # Create .htaccess for production with HTTPS enforcement
+        cat > deploy/.htaccess << 'EOF'
+        # Force HTTPS for webcam/head tracking functionality
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+        
+        # Enable compression
+        <ifModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/plain
+            AddOutputFilterByType DEFLATE text/html
+            AddOutputFilterByType DEFLATE text/css
+            AddOutputFilterByType DEFLATE application/javascript
+            AddOutputFilterByType DEFLATE application/json
+            AddOutputFilterByType DEFLATE image/svg+xml
+        </ifModule>
+        
+        # Cache static assets
+        <ifModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/css "access plus 1 month"
+            ExpiresByType application/javascript "access plus 1 month"
+            ExpiresByType image/png "access plus 1 month"
+            ExpiresByType image/jpg "access plus 1 month"
+            ExpiresByType audio/wav "access plus 1 month"
+            ExpiresByType audio/mp3 "access plus 1 month"
+        </ifModule>
+        
+        # Security headers
+        Header always set X-Content-Type-Options nosniff
+        Header always set X-Frame-Options SAMEORIGIN
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Permissions Policy for camera access
+        Header always set Permissions-Policy "camera=(self), microphone=()"
+        
+        # CORS headers for MediaPipe CDN
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type"
+        EOF
+        
+        echo "✅ Production files prepared with head tracking support"
+        echo "📁 Files to deploy:"
+        ls -la deploy/
+        echo ""
+        echo "📊 File sizes:"
+        du -h deploy/*
+        echo ""
+        
+    - name: Deploy to Hostinger via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./deploy/
+        server-dir: /public_html/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.DS_Store
+          **/Thumbs.db
+          
+    - name: Verify Deployment
+      run: |
+        echo "🎯 Deployment completed successfully!"
+        echo ""
+        echo "🌐 Game is now live at:"
+        echo "https://ki-revolution.at/"
+        echo ""
+        echo "🎮 Features deployed:"
+        echo "• ✅ Mobile-optimized Endless Runner"
+        echo "• ✅ Head Tracking with MediaPipe Face Mesh (Beta)"
+        echo "• ✅ Kalman filtering for smooth gesture detection"
+        echo "• ✅ Touch controls with automatic fallback"
+        echo "• ✅ Progressive difficulty system"
+        echo "• ✅ Achievements and daily challenges"
+        echo "• ✅ Service Worker for offline play"
+        echo "• ✅ HTTPS security headers for camera access"
+        echo ""
+        echo "📱 Head Tracking Demo:"
+        echo "https://ki-revolution.at/head-tracking-demo.html"
+        echo ""
+        echo "🔥 Ready to play with your head movements!"
