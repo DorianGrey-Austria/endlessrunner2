@@ -1221,11 +1221,17 @@
             cameraZoom: 1.0,
             slowMotionActive: false,
             
-            // NEW: Power-Up & Kiwis System
+            // NEW: Power-Up & Collectibles System
             powerUps: [],              // Spawned power-ups in world
-            kiwis: [],                 // Spawned kiwis in world  
+            kiwis: [],                 // Spawned kiwis in world
+            broccolis: [],             // Spawned broccolis in world  
             collectedKiwis: 0,         // Current session kiwis
+            collectedBroccolis: 0,     // Current session broccolis
             totalKiwis: 0,             // Lifetime kiwis
+            totalBroccolis: 0,         // Lifetime broccolis
+            totalCollectibles: 0,      // Total spawned this session
+            collectionGoal: 10,        // Target collectibles for bonus (80% of max ~12-15)
+            collectionBonusAwarded: false, // Track if 80% collection bonus was awarded
             activePowerUp: null,       // Currently active power-up
             powerUpTimeRemaining: 0,   // Time left for active power-up
             magnetActive: false,       // Magnet power-up state
@@ -1298,9 +1304,10 @@
         let scene, camera, renderer, player, track, obstacles = [];
         const LANE_POSITIONS = [-2, 0, 2];
         
-        // Power-Up and Kiwi arrays for tracking
+        // Power-Up and Collectible arrays for tracking
         let powerUps = [];
         let kiwis = [];
+        let broccolis = [];  // NEW: Brokkoli tracking
         
         // Power-Up configuration
         const POWER_UP_TYPES = {
@@ -2254,9 +2261,21 @@
             gameState.nearMissStreak = 0;
             gameState.kiwiCombo = 0;
             
-            // Clear obstacles
+            // Reset collectible system
+            gameState.collectedKiwis = 0;
+            gameState.collectedBroccolis = 0;
+            gameState.totalCollectibles = 0;
+            gameState.collectionBonusAwarded = false;
+            
+            // Clear obstacles and collectibles
             obstacles.forEach(obs => scene.remove(obs.mesh));
             obstacles = [];
+            
+            // Clear existing collectibles
+            gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
+            gameState.kiwis = [];
+            gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
+            gameState.broccolis = [];
             
             // Start sound
             audioManager.play('powerup');
@@ -3203,6 +3222,51 @@
                     gameState.kiwis.splice(index, 1);
                 }
             });
+            
+            // ==================== BROCCOLI COLLISION DETECTION ====================
+            
+            gameState.broccolis.forEach((broccoli, index) => {
+                const broccoliBBox = {
+                    min: {
+                        x: broccoli.mesh.position.x - 0.4,
+                        y: broccoli.mesh.position.y - 0.4,
+                        z: broccoli.mesh.position.z - 0.4
+                    },
+                    max: {
+                        x: broccoli.mesh.position.x + 0.4,
+                        y: broccoli.mesh.position.y + 0.4,
+                        z: broccoli.mesh.position.z + 0.4
+                    }
+                };
+                
+                // Magnet Power-Up Effect (same as kiwis)
+                if (gameState.magnetActive) {
+                    const magnetRange = 2.5;
+                    const distance = Math.sqrt(
+                        Math.pow(broccoli.mesh.position.x - player.position.x, 2) +
+                        Math.pow(broccoli.mesh.position.y - player.position.y, 2) +
+                        Math.pow(broccoli.mesh.position.z - player.position.z, 2)
+                    );
+                    
+                    if (distance < magnetRange && !broccoli.collected) {
+                        const attractionSpeed = 0.15;
+                        const direction = new THREE.Vector3()
+                            .subVectors(player.position, broccoli.mesh.position)
+                            .normalize()
+                            .multiplyScalar(attractionSpeed);
+                        
+                        broccoli.mesh.position.add(direction);
+                        broccoli.z = broccoli.mesh.position.z;
+                    }
+                }
+                
+                const isCollecting = boundingBoxIntersection(playerBBox, broccoliBBox);
+                
+                if (isCollecting && !broccoli.collected) {
+                    collectBroccoli(broccoli);
+                    gameState.broccolis.splice(index, 1);
+                }
+            });
         }
         
         // Calculate precise player bounding box based on current action
@@ -3497,10 +3561,11 @@
             // Haupt-Kiwi-Körper (Halbkugel)
             const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
             
-            // Braune Außenhaut
+            // ENHANCED: Verbesserte Braune Außenhaut mit Glow-Effekt
             const skinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x8B6914,
-                roughness: 0.8
+                color: 0xA0751A,  // Heller für bessere Sichtbarkeit
+                emissive: 0x2A1F0A,  // Leichtes Glühen
+                roughness: 0.6
             });
             const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
             kiwiSkin.rotation.x = -Math.PI / 2;
@@ -3580,7 +3645,70 @@
             };
             
             kiwis.push(kiwiData);
+            gameState.totalCollectibles++;  // Track total spawned collectibles
             return kiwiData;
+        }
+        
+        // NEW: Brokkoli creation function for variety
+        function createBroccoli(lane, z, pattern = 'single') {
+            const broccoliGroup = new THREE.Group();
+            
+            // Brokkoli Geometrie - Baum-ähnliche Form
+            const stemRadius = 0.15;
+            const stemHeight = 0.4;
+            const headRadius = 0.4;
+            
+            // Stiel (Stamm)
+            const stemGeometry = new THREE.CylinderGeometry(stemRadius, stemRadius * 1.2, stemHeight, 8);
+            const stemMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4A6741,  // Dunkles Grün für Stiel
+                emissive: 0x1A241A
+            });
+            const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
+            broccoliStem.position.y = 1.0;
+            broccoliStem.castShadow = true;
+            broccoliGroup.add(broccoliStem);
+            
+            // Kopf (florettes) - mehrere kleine Kugeln
+            for (let i = 0; i < 8; i++) {
+                const floretGeometry = new THREE.SphereGeometry(0.12 + Math.random() * 0.08, 8, 6);
+                const floretMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x228B22,  // Helleres Grün für Florettes
+                    emissive: 0x0F3F0F,  // Grünes Glühen
+                    roughness: 0.7
+                });
+                const floret = new THREE.Mesh(floretGeometry, floretMaterial);
+                
+                // Zufällige Position um den Kopf
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 0.2 + Math.random() * 0.15;
+                floret.position.set(
+                    Math.cos(angle) * radius,
+                    1.25 + Math.random() * 0.2,
+                    Math.sin(angle) * radius
+                );
+                floret.castShadow = true;
+                broccoliGroup.add(floret);
+            }
+            
+            // Position and add to scene
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            broccoliGroup.userData = { type: 'broccoli', lane: lane };
+            scene.add(broccoliGroup);
+            
+            // Brokkoli data object
+            const broccoliData = {
+                mesh: broccoliGroup,
+                lane: lane,
+                z: z,
+                pattern: pattern,
+                animationTime: 0,
+                collected: false
+            };
+            
+            broccolis.push(broccoliData);
+            gameState.totalCollectibles++;
+            return broccoliData;
         }
         
         function createKiwiPattern(type, baseZ) {
@@ -3710,6 +3838,35 @@
             updateKiwiUI();
             
             console.log(`Collected kiwi! Combo: ${gameState.kiwiCombo}, Score: +${totalScore}`);
+        }
+        
+        // NEW: Brokkoli collection function
+        function collectBroccoli(broccoliData) {
+            if (broccoliData.collected) return;
+            
+            broccoliData.collected = true;
+            scene.remove(broccoliData.mesh);
+            
+            // Update broccoli count
+            gameState.collectedBroccolis++;
+            gameState.totalBroccolis++;
+            
+            // Broccolis give slightly more points than kiwis (health food bonus!)
+            const baseScore = 15;
+            const totalScore = baseScore;
+            
+            addScore(totalScore, 'broccoli_collection');
+            
+            // Green healthy effects
+            createBroccoliHealthEffect(broccoliData.mesh.position.clone());
+            
+            // Audio feedback with lower pitch (different from kiwi)
+            audioManager.createTone(400, 0.2, 'sine');
+            
+            // Update UI
+            updateCollectibleUI();
+            
+            console.log(`Collected broccoli! Health bonus: +${totalScore} points`);
         }
         
         // Kiwi-Saft-Splash-Effekt
@@ -3900,19 +4057,19 @@
             const currentTime = performance.now();
             const actualLane = lane !== null ? lane : gameState.playerLane;
             
-            // Track movement for rapid move detection
-            if (gameState.lastAction !== moveType) {
+            // BUGFIX: Only track lane changes for rapid move bonuses, not jumping/ducking
+            if (gameState.lastAction !== moveType && (moveType === 'left' || moveType === 'right')) {
                 const timeSinceLastMove = currentTime - gameState.lastSkillTime;
                 
-                // Award rapid movement bonus (not collision-based)
+                // Award rapid movement bonus only for actual lane changes (skill moves)
                 if (timeSinceLastMove < 1000 && gameState.rapidMoveBonus < 5) { // Max 5 rapid moves
                     gameState.rapidMoveBonus++;
                     const rapidBonus = gameState.rapidMoveBonus * 10;
-                    addScore(rapidBonus, 'rapid_move_bonus');
+                    addScore(rapidBonus, 'rapid_lane_change');
                     
                     // Show rapid move feedback
                     if (gameState.rapidMoveBonus >= 3) {
-                        showSkillCombo(rapidBonus, `RAPID MOVES x${gameState.rapidMoveBonus}!`);
+                        showSkillCombo(rapidBonus, `RAPID LANE CHANGES x${gameState.rapidMoveBonus}!`);
                     }
                 } else if (timeSinceLastMove > 2000) {
                     gameState.rapidMoveBonus = 0; // Reset if too slow
@@ -3920,6 +4077,11 @@
                 
                 gameState.lastAction = moveType;
                 gameState.lastSkillTime = currentTime;
+            }
+            
+            // Track jumping and ducking without giving points (just for sequence tracking)
+            if (moveType === 'jumping' || moveType === 'ducking') {
+                gameState.lastAction = moveType;
             }
         }
         
@@ -4254,6 +4416,132 @@
                 updateEnvironmentUI();
                 console.log('Now in tunnel!');
             }, 2000);
+        }
+        
+        // NEW: Brokkoli health effect
+        function createBroccoliHealthEffect(position) {
+            const healthParticles = [];
+            const particleCount = 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Heart-shaped particles for health effect
+                const heartSize = 0.08 + Math.random() * 0.05;
+                const heartGeometry = new THREE.SphereGeometry(heartSize, 6, 4);
+                const heartMaterial = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color(0.2, 0.8 + Math.random() * 0.2, 0.3),
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const heart = new THREE.Mesh(heartGeometry, heartMaterial);
+                heart.position.copy(position);
+                
+                // Upward floating motion for health
+                const velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 3,
+                    3 + Math.random() * 2,  // Upward
+                    (Math.random() - 0.5) * 3
+                );
+                
+                heart.userData = { velocity: velocity, life: 1.0 };
+                scene.add(heart);
+                healthParticles.push(heart);
+            }
+            
+            // Animate health particles
+            function animateHealthParticles() {
+                healthParticles.forEach((particle, index) => {
+                    if (particle.userData.life > 0) {
+                        particle.position.add(particle.userData.velocity.clone().multiplyScalar(0.016));
+                        particle.userData.velocity.y -= 0.3; // Gravity
+                        particle.userData.life -= 0.02;
+                        particle.material.opacity = particle.userData.life;
+                        
+                        if (particle.userData.life <= 0) {
+                            scene.remove(particle);
+                            healthParticles.splice(index, 1);
+                        }
+                    }
+                });
+                
+                if (healthParticles.length > 0) {
+                    requestAnimationFrame(animateHealthParticles);
+                }
+            }
+            
+            animateHealthParticles();
+        }
+        
+        // NEW: Update collectible UI for both kiwis and broccolis
+        function updateCollectibleUI() {
+            const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+            const collectionPercentage = gameState.totalCollectibles > 0 ? 
+                (collectedTotal / gameState.totalCollectibles * 100).toFixed(0) : 0;
+            
+            // Update display (you can expand this with actual UI elements)
+            console.log(`🥝 Kiwis: ${gameState.collectedKiwis} | 🥦 Broccolis: ${gameState.collectedBroccolis} | Progress: ${collectionPercentage}%`);
+            
+            // Check for collection milestone bonus (80% collected)
+            if (collectionPercentage >= 80 && !gameState.collectionBonusAwarded) {
+                awardCollectionBonus();
+            }
+        }
+        
+        // NEW: Award bonus for collecting 80% of available collectibles
+        function awardCollectionBonus() {
+            if (gameState.collectionBonusAwarded) return;
+            
+            gameState.collectionBonusAwarded = true;
+            const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+            const collectionPercentage = (collectedTotal / gameState.totalCollectibles * 100).toFixed(0);
+            
+            // Calculate bonus - generous reward for achievement
+            const baseBonus = 500;
+            const percentageBonus = Math.floor((collectionPercentage - 80) * 20); // Extra for over 80%
+            const totalBonus = baseBonus + percentageBonus;
+            
+            addScore(totalBonus, 'collection_achievement');
+            
+            // Special celebration effects
+            showCollectionAchievement(collectedTotal, gameState.totalCollectibles, totalBonus);
+            
+            // Audio celebration
+            audioManager.createTone(523, 0.3, 'sine'); // C5
+            setTimeout(() => audioManager.createTone(659, 0.3, 'sine'), 150); // E5
+            setTimeout(() => audioManager.createTone(784, 0.4, 'sine'), 300); // G5
+            
+            console.log(`🎉 COLLECTION ACHIEVEMENT! ${collectionPercentage}% collected - Bonus: +${totalBonus} points`);
+        }
+        
+        // NEW: Show collection achievement UI
+        function showCollectionAchievement(collected, total, bonus) {
+            // Create achievement popup (you can enhance this with actual UI)
+            const percentage = (collected / total * 100).toFixed(0);
+            
+            // For now, show in console - can be enhanced with visual UI later
+            console.log(`
+🏆 COLLECTION MASTER! 🏆
+━━━━━━━━━━━━━━━━━━━━
+🥝 Collected: ${collected}/${total} (${percentage}%)
+💎 Bonus Score: +${bonus} points
+🎯 Achievement: Healthy Eater!
+━━━━━━━━━━━━━━━━━━━━
+            `);
+            
+            // Trigger confetti or other celebration effects
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    createParticleEffect(
+                        new THREE.Vector3(
+                            player.position.x + (Math.random() - 0.5) * 4,
+                            player.position.y + 3,
+                            player.position.z
+                        ),
+                        [0xFFD700, 0x00FF00, 0xFF69B4][i % 3],
+                        'celebration'
+                    );
+                }, i * 100);
+            }
         }
         
         function exitTunnelTransition() {
@@ -4921,22 +5209,53 @@
                         }
                     }
                     
+                    // ENHANCED: Limit total collectibles to 12-15 per game (10-12 needed for 80% bonus)
+                    if (gameState.totalCollectibles >= 15) {
+                        // Max collectibles reached, no more spawning
+                        return;
+                    }
+                    
+                    // Randomly choose between kiwi and broccoli (50/50 chance)
+                    const isKiwi = Math.random() < 0.5;
+                    
                     if (pattern === 'single') {
                         const lane = Math.floor(Math.random() * 3);
-                        const kiwi = createSimpleKiwi(lane, -35);
-                        gameState.kiwis.push(kiwi);
-                    } else if (pattern === 'line') {
-                        // Spawn coins in a line across lanes
-                        for (let lane = 0; lane < 3; lane++) {
-                            const kiwi = createSimpleKiwi(lane, -35 - (lane * 2)); // Stagger them slightly
+                        if (isKiwi) {
+                            const kiwi = createSimpleKiwi(lane, -35);
                             gameState.kiwis.push(kiwi);
+                        } else {
+                            const broccoli = createBroccoli(lane, -35, 'single');
+                            gameState.broccolis.push(broccoli);
+                        }
+                    } else if (pattern === 'line') {
+                        // Spawn collectibles in a line across lanes
+                        for (let lane = 0; lane < 3; lane++) {
+                            if (gameState.totalCollectibles >= 15) break; // Safety check
+                            
+                            // Mix kiwis and broccolis in line patterns
+                            const collectibleType = Math.random() < 0.5;
+                            if (collectibleType) {
+                                const kiwi = createSimpleKiwi(lane, -35 - (lane * 2));
+                                gameState.kiwis.push(kiwi);
+                            } else {
+                                const broccoli = createBroccoli(lane, -35 - (lane * 2), 'line');
+                                gameState.broccolis.push(broccoli);
+                            }
                         }
                     } else if (pattern === 'arc') {
-                        // Spawn coins in arc pattern - more generous in late game
+                        // Spawn collectibles in arc pattern - mixed variety
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         lanes.forEach((lane, index) => {
-                            const kiwi = createSimpleKiwi(lane, -35 - (index * 1.5));
-                            gameState.kiwis.push(kiwi);
+                            if (gameState.totalCollectibles >= 15) return; // Safety check
+                            
+                            // Alternate between kiwis and broccolis in arcs
+                            if (index % 2 === 0) {
+                                const kiwi = createSimpleKiwi(lane, -35 - (index * 1.5));
+                                gameState.kiwis.push(kiwi);
+                            } else {
+                                const broccoli = createBroccoli(lane, -35 - (index * 1.5), 'arc');
+                                gameState.broccolis.push(broccoli);
+                            }
                         });
                     }
                 }
@@ -4982,6 +5301,27 @@
                     // Subtle bounce
                     const baseY = 1.2;
                     kiwi.mesh.position.y = baseY + Math.sin(kiwi.animationTime * 4) * 0.1;
+                });
+                
+                // Update Broccolis (similar to kiwis)
+                gameState.broccolis.forEach((broccoli, index) => {
+                    broccoli.mesh.position.z += visualSpeed;
+                    broccoli.z = broccoli.mesh.position.z;
+                    
+                    // Remove if passed player
+                    if (broccoli.z > 10) {
+                        scene.remove(broccoli.mesh);
+                        gameState.broccolis.splice(index, 1);
+                    }
+                    
+                    // Animate broccoli - different pattern than kiwis
+                    broccoli.animationTime += deltaTime * 0.001;
+                    // Gentle swaying motion for broccoli
+                    broccoli.mesh.rotation.y = Math.sin(broccoli.animationTime * 2) * 0.1;
+                    broccoli.mesh.rotation.z = Math.cos(broccoli.animationTime * 1.5) * 0.05;
+                    // Slight vertical movement
+                    const baseY = 1.0;
+                    broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
                 });
                 
                 // Handle Power-Up Time Remaining
