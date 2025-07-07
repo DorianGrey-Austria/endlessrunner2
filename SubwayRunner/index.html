@@ -1032,7 +1032,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.0.5-BALANCED<br>
+            🚀 V4.0.6-PURE<br>
             📅 07.07.2025
         </div>
         
@@ -4516,9 +4516,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.0.5-BALANCED<br>
-                    🎯 Perfect Balance Mode<br>
-                    🥝 Realistic Kiwis + Limited Spawns
+                    Version: 4.0.6-PURE<br>
+                    🎯 Pure Collectibles Only<br>
+                    🥝 Kiwis + Broccolis + 2 Mystery Boxes
                 `;
             }
         });
@@ -8932,44 +8932,15 @@
                 
                 // ==================== PROGRESSIVE POWER-UP & COIN SPAWNING ====================
                 
-                // Progressive Power-Up spawning (rare at start, more frequent later)
-                const basePowerUpRate = 0.001; // Very low at start
-                const maxPowerUpRate = 0.006; // Higher at end
-                const progressivePowerUpRate = basePowerUpRate + (maxPowerUpRate - basePowerUpRate) * Math.pow(gameProgress, 1.5);
+                // REMOVED: Power-up spawning completely disabled
+                // User wants ONLY kiwis, broccolis, and mystery boxes (max 2)
+                // No more rectangular power-ups (magnets, shields, speed boosts)
                 
-                if (Math.random() < progressivePowerUpRate && !gameState.activePowerUp) {
-                    // Filter out largeMagnet from regular spawning
-                    let powerUpTypes = Object.keys(POWER_UP_TYPES).filter(type => type !== 'largeMagnet');
-                    
-                    // LIMIT: Remove magnets if we already have 2
-                    if (gameState.magnetCount >= 2) {
-                        powerUpTypes = powerUpTypes.filter(type => type !== 'magnet');
-                    }
-                    
-                    // Don't spawn anything if no types available
-                    if (powerUpTypes.length === 0) return;
-                    
-                    let selectedType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-                    
-                    // Special handling for magnet - sometimes spawn large magnet instead
-                    if (selectedType === 'magnet' && Math.random() < 0.3) { // 30% chance for large magnet
-                        selectedType = 'largeMagnet';
-                    }
-                    
-                    // Track magnet spawns
-                    if (selectedType === 'magnet' || selectedType === 'largeMagnet') {
-                        gameState.magnetCount++;
-                    }
-                    
-                    const lane = Math.floor(Math.random() * 3);
-                    
-                    const powerUp = createSimplePowerUp(selectedType, lane, -35);
-                    gameState.powerUps.push(powerUp);
-                }
+                // All power-up spawning logic removed per user request
                 
                 // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
-                // Helper function to check if lane is safe for collectible spawning
-                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
+                // IMPROVED: Helper function to check if lane is safe for collectible spawning
+                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 25) => {
                     return !obstacles.some(obs => 
                         Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
                         Math.abs(obs.position.z - zPosition) < safeDistance
@@ -9047,7 +9018,9 @@
                     if (pattern === 'single') {
                         // ENHANCED: Find safe lanes for spawning
                         const safeLanes = [];
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05; // Further away at high speeds
+                        // FIXED: Spawn collectibles far behind obstacles with speed-dependent spacing
+                        const speedFactor = gameState.speed * 1000; // Convert to proper scale
+                        const baseSpawnZ = -60 - Math.max(0, (speedFactor - 100) * 0.2); // Start 30 units behind obstacles
                         
                         for (let lane = 0; lane < 3; lane++) {
                             if (isLaneClearForCollectible(lane, baseSpawnZ)) {
@@ -9066,8 +9039,9 @@
                             }
                         }
                     } else if (pattern === 'line') {
-                        // ENHANCED: Smart line spawning with obstacle avoidance
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        // FIXED: Smart line spawning with proper spacing behind obstacles
+                        const speedFactor = gameState.speed * 1000; // Convert to proper scale
+                        const baseSpawnZ = -60 - Math.max(0, (speedFactor - 100) * 0.2); // Start 30 units behind obstacles
                         const safeLanes = [];
                         
                         for (let lane = 0; lane < 3; lane++) {
@@ -9123,7 +9097,9 @@
                         }
                     } else if (pattern === 'arc') {
                         // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        // FIXED: Arc spawning with proper spacing behind obstacles
+                        const speedFactor = gameState.speed * 1000; // Convert to proper scale
+                        const baseSpawnZ = -60 - Math.max(0, (speedFactor - 100) * 0.2); // Start 30 units behind obstacles
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
                         

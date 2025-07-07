@@ -25,9 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.0.5-BALANCED (Perfect Balance & Realistic Kiwis)
-- **Previous**: 4.0.4-PERFORMANCE (High-Performance Optimizations)
-- **Before**: 4.0.3-FIXED (Kiwi/Broccoli Only - No Coins Fix)
+- **Latest**: 4.0.6-PURE (Pure Collectibles Only)
+- **Previous**: 4.0.5-BALANCED (Perfect Balance & Realistic Kiwis)
+- **Before**: 4.0.4-PERFORMANCE (High-Performance Optimizations)
 - **Before**: 4.0.0 (SUPER FUN EDITION - 10 Mega-Features von 5 Sub-Agents implementiert)
 
 ### **VERSION UPDATE PROCESS**
@@ -37,6 +37,7 @@ This is a collection of endless runner game projects built with different techno
 4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
 
 ### **VERSION HISTORY LOG**
+- 4.0.6-PURE: Pure Collectibles Only (removed all power-ups, fixed spacing)
 - 4.0.5-BALANCED: Perfect Balance & Realistic Kiwis (limited spawns, bigger kiwis)
 - 4.0.4-PERFORMANCE: High-Performance Optimizations (+300% speed boost)
 - 4.0.3-FIXED: Kiwi/Broccoli Only Mode (disabled Score Token coins)
@@ -183,6 +184,32 @@ npm run inspector    # Run MCP inspector
 - **3D projects**: Bounding box collision with configurable tolerances
 - **2D Godot**: Physics body collision layers for precise detection
 - **Performance**: Spatial partitioning and early exit optimizations
+
+## 🚨 **CRITICAL GAME DESIGN RULES** (Never delete!)
+
+### **Collectible System Rules**
+**RULE 1**: ONLY these collectibles allowed:
+- ✅ **Kiwis** (large, realistic brown fruit) 
+- ✅ **Broccolis** (green vegetables)
+- ✅ **Mystery Boxes** (max 2 per game) - golden sparkly fountains
+
+**RULE 2**: NO rectangular/box collectibles:
+- ❌ **NO** Power-ups (magnets, shields, speed boosts)  
+- ❌ **NO** Score tokens or coins
+- ❌ **NO** Geometric shapes as collectibles
+- ❌ **NO** Rectangle/cube collectibles
+
+**RULE 3**: Collectible spawning must be:
+- ✅ **30+ units behind obstacles** (never next to or inside obstacles)
+- ✅ **Speed-dependent spacing** that increases with game speed
+- ✅ **Sequential spawning** - collectibles come AFTER obstacles, never parallel
+- ✅ **Safe lane checking** with 25+ unit clearance
+
+### **Collectible Balance Rules**
+- **Target**: 30 Kiwis + 7 Broccolis (minimum 20 kiwis guaranteed)
+- **Total limit**: 40 collectibles max for good gameplay
+- **Bias**: 85% kiwi spawning, 15% broccoli spawning
+- **Pattern limits**: Max 2 collectibles per pattern (never all 3 lanes)
 
 ## Development Guidelines
 

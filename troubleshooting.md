@@ -1,6 +1,59 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **FUNKTIONSFÄHIG** - Version 4.0.5-BALANCED erfolgreich deployed
+## **Aktueller Status**: ✅ **FUNKTIONSFÄHIG** - Version 4.0.6-PURE erfolgreich deployed
+
+---
+
+## 🎯 **PURE COLLECTIBLES UPDATE: Only Kiwis + Broccolis + Mystery Boxes** - 7. Juli 2025
+
+### **Problem**: User wants ONLY fruits/vegetables as collectibles - NO rectangular power-ups
+
+#### **User Request**:
+- ❌ **NO rectangular collectibles** (power-ups, magnets, shields, speed boosts)
+- ❌ **Collectibles spawning next to/inside obstacles** - impossible to collect
+- ✅ **Only Kiwis + Broccolis + 2 Mystery Boxes** as collectibles
+- ✅ **Sequential spawning** - collectibles BEHIND obstacles, never parallel
+
+#### **✅ Implemented Fixes**:
+
+**1. Complete Power-Up Removal** (Lines 8935-8939):
+```javascript
+// REMOVED: Power-up spawning completely disabled
+// User wants ONLY kiwis, broccolis, and mystery boxes (max 2)
+// No more rectangular power-ups (magnets, shields, speed boosts)
+
+// All power-up spawning logic removed per user request
+```
+
+**2. Fixed Collectible Spacing** (Lines 8943, 9022-9023, 9043-9044, 9101-9102):
+```javascript
+// BEFORE: Too close to obstacles
+const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05; // Only 5 units behind obstacles!
+
+// AFTER: Proper spacing behind obstacles
+const speedFactor = gameState.speed * 1000; // Convert to proper scale
+const baseSpawnZ = -60 - Math.max(0, (speedFactor - 100) * 0.2); // Start 30 units behind obstacles
+
+// IMPROVED: Safe distance check
+const isLaneClearForCollectible = (lane, zPosition, safeDistance = 25) => {
+    // Increased from 12 to 25 units clearance
+}
+```
+
+**3. Speed-Dependent Spacing** (All spawn patterns):
+- **Formula**: `-60 - (speed * 1000 - 100) * 0.2`
+- **Effect**: Faster speed = more distance behind obstacles
+- **Range**: 30-60+ units behind obstacles depending on speed
+
+#### **🔧 Technische Details**:
+- **Power-Up System**: Komplett entfernt (magnets, shields, speed boosts)
+- **Obstacle Distance**: 30+ Einheiten Abstand (war 5)
+- **Safe Distance Check**: 25 Einheiten Clearance (war 12)
+- **Speed Scaling**: Proper scale factor (speed * 1000) für realistische Abstände
+- **Sequential Spawning**: Collectibles spawnen erst nach Hindernissen
+- **Pattern Safety**: Alle 3 Spawn-Pattern (single, line, arc) nutzen sichere Abstände
+
+**Ergebnis**: ✅ **Pure Collectibles! Nur Kiwis, Broccolis und 2 Mystery Boxes. Perfekte Abstände zu Hindernissen.**
 
 ---
 
