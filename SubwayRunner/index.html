@@ -1032,8 +1032,32 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.0.1-HOTFIX<br>
+            🚀 V4.0.2-STABLE<br>
             📅 07.07.2025
+        </div>
+        
+        <!-- DevOps Monitoring Panel -->
+        <div id="devopsPanel" style="
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            display: none;
+            min-width: 200px;
+            border: 1px solid #00ff00;
+            z-index: 1000;
+        ">
+            <div style="font-weight: bold; margin-bottom: 5px;">🚀 DevOps Monitor</div>
+            <div id="devopsFPS">FPS: --</div>
+            <div id="devopsMemory">Memory: --</div>
+            <div id="devopsErrors">Errors: 0</div>
+            <div id="devopsFeatures">Features: --</div>
+            <div id="devopsMode">Mode: Normal</div>
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -1738,6 +1762,135 @@
         const audioManager = new AudioManager();
         audioManager.ambientPlaying = false;
         
+        // ==================== MEMORY LEAK PREVENTION ====================
+        window.MemoryManager = {
+            maxSceneChildren: 500,
+            cleanupInterval: null,
+            
+            init: function() {
+                // Regular cleanup every 30 seconds
+                this.cleanupInterval = setInterval(() => {
+                    this.performCleanup();
+                }, 30000);
+            },
+            
+            performCleanup: function() {
+                if (!scene) return;
+                
+                const currentChildren = scene.children.length;
+                if (currentChildren > this.maxSceneChildren) {
+                    console.warn(`⚠️ Scene has ${currentChildren} objects, performing cleanup...`);
+                    
+                    // Remove old particles
+                    const particles = scene.children.filter(child => 
+                        child.userData && child.userData.isParticle && 
+                        Date.now() - (child.userData.createdAt || 0) > 5000
+                    );
+                    
+                    particles.forEach(particle => {
+                        scene.remove(particle);
+                        if (particle.geometry) particle.geometry.dispose();
+                        if (particle.material) particle.material.dispose();
+                    });
+                    
+                    // Remove orphaned objects
+                    const orphans = scene.children.filter(child => 
+                        child.position && (child.position.z > 20 || child.position.z < -100)
+                    );
+                    
+                    orphans.forEach(orphan => {
+                        scene.remove(orphan);
+                        if (orphan.geometry) orphan.geometry.dispose();
+                        if (orphan.material) orphan.material.dispose();
+                    });
+                    
+                    console.log(`✅ Cleaned up ${particles.length + orphans.length} objects`);
+                }
+            },
+            
+            dispose: function() {
+                if (this.cleanupInterval) {
+                    clearInterval(this.cleanupInterval);
+                    this.cleanupInterval = null;
+                }
+            }
+        };
+        
+        window.MemoryManager.init();
+        
+        // ==================== GAME RECOVERY SYSTEM ====================
+        window.GameRecovery = {
+            lastValidState: null,
+            recoveryAttempts: 0,
+            maxRecoveryAttempts: 3,
+            
+            saveState: function() {
+                if (!gameState || !gameState.isPlaying) return;
+                
+                this.lastValidState = {
+                    score: gameState.score,
+                    lives: gameState.lives,
+                    speed: gameState.speed,
+                    timeRemaining: gameState.timeRemaining,
+                    playerLane: gameState.playerLane,
+                    collectedKiwis: gameState.collectedKiwis,
+                    collectedBroccolis: gameState.collectedBroccolis
+                };
+            },
+            
+            attemptRecovery: function() {
+                this.recoveryAttempts++;
+                
+                if (this.recoveryAttempts > this.maxRecoveryAttempts) {
+                    console.error('Max recovery attempts reached, reloading page...');
+                    window.location.reload();
+                    return;
+                }
+                
+                console.warn(`🔧 Attempting game recovery (attempt ${this.recoveryAttempts})...`);
+                
+                if (this.lastValidState) {
+                    // Restore last valid state
+                    Object.assign(gameState, this.lastValidState);
+                    
+                    // Clear potentially corrupted data
+                    obstacles.forEach(obs => scene.remove(obs.mesh));
+                    obstacles = [];
+                    
+                    gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
+                    gameState.kiwis = [];
+                    
+                    gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
+                    gameState.broccolis = [];
+                    
+                    // Reset player position
+                    if (player) {
+                        player.position.set(LANE_POSITIONS[gameState.playerLane], 0.8, 0);
+                    }
+                    
+                    console.log('✅ Game state recovered');
+                    window.UIManager?.showNotification('Game recovered from error', 'info');
+                } else {
+                    // No valid state, restart game
+                    console.warn('No valid state to recover, restarting...');
+                    resetGameState();
+                    startGameInternal();
+                }
+            },
+            
+            reset: function() {
+                this.recoveryAttempts = 0;
+                this.lastValidState = null;
+            }
+        };
+        
+        // Save game state periodically
+        setInterval(() => {
+            if (gameState && gameState.isPlaying) {
+                window.GameRecovery.saveState();
+            }
+        }, 5000);
+        
         // CRITICAL FIX: Centralized score management to prevent explosion
         function addScore(amount, source = 'unknown') {
             // Add to queue instead of directly to score
@@ -1771,6 +1924,740 @@
         
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
+
+        // ========================================
+        // DEVOPS MONITORING & FEATURE FLAG SYSTEM
+        // ========================================
+        
+        // Feature Flag System with runtime control
+        const FeatureFlags = {
+            // Mega Feature Flags (10 total)
+            COMBO_EXPLOSIONS: true,        // Feature 1 - Working
+            DYNAMIC_THEMES: false,         // Feature 2 - Disabled (incomplete)
+            POWER_UP_FUSION: true,         // Feature 3 - Working
+            ADRENALINE_MODE: true,         // Feature 4 - Working
+            TRICK_SYSTEM: false,           // Feature 5 - Disabled (incomplete)
+            MYSTERY_GAMBLING: false,       // Feature 6 - Disabled (incomplete)
+            OBSTACLE_DESTRUCTION: true,    // Feature 7 - Working
+            FLIGHT_MODE: true,             // Feature 8 - Working
+            DAILY_CHALLENGES: false,       // Feature 9 - Disabled (incomplete)
+            MULTIPLIER_ROULETTE: false,    // Feature 10 - Disabled (incomplete)
+            
+            // Sub-feature flags
+            GESTURE_CONTROL: true,
+            SOUND_EFFECTS: true,
+            PARTICLE_EFFECTS: true,
+            ADVANCED_PHYSICS: true,
+            LEADERBOARDS: true,
+            ANALYTICS: true,
+            
+            // Rollout percentages (0-100)
+            rolloutPercentages: {
+                COMBO_EXPLOSIONS: 100,
+                DYNAMIC_THEMES: 0,
+                POWER_UP_FUSION: 100,
+                ADRENALINE_MODE: 100,
+                TRICK_SYSTEM: 0,
+                MYSTERY_GAMBLING: 0,
+                OBSTACLE_DESTRUCTION: 100,
+                FLIGHT_MODE: 100,
+                DAILY_CHALLENGES: 0,
+                MULTIPLIER_ROULETTE: 0
+            },
+            
+            // Check if feature is enabled for user
+            isEnabled(featureName) {
+                if (!this[featureName]) return false;
+                
+                // Check rollout percentage
+                const percentage = this.rolloutPercentages[featureName];
+                if (percentage !== undefined && percentage < 100) {
+                    const userHash = this.getUserHash();
+                    const threshold = userHash % 100;
+                    return threshold < percentage;
+                }
+                
+                return true;
+            },
+            
+            // Generate consistent user hash for A/B testing
+            getUserHash() {
+                const userId = localStorage.getItem('userId') || this.generateUserId();
+                let hash = 0;
+                for (let i = 0; i < userId.length; i++) {
+                    hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+                    hash = hash & hash;
+                }
+                return Math.abs(hash);
+            },
+            
+            generateUserId() {
+                const id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('userId', id);
+                return id;
+            },
+            
+            // Runtime feature toggle
+            toggle(featureName, enabled) {
+                if (this.hasOwnProperty(featureName)) {
+                    this[featureName] = enabled;
+                    DevOpsMonitor.logEvent('feature_toggled', {
+                        feature: featureName,
+                        enabled: enabled,
+                        timestamp: Date.now()
+                    });
+                }
+            },
+            
+            // Set rollout percentage
+            setRollout(featureName, percentage) {
+                this.rolloutPercentages[featureName] = Math.max(0, Math.min(100, percentage));
+                DevOpsMonitor.logEvent('rollout_changed', {
+                    feature: featureName,
+                    percentage: percentage
+                });
+            }
+        };
+        
+        // Production Error Logging & Monitoring System
+        class DevOpsMonitor {
+            static sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            static errorQueue = [];
+            static metrics = {
+                fps: [],
+                memoryUsage: [],
+                loadTimes: {},
+                featureUsage: {},
+                errorCounts: {},
+                performance: {
+                    avgFps: 0,
+                    minFps: 60,
+                    maxFps: 60,
+                    frameDrops: 0,
+                    lagSpikes: 0
+                }
+            };
+            static rollbackThresholds = {
+                errorRate: 0.1,        // 10% error rate
+                crashRate: 0.05,       // 5% crash rate
+                performanceDrop: 0.3,  // 30% FPS drop
+                memoryLeak: 100        // 100MB memory increase
+            };
+            static healthCheckInterval = null;
+            static analyticsBuffer = [];
+            static isInSafeMode = false;
+            
+            // Initialize monitoring
+            static init() {
+                this.setupErrorHandlers();
+                this.startPerformanceMonitoring();
+                this.startHealthChecks();
+                this.initializeAnalytics();
+                console.log('🚀 DevOps Monitor initialized - Session:', this.sessionId);
+            }
+            
+            // Global error handlers
+            static setupErrorHandlers() {
+                // Catch unhandled errors
+                window.addEventListener('error', (event) => {
+                    this.logError({
+                        type: 'unhandled_error',
+                        message: event.message,
+                        filename: event.filename,
+                        line: event.lineno,
+                        column: event.colno,
+                        stack: event.error?.stack,
+                        userAgent: navigator.userAgent,
+                        timestamp: Date.now()
+                    });
+                });
+                
+                // Catch promise rejections
+                window.addEventListener('unhandledrejection', (event) => {
+                    this.logError({
+                        type: 'unhandled_rejection',
+                        reason: event.reason,
+                        promise: event.promise,
+                        timestamp: Date.now()
+                    });
+                });
+                
+                // Monitor resource loading errors
+                window.addEventListener('error', (event) => {
+                    if (event.target !== window) {
+                        this.logError({
+                            type: 'resource_error',
+                            tagName: event.target.tagName,
+                            src: event.target.src || event.target.href,
+                            timestamp: Date.now()
+                        });
+                    }
+                }, true);
+            }
+            
+            // Log errors with context
+            static logError(error) {
+                const errorEntry = {
+                    ...error,
+                    sessionId: this.sessionId,
+                    gameState: this.getGameContext(),
+                    performance: this.getCurrentPerformance(),
+                    features: this.getActiveFeatures()
+                };
+                
+                this.errorQueue.push(errorEntry);
+                
+                // Track error counts
+                const errorType = error.type || 'unknown';
+                this.metrics.errorCounts[errorType] = (this.metrics.errorCounts[errorType] || 0) + 1;
+                
+                // Check if we need to trigger rollback
+                this.checkRollbackConditions();
+                
+                // Send to analytics
+                this.sendAnalytics('error', errorEntry);
+                
+                console.error('🚨 Error logged:', errorEntry);
+            }
+            
+            // Performance monitoring
+            static startPerformanceMonitoring() {
+                let lastTime = performance.now();
+                let frameCount = 0;
+                
+                const measureFPS = () => {
+                    const currentTime = performance.now();
+                    const deltaTime = currentTime - lastTime;
+                    
+                    if (deltaTime >= 1000) {
+                        const fps = Math.round((frameCount * 1000) / deltaTime);
+                        this.metrics.fps.push(fps);
+                        
+                        // Keep only last 60 samples
+                        if (this.metrics.fps.length > 60) {
+                            this.metrics.fps.shift();
+                        }
+                        
+                        // Update performance metrics
+                        this.updatePerformanceMetrics(fps);
+                        
+                        frameCount = 0;
+                        lastTime = currentTime;
+                    }
+                    
+                    frameCount++;
+                    requestAnimationFrame(measureFPS);
+                };
+                
+                requestAnimationFrame(measureFPS);
+                
+                // Monitor memory usage
+                if (performance.memory) {
+                    setInterval(() => {
+                        this.metrics.memoryUsage.push({
+                            usedJSHeapSize: performance.memory.usedJSHeapSize,
+                            totalJSHeapSize: performance.memory.totalJSHeapSize,
+                            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+                            timestamp: Date.now()
+                        });
+                        
+                        // Keep only last 100 samples
+                        if (this.metrics.memoryUsage.length > 100) {
+                            this.metrics.memoryUsage.shift();
+                        }
+                        
+                        // Check for memory leaks
+                        this.checkMemoryLeaks();
+                    }, 5000);
+                }
+            }
+            
+            // Update performance metrics
+            static updatePerformanceMetrics(currentFps) {
+                const metrics = this.metrics.performance;
+                
+                // Update min/max
+                metrics.minFps = Math.min(metrics.minFps, currentFps);
+                metrics.maxFps = Math.max(metrics.maxFps, currentFps);
+                
+                // Calculate average
+                const fpsArray = this.metrics.fps;
+                metrics.avgFps = Math.round(fpsArray.reduce((a, b) => a + b, 0) / fpsArray.length);
+                
+                // Detect frame drops
+                if (currentFps < 30) {
+                    metrics.frameDrops++;
+                }
+                
+                // Detect lag spikes
+                if (currentFps < metrics.avgFps * 0.5) {
+                    metrics.lagSpikes++;
+                }
+            }
+            
+            // Check memory leaks
+            static checkMemoryLeaks() {
+                if (this.metrics.memoryUsage.length < 10) return;
+                
+                const recent = this.metrics.memoryUsage.slice(-10);
+                const old = this.metrics.memoryUsage.slice(0, 10);
+                
+                const recentAvg = recent.reduce((a, b) => a + b.usedJSHeapSize, 0) / recent.length;
+                const oldAvg = old.reduce((a, b) => a + b.usedJSHeapSize, 0) / old.length;
+                
+                const increase = (recentAvg - oldAvg) / 1024 / 1024; // Convert to MB
+                
+                if (increase > this.rollbackThresholds.memoryLeak) {
+                    this.logEvent('memory_leak_detected', {
+                        increase: increase + 'MB',
+                        oldAvg: (oldAvg / 1024 / 1024).toFixed(2) + 'MB',
+                        recentAvg: (recentAvg / 1024 / 1024).toFixed(2) + 'MB'
+                    });
+                }
+            }
+            
+            // Health check system
+            static startHealthChecks() {
+                this.healthCheckInterval = setInterval(() => {
+                    const health = {
+                        fps: this.metrics.performance.avgFps,
+                        memory: performance.memory ? 
+                            (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit * 100).toFixed(2) + '%' : 
+                            'N/A',
+                        errors: Object.values(this.metrics.errorCounts).reduce((a, b) => a + b, 0),
+                        uptime: Math.floor((Date.now() - parseInt(this.sessionId.split('_')[1])) / 1000),
+                        features: this.getActiveFeatures()
+                    };
+                    
+                    this.logEvent('health_check', health);
+                }, 30000); // Every 30 seconds
+            }
+            
+            // Feature usage tracking
+            static trackFeatureUsage(featureName, action = 'used') {
+                if (!this.metrics.featureUsage[featureName]) {
+                    this.metrics.featureUsage[featureName] = {
+                        uses: 0,
+                        errors: 0,
+                        avgDuration: 0,
+                        lastUsed: null
+                    };
+                }
+                
+                const feature = this.metrics.featureUsage[featureName];
+                feature.uses++;
+                feature.lastUsed = Date.now();
+                
+                this.sendAnalytics('feature_usage', {
+                    feature: featureName,
+                    action: action,
+                    timestamp: Date.now()
+                });
+            }
+            
+            // Rollback system
+            static checkRollbackConditions() {
+                const totalErrors = Object.values(this.metrics.errorCounts).reduce((a, b) => a + b, 0);
+                const sessionDuration = (Date.now() - parseInt(this.sessionId.split('_')[1])) / 1000;
+                const errorRate = totalErrors / Math.max(1, sessionDuration / 60); // Errors per minute
+                
+                // Check error rate threshold
+                if (errorRate > this.rollbackThresholds.errorRate * 60) {
+                    this.triggerRollback('high_error_rate', { errorRate, threshold: this.rollbackThresholds.errorRate * 60 });
+                }
+                
+                // Check performance degradation
+                if (this.metrics.performance.avgFps < 60 * (1 - this.rollbackThresholds.performanceDrop)) {
+                    this.triggerRollback('performance_degradation', { 
+                        avgFps: this.metrics.performance.avgFps, 
+                        threshold: 60 * (1 - this.rollbackThresholds.performanceDrop) 
+                    });
+                }
+            }
+            
+            // Trigger rollback to safe mode
+            static triggerRollback(reason, details) {
+                if (this.isInSafeMode) return;
+                
+                console.warn('🚨 ROLLBACK TRIGGERED:', reason, details);
+                
+                this.logEvent('rollback_triggered', {
+                    reason,
+                    details,
+                    timestamp: Date.now()
+                });
+                
+                // Enter safe mode
+                this.enterSafeMode();
+                
+                // Notify user
+                this.showRollbackNotification(reason);
+            }
+            
+            // Enter safe mode with minimal features
+            static enterSafeMode() {
+                this.isInSafeMode = true;
+                
+                // Disable all non-essential features
+                const essentialFeatures = ['COMBO_EXPLOSIONS', 'POWER_UP_FUSION', 'OBSTACLE_DESTRUCTION'];
+                
+                for (let feature in FeatureFlags) {
+                    if (typeof FeatureFlags[feature] === 'boolean' && !essentialFeatures.includes(feature)) {
+                        FeatureFlags[feature] = false;
+                    }
+                }
+                
+                // Reduce graphics quality
+                if (window.renderer) {
+                    window.renderer.setPixelRatio(1);
+                }
+                
+                // Disable particle effects
+                FeatureFlags.PARTICLE_EFFECTS = false;
+                
+                this.logEvent('safe_mode_activated', {
+                    timestamp: Date.now(),
+                    disabledFeatures: Object.keys(FeatureFlags).filter(f => !FeatureFlags[f])
+                });
+            }
+            
+            // Show rollback notification
+            static showRollbackNotification(reason) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 0, 0, 0.9);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    font-size: 18px;
+                    z-index: 10000;
+                    text-align: center;
+                    max-width: 400px;
+                `;
+                notification.innerHTML = `
+                    <h3>⚠️ Performance Issue Detected</h3>
+                    <p>The game has entered safe mode due to ${reason.replace(/_/g, ' ')}.</p>
+                    <p>Some features have been disabled to ensure smooth gameplay.</p>
+                    <button onclick="DevOpsMonitor.dismissNotification(this.parentElement)" style="
+                        margin-top: 10px;
+                        padding: 10px 20px;
+                        background: white;
+                        color: black;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">OK</button>
+                `;
+                document.body.appendChild(notification);
+            }
+            
+            static dismissNotification(element) {
+                element.remove();
+            }
+            
+            // Analytics system
+            static initializeAnalytics() {
+                // Send buffered analytics every 10 seconds
+                setInterval(() => {
+                    if (this.analyticsBuffer.length > 0) {
+                        this.flushAnalytics();
+                    }
+                }, 10000);
+                
+                // Track page visibility
+                document.addEventListener('visibilitychange', () => {
+                    this.logEvent('visibility_changed', {
+                        hidden: document.hidden,
+                        timestamp: Date.now()
+                    });
+                });
+                
+                // Track user engagement
+                let lastActivity = Date.now();
+                ['click', 'keydown', 'touchstart'].forEach(event => {
+                    document.addEventListener(event, () => {
+                        const now = Date.now();
+                        if (now - lastActivity > 60000) { // 1 minute of inactivity
+                            this.logEvent('user_returned', {
+                                inactivityDuration: now - lastActivity
+                            });
+                        }
+                        lastActivity = now;
+                    });
+                });
+            }
+            
+            // Send analytics data
+            static sendAnalytics(eventType, data) {
+                const event = {
+                    type: eventType,
+                    data: data,
+                    sessionId: this.sessionId,
+                    timestamp: Date.now(),
+                    context: {
+                        url: window.location.href,
+                        userAgent: navigator.userAgent,
+                        screen: {
+                            width: window.screen.width,
+                            height: window.screen.height
+                        },
+                        viewport: {
+                            width: window.innerWidth,
+                            height: window.innerHeight
+                        }
+                    }
+                };
+                
+                this.analyticsBuffer.push(event);
+                
+                // Flush if buffer is getting large
+                if (this.analyticsBuffer.length > 100) {
+                    this.flushAnalytics();
+                }
+            }
+            
+            // Flush analytics buffer
+            static flushAnalytics() {
+                if (this.analyticsBuffer.length === 0) return;
+                
+                const events = [...this.analyticsBuffer];
+                this.analyticsBuffer = [];
+                
+                // In production, this would send to an analytics endpoint
+                console.log('📊 Analytics batch:', events.length, 'events');
+                
+                // Store locally for debugging
+                const stored = JSON.parse(localStorage.getItem('devops_analytics') || '[]');
+                stored.push(...events);
+                
+                // Keep only last 1000 events
+                if (stored.length > 1000) {
+                    stored.splice(0, stored.length - 1000);
+                }
+                
+                localStorage.setItem('devops_analytics', JSON.stringify(stored));
+            }
+            
+            // Log custom events
+            static logEvent(eventName, data) {
+                this.sendAnalytics('custom_event', {
+                    name: eventName,
+                    ...data
+                });
+            }
+            
+            // Get current game context
+            static getGameContext() {
+                if (!window.gameState) return null;
+                
+                return {
+                    score: gameState.score,
+                    lives: gameState.lives,
+                    speed: gameState.speed,
+                    isPlaying: gameState.isPlaying,
+                    playerAction: gameState.playerAction,
+                    activePowerUp: gameState.activePowerUp,
+                    collectibles: {
+                        kiwis: gameState.collectedKiwis,
+                        broccolis: gameState.collectedBroccolis
+                    }
+                };
+            }
+            
+            // Get current performance metrics
+            static getCurrentPerformance() {
+                return {
+                    fps: this.metrics.performance.avgFps,
+                    frameDrops: this.metrics.performance.frameDrops,
+                    lagSpikes: this.metrics.performance.lagSpikes,
+                    memory: performance.memory ? {
+                        used: (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + 'MB',
+                        total: (performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(2) + 'MB',
+                        limit: (performance.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2) + 'MB'
+                    } : null
+                };
+            }
+            
+            // Get active features
+            static getActiveFeatures() {
+                return Object.keys(FeatureFlags).filter(key => 
+                    typeof FeatureFlags[key] === 'boolean' && FeatureFlags[key]
+                );
+            }
+            
+            // Performance profiling
+            static profile(name, fn) {
+                const start = performance.now();
+                const result = fn();
+                const duration = performance.now() - start;
+                
+                if (!this.metrics.loadTimes[name]) {
+                    this.metrics.loadTimes[name] = [];
+                }
+                
+                this.metrics.loadTimes[name].push(duration);
+                
+                // Keep only last 100 samples
+                if (this.metrics.loadTimes[name].length > 100) {
+                    this.metrics.loadTimes[name].shift();
+                }
+                
+                if (duration > 16.67) { // Longer than one frame
+                    console.warn(`⚠️ Performance warning: ${name} took ${duration.toFixed(2)}ms`);
+                }
+                
+                return result;
+            }
+            
+            // Get monitoring dashboard data
+            static getDashboardData() {
+                return {
+                    session: {
+                        id: this.sessionId,
+                        duration: Math.floor((Date.now() - parseInt(this.sessionId.split('_')[1])) / 1000),
+                        safeMode: this.isInSafeMode
+                    },
+                    performance: this.metrics.performance,
+                    errors: this.metrics.errorCounts,
+                    features: {
+                        active: this.getActiveFeatures(),
+                        usage: this.metrics.featureUsage
+                    },
+                    memory: this.metrics.memoryUsage.slice(-1)[0] || null,
+                    analytics: {
+                        bufferSize: this.analyticsBuffer.length,
+                        totalEvents: JSON.parse(localStorage.getItem('devops_analytics') || '[]').length
+                    }
+                };
+            }
+        }
+        
+        // Initialize DevOps monitoring
+        DevOpsMonitor.init();
+        
+        // Expose to global scope for debugging
+        window.FeatureFlags = FeatureFlags;
+        window.DevOpsMonitor = DevOpsMonitor;
+        
+        // Update DevOps monitoring panel
+        setInterval(() => {
+            const panel = document.getElementById('devopsPanel');
+            if (!panel) return;
+            
+            const data = DevOpsMonitor.getDashboardData();
+            
+            // Update FPS
+            document.getElementById('devopsFPS').textContent = 
+                `FPS: ${data.performance.avgFps} (${data.performance.minFps}-${data.performance.maxFps})`;
+            
+            // Update Memory
+            if (data.memory) {
+                const memPercent = ((data.memory.usedJSHeapSize / data.memory.jsHeapSizeLimit) * 100).toFixed(1);
+                document.getElementById('devopsMemory').textContent = 
+                    `Memory: ${memPercent}% (${(data.memory.usedJSHeapSize / 1024 / 1024).toFixed(1)}MB)`;
+            }
+            
+            // Update Errors
+            const totalErrors = Object.values(data.errors).reduce((a, b) => a + b, 0);
+            document.getElementById('devopsErrors').textContent = 
+                `Errors: ${totalErrors} ${totalErrors > 0 ? '⚠️' : '✅'}`;
+            
+            // Update Features
+            document.getElementById('devopsFeatures').textContent = 
+                `Features: ${data.features.active.length}/13`;
+            
+            // Update Mode
+            document.getElementById('devopsMode').textContent = 
+                `Mode: ${data.session.safeMode ? '🛡️ SAFE MODE' : '✅ Normal'}`;
+            
+            // Show/hide panel based on debug mode or errors
+            if (window.debugMode || totalErrors > 0 || data.session.safeMode) {
+                panel.style.display = 'block';
+            }
+        }, 1000);
+        
+        // Admin console for feature management
+        window.DevOpsAdmin = {
+            // Toggle feature
+            toggleFeature(name, enabled) {
+                FeatureFlags.toggle(name, enabled);
+                console.log(`Feature ${name} is now ${enabled ? 'enabled' : 'disabled'}`);
+            },
+            
+            // Set feature rollout percentage
+            setRollout(name, percentage) {
+                FeatureFlags.setRollout(name, percentage);
+                console.log(`Feature ${name} rollout set to ${percentage}%`);
+            },
+            
+            // Get monitoring dashboard
+            getDashboard() {
+                return DevOpsMonitor.getDashboardData();
+            },
+            
+            // Force safe mode
+            enterSafeMode() {
+                DevOpsMonitor.enterSafeMode();
+            },
+            
+            // Exit safe mode
+            exitSafeMode() {
+                DevOpsMonitor.isInSafeMode = false;
+                console.log('Safe mode deactivated - features must be re-enabled manually');
+            },
+            
+            // Get error log
+            getErrors() {
+                return DevOpsMonitor.errorQueue;
+            },
+            
+            // Clear error log
+            clearErrors() {
+                DevOpsMonitor.errorQueue = [];
+                DevOpsMonitor.metrics.errorCounts = {};
+                console.log('Error log cleared');
+            },
+            
+            // Get analytics
+            getAnalytics() {
+                return JSON.parse(localStorage.getItem('devops_analytics') || '[]');
+            },
+            
+            // Clear analytics
+            clearAnalytics() {
+                localStorage.removeItem('devops_analytics');
+                DevOpsMonitor.analyticsBuffer = [];
+                console.log('Analytics cleared');
+            },
+            
+            // Performance report
+            getPerformanceReport() {
+                const perf = DevOpsMonitor.metrics.performance;
+                const memory = DevOpsMonitor.metrics.memoryUsage.slice(-1)[0];
+                
+                return {
+                    fps: {
+                        current: DevOpsMonitor.metrics.fps.slice(-1)[0],
+                        average: perf.avgFps,
+                        min: perf.minFps,
+                        max: perf.maxFps
+                    },
+                    issues: {
+                        frameDrops: perf.frameDrops,
+                        lagSpikes: perf.lagSpikes
+                    },
+                    memory: memory ? {
+                        used: (memory.usedJSHeapSize / 1024 / 1024).toFixed(2) + 'MB',
+                        total: (memory.totalJSHeapSize / 1024 / 1024).toFixed(2) + 'MB',
+                        percentage: ((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(2) + '%'
+                    } : 'N/A'
+                };
+            }
+        };
 
         // Supabase Configuration - Using working credentials
         const SUPABASE_URL = 'https://umvrurelsxpxmyzcvrcd.supabase.co'
@@ -1925,7 +2812,12 @@
 
         window.submitHighscore = function() {
             console.log('submitHighscore called');
-            submitHighscoreInternal();
+            try {
+                submitHighscoreInternal();
+            } catch (error) {
+                console.error('Failed to submit highscore:', error);
+                window.SecurityManager.handleError(error, 'highscore_submit');
+            }
         };
 
         window.skipHighscore = function() {
@@ -3617,8 +4509,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.0.1-HOTFIX<br>
-                    🏆 Daily Challenges & 🎰 Multiplier Roulette
+                    Version: 4.1.0-DEVOPS<br>
+                    🚀 DevOps Monitoring & Feature Flags<br>
+                    🛡️ Rollback Protection System
                 `;
             }
         });
@@ -3676,6 +4569,34 @@
         };
 
         function handleKeyDown(event) {
+            // DevOps keyboard shortcuts (work even when not playing)
+            if (event.ctrlKey && event.shiftKey) {
+                switch (event.code) {
+                    case 'KeyD': // Ctrl+Shift+D - Toggle DevOps panel
+                        event.preventDefault();
+                        const panel = document.getElementById('devopsPanel');
+                        if (panel) {
+                            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                        }
+                        console.log('DevOps panel toggled');
+                        break;
+                    case 'KeyS': // Ctrl+Shift+S - Enter safe mode
+                        event.preventDefault();
+                        DevOpsMonitor.enterSafeMode();
+                        console.log('Safe mode activated');
+                        break;
+                    case 'KeyR': // Ctrl+Shift+R - Show performance report
+                        event.preventDefault();
+                        console.log('Performance Report:', DevOpsAdmin.getPerformanceReport());
+                        break;
+                    case 'KeyF': // Ctrl+Shift+F - Show feature flags
+                        event.preventDefault();
+                        console.log('Active Features:', FeatureFlags);
+                        break;
+                }
+                return;
+            }
+            
             if (!gameState.isPlaying) return;
             
             switch (event.code) {
@@ -3768,7 +4689,31 @@
         }
 
         function createParticleEffect(position, color, type) {
+            // Security check for particle availability
+            if (!window.SecurityManager.isFeatureAvailable('particles')) return;
+            
+            // Performance check
+            const quality = window.PerformanceMonitor.getQualityLevel();
+            if (quality === 'low' && type !== 'collision' && type !== 'success') {
+                // Only show critical particles on low-end devices
+                return;
+            }
+            
+            // Limit total particles in scene
+            const currentParticles = scene.children.filter(child => child.userData && child.userData.isParticle).length;
+            if (currentParticles > 100) {
+                // Remove oldest particles
+                const toRemove = scene.children
+                    .filter(child => child.userData && child.userData.isParticle)
+                    .sort((a, b) => (a.userData.createdAt || 0) - (b.userData.createdAt || 0))
+                    .slice(0, 50);
+                toRemove.forEach(particle => scene.remove(particle));
+            }
+            
             let particleCount, spreadRange, speed, size;
+            
+            // Reduce particle count based on performance
+            const particleMultiplier = quality === 'high' ? 1.0 : (quality === 'medium' ? 0.6 : 0.3);
             
             switch (type) {
                 case 'success':
@@ -3832,7 +4777,12 @@
                     size = 0.05;
             }
             
+            // Apply performance multiplier
+            particleCount = Math.max(1, Math.floor(particleCount * particleMultiplier));
+            
             const particles = new THREE.Group();
+            particles.userData.isParticle = true;
+            particles.userData.createdAt = Date.now();
             
             for (let i = 0; i < particleCount; i++) {
                 const particle = new THREE.Mesh(
@@ -4052,9 +5002,12 @@
                     // FEATURE 7: Check for high-speed destruction
                     const currentSpeed = gameState.speed * 1000; // Convert to display speed
                     const isBreakable = gameState.breakableObstacles.includes(obstacle.type);
-                    const canDestroy = currentSpeed > 200 && isBreakable && !gameState.flightMode;
+                    const canDestroy = FeatureFlags.isEnabled('OBSTACLE_DESTRUCTION') && 
+                                     currentSpeed > 200 && isBreakable && !gameState.flightMode;
                     
                     if (canDestroy || gameState.rampageActive) {
+                        // Track feature usage
+                        DevOpsMonitor.trackFeatureUsage('OBSTACLE_DESTRUCTION', 'destroyed');
                         // DESTRUCTION! 💥
                         handleObstacleDestruction(obstacle);
                         scene.remove(obstacle.mesh);
@@ -5203,6 +6156,11 @@
         }
         
         function addToFusionSlot(powerUpType) {
+            // Check if power-up fusion feature is enabled
+            if (!FeatureFlags.isEnabled('POWER_UP_FUSION')) {
+                return false;
+            }
+            
             // Find empty slot
             const emptySlotIndex = gameState.fusionSlots.findIndex(slot => slot === null);
             if (emptySlotIndex === -1) return false; // No empty slots
@@ -5410,6 +6368,14 @@
         }
         
         function activateAdrenalineMode() {
+            // Check if adrenaline mode feature is enabled
+            if (!FeatureFlags.isEnabled('ADRENALINE_MODE')) {
+                return;
+            }
+            
+            // Track feature usage
+            DevOpsMonitor.trackFeatureUsage('ADRENALINE_MODE', 'activated');
+            
             gameState.adrenalineActive = true;
             gameState.adrenalineTimeRemaining = 5000; // 5 seconds
             gameState.timeScaleFactor = 0.3; // Slow motion to 30% speed
@@ -5680,6 +6646,14 @@
         // ==================== FEATURE 8: ROCKET BOOST PADS & FLIGHT MODE ====================
         
         function activateFlightMode() {
+            // Check if flight mode feature is enabled
+            if (!FeatureFlags.isEnabled('FLIGHT_MODE')) {
+                return;
+            }
+            
+            // Track feature usage
+            DevOpsMonitor.trackFeatureUsage('FLIGHT_MODE', 'activated');
+            
             gameState.flightMode = true;
             gameState.flightTimeRemaining = 3000; // 3 seconds
             gameState.flightAltitude = 0;
@@ -6413,8 +7387,15 @@
             const pitchVariation = 1 + (gameState.kiwiCombo * 0.1);
             audioManager.createTone(600 * pitchVariation, 0.15, 'sine');
             
-            // Kiwi-Saft-Splash-Effekt
-            createKiwiSplashEffect(kiwiData.mesh.position.clone());
+            // Kiwi-Saft-Splash-Effekt (Feature 1: Combo Explosions)
+            if (FeatureFlags.isEnabled('COMBO_EXPLOSIONS')) {
+                createKiwiSplashEffect(kiwiData.mesh.position.clone());
+                
+                // Extra explosion effect for combos
+                if (gameState.kiwiCombo >= 3) {
+                    DevOpsMonitor.trackFeatureUsage('COMBO_EXPLOSIONS', 'combo_' + gameState.kiwiCombo);
+                }
+            }
             
             // Update UI
             updateKiwiUI();
@@ -6441,8 +7422,11 @@
             
             addScore(totalScore, 'broccoli_collection');
             
-            // Green healthy effects
-            createBroccoliHealthEffect(broccoliData.mesh.position.clone());
+            // Green healthy effects (Feature 1: Combo Explosions)
+            if (FeatureFlags.isEnabled('COMBO_EXPLOSIONS')) {
+                createBroccoliHealthEffect(broccoliData.mesh.position.clone());
+                DevOpsMonitor.trackFeatureUsage('COMBO_EXPLOSIONS', 'broccoli_effect');
+            }
             
             // Audio feedback with lower pitch (different from kiwi)
             audioManager.createTone(400, 0.2, 'sine');
@@ -7676,10 +8660,12 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // Calculate delta time for smooth movement
-            const currentTime = performance.now();
-            const deltaTime = currentTime - lastFrameTime;
-            lastFrameTime = currentTime;
+            // Profile the entire frame
+            DevOpsMonitor.profile('frame', () => {
+                // Calculate delta time for smooth movement
+                const currentTime = performance.now();
+                const deltaTime = currentTime - lastFrameTime;
+                lastFrameTime = currentTime;
             
             // Apply time scale for adrenaline mode
             const scaledDeltaTime = deltaTime * gameState.timeScaleFactor;
@@ -8537,6 +9523,7 @@
             }
             
             renderer.render(scene, camera);
+            }); // End of DevOpsMonitor.profile
         }
 
         // Handle near miss detection
