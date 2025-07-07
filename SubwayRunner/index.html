@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.5.4-LARGE-MAGNET<br>
+            🚀 V3.6.0-GAMIFICATION-COMPLETE<br>
             📅 07.07.2025
         </div>
         
@@ -501,7 +501,17 @@
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span> | 🥦 <span id="broccoliCount">0</span>
+                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
+                <div style="font-size: 12px; margin-top: 2px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
+                            <div id="kiwiProgress" style="background: #FFD700; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 40px; height: 8px; overflow: hidden;">
+                            <div id="broccoliProgress" style="background: #8BC34A; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
                 COMBO x<span id="comboMultiplier">1</span>!
@@ -1265,8 +1275,10 @@
             collectionGoal: 10,        // Target collectibles for bonus (80% of max ~12-15)
             collectionBonusAwarded: {      // Track tiered collection bonuses
                 fiveOfOne: false,               // 5+ of one type
-                allOfOne: false,                // All 7 of one type  
-                allFourteen: false              // All 14 collectibles
+                allOfOne: false,                // All 30 kiwis OR all 7 broccolis  
+                allThirtySeven: false,          // All 37 collectibles (30 kiwis + 7 broccolis)
+                broccoliMaster: false,          // 5 broccolis (+200 points)
+                veggieChampion: false           // 7 broccolis (+500 points)
             },
             activePowerUp: null,       // Currently active power-up
             powerUpTimeRemaining: 0,   // Time left for active power-up
@@ -2316,7 +2328,9 @@
             gameState.collectionBonusAwarded = {
                 fiveOfOne: false,
                 allOfOne: false, 
-                allFourteen: false
+                allThirtySeven: false,
+                broccoliMaster: false,
+                veggieChampion: false
             };
             
             console.log(`   After reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
@@ -2753,6 +2767,12 @@
                     speed = 1;
                     size = 0.04;
                     break;
+                case 'duckConfetti':
+                    particleCount = 20;
+                    spreadRange = 3;
+                    speed = 4;
+                    size = 0.07;
+                    break;
                 default:
                     particleCount = 15;
                     spreadRange = 2;
@@ -2800,6 +2820,15 @@
                     } else if (type === 'success') {
                         particle.material.opacity = particle.life;
                         particle.scale.setScalar(1 + Math.sin(Date.now() * 0.01 + index) * 0.3);
+                    } else if (type === 'duckConfetti') {
+                        // Special duck confetti: sparkly falling effect with rotation
+                        particle.material.opacity = particle.life * 0.9;
+                        particle.scale.setScalar(1 + Math.sin(Date.now() * 0.02 + index) * 0.4);
+                        particle.rotation.x += 0.15 * gameState.timeScale;
+                        particle.rotation.y += 0.2 * gameState.timeScale;
+                        particle.rotation.z += 0.1 * gameState.timeScale;
+                        // Floating effect: less gravity for confetti
+                        particle.velocity.y += 0.05 * gameState.timeScale; // Counter some gravity
                     } else {
                         particle.material.opacity = particle.life;
                         particle.scale.setScalar(particle.life);
@@ -3094,6 +3123,11 @@
                             console.log(`🦆 DUCK BONUS AWARDED: +30 points for ${obstacle.type} obstacle avoidance!`);
                             // Show duck bonus feedback
                             showSkillCombo(30, `DUCK MASTER! 🦆`);
+                            
+                            // DUCK CONFETTI: Celebration particle effect for successful ducking
+                            const duckConfettiPos = obstacle.mesh.position.clone();
+                            duckConfettiPos.y += 2.0; // Above the obstacle
+                            createParticleEffect(duckConfettiPos, 0x00FF88, 'duckConfetti'); // Green confetti
                         }
                         
                         // ==================== ADVANCED SKILL TRACKING ====================
@@ -3676,12 +3710,14 @@
         function createKiwi(lane, z, pattern = 'single') {
             const kiwiGroup = new THREE.Group();
             
-            // Halbierte Kiwi Geometrie (flache Seite unten)
-            const kiwiRadius = 0.35;
-            const kiwiHeight = 0.35;
+            // REDESIGNED: Elongated Kiwi Geometrie (oval shape, less coin-like)
+            const kiwiRadiusX = 0.3;   // Smaller width
+            const kiwiRadiusY = 0.5;   // Taller height 
+            const kiwiRadiusZ = 0.3;   // Smaller depth
             
-            // ENHANCED: Vollständige Kiwi-Körper (mehr 3D, besser sichtbar von oben)
-            const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.75);
+            // ENHANCED: Elongated ellipsoid shape for realistic kiwi appearance
+            const kiwiGeometry = new THREE.SphereGeometry(1, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.8);
+            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
             
             // ENHANCED: Verbesserte Braune Außenhaut mit Glow-Effekt
             const skinMaterial = new THREE.MeshLambertMaterial({ 
@@ -3695,9 +3731,9 @@
             kiwiSkin.castShadow = true;
             kiwiGroup.add(kiwiSkin);
             
-            // ENHANCED: Zusätzliche braune Textur-Ringe für bessere Kiwi-Optik
+            // ENHANCED: Zusätzliche braune Textur-Ringe für bessere Kiwi-Optik (angepasst für oval)
             for (let i = 0; i < 3; i++) {
-                const ringGeometry = new THREE.RingGeometry(kiwiRadius * 0.7 + i * 0.05, kiwiRadius * 0.75 + i * 0.05, 16);
+                const ringGeometry = new THREE.RingGeometry(kiwiRadiusX * 0.7 + i * 0.04, kiwiRadiusX * 0.75 + i * 0.04, 16);
                 const ringMaterial = new THREE.MeshLambertMaterial({ 
                     color: 0x8B4513,  // Dunklere braune Streifen
                     transparent: true,
@@ -3709,8 +3745,10 @@
                 kiwiGroup.add(ring);
             }
             
-            // Grünes Fruchtfleisch (flache Unterseite)
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.95, 32);
+            // Grünes Fruchtfleisch (elliptische Unterseite)
+            const fleshGeometry = new THREE.EllipseGeometry ? 
+                new THREE.EllipseGeometry(kiwiRadiusX * 0.95, kiwiRadiusZ * 0.95) :
+                new THREE.CircleGeometry(kiwiRadiusX * 0.95, 32);
             const fleshMaterial = new THREE.MeshLambertMaterial({ 
                 color: 0x8FBC8F,
                 emissive: 0x2F5F2F,
@@ -3721,8 +3759,8 @@
             kiwiFlesh.position.y = 1.2;
             kiwiGroup.add(kiwiFlesh);
             
-            // Weißer Kern in der Mitte
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.3, 16);
+            // Weißer Kern in der Mitte (angepasst für oval)
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 16);
             const coreMaterial = new THREE.MeshLambertMaterial({ 
                 color: 0xF5F5DC,
                 emissive: 0xFFFFFF,
@@ -3733,11 +3771,12 @@
             kiwiCore.position.y = 1.201;
             kiwiGroup.add(kiwiCore);
             
-            // Schwarze Kerne/Samen
+            // Schwarze Kerne/Samen (elliptisch verteilt)
             const seedCount = 12;
             for (let i = 0; i < seedCount; i++) {
                 const angle = (i / seedCount) * Math.PI * 2;
-                const distance = kiwiRadius * 0.5 + Math.random() * kiwiRadius * 0.3;
+                const distanceX = kiwiRadiusX * 0.5 + Math.random() * kiwiRadiusX * 0.2;
+                const distanceZ = kiwiRadiusZ * 0.5 + Math.random() * kiwiRadiusZ * 0.2;
                 
                 const seedGeometry = new THREE.CircleGeometry(0.02, 4);
                 const seedMaterial = new THREE.MeshLambertMaterial({ 
@@ -3746,9 +3785,9 @@
                 const seed = new THREE.Mesh(seedGeometry, seedMaterial);
                 seed.rotation.x = -Math.PI / 2;
                 seed.position.set(
-                    Math.cos(angle) * distance,
+                    Math.cos(angle) * distanceX,  // Use elliptical X coordinate
                     1.202,
-                    Math.sin(angle) * distance
+                    Math.sin(angle) * distanceZ   // Use elliptical Z coordinate
                 );
                 kiwiGroup.add(seed);
             }
@@ -4094,6 +4133,8 @@
         function updateKiwiUI() {
             const kiwiCount = document.getElementById('kiwiCount');
             const broccoliCount = document.getElementById('broccoliCount');
+            const kiwiProgress = document.getElementById('kiwiProgress');
+            const broccoliProgress = document.getElementById('broccoliProgress');
             
             // Debug logging
             console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
@@ -4108,6 +4149,17 @@
                 broccoliCount.textContent = gameState.collectedBroccolis || 0;
             } else {
                 console.error('❌ broccoliCount element not found!');
+            }
+            
+            // Update progress bars for 30:7 goals
+            if (kiwiProgress) {
+                const kiwiPercent = Math.min((gameState.collectedKiwis / 30) * 100, 100);
+                kiwiProgress.style.width = kiwiPercent + '%';
+            }
+            
+            if (broccoliProgress) {
+                const broccoliPercent = Math.min((gameState.collectedBroccolis / 7) * 100, 100);
+                broccoliProgress.style.width = broccoliPercent + '%';
             }
             
             // Also update the total for percentage calculation
@@ -4301,11 +4353,14 @@
         function createSimpleKiwi(lane, z) {
             const kiwiGroup = new THREE.Group();
             
-            // Simplified kiwi for performance (less detailed than createKiwi)
-            const kiwiRadius = 0.25;
+            // Simplified elongated kiwi for performance (less detailed than createKiwi)
+            const kiwiRadiusX = 0.2;   // Smaller width
+            const kiwiRadiusY = 0.35;  // Taller height 
+            const kiwiRadiusZ = 0.2;   // Smaller depth
             
-            // Half sphere for kiwi body
-            const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
+            // Half ellipsoid for kiwi body
+            const kiwiGeometry = new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
+            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
             const kiwiMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0x8B6914,
                 transparent: true,
@@ -4316,8 +4371,8 @@
             kiwiBody.rotation.x = -Math.PI / 2;
             kiwiGroup.add(kiwiBody);
             
-            // Simple flesh circle
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.9, 8);
+            // Simple flesh ellipse
+            const fleshGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.9, 8);
             const fleshMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0x90EE90,
                 transparent: true,
@@ -4742,14 +4797,25 @@
                 awardTieredBonus('fiveOfOne', 250, `5+ ${kiwis >= 5 ? 'Kiwis' : 'Broccolis'}`);
             }
             
-            // Tier 2: All 7 of one type (500 points)
-            if ((kiwis >= 7 || broccolis >= 7) && !gameState.collectionBonusAwarded.allOfOne) {
-                awardTieredBonus('allOfOne', 500, `All 7 ${kiwis >= 7 ? 'Kiwis' : 'Broccolis'}`);
+            // Tier 2: All 30 kiwis OR all 7 broccolis (500 points)
+            if ((kiwis >= 30 || broccolis >= 7) && !gameState.collectionBonusAwarded.allOfOne) {
+                awardTieredBonus('allOfOne', 500, `All ${kiwis >= 30 ? '30 Kiwis' : '7 Broccolis'}`);
             }
             
-            // Tier 3: All 14 collectibles (1000 points)
-            if (total >= 14 && !gameState.collectionBonusAwarded.allFourteen) {
-                awardTieredBonus('allFourteen', 1000, 'Perfect Collection - All 14!');
+            // Tier 3: All 37 collectibles (1000 points)
+            if (total >= 37 && !gameState.collectionBonusAwarded.allThirtySeven) {
+                awardTieredBonus('allThirtySeven', 1000, 'Perfect Collection - All 37!');
+            }
+            
+            // NEW: Broccoli specific bonuses
+            // Tier B1: 5 broccolis (200 points)
+            if (broccolis >= 5 && !gameState.collectionBonusAwarded.broccoliMaster) {
+                awardTieredBonus('broccoliMaster', 200, 'BROCCOLI MASTER! 🥦');
+            }
+            
+            // Tier B2: 7 broccolis (500 points)
+            if (broccolis >= 7 && !gameState.collectionBonusAwarded.veggieChampion) {
+                awardTieredBonus('veggieChampion', 500, 'VEGGIE CHAMPION! 🏆');
             }
         }
         
@@ -4766,7 +4832,7 @@
             } else if (tier === 'allOfOne') {
                 audioManager.createTone(659, 0.3, 'sine'); // E5
                 setTimeout(() => audioManager.createTone(784, 0.3, 'sine'), 150); // G5
-            } else if (tier === 'allFourteen') {
+            } else if (tier === 'allThirtySeven') {
                 audioManager.createTone(523, 0.3, 'sine'); // C5
                 setTimeout(() => audioManager.createTone(659, 0.3, 'sine'), 150); // E5
                 setTimeout(() => audioManager.createTone(784, 0.3, 'sine'), 300); // G5
@@ -5489,24 +5555,34 @@
                         }
                     }
                     
-                    // ENHANCED: Limit total collectibles to 14 per game (7 Kiwis + 7 Broccolis)
-                    if (gameState.totalCollectibles >= 14) {
+                    // ENHANCED: Limit total collectibles to 37 per game (30 Kiwis + 7 Broccolis)
+                    if (gameState.totalCollectibles >= 37) {
                         // Max collectibles reached, no more spawning
                         return;
                     }
                     
-                    // Balanced spawning: 7 Kiwis + 7 Broccolis
+                    // Balanced spawning: 30 Kiwis + 7 Broccolis
                     const kiwiCount = gameState.kiwis.length;
                     const broccoliCount = gameState.broccolis.length;
                     
-                    // Determine what to spawn based on balance
+                    // Determine what to spawn based on 30:7 target ratio
                     let isKiwi;
-                    if (kiwiCount >= 7) {
-                        isKiwi = false; // Force broccoli if we have 7 kiwis
+                    if (kiwiCount >= 30) {
+                        isKiwi = false; // Force broccoli if we have 30 kiwis
                     } else if (broccoliCount >= 7) {
                         isKiwi = true; // Force kiwi if we have 7 broccolis
                     } else {
-                        isKiwi = Math.random() < 0.5; // Random if both below 7
+                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
+                        const totalTarget = 37;
+                        const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
+                        const targetRatio = 30 / totalTarget; // ~0.81
+                        
+                        // Bias towards kiwis if we're below target ratio
+                        if (currentRatio < targetRatio) {
+                            isKiwi = Math.random() < 0.85; // Strong bias toward kiwis
+                        } else {
+                            isKiwi = Math.random() < 0.25; // Strong bias toward broccolis
+                        }
                     }
                     
                     console.log(`🎯 Spawning ${isKiwi ? 'Kiwi' : 'Broccoli'} - Pattern: ${pattern} (K:${kiwiCount}, B:${broccoliCount})`);
@@ -5558,7 +5634,7 @@
                             console.log(`🎯 LINE PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
                             for (const lane of selectedLanes) {
-                                if (gameState.totalCollectibles >= 14) break; // Safety check
+                                if (gameState.totalCollectibles >= 37) break; // Safety check
                                 
                                 // FIXED: Use same balance logic as single pattern (not separate random)
                                 // Check current counts for proper balance
@@ -5566,12 +5642,12 @@
                                 const currentBroccoliCount = gameState.broccolis.length;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 7) {
-                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below 7
+                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
                                 }
                                 
                                 console.log(`🎯 LINE BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -5601,19 +5677,19 @@
                             console.log(`🌀 ARC PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
                             selectedLanes.forEach((lane, index) => {
-                                if (gameState.totalCollectibles >= 14) return; // Safety check
+                                if (gameState.totalCollectibles >= 37) return; // Safety check
                                 
                                 // FIXED: Use same balance logic as single pattern instead of alternating
                                 const currentKiwiCount = gameState.kiwis.length;
                                 const currentBroccoliCount = gameState.broccolis.length;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 7) {
-                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below 7
+                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
                                 }
                                 
                                 console.log(`🌀 ARC BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);

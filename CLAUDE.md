@@ -25,9 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 3.5.4 (Large Magnet - Special collectible magnet powerup)
-- **Previous**: 3.5.2 (Smart Collectible System + Obstacle Avoidance)
-- **Before**: 3.5.1 (Kiwi Visual Fix + Duck Obstacle Improvements)
+- **Latest**: 3.6.0 (Complete Gamification System - 30 Kiwi/7 Broccoli Balance)
+- **Previous**: 3.5.4 (Large Magnet - Special collectible magnet powerup)
+- **Before**: 3.5.2 (Smart Collectible System + Obstacle Avoidance)
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (around line 440)
@@ -43,6 +43,7 @@ This is a collection of endless runner game projects built with different techno
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
 
 ### **VERSION HISTORY LOG**
+- 3.6.0: Complete gamification system (30 kiwi limit, broccoli bonuses, elongated kiwi design, duck confetti, UI progress bars, smart 30:7 spawn ratio)
 - 3.5.4: Complete collectible & power-up overhaul (max 2 per pattern + 50/50 balance + 3D horseshoe magnet + blue vignette + large collectible magnet)
 - 3.5.2: Smart collectible spawning + obstacle avoidance + counter fixes + speed-based density
 - 3.5.1: Kiwi visual improvements + duck obstacle height fixes + duck scoring system
