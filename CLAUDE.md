@@ -14,22 +14,60 @@ This is a collection of endless runner game projects built with different techno
 
 **Primary Project**: SubwayRunner is the main production game with automated deployment to Hostinger.
 
+## 🚨 VERSIONING RULES (NEVER DELETE!)
+
+### **CRITICAL: Version Management System**
+**RULE 1**: Every deployment MUST increment the sub-version number  
+**RULE 2**: Version format: MAJOR.MINOR.PATCH (e.g., 3.5.0)  
+**RULE 3**: Increment rules:
+- **PATCH** (+0.0.1): Bug fixes, small improvements, feature additions
+- **MINOR** (+0.1.0): Major features, significant UI changes, new systems  
+- **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
+
+### **CURRENT VERSION TRACKING**
+- **Latest**: 3.5.1 (Kiwi Visual Fix + Duck Obstacle Improvements)
+- **Previous**: 3.5.0 (Gamification - Complete Tiered Bonus System)
+- **Before**: 3.4.2 (Gamification Update - Kiwi/Broccoli System)
+
+### **VERSION UPDATE PROCESS**
+1. Update version in `SubwayRunner/index.html` (around line 440)
+2. Update this CLAUDE.md file with new version info
+3. Always mention new version when saying "test it online"
+4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
+
+### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**
+**WICHTIGE REGEL**: Nach jeder längeren Programmier-Session IMMER sofort online stellen!
+- Nach Implementierung von Features/Fixes: `git add . && git commit -m "message" && git push`
+- GitHub Actions deployed automatisch zu https://ki-revolution.at/
+- Nutzer sollen immer die neueste Version testen können
+- Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
+
+### **VERSION HISTORY LOG**
+- 3.5.1: Kiwi visual improvements + duck obstacle height fixes + duck scoring system
+- 3.5.0: Complete tiered bonus system implementation
+- 3.4.2: Gamification (Kiwi/Broccoli collectibles, 80% achievement, jump fix)
+- 3.4.1: Score system emergency overhaul (centralized scoring, throttling)
+- 3.4.0: Visual effects, gesture control, collision fixes
+
 ## Common Development Commands
 
 ### SubwayRunner (Vanilla JS/Three.js) - Primary Project
 ```bash
 cd SubwayRunner
-# Serve locally for development
+# Main game file: index.html (single file with embedded CSS/JS)
 python -m http.server 8001
 # Navigate to localhost:8001
+
+# React version (development)
+npm install          # Install dependencies
+npm run dev          # Start Vite dev server
+npm run build        # Build for production
+npm run lint         # Run ESLint
+npm run preview      # Preview production build
 
 # Deployment (automatic via GitHub Actions)
 git add . && git commit -m "message" && git push
 # Deploys to https://ki-revolution.at/ via Hostinger FTP
-
-# Run lint and typecheck before commits
-# No specific lint/typecheck commands for vanilla JS project
-# Test directly in browser at localhost:8001
 ```
 
 ### Endless3D (Vanilla JS/Three.js)
@@ -68,23 +106,21 @@ npm install          # Install dependencies
 npm run build        # Build TypeScript to JavaScript
 npm run watch        # Watch mode for development
 npm run inspector    # Run MCP inspector
-
-# Run lint and typecheck before commits
-npm run lint         # Linting (if configured)
-npm run typecheck    # TypeScript type checking
 ```
 
 ## Architecture Overview
 
 ### SubwayRunner Architecture (Primary Project)
-- **Single HTML File**: Complete game in SubwayRunner/index.html with embedded CSS/JS
-- **Three.js Direct**: Direct Three.js usage without React wrapper
-- **Vanilla JS**: Performance-optimized pure JavaScript implementation
+- **Dual Architecture**: 
+  - **Production**: Single HTML file (index.html) with embedded CSS/JS
+  - **Development**: React + TypeScript version with Vite build system
+- **Three.js Integration**: Direct Three.js usage (vanilla) or React Three Fiber (React version)
 - **Game Loop**: RequestAnimationFrame-based game loop with delta time
 - **Obstacle System**: 7+ obstacle types including tunnels, barriers, spikes, walls
 - **Audio System**: Background music with WAV format support
 - **Deployment**: GitHub Actions automatic deployment to Hostinger via FTP
 - **Version Display**: UI shows current version and deployment date
+- **Gesture Control**: MediaPipe integration for head tracking controls
 
 ### Endless3D Architecture
 - **Modular World System**: JSON-configurable environments and themes
@@ -161,18 +197,18 @@ npm run typecheck    # TypeScript type checking
 - **Production**: Includes .htaccess with HTTPS enforcement, compression, caching, and security headers
 
 ### Known Issues & Current Focus
-- **Critical Bug**: Overhead/tunnel obstacles are passable when ducking - collision detection needs fixing
-- **Version Display**: UI version info should appear bottom-left but may need CSS fixes
 - **Next Phase**: Gesture control integration from GestureRunnerPro into SubwayRunner
 - **Planned**: Sound system overhaul with realistic audio samples
+- **Dual Architecture**: SubwayRunner exists as both vanilla JS (index.html) and React version (src/)
 
 ## Project-Specific Notes
 
 ### SubwayRunner (Primary Project)
 - **Development Port**: 8001 (python -m http.server)
-- **Production**: Single HTML file deployment
-- **Current Version**: 3.1 with deployment fixes
-- **Critical Bug**: Overhead/tunnel obstacles passable when ducking
+- **Production**: Single HTML file deployment (index.html)
+- **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
+- **Current Version**: 3.5.0 with tiered bonus system
+- **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 
 ### Endless3D
 - Fully modular world system - add new worlds via JSON config

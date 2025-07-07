@@ -437,7 +437,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.5.0-GAMIFICATION<br>
+            🚀 V3.5.1-GAMIFICATION<br>
             📅 07.07.2025
         </div>
         
@@ -2162,9 +2162,9 @@
                 if (type === 'spikes') {
                     obstacle.position.y = height / 2;
                 } else if (type === 'duckbeam') {
-                    obstacle.position.y = 1.8; // Hoch positioniert zum Ducken
+                    obstacle.position.y = 1.4; // FIXED: Niedriger positioniert für echtes Ducken
                 } else if (type === 'highbarrier') {
-                    obstacle.position.y = 1.8; // Hoch positioniert zum Ducken
+                    obstacle.position.y = 1.4; // FIXED: Niedriger positioniert für echtes Ducken
                 } else {
                     obstacle.position.y = height / 2;
                 }
@@ -2829,7 +2829,7 @@
                     // Check if player is too high (not ducking properly)
                     // BUGFIX: Reduced duck height from 0.6 to 0.4 for better collision avoidance
                     const playerHeight = gameState.playerAction === 'ducking' ? 0.4 : 1.5;
-                    let obstacleHeight = 1.8; // Default duck obstacles height
+                    let obstacleHeight = 1.4; // Default duck obstacles height
                     
                     // Adjust for wallgap (gap bottom is at 1.3)
                     // FIXED: For wallgap, the obstacleHeight should be the bottom of the gap (1.3), not the gap size
@@ -2979,6 +2979,12 @@
                         bonusScore += Math.floor(precision * 25);
                         
                         if (avoidanceType === 'jump') bonusScore += 25; // Jump bonus
+                        if (avoidanceType === 'duck') {
+                            bonusScore += 30; // Duck bonus - slightly higher for skill
+                            console.log(`🦆 DUCK BONUS AWARDED: +30 points for ${obstacle.type} obstacle avoidance!`);
+                            // Show duck bonus feedback
+                            showSkillCombo(30, `DUCK MASTER! 🦆`);
+                        }
                         
                         // ==================== ADVANCED SKILL TRACKING ====================
                         
@@ -3320,8 +3326,8 @@
                     width = 1.8; height = 0.4; depth = 0.3;
                     // Position is higher up
                     return {
-                        min: new THREE.Vector3(pos.x - width/2, 1.8, pos.z - depth/2),
-                        max: new THREE.Vector3(pos.x + width/2, 1.8 + height, pos.z + depth/2)
+                        min: new THREE.Vector3(pos.x - width/2, 1.4, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.4 + height, pos.z + depth/2)
                     };
                 case 'jumpblock':
                     width = 1.2; height = 1.2; depth = 1.2;
@@ -3333,8 +3339,8 @@
                     width = 2.2; height = 0.3; depth = 0.8;
                     // Position is higher up
                     return {
-                        min: new THREE.Vector3(pos.x - width/2, 1.8, pos.z - depth/2),
-                        max: new THREE.Vector3(pos.x + width/2, 1.8 + height, pos.z + depth/2)
+                        min: new THREE.Vector3(pos.x - width/2, 1.4, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.4 + height, pos.z + depth/2)
                     };
                 case 'hurdleset':
                     width = 1.4; height = 0.7; depth = 1.5; // Covers multiple hurdles
@@ -3562,13 +3568,13 @@
             const kiwiRadius = 0.35;
             const kiwiHeight = 0.35;
             
-            // Haupt-Kiwi-Körper (Halbkugel)
-            const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            // ENHANCED: Vollständige Kiwi-Körper (mehr 3D, besser sichtbar von oben)
+            const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.75);
             
             // ENHANCED: Verbesserte Braune Außenhaut mit Glow-Effekt
             const skinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xA0751A,  // Heller für bessere Sichtbarkeit
-                emissive: 0x2A1F0A,  // Leichtes Glühen
+                color: 0xB8860B,  // Noch heller für bessere Sichtbarkeit
+                emissive: 0x3A2A0A,  // Leichtes Glühen
                 roughness: 0.6
             });
             const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
@@ -3576,6 +3582,20 @@
             kiwiSkin.position.y = 1.2;
             kiwiSkin.castShadow = true;
             kiwiGroup.add(kiwiSkin);
+            
+            // ENHANCED: Zusätzliche braune Textur-Ringe für bessere Kiwi-Optik
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(kiwiRadius * 0.7 + i * 0.05, kiwiRadius * 0.75 + i * 0.05, 16);
+                const ringMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x8B4513,  // Dunklere braune Streifen
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 1.21 + i * 0.001;
+                kiwiGroup.add(ring);
+            }
             
             // Grünes Fruchtfleisch (flache Unterseite)
             const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.95, 32);
