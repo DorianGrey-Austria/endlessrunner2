@@ -437,7 +437,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.5.1-GAMIFICATION<br>
+            🚀 V3.5.2-GAMIFICATION<br>
             📅 07.07.2025
         </div>
         
@@ -2419,6 +2419,9 @@
             
             // Update difficulty progress display
             updateDifficultyUI();
+            
+            // Update collectible counters
+            updateKiwiUI();
         }
 
         function showNameInputDialog(isVictory) {
@@ -4507,6 +4510,9 @@
             // Update display (you can expand this with actual UI elements)
             console.log(`🥝 Kiwis: ${gameState.collectedKiwis} | 🥦 Broccolis: ${gameState.collectedBroccolis} | Progress: ${collectionPercentage}%`);
             
+            // Update the HTML display
+            updateKiwiUI();
+            
             // Check for tiered collection bonuses
             checkTieredCollectionBonuses();
         }
@@ -5219,10 +5225,20 @@
                     gameState.powerUps.push(powerUp);
                 }
                 
-                // Progressive Kiwi spawning (few at start, many later)
+                // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
+                // Helper function to check if lane is safe for collectible spawning
+                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
+                    return !obstacles.some(obs => 
+                        Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
+                        Math.abs(obs.position.z - zPosition) < safeDistance
+                    );
+                };
+                
+                // Dynamic spawn rate based on speed (reduce at high speeds)
                 const baseCoinRate = 0.003; // Low starting rate
-                const maxCoinRate = 0.015; // Higher end rate
-                const progressiveCoinRate = baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1);
+                const maxCoinRate = 0.012; // Reduced max rate for better spacing
+                const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
+                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
                 if (Math.random() < progressiveCoinRate) {
                     // Progressive kiwi pattern complexity
@@ -5275,44 +5291,76 @@
                     console.log(`🎯 Spawning ${isKiwi ? 'Kiwi' : 'Broccoli'} - Pattern: ${pattern} (K:${kiwiCount}, B:${broccoliCount})`);
                     
                     if (pattern === 'single') {
-                        const lane = Math.floor(Math.random() * 3);
-                        if (isKiwi) {
-                            const kiwi = createSimpleKiwi(lane, -35);
-                            gameState.kiwis.push(kiwi);
-                        } else {
-                            const broccoli = createBroccoli(lane, -35, 'single');
-                            gameState.broccolis.push(broccoli);
-                        }
-                    } else if (pattern === 'line') {
-                        // Spawn collectibles in a line across lanes
+                        // ENHANCED: Find safe lanes for spawning
+                        const safeLanes = [];
+                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05; // Further away at high speeds
+                        
                         for (let lane = 0; lane < 3; lane++) {
-                            if (gameState.totalCollectibles >= 14) break; // Safety check
-                            
-                            // Mix kiwis and broccolis in line patterns
-                            const collectibleType = Math.random() < 0.5;
-                            if (collectibleType) {
-                                const kiwi = createSimpleKiwi(lane, -35 - (lane * 2));
+                            if (isLaneClearForCollectible(lane, baseSpawnZ)) {
+                                safeLanes.push(lane);
+                            }
+                        }
+                        
+                        if (safeLanes.length > 0) {
+                            const lane = safeLanes[Math.floor(Math.random() * safeLanes.length)];
+                            if (isKiwi) {
+                                const kiwi = createSimpleKiwi(lane, baseSpawnZ);
                                 gameState.kiwis.push(kiwi);
                             } else {
-                                const broccoli = createBroccoli(lane, -35 - (lane * 2), 'line');
+                                const broccoli = createBroccoli(lane, baseSpawnZ, 'single');
                                 gameState.broccolis.push(broccoli);
+                            }
+                        }
+                    } else if (pattern === 'line') {
+                        // ENHANCED: Smart line spawning with obstacle avoidance
+                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        const safeLanes = [];
+                        
+                        for (let lane = 0; lane < 3; lane++) {
+                            if (isLaneClearForCollectible(lane, baseSpawnZ)) {
+                                safeLanes.push(lane);
+                            }
+                        }
+                        
+                        // Only spawn in safe lanes, minimum 2 for line pattern
+                        if (safeLanes.length >= 2) {
+                            for (const lane of safeLanes) {
+                                if (gameState.totalCollectibles >= 14) break; // Safety check
+                                
+                                // Mix kiwis and broccolis in line patterns
+                                const collectibleType = Math.random() < 0.5;
+                                if (collectibleType) {
+                                    const spacing = gameState.speed > 150 ? 3 : 2; // Better spacing at high speed
+                                    const kiwi = createSimpleKiwi(lane, baseSpawnZ - (lane * spacing));
+                                    gameState.kiwis.push(kiwi);
+                                } else {
+                                    const spacing = gameState.speed > 150 ? 3 : 2;
+                                    const broccoli = createBroccoli(lane, baseSpawnZ - (lane * spacing), 'line');
+                                    gameState.broccolis.push(broccoli);
+                                }
                             }
                         }
                     } else if (pattern === 'arc') {
-                        // Spawn collectibles in arc pattern - mixed variety
+                        // ENHANCED: Smart arc spawning with obstacle avoidance
+                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
-                        lanes.forEach((lane, index) => {
-                            if (gameState.totalCollectibles >= 14) return; // Safety check
-                            
-                            // Alternate between kiwis and broccolis in arcs
-                            if (index % 2 === 0) {
-                                const kiwi = createSimpleKiwi(lane, -35 - (index * 1.5));
-                                gameState.kiwis.push(kiwi);
-                            } else {
-                                const broccoli = createBroccoli(lane, -35 - (index * 1.5), 'arc');
-                                gameState.broccolis.push(broccoli);
-                            }
-                        });
+                        const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
+                        
+                        if (safeLanes.length >= 2) {  // Only spawn arc if at least 2 safe lanes
+                            safeLanes.forEach((lane, index) => {
+                                if (gameState.totalCollectibles >= 14) return; // Safety check
+                                
+                                // Alternate between kiwis and broccolis in arcs
+                                const spacing = gameState.speed > 150 ? 2.5 : 1.5; // Better spacing at high speed
+                                if (index % 2 === 0) {
+                                    const kiwi = createSimpleKiwi(lane, baseSpawnZ - (index * spacing));
+                                    gameState.kiwis.push(kiwi);
+                                } else {
+                                    const broccoli = createBroccoli(lane, baseSpawnZ - (index * spacing), 'arc');
+                                    gameState.broccolis.push(broccoli);
+                                }
+                            });
+                        }
                     }
                 }
                 

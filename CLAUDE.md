@@ -25,9 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 3.5.1 (Kiwi Visual Fix + Duck Obstacle Improvements)
-- **Previous**: 3.5.0 (Gamification - Complete Tiered Bonus System)
-- **Before**: 3.4.2 (Gamification Update - Kiwi/Broccoli System)
+- **Latest**: 3.5.2 (Smart Collectible System + Obstacle Avoidance)
+- **Previous**: 3.5.1 (Kiwi Visual Fix + Duck Obstacle Improvements)
+- **Before**: 3.5.0 (Gamification - Complete Tiered Bonus System)
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (around line 440)
@@ -43,6 +43,7 @@ This is a collection of endless runner game projects built with different techno
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
 
 ### **VERSION HISTORY LOG**
+- 3.5.2: Smart collectible spawning + obstacle avoidance + counter fixes + speed-based density
 - 3.5.1: Kiwi visual improvements + duck obstacle height fixes + duck scoring system
 - 3.5.0: Complete tiered bonus system implementation
 - 3.4.2: Gamification (Kiwi/Broccoli collectibles, 80% achievement, jump fix)
