@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - Challenge</title>
+    <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
@@ -435,7 +437,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.4-VISUAL<br>
+            🚀 V3.4.1-BUGFIX<br>
             📅 07.01.2025
         </div>
         
@@ -981,6 +983,9 @@
                     } catch (error) {
                         console.warn('Audio playback error:', error);
                     }
+                } else {
+                    // BUGFIX: Silently ignore missing sound effects to prevent console spam
+                    // console.log(`Sound effect '${soundName}' not available`);
                 }
             }
 
@@ -1034,11 +1039,19 @@
                 try {
                     if (supabase) {
                         console.log('🔄 Fetching from Supabase...');
-                        const { data, error } = await supabase
+                        
+                        // BUGFIX: Add timeout and better error handling for DNS issues
+                        const timeoutPromise = new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Request timeout - possible DNS/network issue')), 5000)
+                        );
+                        
+                        const supabasePromise = supabase
                             .from('subway_runner_scores')
                             .select('*')
                             .order('score', { ascending: false })
                             .limit(10);
+                            
+                        const { data, error } = await Promise.race([supabasePromise, timeoutPromise]);
                         
                         if (!error && data) {
                             console.log(`✅ Loaded ${data.length} scores from Supabase:`, data);
@@ -1051,7 +1064,7 @@
                         throw new Error('No Supabase connection');
                     }
                 } catch (error) {
-                    console.log('⚠️ Falling back to localStorage:', error.message);
+                    console.log('⚠️ Network/DNS error, falling back to localStorage:', error.message);
                     // Fallback to localStorage
                     const localScores = localStorage.getItem(this.localStorageKey);
                     highscores = localScores ? JSON.parse(localScores) : [];
@@ -1167,6 +1180,8 @@
             playerAction: 'running', // running, jumping, ducking
             playerY: 0,
             jumpVelocity: 0,
+            jumpStartTime: 0,  // BUGFIX: Track jump start time for safety
+            maxJumpDuration: 2000, // Maximum 2 seconds jump duration
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -1237,7 +1252,11 @@
             targetFogDensity: 0.002,
             motionBlurActive: false,
             vignetteIntensity: 0,
-            particleEffects: []
+            particleEffects: [],
+            
+            // Score update throttling (FIX: Prevent 60FPS score updates)
+            lastScoreUpdate: 0,
+            scoreUpdateInterval: 100 // Update score every 100ms (10 times per second)
         };
 
         // Three.js setup
@@ -2182,6 +2201,22 @@
             gameState.cameraShakeIntensity = 0;
             gameState.slowMotionActive = false;
             
+            // BUGFIX: Reset milestone tracking to prevent constant confetti
+            gameState.lastMilestone = 0;
+            gameState.milestoneReached = 0;
+            gameState.totalDistance = 0;
+            
+            // BUGFIX: Initialize score update throttling
+            gameState.lastScoreUpdate = performance.now();
+            
+            // Reset all multipliers and combos
+            gameState.comboMultiplier = 1;
+            gameState.nearMissMultiplier = 1;
+            gameState.skillMultiplier = 1;
+            gameState.scoreMultiplier = 1;
+            gameState.nearMissStreak = 0;
+            gameState.kiwiCombo = 0;
+            
             // Clear obstacles
             obstacles.forEach(obs => scene.remove(obs.mesh));
             obstacles = [];
@@ -2206,7 +2241,9 @@
             currentSurvivalTime = Math.max(0, gameState.gameTime - Math.ceil(gameState.timeRemaining));
             
             // Check for highscore
+            console.log('Game ended. Checking highscore:', currentScore, 'isHighscore:', highscoreManager.isHighscore(currentScore));
             if (highscoreManager.isHighscore(currentScore)) {
+                console.log('New highscore achieved! Showing name input dialog.');
                 showNameInputDialog(false);
             } else {
                 showGameOverMenu(false);
@@ -2447,7 +2484,9 @@
                     event.preventDefault();
                     if (gameState.playerAction === 'running') {
                         gameState.playerAction = 'jumping';
-                        gameState.jumpVelocity = 10; // Höherer Sprung
+                        gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time // Höherer Sprung
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         
                         // Audio & Visual Feedback with speed dynamics
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
@@ -2728,7 +2767,8 @@
                     const inCollisionZone = obstacleZ > -2 && obstacleZ < 2;
                     
                     // Check if player is too high (not ducking properly)
-                    const playerHeight = gameState.playerAction === 'ducking' ? 0.6 : 1.5;
+                    // BUGFIX: Reduced duck height from 0.6 to 0.4 for better collision avoidance
+                    const playerHeight = gameState.playerAction === 'ducking' ? 0.4 : 1.5;
                     let obstacleHeight = 1.8; // Default duck obstacles height
                     
                     // Adjust for wallgap (gap bottom is at 1.3)
@@ -2778,15 +2818,18 @@
                         case 'highbarrier':
                         case 'duckbeam':
                         case 'wallgap':
-                            // Must be ducked - check if player is low enough to pass under
-                            // FIXED: Player avoids collision when ducking if their max height is below the obstacle's min height
-                            // This allows the player to pass under overhead obstacles when ducking
+                            // CRITICAL FIX: Overhead obstacles require ducking to avoid collision
+                            // Player can ONLY avoid collision if they are ducking AND low enough
                             if (gameState.playerAction === 'ducking' && 
-                                playerBBox.max.y < obstacleBBox.min.y + 0.1) {
+                                playerBBox.max.y < obstacleBBox.min.y + 0.2) {
                                 canAvoid = true;
                                 avoidanceType = 'duck';
+                            } else {
+                                // FORCE collision if not ducking or not low enough
+                                canAvoid = false;
+                                console.log(`🚨 OVERHEAD COLLISION: Player must duck! action=${gameState.playerAction}, playerMaxY=${playerBBox.max.y}, obstacleMinY=${obstacleBBox.min.y}`);
                             }
-                            console.log(`Duck obstacle collision: action=${gameState.playerAction}, playerMaxY=${playerBBox.max.y}, obstacleMinY=${obstacleBBox.min.y}, canAvoid=${canAvoid}`);
+                            console.log(`🎯 Overhead obstacle: action=${gameState.playerAction}, playerMaxY=${playerBBox.max.y}, obstacleMinY=${obstacleBBox.min.y}, canAvoid=${canAvoid}`);
                             break;
                             
                         case 'spikes':
@@ -3136,7 +3179,7 @@
             
             // Adjust hitbox based on action
             if (gameState.playerAction === 'ducking') {
-                height = 0.6;
+                height = 0.4; // Reduced from 0.6 to 0.4 for better obstacle clearance
                 depth = 0.8; // Slightly larger depth when ducking
             } else if (gameState.playerAction === 'jumping') {
                 // Tighter hitbox when jumping for more precise collision
@@ -4567,13 +4610,31 @@
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
                 
-                // Handle jumping - verbesserte Physik
+                // Handle jumping - FIXED: Use proper deltaTime for frame-independent physics
                 if (gameState.playerAction === 'jumping') {
-                    gameState.playerY += gameState.jumpVelocity * 0.016;
-                    gameState.jumpVelocity -= 30 * 0.016; // Stärkere Gravitation
+                    const deltaTimeSeconds = deltaTime / 1000; // Convert to seconds
+                    gameState.playerY += gameState.jumpVelocity * deltaTimeSeconds;
+                    gameState.jumpVelocity -= 30 * deltaTimeSeconds; // Gravity in units/second²
                     
-                    // Landing
+                    // BUGFIX: Maximum jump duration safety check
+                    const jumpDuration = Date.now() - gameState.jumpStartTime;
+                    if (jumpDuration > gameState.maxJumpDuration) {
+                        console.warn('Jump duration exceeded, forcing landing');
+                        gameState.playerY = 0;
+                        gameState.jumpVelocity = 0;
+                        gameState.playerAction = 'running';
+                    }
+                    
+                    // Landing with safety check
                     if (gameState.playerY <= 0) {
+                        gameState.playerY = 0;
+                        gameState.jumpVelocity = 0;
+                        gameState.playerAction = 'running';
+                    }
+                    
+                    // BUGFIX: Enhanced safety check - trigger earlier at Y < -2
+                    if (gameState.playerY < -2) {
+                        console.warn('Player stuck in air, resetting position');
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
@@ -5240,15 +5301,26 @@
             }, 10);
         }
         
-        // Update score with all active multipliers
+        // Update score with all active multipliers (FIXED: Throttled to 10 updates/second)
         function updateScoreWithMultipliers(deltaTime) {
+            const currentTime = performance.now();
+            
+            // BUGFIX: Throttle score updates to prevent constant scoring every frame
+            if (currentTime - gameState.lastScoreUpdate < gameState.scoreUpdateInterval) {
+                return; // Skip this frame
+            }
+            
+            // Calculate actual time since last update for accurate scoring
+            const timeSinceLastUpdate = (currentTime - gameState.lastScoreUpdate) / 1000; // Convert to seconds
+            gameState.lastScoreUpdate = currentTime;
+            
             // Calculate combined multiplier
             gameState.scoreMultiplier = gameState.comboMultiplier * 
                                        gameState.nearMissMultiplier * 
                                        gameState.skillMultiplier;
             
-            // Base score increase (distance-based)
-            const baseScoreIncrease = Math.floor(gameState.speed * deltaTime * 0.1);
+            // Base score increase (distance-based, using actual time delta)
+            const baseScoreIncrease = Math.floor(gameState.speed * timeSinceLastUpdate * 100); // Increased from 0.1 to 100 for better scoring
             
             // Apply multipliers
             const scoreIncrease = Math.floor(baseScoreIncrease * gameState.scoreMultiplier);
@@ -5257,13 +5329,13 @@
             gameState.score += scoreIncrease;
             
             // Decay multipliers over time
-            if (performance.now() - gameState.lastKiwiTime > 3000) {
+            if (currentTime - gameState.lastKiwiTime > 3000) {
                 gameState.comboMultiplier = Math.max(1, gameState.comboMultiplier - 0.01);
             }
-            if (performance.now() - gameState.lastNearMissTime > 5000) {
+            if (currentTime - gameState.lastNearMissTime > 5000) {
                 gameState.nearMissMultiplier = Math.max(1, gameState.nearMissMultiplier - 0.01);
             }
-            if (performance.now() - gameState.lastSkillTime > 4000) {
+            if (currentTime - gameState.lastSkillTime > 4000) {
                 gameState.skillMultiplier = Math.max(1, gameState.skillMultiplier - 0.01);
             }
         }
@@ -5307,6 +5379,7 @@
                         // Swipe up - jump
                         gameState.playerAction = 'jumping';
                         gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         audioManager.play('jump');
                         createParticleEffect(
                             new THREE.Vector3(player.position.x, 0.1, player.position.z),
@@ -5468,7 +5541,12 @@
                         this.options.videoElement.onloadedmetadata = resolve;
                     });
                     
-                    await this.initializeMediaPipe();
+                    try {
+                        await this.initializeMediaPipe();
+                    } catch (error) {
+                        console.error('MediaPipe initialization failed:', error);
+                        throw new Error('MediaPipe Vision library not loaded. Please refresh the page.');
+                    }
                     
                     this.isRunning = true;
                     this.detectLoop();
@@ -5496,11 +5574,17 @@
             }
             
             async initializeMediaPipe() {
-                const vision = await MediaPipeTasksVision.FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-                );
+                // BUGFIX: Check if MediaPipe is loaded and handle namespace properly
+                if (!window.mediapipe || !window.mediapipe.tasks || !window.mediapipe.tasks.vision) {
+                    throw new Error('MediaPipe Vision library not loaded yet');
+                }
                 
-                this.faceLandmarker = await MediaPipeTasksVision.FaceLandmarker.createFromOptions(vision, {
+                try {
+                    const vision = await window.mediapipe.tasks.vision.FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                    );
+                    
+                    this.faceLandmarker = await window.mediapipe.tasks.vision.FaceLandmarker.createFromOptions(vision, {
                     baseOptions: {
                         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker_lite/float16/latest/face_landmarker_lite.task",
                         delegate: "GPU"
@@ -5512,6 +5596,10 @@
                     minFacePresenceConfidence: this.options.minDetectionConfidence,
                     minTrackingConfidence: this.options.minTrackingConfidence
                 });
+                } catch (error) {
+                    console.error('Failed to create FaceLandmarker:', error);
+                    throw error;
+                }
             }
             
             detectLoop() {
@@ -5709,6 +5797,13 @@
         
         // Initialize gesture controller
         function initGestureController() {
+            // Wait for MediaPipe to load
+            if (!window.mediapipe || !window.mediapipe.tasks || !window.mediapipe.tasks.vision) {
+                console.warn('MediaPipe not loaded yet, waiting...');
+                setTimeout(initGestureController, 500);
+                return;
+            }
+            
             gestureController = new GestureController({
                 videoElement: document.getElementById('gestureVideo'),
                 canvasElement: document.getElementById('gestureCanvas'),
@@ -5757,6 +5852,7 @@
                     if (gameState.playerAction === 'running') {
                         gameState.playerAction = 'jumping';
                         gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
