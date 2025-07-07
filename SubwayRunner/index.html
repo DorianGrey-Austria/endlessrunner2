@@ -999,6 +999,37 @@
         const audioManager = new AudioManager();
         audioManager.ambientPlaying = false;
         
+        // CRITICAL FIX: Centralized score management to prevent explosion
+        function addScore(amount, source = 'unknown') {
+            // Add to queue instead of directly to score
+            gameState.scoreQueue += Math.max(0, Math.floor(amount));
+            
+            // Debug logging for score tracking
+            if (amount > 0) {
+                console.log(`🎯 Score queued: +${amount} from ${source} (queue: ${gameState.scoreQueue})`);
+            }
+        }
+        
+        function processScoreQueue() {
+            const currentTime = performance.now();
+            
+            // Only process queue every scoreUpdateInterval
+            if (currentTime - gameState.lastScoreUpdate < gameState.scoreUpdateInterval) {
+                return;
+            }
+            
+            if (gameState.scoreQueue > 0) {
+                // Apply limited amount from queue
+                const scoreToAdd = Math.min(gameState.scoreQueue, gameState.maxScorePerUpdate);
+                gameState.score += scoreToAdd;
+                gameState.scoreQueue -= scoreToAdd;
+                
+                gameState.lastScoreUpdate = currentTime;
+                
+                console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
+            }
+        }
+        
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
 
@@ -1256,7 +1287,11 @@
             
             // Score update throttling (FIX: Prevent 60FPS score updates)
             lastScoreUpdate: 0,
-            scoreUpdateInterval: 100 // Update score every 100ms (10 times per second)
+            scoreUpdateInterval: 100, // Update score every 100ms (10 times per second)
+            
+            // Centralized score queue for throttling ALL score additions
+            scoreQueue: 0,
+            maxScorePerUpdate: 100 // Maximum score increase per throttled update
         };
 
         // Three.js setup
@@ -2206,8 +2241,10 @@
             gameState.milestoneReached = 0;
             gameState.totalDistance = 0;
             
-            // BUGFIX: Initialize score update throttling
+            // BUGFIX: Initialize centralized score system
             gameState.lastScoreUpdate = performance.now();
+            gameState.scoreQueue = 0;
+            gameState.lastDistanceScore = performance.now();
             
             // Reset all multipliers and combos
             gameState.comboMultiplier = 1;
@@ -3034,7 +3071,7 @@
                         // ==================== APPLY REWARDS ====================
                         
                         const totalBonus = bonusScore + skillBonus;
-                        gameState.score += totalBonus;
+                        addScore(totalBonus, 'avoidance_bonus');
                         
                         // Show skill combo UI if we got a bonus
                         if (skillBonus > 0) {
@@ -3657,7 +3694,7 @@
             const comboBonus = gameState.kiwiCombo > 1 ? (gameState.kiwiCombo - 1) * 5 : 0;
             const totalScore = baseScore + comboBonus;
             
-            gameState.score += totalScore;
+            addScore(totalScore, 'kiwi_collection');
             
             // Show combo UI
             updateComboUI();
@@ -3871,7 +3908,7 @@
                 if (timeSinceLastMove < 1000 && gameState.rapidMoveBonus < 5) { // Max 5 rapid moves
                     gameState.rapidMoveBonus++;
                     const rapidBonus = gameState.rapidMoveBonus * 10;
-                    gameState.score += rapidBonus;
+                    addScore(rapidBonus, 'rapid_move_bonus');
                     
                     // Show rapid move feedback
                     if (gameState.rapidMoveBonus >= 3) {
@@ -4304,7 +4341,7 @@
             const distance = boundingBoxDistance(playerBBox, obstacleBBox);
             const nearMissBonus = Math.floor((0.3 - distance) * 100); // Closer = more points
             
-            gameState.score += nearMissBonus;
+            addScore(nearMissBonus, 'near_miss_bonus');
             
             // Near-miss audio feedback
             audioManager.play('nearmiss');
@@ -4722,7 +4759,7 @@
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        gameState.score += 10;
+                        addScore(10, 'shield_collision');
                     }
                 });
                 
@@ -5039,8 +5076,16 @@
                 // Check for milestones
                 checkMilestones();
                 
-                // Update score with multipliers
-                updateScoreWithMultipliers(deltaTime);
+                // CRITICAL FIX: Process centralized score queue instead of individual updates
+                processScoreQueue();
+                
+                // Keep distance-based scoring (converted to use addScore)
+                const timeSinceLastUpdate = (currentTime - (gameState.lastDistanceScore || 0)) / 1000;
+                if (timeSinceLastUpdate >= 0.1) { // Every 100ms
+                    const distanceScore = Math.floor(gameState.speed * timeSinceLastUpdate * 10);
+                    addScore(distanceScore, 'distance');
+                    gameState.lastDistanceScore = currentTime;
+                }
                 
                 updateUI();
             }
@@ -5073,7 +5118,7 @@
             nearMissBonus *= Math.min(gameState.nearMissStreak, 5); // Max 5x multiplier
             
             // Add to score
-            gameState.score += nearMissBonus;
+            addScore(nearMissBonus, 'near_miss_bonus');
             
             // Update near miss multiplier
             gameState.nearMissMultiplier = Math.min(gameState.nearMissStreak * 0.2 + 1, 2); // Max 2x
@@ -5114,18 +5159,19 @@
             }
         }
         
-        // Check and award milestone rewards
+        // Check and award milestone rewards (FIXED: Based on time, not exploitable score)
         function checkMilestones() {
-            const distance = Math.floor(gameState.totalDistance);
-            const milestoneInterval = 500; // Every 500m
-            const currentMilestone = Math.floor(distance / milestoneInterval) * milestoneInterval;
+            const gameTimeElapsed = (performance.now() - gameState.gameStartTime) / 1000;
+            const milestoneInterval = 10; // Every 10 seconds of actual gameplay
+            const currentMilestone = Math.floor(gameTimeElapsed / milestoneInterval) * milestoneInterval;
             
-            if (currentMilestone > gameState.lastMilestone && currentMilestone > 0) {
+            // Only award milestone if enough time has passed AND we haven't awarded this one yet
+            if (currentMilestone > gameState.lastMilestone && currentMilestone > 0 && gameTimeElapsed >= milestoneInterval) {
                 gameState.lastMilestone = currentMilestone;
                 
-                // Calculate milestone bonus
-                const milestoneBonus = currentMilestone; // Bonus equals distance
-                gameState.score += milestoneBonus;
+                // Calculate milestone bonus (reasonable amounts)
+                const milestoneBonus = Math.min(100, currentMilestone * 2); // Max 100 points per milestone
+                addScore(milestoneBonus, 'milestone_bonus');
                 
                 // Show milestone UI
                 showMilestoneUI(currentMilestone, milestoneBonus);
@@ -5151,10 +5197,14 @@
                     }, i * 100);
                 }
                 
-                // Increase life at major milestones
-                if (currentMilestone % 1500 === 0 && gameState.lives < 5) {
-                    gameState.lives++;
-                    console.log('Extra life awarded!');
+                // BUGFIX: Life awards based on actual game time, not score-based milestones
+                const gameTimeElapsed = (performance.now() - gameState.gameStartTime) / 1000;
+                const lifeAwardInterval = 20; // Award life every 20 seconds
+                const expectedLives = Math.min(5, 3 + Math.floor(gameTimeElapsed / lifeAwardInterval));
+                
+                if (gameState.lives < expectedLives && currentMilestone >= 1500) {
+                    gameState.lives = expectedLives;
+                    console.log(`Extra life awarded! Lives: ${gameState.lives} (time: ${gameTimeElapsed.toFixed(1)}s)`);
                 }
             }
         }
@@ -5301,44 +5351,7 @@
             }, 10);
         }
         
-        // Update score with all active multipliers (FIXED: Throttled to 10 updates/second)
-        function updateScoreWithMultipliers(deltaTime) {
-            const currentTime = performance.now();
-            
-            // BUGFIX: Throttle score updates to prevent constant scoring every frame
-            if (currentTime - gameState.lastScoreUpdate < gameState.scoreUpdateInterval) {
-                return; // Skip this frame
-            }
-            
-            // Calculate actual time since last update for accurate scoring
-            const timeSinceLastUpdate = (currentTime - gameState.lastScoreUpdate) / 1000; // Convert to seconds
-            gameState.lastScoreUpdate = currentTime;
-            
-            // Calculate combined multiplier
-            gameState.scoreMultiplier = gameState.comboMultiplier * 
-                                       gameState.nearMissMultiplier * 
-                                       gameState.skillMultiplier;
-            
-            // Base score increase (distance-based, using actual time delta)
-            const baseScoreIncrease = Math.floor(gameState.speed * timeSinceLastUpdate * 100); // Increased from 0.1 to 100 for better scoring
-            
-            // Apply multipliers
-            const scoreIncrease = Math.floor(baseScoreIncrease * gameState.scoreMultiplier);
-            
-            // Add to score
-            gameState.score += scoreIncrease;
-            
-            // Decay multipliers over time
-            if (currentTime - gameState.lastKiwiTime > 3000) {
-                gameState.comboMultiplier = Math.max(1, gameState.comboMultiplier - 0.01);
-            }
-            if (currentTime - gameState.lastNearMissTime > 5000) {
-                gameState.nearMissMultiplier = Math.max(1, gameState.nearMissMultiplier - 0.01);
-            }
-            if (currentTime - gameState.lastSkillTime > 4000) {
-                gameState.skillMultiplier = Math.max(1, gameState.skillMultiplier - 0.01);
-            }
-        }
+        // REMOVED: Old updateScoreWithMultipliers function replaced by centralized score system
         
         // Touch control handlers
         function handleTouchStart(event) {
