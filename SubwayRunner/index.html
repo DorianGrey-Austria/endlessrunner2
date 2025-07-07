@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.6.0-GAMIFICATION-COMPLETE<br>
+            🚀 V3.6.1-COLLECTIBLE-BUGFIX<br>
             📅 07.07.2025
         </div>
         
@@ -3820,7 +3820,7 @@
             };
             
             kiwis.push(kiwiData);
-            gameState.totalCollectibles++;  // Track total spawned collectibles
+            // REMOVED: totalCollectibles++ causes premature spawn stopping
             return kiwiData;
         }
         
@@ -3882,7 +3882,7 @@
             };
             
             broccolis.push(broccoliData);
-            gameState.totalCollectibles++;
+            // REMOVED: totalCollectibles++ causes premature spawn stopping  
             return broccoliData;
         }
         
@@ -5555,15 +5555,17 @@
                         }
                     }
                     
-                    // ENHANCED: Limit total collectibles to 37 per game (30 Kiwis + 7 Broccolis)
-                    if (gameState.totalCollectibles >= 37) {
-                        // Max collectibles reached, no more spawning
+                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
+                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
+                    const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+                    if (collectedTotal >= 37) {
+                        // Max collectibles collected, no more spawning
                         return;
                     }
                     
-                    // Balanced spawning: 30 Kiwis + 7 Broccolis
-                    const kiwiCount = gameState.kiwis.length;
-                    const broccoliCount = gameState.broccolis.length;
+                    // CORRECTED: Use collected counts for spawn logic, not active counts
+                    const kiwiCount = gameState.collectedKiwis;
+                    const broccoliCount = gameState.collectedBroccolis;
                     
                     // Determine what to spawn based on 30:7 target ratio
                     let isKiwi;
@@ -5634,12 +5636,13 @@
                             console.log(`🎯 LINE PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
                             for (const lane of selectedLanes) {
-                                if (gameState.totalCollectibles >= 37) break; // Safety check
+                                // BUGFIX: Check collected counts, not spawned total
+                                const currentCollectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+                                if (currentCollectedTotal >= 37) break; // Safety check
                                 
-                                // FIXED: Use same balance logic as single pattern (not separate random)
-                                // Check current counts for proper balance
-                                const currentKiwiCount = gameState.kiwis.length;
-                                const currentBroccoliCount = gameState.broccolis.length;
+                                // FIXED: Use collected counts for proper balance
+                                const currentKiwiCount = gameState.collectedKiwis;
+                                const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
                                 if (currentKiwiCount >= 30) {
@@ -5677,11 +5680,13 @@
                             console.log(`🌀 ARC PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
                             selectedLanes.forEach((lane, index) => {
-                                if (gameState.totalCollectibles >= 37) return; // Safety check
+                                // BUGFIX: Check collected counts, not spawned total
+                                const currentCollectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+                                if (currentCollectedTotal >= 37) return; // Safety check
                                 
-                                // FIXED: Use same balance logic as single pattern instead of alternating
-                                const currentKiwiCount = gameState.kiwis.length;
-                                const currentBroccoliCount = gameState.broccolis.length;
+                                // FIXED: Use collected counts for proper balance
+                                const currentKiwiCount = gameState.collectedKiwis;
+                                const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
                                 if (currentKiwiCount >= 30) {
