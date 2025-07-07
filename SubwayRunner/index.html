@@ -120,6 +120,37 @@
             opacity: 1;
         }
         
+        /* ENHANCED: Magnet Visual Effect - Blue/Magnetic Vignette */
+        .magnet-vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(30, 144, 255, 0.3) 70%, rgba(0, 100, 200, 0.5) 100%);
+            box-shadow: inset 0 0 100px rgba(30, 144, 255, 0.3);
+            z-index: 61;
+            opacity: 0;
+            transition: opacity 0.5s;
+            animation: magnetPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes magnetPulse {
+            0%, 100% { 
+                filter: brightness(1) hue-rotate(0deg);
+                box-shadow: inset 0 0 100px rgba(30, 144, 255, 0.3);
+            }
+            50% { 
+                filter: brightness(1.2) hue-rotate(10deg);
+                box-shadow: inset 0 0 120px rgba(30, 144, 255, 0.5);
+            }
+        }
+
+        .magnet-vignette.active {
+            opacity: 1;
+        }
+        
         /* UI Element Animations */
         .ui-glow {
             animation: uiGlow 2s ease-in-out infinite;
@@ -437,13 +468,14 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.5.2-GAMIFICATION<br>
+            🚀 V3.5.4-LARGE-MAGNET<br>
             📅 07.07.2025
         </div>
         
         <!-- Visual Effects Overlays -->
         <div id="speedLines" class="speed-lines"></div>
         <div id="vignetteOverlay" class="vignette-overlay"></div>
+        <div id="magnetVignette" class="magnet-vignette"></div>
         
         <!-- Gesture Control UI -->
         <div id="gestureControls">
@@ -1318,9 +1350,18 @@
             magnet: {
                 name: 'Magnet',
                 icon: '🧲',
-                color: 0xFFD700,
+                color: 0xFFD700, // Keep golden color for UI/effects
                 duration: 15000, // 15 seconds
                 effect: 'magnetActive'
+            },
+            largeMagnet: {
+                name: 'Large Magnet',
+                icon: '🧲',
+                color: 0xFFD700, // Same golden color
+                duration: 15000, // Same duration as regular magnet
+                effect: 'magnetActive', // Same effect
+                isLarge: true, // Special flag to identify large magnet
+                spawnRate: 0.3 // 30% chance when spawning magnets
             },
             shield: {
                 name: 'Shield', 
@@ -2265,7 +2306,10 @@
             gameState.nearMissStreak = 0;
             gameState.kiwiCombo = 0;
             
-            // Reset collectible system
+            // Reset collectible system with debug logging
+            console.log('🔄 RESETTING COLLECTIBLE COUNTERS');
+            console.log(`   Before reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            
             gameState.collectedKiwis = 0;
             gameState.collectedBroccolis = 0;
             gameState.totalCollectibles = 0;
@@ -2274,6 +2318,11 @@
                 allOfOne: false, 
                 allFourteen: false
             };
+            
+            console.log(`   After reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            
+            // Force immediate UI update
+            updateKiwiUI();
             
             // Clear obstacles and collectibles
             obstacles.forEach(obs => scene.remove(obs.mesh));
@@ -2290,6 +2339,12 @@
             
             document.getElementById('menu').style.display = 'none';
             updateUI();
+            
+            // Extra check to ensure UI is properly updated at game start
+            setTimeout(() => {
+                updateKiwiUI();
+                console.log('✅ Game started - UI updated after delay');
+            }, 100);
         }
 
         function endGame() {
@@ -2516,6 +2571,58 @@
                 }
             });
         });
+        
+        // Initialize UI counters on page load
+        setTimeout(() => {
+            updateKiwiUI();
+            console.log('✅ Initial UI update completed');
+        }, 100);
+        
+        // Debug functions for testing collectible counters
+        window.debugCollectibles = function() {
+            console.log('=== COLLECTIBLE DEBUG INFO ===');
+            console.log(`Game State:`, {
+                collectedKiwis: gameState.collectedKiwis,
+                collectedBroccolis: gameState.collectedBroccolis,
+                totalKiwis: gameState.totalKiwis,
+                totalBroccolis: gameState.totalBroccolis,
+                totalCollectibles: gameState.totalCollectibles,
+                activeKiwis: gameState.kiwis.length,
+                activeBroccolis: gameState.broccolis.length,
+                isPlaying: gameState.isPlaying
+            });
+            
+            console.log('UI Elements:', {
+                kiwiCount: document.getElementById('kiwiCount')?.textContent,
+                broccoliCount: document.getElementById('broccoliCount')?.textContent,
+                kiwiElement: document.getElementById('kiwiCount'),
+                broccoliElement: document.getElementById('broccoliCount')
+            });
+            
+            // Force UI update
+            updateKiwiUI();
+            console.log('Force updated UI - check values now');
+        };
+        
+        // Function to manually reset and test counters
+        window.testCollectibles = function() {
+            console.log('Testing collectible system...');
+            
+            // Reset counters
+            gameState.collectedKiwis = 0;
+            gameState.collectedBroccolis = 0;
+            updateKiwiUI();
+            
+            console.log('Reset counters to 0');
+            
+            // Simulate collecting
+            setTimeout(() => {
+                gameState.collectedKiwis = 5;
+                gameState.collectedBroccolis = 3;
+                updateKiwiUI();
+                console.log('Set test values: Kiwis=5, Broccolis=3');
+            }, 1000);
+        };
 
         function handleKeyDown(event) {
             if (!gameState.isPlaying) return;
@@ -3157,16 +3264,18 @@
             // ==================== POWER-UP COLLISION DETECTION ====================
             
             gameState.powerUps.forEach((powerUp, index) => {
+                // Larger collision box for large magnet
+                const boxSize = powerUp.type === 'largeMagnet' ? 0.8 : 0.4;
                 const powerUpBBox = {
                     min: {
-                        x: powerUp.mesh.position.x - 0.4,
-                        y: powerUp.mesh.position.y - 0.4,
-                        z: powerUp.mesh.position.z - 0.4
+                        x: powerUp.mesh.position.x - boxSize,
+                        y: powerUp.mesh.position.y - boxSize,
+                        z: powerUp.mesh.position.z - boxSize
                     },
                     max: {
-                        x: powerUp.mesh.position.x + 0.4,
-                        y: powerUp.mesh.position.y + 0.4,
-                        z: powerUp.mesh.position.z + 0.4
+                        x: powerUp.mesh.position.x + boxSize,
+                        y: powerUp.mesh.position.y + boxSize,
+                        z: powerUp.mesh.position.z + boxSize
                     }
                 };
                 
@@ -3831,9 +3940,11 @@
             kiwiData.collected = true;
             scene.remove(kiwiData.mesh);
             
-            // Update kiwi count
+            // Update kiwi count with debug logging
             gameState.collectedKiwis++;
             gameState.totalKiwis++;
+            
+            console.log(`🥝 COLLECTED KIWI - Session: ${gameState.collectedKiwis}, Total Lifetime: ${gameState.totalKiwis}`);
             
             // Handle combo system
             const currentTime = performance.now();
@@ -3874,9 +3985,11 @@
             broccoliData.collected = true;
             scene.remove(broccoliData.mesh);
             
-            // Update broccoli count
+            // Update broccoli count with debug logging
             gameState.collectedBroccolis++;
             gameState.totalBroccolis++;
+            
+            console.log(`🥦 COLLECTED BROCCOLI - Session: ${gameState.collectedBroccolis}, Total Lifetime: ${gameState.totalBroccolis}`);
             
             // Broccolis give slightly more points than kiwis (health food bonus!)
             const baseScore = 15;
@@ -3981,8 +4094,25 @@
         function updateKiwiUI() {
             const kiwiCount = document.getElementById('kiwiCount');
             const broccoliCount = document.getElementById('broccoliCount');
-            kiwiCount.textContent = gameState.collectedKiwis;
-            broccoliCount.textContent = gameState.collectedBroccolis;
+            
+            // Debug logging
+            console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            
+            if (kiwiCount) {
+                kiwiCount.textContent = gameState.collectedKiwis || 0;
+            } else {
+                console.error('❌ kiwiCount element not found!');
+            }
+            
+            if (broccoliCount) {
+                broccoliCount.textContent = gameState.collectedBroccolis || 0;
+            } else {
+                console.error('❌ broccoliCount element not found!');
+            }
+            
+            // Also update the total for percentage calculation
+            const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+            console.log(`📊 Total collected: ${collectedTotal}/${gameState.totalCollectibles} (${gameState.totalCollectibles > 0 ? (collectedTotal/gameState.totalCollectibles*100).toFixed(0) : 0}%)`);
         }
         
         function updateEnvironmentUI() {
@@ -4230,31 +4360,105 @@
         function createSimplePowerUp(type, lane, z) {
             const powerUpGroup = new THREE.Group();
             
-            // Main power-up crystal
-            const crystalGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.4);
-            const crystalMaterial = new THREE.MeshBasicMaterial({ 
-                color: POWER_UP_TYPES[type].color,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
-            powerUpGroup.add(crystal);
-            
-            // Power-up glow
-            const glowGeometry = new THREE.SphereGeometry(0.5, 8, 8);
-            const glowMaterial = new THREE.MeshBasicMaterial({ 
-                color: POWER_UP_TYPES[type].color,
-                transparent: true,
-                opacity: 0.2
-            });
-            
-            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-            powerUpGroup.add(glow);
+            // Special geometry for magnet and large magnet
+            if (type === 'magnet' || type === 'largeMagnet') {
+                // Create horseshoe magnet shape
+                const magnetGroup = new THREE.Group();
+                
+                // Scale factor for large magnet
+                const scale = type === 'largeMagnet' ? 2.0 : 1.0;
+                
+                // Red (north) pole
+                const redPoleGeometry = new THREE.BoxGeometry(0.3 * scale, 0.8 * scale, 0.3 * scale);
+                const redPoleMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0xFF0000,
+                    emissive: 0xFF0000,
+                    emissiveIntensity: type === 'largeMagnet' ? 0.5 : 0.3
+                });
+                const redPole = new THREE.Mesh(redPoleGeometry, redPoleMaterial);
+                redPole.position.set(-0.25 * scale, 0, 0);
+                magnetGroup.add(redPole);
+                
+                // Blue (south) pole
+                const bluePoleGeometry = new THREE.BoxGeometry(0.3 * scale, 0.8 * scale, 0.3 * scale);
+                const bluePoleMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x0000FF,
+                    emissive: 0x0000FF,
+                    emissiveIntensity: type === 'largeMagnet' ? 0.5 : 0.3
+                });
+                const bluePole = new THREE.Mesh(bluePoleGeometry, bluePoleMaterial);
+                bluePole.position.set(0.25 * scale, 0, 0);
+                magnetGroup.add(bluePole);
+                
+                // Curved top connection (simplified with box)
+                const topGeometry = new THREE.BoxGeometry(0.8 * scale, 0.3 * scale, 0.3 * scale);
+                const topMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x666666,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                const topPart = new THREE.Mesh(topGeometry, topMaterial);
+                topPart.position.set(0, 0.55 * scale, 0);
+                magnetGroup.add(topPart);
+                
+                // Add magnet group to power-up
+                magnetGroup.rotation.z = Math.PI / 6; // Slight tilt for visual interest
+                powerUpGroup.add(magnetGroup);
+                
+                // Add golden glow around magnet (larger and brighter for large magnet)
+                const glowSize = type === 'largeMagnet' ? 1.5 : 0.7;
+                const glowOpacity = type === 'largeMagnet' ? 0.3 : 0.15;
+                const glowGeometry = new THREE.SphereGeometry(glowSize, 12, 12);
+                const glowMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFD700,
+                    transparent: true,
+                    opacity: glowOpacity
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                powerUpGroup.add(glow);
+                
+                // Add pulsing outer ring for large magnet
+                if (type === 'largeMagnet') {
+                    const ringGeometry = new THREE.TorusGeometry(1.2, 0.1, 8, 16);
+                    const ringMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0xFFD700,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+                    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                    ring.rotation.x = Math.PI / 2;
+                    powerUpGroup.add(ring);
+                    powerUpGroup.ring = ring; // Store reference for animation
+                }
+                
+            } else {
+                // Default crystal for other power-ups
+                const crystalGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.4);
+                const crystalMaterial = new THREE.MeshBasicMaterial({ 
+                    color: POWER_UP_TYPES[type].color,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+                powerUpGroup.add(crystal);
+                
+                // Power-up glow
+                const glowGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+                const glowMaterial = new THREE.MeshBasicMaterial({ 
+                    color: POWER_UP_TYPES[type].color,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                powerUpGroup.add(glow);
+            }
             
             // Position
             const LANE_POSITIONS = [-2, 0, 2];
-            powerUpGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            const baseY = type === 'largeMagnet' ? 2.2 : 1.5; // Higher position for large magnet
+            powerUpGroup.position.set(LANE_POSITIONS[lane], baseY, z);
             
             scene.add(powerUpGroup);
             
@@ -4265,7 +4469,7 @@
                 z: z,
                 collected: false,
                 animationTime: 0,
-                baseY: 1.5
+                baseY: baseY
             };
         }
         
@@ -4507,11 +4711,21 @@
             const collectionPercentage = gameState.totalCollectibles > 0 ? 
                 (collectedTotal / gameState.totalCollectibles * 100).toFixed(0) : 0;
             
-            // Update display (you can expand this with actual UI elements)
-            console.log(`🥝 Kiwis: ${gameState.collectedKiwis} | 🥦 Broccolis: ${gameState.collectedBroccolis} | Progress: ${collectionPercentage}%`);
+            // Update display with enhanced debugging
+            console.log(`📊 COLLECTIBLE UPDATE:`);
+            console.log(`   🥝 Kiwis: ${gameState.collectedKiwis} (${gameState.kiwis.length} active)`);
+            console.log(`   🥦 Broccolis: ${gameState.collectedBroccolis} (${gameState.broccolis.length} active)`);
+            console.log(`   📈 Progress: ${collectedTotal}/${gameState.totalCollectibles} (${collectionPercentage}%)`);
             
-            // Update the HTML display
+            // Update the HTML display - force update
             updateKiwiUI();
+            
+            // Verify the update actually happened
+            const kiwiElement = document.getElementById('kiwiCount');
+            const broccoliElement = document.getElementById('broccoliCount');
+            if (kiwiElement && broccoliElement) {
+                console.log(`   ✅ UI Elements - Kiwi: ${kiwiElement.textContent}, Broccoli: ${broccoliElement.textContent}`);
+            }
             
             // Check for tiered collection bonuses
             checkTieredCollectionBonuses();
@@ -5217,11 +5431,18 @@
                 const progressivePowerUpRate = basePowerUpRate + (maxPowerUpRate - basePowerUpRate) * Math.pow(gameProgress, 1.5);
                 
                 if (Math.random() < progressivePowerUpRate && !gameState.activePowerUp) {
-                    const powerUpTypes = Object.keys(POWER_UP_TYPES);
-                    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                    // Filter out largeMagnet from regular spawning
+                    const powerUpTypes = Object.keys(POWER_UP_TYPES).filter(type => type !== 'largeMagnet');
+                    let selectedType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                    
+                    // Special handling for magnet - sometimes spawn large magnet instead
+                    if (selectedType === 'magnet' && Math.random() < 0.3) { // 30% chance for large magnet
+                        selectedType = 'largeMagnet';
+                    }
+                    
                     const lane = Math.floor(Math.random() * 3);
                     
-                    const powerUp = createSimplePowerUp(randomType, lane, -35);
+                    const powerUp = createSimplePowerUp(selectedType, lane, -35);
                     gameState.powerUps.push(powerUp);
                 }
                 
@@ -5322,37 +5543,83 @@
                             }
                         }
                         
-                        // Only spawn in safe lanes, minimum 2 for line pattern
+                        // FIXED: Maximum 2 collectibles per line, never all 3 simultaneously
                         if (safeLanes.length >= 2) {
-                            for (const lane of safeLanes) {
+                            // Randomly select max 2 lanes from safe lanes to prevent overwhelming patterns
+                            const maxLanes = Math.min(2, safeLanes.length);
+                            const selectedLanes = [];
+                            
+                            // Shuffle and select up to 2 lanes
+                            const shuffledLanes = [...safeLanes].sort(() => Math.random() - 0.5);
+                            for (let i = 0; i < maxLanes; i++) {
+                                selectedLanes.push(shuffledLanes[i]);
+                            }
+                            
+                            console.log(`🎯 LINE PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
+                            
+                            for (const lane of selectedLanes) {
                                 if (gameState.totalCollectibles >= 14) break; // Safety check
                                 
-                                // Mix kiwis and broccolis in line patterns
-                                const collectibleType = Math.random() < 0.5;
-                                if (collectibleType) {
-                                    const spacing = gameState.speed > 150 ? 3 : 2; // Better spacing at high speed
+                                // FIXED: Use same balance logic as single pattern (not separate random)
+                                // Check current counts for proper balance
+                                const currentKiwiCount = gameState.kiwis.length;
+                                const currentBroccoliCount = gameState.broccolis.length;
+                                
+                                let spawnKiwi;
+                                if (currentKiwiCount >= 7) {
+                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
+                                } else if (currentBroccoliCount >= 7) {
+                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
+                                } else {
+                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below 7
+                                }
+                                
+                                console.log(`🎯 LINE BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
+                                
+                                if (spawnKiwi) {
+                                    const spacing = gameState.speed > 150 ? 4 : 3; // Increased spacing for better collection
                                     const kiwi = createSimpleKiwi(lane, baseSpawnZ - (lane * spacing));
                                     gameState.kiwis.push(kiwi);
                                 } else {
-                                    const spacing = gameState.speed > 150 ? 3 : 2;
+                                    const spacing = gameState.speed > 150 ? 4 : 3; // Increased spacing for better collection
                                     const broccoli = createBroccoli(lane, baseSpawnZ - (lane * spacing), 'line');
                                     gameState.broccolis.push(broccoli);
                                 }
                             }
                         }
                     } else if (pattern === 'arc') {
-                        // ENHANCED: Smart arc spawning with obstacle avoidance
+                        // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
                         const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
                         
                         if (safeLanes.length >= 2) {  // Only spawn arc if at least 2 safe lanes
-                            safeLanes.forEach((lane, index) => {
+                            // FIXED: Limit to maximum 2 collectibles in arc pattern
+                            const maxArcCollectibles = Math.min(2, safeLanes.length);
+                            const selectedLanes = safeLanes.slice(0, maxArcCollectibles);
+                            
+                            console.log(`🌀 ARC PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
+                            
+                            selectedLanes.forEach((lane, index) => {
                                 if (gameState.totalCollectibles >= 14) return; // Safety check
                                 
-                                // Alternate between kiwis and broccolis in arcs
-                                const spacing = gameState.speed > 150 ? 2.5 : 1.5; // Better spacing at high speed
-                                if (index % 2 === 0) {
+                                // FIXED: Use same balance logic as single pattern instead of alternating
+                                const currentKiwiCount = gameState.kiwis.length;
+                                const currentBroccoliCount = gameState.broccolis.length;
+                                
+                                let spawnKiwi;
+                                if (currentKiwiCount >= 7) {
+                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
+                                } else if (currentBroccoliCount >= 7) {
+                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
+                                } else {
+                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below 7
+                                }
+                                
+                                console.log(`🌀 ARC BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
+                                
+                                const spacing = gameState.speed > 150 ? 3 : 2; // Increased spacing for better collection
+                                if (spawnKiwi) {
                                     const kiwi = createSimpleKiwi(lane, baseSpawnZ - (index * spacing));
                                     gameState.kiwis.push(kiwi);
                                 } else {
@@ -5377,8 +5644,31 @@
                     
                     // Animate power-up rotation and floating
                     powerUp.animationTime += deltaTime * 0.001;
-                    powerUp.mesh.rotation.y += 0.02;
-                    powerUp.mesh.position.y = powerUp.baseY + Math.sin(powerUp.animationTime * 3) * 0.3;
+                    
+                    // Special animation for magnets
+                    if (powerUp.type === 'magnet' || powerUp.type === 'largeMagnet') {
+                        // Wobble rotation for magnet
+                        powerUp.mesh.rotation.y += 0.015;
+                        powerUp.mesh.rotation.z = Math.PI / 6 + Math.sin(powerUp.animationTime * 2) * 0.1;
+                        
+                        // Different floating height for large magnet
+                        if (powerUp.type === 'largeMagnet') {
+                            powerUp.mesh.position.y = powerUp.baseY + Math.sin(powerUp.animationTime * 3) * 0.4;
+                            
+                            // Animate the pulsing ring
+                            if (powerUp.mesh.ring) {
+                                const pulseScale = 1 + Math.sin(powerUp.animationTime * 4) * 0.2;
+                                powerUp.mesh.ring.scale.set(pulseScale, pulseScale, 1);
+                                powerUp.mesh.ring.material.opacity = 0.3 + Math.sin(powerUp.animationTime * 3) * 0.2;
+                            }
+                        } else {
+                            powerUp.mesh.position.y = powerUp.baseY + Math.sin(powerUp.animationTime * 3) * 0.2;
+                        }
+                    } else {
+                        // Regular rotation for other power-ups
+                        powerUp.mesh.rotation.y += 0.02;
+                        powerUp.mesh.position.y = powerUp.baseY + Math.sin(powerUp.animationTime * 3) * 0.3;
+                    }
                     
                     // Update particle effects
                     if (powerUp.particles) {
@@ -5707,6 +5997,17 @@
                     vignetteOverlay.classList.add('active');
                 } else {
                     vignetteOverlay.classList.remove('active');
+                }
+            }
+            
+            // ENHANCED: Magnet vignette effect (blue/magnetic instead of black)
+            const magnetVignette = document.getElementById('magnetVignette');
+            if (magnetVignette) {
+                if (gameState.magnetActive) {
+                    magnetVignette.classList.add('active');
+                    console.log('🧲 MAGNET VIGNETTE: Activated - Blue magnetic effect active');
+                } else {
+                    magnetVignette.classList.remove('active');
                 }
             }
             

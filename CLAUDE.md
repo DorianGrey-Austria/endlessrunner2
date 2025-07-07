@@ -25,9 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 3.5.2 (Smart Collectible System + Obstacle Avoidance)
-- **Previous**: 3.5.1 (Kiwi Visual Fix + Duck Obstacle Improvements)
-- **Before**: 3.5.0 (Gamification - Complete Tiered Bonus System)
+- **Latest**: 3.5.4 (Large Magnet - Special collectible magnet powerup)
+- **Previous**: 3.5.2 (Smart Collectible System + Obstacle Avoidance)
+- **Before**: 3.5.1 (Kiwi Visual Fix + Duck Obstacle Improvements)
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (around line 440)
@@ -43,6 +43,7 @@ This is a collection of endless runner game projects built with different techno
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
 
 ### **VERSION HISTORY LOG**
+- 3.5.4: Complete collectible & power-up overhaul (max 2 per pattern + 50/50 balance + 3D horseshoe magnet + blue vignette + large collectible magnet)
 - 3.5.2: Smart collectible spawning + obstacle avoidance + counter fixes + speed-based density
 - 3.5.1: Kiwi visual improvements + duck obstacle height fixes + duck scoring system
 - 3.5.0: Complete tiered bonus system implementation
