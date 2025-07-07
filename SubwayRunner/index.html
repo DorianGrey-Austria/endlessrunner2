@@ -437,7 +437,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.4.2-GAMIFICATION<br>
+            🚀 V3.5.0-GAMIFICATION<br>
             📅 07.07.2025
         </div>
         
@@ -468,8 +468,8 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             
             <!-- NEW: Power-Up & Coins UI -->
-            <div id="kiwiCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>
+            <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
+                🥝 <span id="kiwiCount">0</span> | 🥦 <span id="broccoliCount">0</span>
             </div>
             <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
                 COMBO x<span id="comboMultiplier">1</span>!
@@ -1231,7 +1231,11 @@
             totalBroccolis: 0,         // Lifetime broccolis
             totalCollectibles: 0,      // Total spawned this session
             collectionGoal: 10,        // Target collectibles for bonus (80% of max ~12-15)
-            collectionBonusAwarded: false, // Track if 80% collection bonus was awarded
+            collectionBonusAwarded: {      // Track tiered collection bonuses
+                fiveOfOne: false,               // 5+ of one type
+                allOfOne: false,                // All 7 of one type  
+                allFourteen: false              // All 14 collectibles
+            },
             activePowerUp: null,       // Currently active power-up
             powerUpTimeRemaining: 0,   // Time left for active power-up
             magnetActive: false,       // Magnet power-up state
@@ -2265,7 +2269,11 @@
             gameState.collectedKiwis = 0;
             gameState.collectedBroccolis = 0;
             gameState.totalCollectibles = 0;
-            gameState.collectionBonusAwarded = false;
+            gameState.collectionBonusAwarded = {
+                fiveOfOne: false,
+                allOfOne: false, 
+                allFourteen: false
+            };
             
             // Clear obstacles and collectibles
             obstacles.forEach(obs => scene.remove(obs.mesh));
@@ -2549,12 +2557,8 @@
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
                         
-                        // Sprung-Partikel
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
                         
                         // Track jump for skill combos
                         trackPlayerMove('jumping');
@@ -3953,7 +3957,9 @@
         
         function updateKiwiUI() {
             const kiwiCount = document.getElementById('kiwiCount');
+            const broccoliCount = document.getElementById('broccoliCount');
             kiwiCount.textContent = gameState.collectedKiwis;
+            broccoliCount.textContent = gameState.collectedBroccolis;
         }
         
         function updateEnvironmentUI() {
@@ -4481,50 +4487,67 @@
             // Update display (you can expand this with actual UI elements)
             console.log(`🥝 Kiwis: ${gameState.collectedKiwis} | 🥦 Broccolis: ${gameState.collectedBroccolis} | Progress: ${collectionPercentage}%`);
             
-            // Check for collection milestone bonus (80% collected)
-            if (collectionPercentage >= 80 && !gameState.collectionBonusAwarded) {
-                awardCollectionBonus();
+            // Check for tiered collection bonuses
+            checkTieredCollectionBonuses();
+        }
+        
+        // NEW: Tiered collection bonus system
+        function checkTieredCollectionBonuses() {
+            const kiwis = gameState.collectedKiwis;
+            const broccolis = gameState.collectedBroccolis;
+            const total = kiwis + broccolis;
+            
+            // Tier 1: 5+ of one type (250 points)
+            if ((kiwis >= 5 || broccolis >= 5) && !gameState.collectionBonusAwarded.fiveOfOne) {
+                awardTieredBonus('fiveOfOne', 250, `5+ ${kiwis >= 5 ? 'Kiwis' : 'Broccolis'}`);
+            }
+            
+            // Tier 2: All 7 of one type (500 points)
+            if ((kiwis >= 7 || broccolis >= 7) && !gameState.collectionBonusAwarded.allOfOne) {
+                awardTieredBonus('allOfOne', 500, `All 7 ${kiwis >= 7 ? 'Kiwis' : 'Broccolis'}`);
+            }
+            
+            // Tier 3: All 14 collectibles (1000 points)
+            if (total >= 14 && !gameState.collectionBonusAwarded.allFourteen) {
+                awardTieredBonus('allFourteen', 1000, 'Perfect Collection - All 14!');
             }
         }
         
-        // NEW: Award bonus for collecting 80% of available collectibles
-        function awardCollectionBonus() {
-            if (gameState.collectionBonusAwarded) return;
-            
-            gameState.collectionBonusAwarded = true;
-            const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-            const collectionPercentage = (collectedTotal / gameState.totalCollectibles * 100).toFixed(0);
-            
-            // Calculate bonus - generous reward for achievement
-            const baseBonus = 500;
-            const percentageBonus = Math.floor((collectionPercentage - 80) * 20); // Extra for over 80%
-            const totalBonus = baseBonus + percentageBonus;
-            
-            addScore(totalBonus, 'collection_achievement');
+        function awardTieredBonus(tier, points, achievement) {
+            gameState.collectionBonusAwarded[tier] = true;
+            addScore(points, `collection_${tier}`);
             
             // Special celebration effects
-            showCollectionAchievement(collectedTotal, gameState.totalCollectibles, totalBonus);
+            showCollectionAchievement(achievement, points);
             
-            // Audio celebration
-            audioManager.createTone(523, 0.3, 'sine'); // C5
-            setTimeout(() => audioManager.createTone(659, 0.3, 'sine'), 150); // E5
-            setTimeout(() => audioManager.createTone(784, 0.4, 'sine'), 300); // G5
+            // Audio celebration - different tones for each tier
+            if (tier === 'fiveOfOne') {
+                audioManager.createTone(523, 0.3, 'sine'); // C5
+            } else if (tier === 'allOfOne') {
+                audioManager.createTone(659, 0.3, 'sine'); // E5
+                setTimeout(() => audioManager.createTone(784, 0.3, 'sine'), 150); // G5
+            } else if (tier === 'allFourteen') {
+                audioManager.createTone(523, 0.3, 'sine'); // C5
+                setTimeout(() => audioManager.createTone(659, 0.3, 'sine'), 150); // E5
+                setTimeout(() => audioManager.createTone(784, 0.3, 'sine'), 300); // G5
+                setTimeout(() => audioManager.createTone(1047, 0.4, 'sine'), 450); // C6
+            }
             
-            console.log(`🎉 COLLECTION ACHIEVEMENT! ${collectionPercentage}% collected - Bonus: +${totalBonus} points`);
+            console.log(`🎉 ${achievement.toUpperCase()} BONUS! +${points} points`);
         }
         
         // NEW: Show collection achievement UI
-        function showCollectionAchievement(collected, total, bonus) {
+        function showCollectionAchievement(achievement, points) {
             // Create achievement popup (you can enhance this with actual UI)
-            const percentage = (collected / total * 100).toFixed(0);
+            const total = gameState.collectedKiwis + gameState.collectedBroccolis;
             
             // For now, show in console - can be enhanced with visual UI later
             console.log(`
-🏆 COLLECTION MASTER! 🏆
+🏆 ${achievement.toUpperCase()} ACHIEVED! 🏆
 ━━━━━━━━━━━━━━━━━━━━
-🥝 Collected: ${collected}/${total} (${percentage}%)
-💎 Bonus Score: +${bonus} points
-🎯 Achievement: Healthy Eater!
+🥝 Kiwis: ${gameState.collectedKiwis} | 🥦 Broccolis: ${gameState.collectedBroccolis}
+📊 Total: ${total}/14
+💎 Bonus Score: +${points} points
 ━━━━━━━━━━━━━━━━━━━━
             `);
             
@@ -5209,14 +5232,27 @@
                         }
                     }
                     
-                    // ENHANCED: Limit total collectibles to 12-15 per game (10-12 needed for 80% bonus)
-                    if (gameState.totalCollectibles >= 15) {
+                    // ENHANCED: Limit total collectibles to 14 per game (7 Kiwis + 7 Broccolis)
+                    if (gameState.totalCollectibles >= 14) {
                         // Max collectibles reached, no more spawning
                         return;
                     }
                     
-                    // Randomly choose between kiwi and broccoli (50/50 chance)
-                    const isKiwi = Math.random() < 0.5;
+                    // Balanced spawning: 7 Kiwis + 7 Broccolis
+                    const kiwiCount = gameState.kiwis.length;
+                    const broccoliCount = gameState.broccolis.length;
+                    
+                    // Determine what to spawn based on balance
+                    let isKiwi;
+                    if (kiwiCount >= 7) {
+                        isKiwi = false; // Force broccoli if we have 7 kiwis
+                    } else if (broccoliCount >= 7) {
+                        isKiwi = true; // Force kiwi if we have 7 broccolis
+                    } else {
+                        isKiwi = Math.random() < 0.5; // Random if both below 7
+                    }
+                    
+                    console.log(`🎯 Spawning ${isKiwi ? 'Kiwi' : 'Broccoli'} - Pattern: ${pattern} (K:${kiwiCount}, B:${broccoliCount})`);
                     
                     if (pattern === 'single') {
                         const lane = Math.floor(Math.random() * 3);
@@ -5230,7 +5266,7 @@
                     } else if (pattern === 'line') {
                         // Spawn collectibles in a line across lanes
                         for (let lane = 0; lane < 3; lane++) {
-                            if (gameState.totalCollectibles >= 15) break; // Safety check
+                            if (gameState.totalCollectibles >= 14) break; // Safety check
                             
                             // Mix kiwis and broccolis in line patterns
                             const collectibleType = Math.random() < 0.5;
@@ -5246,7 +5282,7 @@
                         // Spawn collectibles in arc pattern - mixed variety
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         lanes.forEach((lane, index) => {
-                            if (gameState.totalCollectibles >= 15) return; // Safety check
+                            if (gameState.totalCollectibles >= 14) return; // Safety check
                             
                             // Alternate between kiwis and broccolis in arcs
                             if (index % 2 === 0) {
@@ -5734,11 +5770,8 @@
                         gameState.jumpVelocity = 10;
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         audioManager.play('jump');
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
                         trackPlayerMove('jumping');
                     } else if (deltaY > 0 && gameState.playerAction === 'running') {
                         // Swipe down - duck

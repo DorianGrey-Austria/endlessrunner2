@@ -227,6 +227,32 @@ setInterval(() => {
 
 ---
 
-**Last Updated**: 07.07.2025 16:00 CET  
-**Status**: ✅ **CORE ISSUES RESOLVED** - Game playable, minor enhancements needed  
-**Next Action**: Address jump confetti bug and implement gamification improvements
+---
+
+## 📋 **VERSION MANAGEMENT RULES**
+
+### **CRITICAL RULE**: Version numbers must ALWAYS be updated when deploying changes!
+
+**Version Format**: MAJOR.MINOR.PATCH-DESCRIPTION
+- **MAJOR**: Game-breaking changes, complete rewrites
+- **MINOR**: New features, significant improvements  
+- **PATCH**: Bug fixes, small tweaks
+- **DESCRIPTION**: Brief description of changes
+
+**Examples:**
+- `v3.5.0-gamification` - New gamification features
+- `v3.4.2-bugfix` - Critical bug fixes
+- `v3.6.0-performance` - Performance improvements
+
+**Deployment Checklist:**
+1. ✅ Update version number in HTML (line 440)
+2. ✅ Update date in HTML (line 441)  
+3. ✅ Test changes locally
+4. ✅ Deploy to production
+5. ✅ Verify version displays correctly
+
+---
+
+**Last Updated**: 07.07.2025 16:45 CET  
+**Status**: ✅ **GAMIFICATION SYSTEM IMPLEMENTED** - v3.5.0 deployed  
+**Next Action**: All major issues resolved, system stable
