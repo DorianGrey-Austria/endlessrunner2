@@ -86,6 +86,78 @@ if (gameState.magnetActive) {
 
 ---
 
+## 🚨 **CRITICAL BUGFIX: Collectibles verschwunden** - 7. Juli 2025
+
+### **Problem**: Nach v3.6.0 Deployment spawnen keine Kiwis und Broccolis mehr
+
+#### **Symptome**:
+- ❌ Keine Collectibles (Kiwis/Broccolis) werden angezeigt oder gespawnt
+- ❌ UI zeigt dauerhaft 0/30 Kiwis und 0/7 Broccolis  
+- ❌ Spiel funktioniert, aber ohne Collectible-Gameplay
+- ❌ Console zeigt keine Spawn-Nachrichten
+
+#### **Root Cause Analyse**:
+
+**🔍 PROBLEM 1: Falsche Limit-Logik**
+```javascript
+// FEHLERHAFT - V3.6.0:
+if (gameState.totalCollectibles >= 37) {
+    return; // Kein Spawning mehr!
+}
+const kiwiCount = gameState.kiwis.length; // Aktive Kiwis im Spiel
+```
+
+**🔍 PROBLEM 2: Verwirrung zwischen "gespawnt" und "gesammelt"**
+- `totalCollectibles++` bei jedem Spawn → nach 37 Spawns STOP
+- `gameState.kiwis.length` = aktive Kiwis (meist 0-3)
+- `gameState.collectedKiwis` = gesammelte Kiwis (das was wir wollen!)
+
+**🔍 PROBLEM 3: Spawning stoppt viel zu früh**
+- Nach 37 gespawnten Collectibles: Kein Spawning mehr
+- Aber: Die meisten werden gesammelt oder verschwinden
+- Ergebnis: 0 aktive Collectibles, aber Spawning gestoppt
+
+#### **✅ Lösung implementiert**:
+
+**1. Korrektur der Limit-Logik:**
+```javascript
+// VORHER (FEHLER):
+if (gameState.totalCollectibles >= 37) return;
+const kiwiCount = gameState.kiwis.length;
+
+// NACHHER (KORREKT):
+const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
+if (collectedTotal >= 37) return;
+const kiwiCount = gameState.collectedKiwis;
+```
+
+**2. Entfernung der problematischen Spawn-Counter:**
+```javascript
+// ENTFERNT:
+gameState.totalCollectibles++;  // Verursachte vorzeitiges Stop
+```
+
+**3. Alle drei Spawn-Pattern korrigiert:**
+- ✅ Single Pattern: Verwendet `collectedKiwis/Broccolis`
+- ✅ Line Pattern: Verwendet `collectedKiwis/Broccolis`  
+- ✅ Arc Pattern: Verwendet `collectedKiwis/Broccolis`
+
+#### **🔧 Technische Details der Korrektur**:
+- **Spawn-Limits**: Basieren jetzt auf gesammelten Items (0-37)
+- **Balance-Logic**: 30 gesammelte Kiwis + 7 gesammelte Broccolis  
+- **Spawn-Kontinuität**: Erlaubt kontinuierliches Spawning bis Ziele erreicht
+- **Safety Checks**: Alle drei Pattern verwenden identische Logik
+
+#### **📊 Vorher/Nachher**:
+```
+VORHER: Spawn → totalCollectibles++ → Bei 37: STOP → Keine Collectibles mehr
+NACHHER: Spawn → Sammeln → collectedKiwis++ → Bei 30+7: STOP → Korrekte Balance
+```
+
+**Ergebnis**: ✅ **Collectibles spawnen wieder korrekt! 30:7 Balance funktioniert einwandfrei.**
+
+---
+
 ## ✅ **Deployment-Problem behoben** - 30. Juni 2025
 
 ### **Problem**: GitHub Action deployte nicht zu korrektem Verzeichnis
