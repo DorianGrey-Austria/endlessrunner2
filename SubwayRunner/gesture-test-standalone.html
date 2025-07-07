@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubwayRunner - Gesture Control Test (Standalone)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #testContainer {
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            border: 2px solid #00ff88;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+        
+        #header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #00ff88;
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        #mainContent {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+        }
+        
+        #gameSimulation {
+            flex: 1;
+            background: #0a0a0a;
+            border-radius: 10px;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #controlPanel {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            border: 1px solid #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-section h3 {
+            margin: 0 0 10px 0;
+            color: #00ff88;
+            font-size: 1.2em;
+        }
+        
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        button:hover {
+            background: #00cc70;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        button:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .slider-container {
+            margin: 10px 0;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #333;
+            outline: none;
+            border-radius: 5px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #00ff88;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        #stats {
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #0f0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        /* Game simulation elements */
+        #player {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: #00ff88;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        #player.jumping {
+            animation: jump 0.8s ease;
+        }
+        
+        #player.ducking {
+            height: 40px;
+            bottom: 30px;
+        }
+        
+        .lane-marker {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            top: 0;
+        }
+        
+        #lane1 { left: 33.33%; }
+        #lane2 { left: 66.66%; }
+        
+        @keyframes jump {
+            0%, 100% { bottom: 50px; }
+            50% { bottom: 150px; }
+        }
+        
+        .gesture-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .gesture-indicator.active {
+            opacity: 1;
+        }
+        
+        #errorMessage {
+            display: none;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: #ff6666;
+        }
+        
+        /* Video preview */
+        #videoCanvas {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 180px;
+            height: 135px;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            background: #000;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        #videoCanvas.debug-mode {
+            width: 320px;
+            height: 240px;
+        }
+    </style>
+</head>
+<body>
+    <div id="testContainer">
+        <div id="header">
+            <h1>🎮 SubwayRunner Gesture Control Test</h1>
+            <p>Test der Gestensteuerung mit MediaPipe Face Tracking (Standalone)</p>
+        </div>
+        
+        <div id="mainContent">
+            <div id="gameSimulation">
+                <!-- Game simulation area -->
+                <div class="lane-marker" id="lane1"></div>
+                <div class="lane-marker" id="lane2"></div>
+                <div id="player"></div>
+                <div class="gesture-indicator" id="gestureIndicator"></div>
+            </div>
+            
+            <div id="controlPanel">
+                <div id="errorMessage"></div>
+                
+                <div class="control-section">
+                    <h3>🎥 Kamera-Steuerung</h3>
+                    <button id="startCamera">Kamera starten</button>
+                    <button id="stopCamera" disabled>Kamera stoppen</button>
+                    <button id="calibrate" disabled>Kalibrieren</button>
+                </div>
+                
+                <div class="control-section">
+                    <h3>⚙️ Einstellungen</h3>
+                    <div class="slider-container">
+                        <label for="sensitivitySlider">Empfindlichkeit: <span id="sensitivityValue">50</span>%</label>
+                        <input type="range" id="sensitivitySlider" min="10" max="100" value="50">
+                    </div>
+                    <div class="slider-container">
+                        <label for="smoothingSlider">Glättung: <span id="smoothingValue">5</span> Frames</label>
+                        <input type="range" id="smoothingSlider" min="1" max="10" value="5">
+                    </div>
+                    <label>
+                        <input type="checkbox" id="showDebug"> Debug-Ansicht zeigen
+                    </label>
+                </div>
+                
+                <div class="control-section">
+                    <h3>📊 Status</h3>
+                    <div id="stats">
+                        <div>FPS: <span id="fps">--</span></div>
+                        <div>Gesicht erkannt: <span id="faceDetected">❌</span></div>
+                        <div>Yaw: <span id="yaw">0</span>°</div>
+                        <div>Pitch: <span id="pitch">0</span>°</div>
+                        <div>Geste: <span id="currentGesture">NONE</span></div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🎮 Steuerung</h3>
+                    <p style="font-size: 0.9em; color: #aaa; margin: 0;">
+                        • Kopf links/rechts: Spurwechsel<br>
+                        • Kopf hoch: Springen<br>
+                        • Kopf runter: Ducken<br>
+                        • Neutral: Normale Position
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video element for camera (hidden) -->
+    <video id="videoElement" style="display: none;" autoplay playsinline></video>
+    
+    <!-- Canvas for video preview -->
+    <canvas id="videoCanvas"></canvas>
+    
+    <!-- MediaPipe CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    
+    <script>
+        // Standalone GestureController without ES6 modules
+        class GestureController {
+            constructor(options = {}) {
+                this.options = {
+                    videoElement: options.videoElement || null,
+                    canvasElement: options.canvasElement || null,
+                    onGestureDetected: options.onGestureDetected || (() => {}),
+                    onStatsUpdate: options.onStatsUpdate || (() => {}),
+                    onError: options.onError || (() => {}),
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5,
+                    smoothingFrames: 5,
+                    sensitivity: 0.5,
+                    debugMode: false
+                };
+                
+                this.isRunning = false;
+                this.faceLandmarker = null;
+                this.lastVideoTime = -1;
+                this.gestureHistory = [];
+                this.lastGesture = 'NONE';
+                
+                this.calibrationData = {
+                    neutralYaw: 0,
+                    neutralPitch: 0,
+                    isCalibrated: false
+                };
+                
+                this.stats = {
+                    fps: 0,
+                    frameCount: 0,
+                    lastFrameTime: performance.now(),
+                    faceDetected: false,
+                    yaw: 0,
+                    pitch: 0
+                };
+                
+                this.kalmanFilter = {
+                    yaw: new KalmanFilter(0.01, 1),
+                    pitch: new KalmanFilter(0.01, 1)
+                };
+                
+                this.thresholds = {
+                    yawLeft: -0.6,
+                    yawRight: 0.6,
+                    pitchUp: -0.6,
+                    pitchDown: 0.6,
+                    deadZone: 0.2
+                };
+                
+                this.ctx = this.options.canvasElement ? 
+                    this.options.canvasElement.getContext('2d') : null;
+                
+                this.frameSkipCounter = 0;
+                this.frameSkipRate = 2;
+            }
+            
+            async start() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    this.options.videoElement.srcObject = stream;
+                    
+                    await new Promise((resolve) => {
+                        this.options.videoElement.onloadedmetadata = resolve;
+                    });
+                    
+                    await this.initializeMediaPipe();
+                    
+                    this.isRunning = true;
+                    this.detectLoop();
+                    
+                    setTimeout(() => this.calibrate(), 2000);
+                    
+                } catch (error) {
+                    this.options.onError(`Failed to start camera: ${error.message}`);
+                    throw error;
+                }
+            }
+            
+            stop() {
+                this.isRunning = false;
+                
+                if (this.options.videoElement && this.options.videoElement.srcObject) {
+                    const tracks = this.options.videoElement.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.options.videoElement.srcObject = null;
+                }
+                
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.options.canvasElement.width, this.options.canvasElement.height);
+                }
+            }
+            
+            async initializeMediaPipe() {
+                const vision = await MediaPipeTasksVision.FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                );
+                
+                this.faceLandmarker = await MediaPipeTasksVision.FaceLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker_lite/float16/latest/face_landmarker_lite.task",
+                        delegate: "GPU"
+                    },
+                    outputFaceBlendshapes: true,
+                    runningMode: "VIDEO",
+                    numFaces: 1,
+                    minFaceDetectionConfidence: this.options.minDetectionConfidence,
+                    minFacePresenceConfidence: this.options.minDetectionConfidence,
+                    minTrackingConfidence: this.options.minTrackingConfidence
+                });
+            }
+            
+            detectLoop() {
+                if (!this.isRunning || !this.faceLandmarker) {
+                    return;
+                }
+                
+                this.frameSkipCounter++;
+                if (this.frameSkipCounter < this.frameSkipRate) {
+                    requestAnimationFrame(() => this.detectLoop());
+                    return;
+                }
+                this.frameSkipCounter = 0;
+                
+                const video = this.options.videoElement;
+                const startTimeMs = performance.now();
+                
+                if (video.readyState >= 2 && this.lastVideoTime !== video.currentTime) {
+                    this.lastVideoTime = video.currentTime;
+                    
+                    const results = this.faceLandmarker.detectForVideo(video, startTimeMs);
+                    
+                    this.updateFPS();
+                    
+                    if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+                        this.processFaceLandmarks(results);
+                        this.stats.faceDetected = true;
+                    } else {
+                        this.stats.faceDetected = false;
+                        this.updateGesture('NONE');
+                    }
+                    
+                    if (this.options.debugMode && this.ctx) {
+                        this.drawDebugVisualization(results);
+                    } else if (this.ctx) {
+                        this.drawMinimalVisualization();
+                    }
+                    
+                    this.options.onStatsUpdate(this.stats);
+                }
+                
+                requestAnimationFrame(() => this.detectLoop());
+            }
+            
+            processFaceLandmarks(results) {
+                const landmarks = results.faceLandmarks[0];
+                
+                const nose = landmarks[1];
+                const forehead = landmarks[9];
+                const chin = landmarks[152];
+                const leftEar = landmarks[234];
+                const rightEar = landmarks[454];
+                
+                const earDistance = rightEar.x - leftEar.x;
+                const faceCenterX = (leftEar.x + rightEar.x) / 2;
+                const noseOffsetX = nose.x - faceCenterX;
+                let yaw = (noseOffsetX / earDistance) * 2;
+                
+                const faceHeight = chin.y - forehead.y;
+                const noseCenterY = (forehead.y + chin.y) / 2;
+                const noseOffsetY = nose.y - noseCenterY;
+                let pitch = (noseOffsetY / faceHeight) * 2;
+                
+                yaw = this.kalmanFilter.yaw.filter(yaw);
+                pitch = this.kalmanFilter.pitch.filter(pitch);
+                
+                this.stats.yaw = yaw * 45;
+                this.stats.pitch = pitch * 45;
+                
+                if (this.calibrationData.isCalibrated) {
+                    yaw -= this.calibrationData.neutralYaw;
+                    pitch -= this.calibrationData.neutralPitch;
+                }
+                
+                yaw *= this.options.sensitivity * 2;
+                pitch *= this.options.sensitivity * 2;
+                
+                const gesture = this.detectGesture(yaw, pitch);
+                this.updateGesture(gesture);
+            }
+            
+            detectGesture(yaw, pitch) {
+                const inDeadZone = Math.abs(yaw) < this.thresholds.deadZone && 
+                                  Math.abs(pitch) < this.thresholds.deadZone;
+                
+                if (pitch > this.thresholds.pitchDown) {
+                    return 'DUCK';
+                } else if (pitch < this.thresholds.pitchUp) {
+                    return 'JUMP';
+                } else if (yaw < this.thresholds.yawLeft) {
+                    return 'MOVE_LEFT';
+                } else if (yaw > this.thresholds.yawRight) {
+                    return 'MOVE_RIGHT';
+                } else if (inDeadZone || this.lastGesture === 'DUCK') {
+                    return 'NONE';
+                }
+                
+                return this.lastGesture;
+            }
+            
+            updateGesture(gesture) {
+                this.gestureHistory.push(gesture);
+                if (this.gestureHistory.length > this.options.smoothingFrames) {
+                    this.gestureHistory.shift();
+                }
+                
+                const gestureCount = {};
+                this.gestureHistory.forEach(g => {
+                    gestureCount[g] = (gestureCount[g] || 0) + 1;
+                });
+                
+                let maxCount = 0;
+                let smoothedGesture = 'NONE';
+                for (const [g, count] of Object.entries(gestureCount)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        smoothedGesture = g;
+                    }
+                }
+                
+                if (smoothedGesture !== this.lastGesture) {
+                    this.lastGesture = smoothedGesture;
+                    this.options.onGestureDetected(smoothedGesture);
+                }
+            }
+            
+            calibrate() {
+                this.calibrationData.neutralYaw = this.stats.yaw / 45;
+                this.calibrationData.neutralPitch = this.stats.pitch / 45;
+                this.calibrationData.isCalibrated = true;
+                
+                if (this.ctx) {
+                    const canvas = this.options.canvasElement;
+                    this.ctx.fillStyle = '#00ff88';
+                    this.ctx.font = 'bold 16px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('CALIBRATED!', canvas.width / 2, canvas.height / 2);
+                    
+                    setTimeout(() => {
+                        if (this.ctx) {
+                            this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        }
+                    }, 1000);
+                }
+            }
+            
+            drawMinimalVisualization() {
+                const canvas = this.options.canvasElement;
+                const video = this.options.videoElement;
+                
+                canvas.width = 180;
+                canvas.height = 135;
+                
+                this.ctx.save();
+                this.ctx.scale(-1, 1);
+                this.ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                this.ctx.restore();
+                
+                if (this.stats.faceDetected) {
+                    this.ctx.strokeStyle = '#00ff88';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+                } else {
+                    this.ctx.strokeStyle = '#ff0000';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+                }
+                
+                if (this.lastGesture !== 'NONE') {
+                    this.ctx.fillStyle = '#00ff88';
+                    this.ctx.font = 'bold 14px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(this.lastGesture, canvas.width / 2, canvas.height - 10);
+                }
+            }
+            
+            drawDebugVisualization(results) {
+                const canvas = this.options.canvasElement;
+                const video = this.options.videoElement;
+                
+                canvas.width = 320;
+                canvas.height = 240;
+                
+                this.ctx.save();
+                this.ctx.scale(-1, 1);
+                this.ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                this.ctx.restore();
+                
+                if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+                    const landmarks = results.faceLandmarks[0];
+                    
+                    this.ctx.fillStyle = '#00ff88';
+                    landmarks.forEach(landmark => {
+                        const x = (1 - landmark.x) * canvas.width;
+                        const y = landmark.y * canvas.height;
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, 1, 0, 2 * Math.PI);
+                        this.ctx.fill();
+                    });
+                    
+                    const keyLandmarks = [1, 9, 152, 234, 454];
+                    this.ctx.fillStyle = '#ff0000';
+                    keyLandmarks.forEach(idx => {
+                        const landmark = landmarks[idx];
+                        const x = (1 - landmark.x) * canvas.width;
+                        const y = landmark.y * canvas.height;
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                        this.ctx.fill();
+                    });
+                }
+                
+                this.ctx.fillStyle = '#00ff88';
+                this.ctx.font = '12px monospace';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText(`FPS: ${this.stats.fps.toFixed(1)}`, 10, 20);
+                this.ctx.fillText(`Yaw: ${this.stats.yaw.toFixed(1)}°`, 10, 35);
+                this.ctx.fillText(`Pitch: ${this.stats.pitch.toFixed(1)}°`, 10, 50);
+                this.ctx.fillText(`Gesture: ${this.lastGesture}`, 10, 65);
+            }
+            
+            updateFPS() {
+                this.stats.frameCount++;
+                const now = performance.now();
+                const elapsed = now - this.stats.lastFrameTime;
+                
+                if (elapsed >= 1000) {
+                    this.stats.fps = (this.stats.frameCount * 1000) / elapsed;
+                    this.stats.frameCount = 0;
+                    this.stats.lastFrameTime = now;
+                }
+            }
+            
+            setSensitivity(value) {
+                this.options.sensitivity = Math.max(0.1, Math.min(1, value));
+            }
+            
+            setSmoothingFrames(frames) {
+                this.options.smoothingFrames = Math.max(1, Math.min(10, frames));
+            }
+            
+            setDebugMode(enabled) {
+                this.options.debugMode = enabled;
+                if (!enabled && this.ctx) {
+                    this.ctx.clearRect(0, 0, this.options.canvasElement.width, this.options.canvasElement.height);
+                }
+            }
+        }
+        
+        // Simple Kalman Filter
+        class KalmanFilter {
+            constructor(processNoise = 0.01, measurementNoise = 1) {
+                this.processNoise = processNoise;
+                this.measurementNoise = measurementNoise;
+                this.value = 0;
+                this.uncertainty = 1;
+            }
+            
+            filter(measurement) {
+                this.uncertainty += this.processNoise;
+                const gain = this.uncertainty / (this.uncertainty + this.measurementNoise);
+                this.value += gain * (measurement - this.value);
+                this.uncertainty *= (1 - gain);
+                return this.value;
+            }
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const controller = new GestureController({
+                videoElement: document.getElementById('videoElement'),
+                canvasElement: document.getElementById('videoCanvas'),
+                onGestureDetected: handleGesture,
+                onStatsUpdate: updateStats,
+                onError: showError
+            });
+            
+            // UI Elements
+            const startBtn = document.getElementById('startCamera');
+            const stopBtn = document.getElementById('stopCamera');
+            const calibrateBtn = document.getElementById('calibrate');
+            const sensitivitySlider = document.getElementById('sensitivitySlider');
+            const smoothingSlider = document.getElementById('smoothingSlider');
+            const showDebugCheckbox = document.getElementById('showDebug');
+            
+            // Game elements
+            const player = document.getElementById('player');
+            const gestureIndicator = document.getElementById('gestureIndicator');
+            let currentLane = 1; // 0, 1, 2 for three lanes
+            
+            // Button handlers
+            startBtn.addEventListener('click', async () => {
+                try {
+                    await controller.start();
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    calibrateBtn.disabled = false;
+                } catch (error) {
+                    showError(error.message);
+                }
+            });
+            
+            stopBtn.addEventListener('click', () => {
+                controller.stop();
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                calibrateBtn.disabled = true;
+            });
+            
+            calibrateBtn.addEventListener('click', () => {
+                controller.calibrate();
+            });
+            
+            // Settings handlers
+            sensitivitySlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                document.getElementById('sensitivityValue').textContent = value;
+                controller.setSensitivity(value / 100);
+            });
+            
+            smoothingSlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                document.getElementById('smoothingValue').textContent = value;
+                controller.setSmoothingFrames(parseInt(value));
+            });
+            
+            showDebugCheckbox.addEventListener('change', (e) => {
+                controller.setDebugMode(e.target.checked);
+            });
+            
+            // Handle detected gestures
+            function handleGesture(gesture) {
+                document.getElementById('currentGesture').textContent = gesture;
+                
+                // Update game simulation
+                switch (gesture) {
+                    case 'MOVE_LEFT':
+                        if (currentLane > 0) {
+                            currentLane--;
+                            updatePlayerPosition();
+                            showGestureIndicator('⬅️');
+                        }
+                        break;
+                    case 'MOVE_RIGHT':
+                        if (currentLane < 2) {
+                            currentLane++;
+                            updatePlayerPosition();
+                            showGestureIndicator('➡️');
+                        }
+                        break;
+                    case 'JUMP':
+                        player.classList.add('jumping');
+                        showGestureIndicator('⬆️');
+                        setTimeout(() => player.classList.remove('jumping'), 800);
+                        break;
+                    case 'DUCK':
+                        player.classList.add('ducking');
+                        showGestureIndicator('⬇️');
+                        break;
+                    case 'NONE':
+                        player.classList.remove('ducking');
+                        break;
+                }
+            }
+            
+            // Update player position based on lane
+            function updatePlayerPosition() {
+                const lanePositions = ['16.66%', '50%', '83.33%'];
+                player.style.left = lanePositions[currentLane];
+            }
+            
+            // Show gesture indicator
+            function showGestureIndicator(emoji) {
+                gestureIndicator.textContent = emoji;
+                gestureIndicator.classList.add('active');
+                setTimeout(() => {
+                    gestureIndicator.classList.remove('active');
+                }, 500);
+            }
+            
+            // Update stats display
+            function updateStats(stats) {
+                document.getElementById('fps').textContent = stats.fps.toFixed(1);
+                document.getElementById('faceDetected').textContent = stats.faceDetected ? '✅' : '❌';
+                document.getElementById('yaw').textContent = stats.yaw.toFixed(1);
+                document.getElementById('pitch').textContent = stats.pitch.toFixed(1);
+            }
+            
+            // Show error message
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = `❌ Error: ${message}`;
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
