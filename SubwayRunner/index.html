@@ -1032,7 +1032,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.0.2-STABLE<br>
+            🚀 V4.0.3-FIXED<br>
             📅 07.07.2025
         </div>
         
@@ -1187,7 +1187,7 @@
                 <div id="challengeCompleteStatus" style="font-size: 14px; color: #00FF00; display: none;">✅ COMPLETE! +<span id="challengeReward">0</span></div>
             </div>
             
-            <!-- FEATURE 10: Multiplier & Roulette Display -->
+            <!-- FEATURE 10: Multiplier & Roulette Display - DISABLED (User wants NO coins) -->
             <div id="scoreTokenDisplay" style="color: #FFD700; display: none; font-weight: bold; margin-top: 5px;">
                 🪙 Score Tokens: <span id="tokenCount">0</span>/3
                 <div id="rouletteReady" style="font-size: 14px; color: #00FF00; display: none;">🎰 ROULETTE READY!</div>
@@ -4509,9 +4509,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.1.0-DEVOPS<br>
-                    🚀 DevOps Monitoring & Feature Flags<br>
-                    🛡️ Rollback Protection System
+                    Version: 4.0.3-FIXED<br>
+                    🥝 Kiwi/Broccoli Only Mode<br>
+                    🚫 No Coins - Pure Collectibles
                 `;
             }
         });
@@ -8953,12 +8953,12 @@
                 };
                 
                 // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.003; // Low starting rate
-                const maxCoinRate = 0.012; // Reduced max rate for better spacing
+                const baseCollectibleRate = 0.008; // INCREASED: More collectibles (kiwis/broccolis)
+                const maxCollectibleRate = 0.020; // INCREASED: Better kiwi/broccoli visibility
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
-                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
+                const progressiveCollectibleRate = (baseCollectibleRate + (maxCollectibleRate - baseCollectibleRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
-                if (Math.random() < progressiveCoinRate) {
+                if (Math.random() < progressiveCollectibleRate) {
                     // Progressive kiwi pattern complexity
                     let pattern;
                     const patternRand = Math.random();
@@ -9351,11 +9351,11 @@
                     createRocketBoostPad(lane, -40);
                 }
                 
-                // FEATURE 10: Spawn score tokens (3% chance)
-                if (Math.random() < 0.03 && !gameState.rouletteActive) {
-                    const lane = Math.floor(Math.random() * 3);
-                    spawnScoreToken(lane, -35);
-                }
+                // FEATURE 10: Score tokens DISABLED - User wants NO coins, only kiwis/broccolis
+                // if (Math.random() < 0.03 && !gameState.rouletteActive) {
+                //     const lane = Math.floor(Math.random() * 3);
+                //     spawnScoreToken(lane, -35);
+                // }
                 
                 // FEATURE 10: Update score tokens
                 gameState.scoreTokens.forEach((token, index) => {

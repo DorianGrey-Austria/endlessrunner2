@@ -1,6 +1,41 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **FUNKTIONSFÄHIG** - Version 3.5.1 erfolgreich deployed
+## **Aktueller Status**: ✅ **FUNKTIONSFÄHIG** - Version 4.0.3-FIXED erfolgreich deployed
+
+---
+
+## ✅ **COLLECTIBLE FIX: Kiwi/Broccoli Only Mode** - 7. Juli 2025
+
+### **Problem**: User sah goldene Münzen (Score Tokens) statt nur Kiwis und Broccolis
+
+#### **Root Cause**:
+- **Score Tokens**: Goldene Münzen mit 3% Spawn-Rate für Roulette-System
+- **User Request**: "Wir wollen überhaupt keine Münzen sehen, sondern nur Kiwis und Ruckelis"
+- **System**: Score Tokens spawnen parallel zu Kiwis/Broccolis
+
+#### **✅ Lösung implementiert**:
+1. **Score Token Spawning deaktiviert** (Line 9354-9358):
+```javascript
+// VORHER:
+if (Math.random() < 0.03 && !gameState.rouletteActive) {
+    spawnScoreToken(lane, -35);
+}
+
+// NACHHER:
+// Score tokens DISABLED - User wants NO coins, only kiwis/broccolis
+// if (Math.random() < 0.03 && !gameState.rouletteActive) {
+//     spawnScoreToken(lane, -35);
+// }
+```
+
+2. **UI-Kommentar aktualisiert** (Line 1190):
+```html
+<!-- FEATURE 10: Multiplier & Roulette Display - DISABLED (User wants NO coins) -->
+```
+
+3. **Version aktualisiert**: 4.0.3-FIXED "Kiwi/Broccoli Only Mode"
+
+**Ergebnis**: ✅ **Keine goldenen Münzen mehr! Nur noch Kiwis und Broccolis spawnen.**
 
 ---
 

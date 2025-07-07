@@ -1,4 +1,4 @@
-# 🚀 GitHub → Hostinger Deployment Guide
+2# 🚀 GitHub → Hostinger Deployment Guide
 
 **Vollständige Anleitung für automatisches Deployment von GitHub zu Hostinger via GitHub Actions**
 
@@ -542,32 +542,68 @@ Local Development → Git Push → GitHub Actions → FTP Upload → Live Game
 
 ---
 
-## 🔧 **16. Deployment-Fix Update** - 30. Juni 2025
+## 📌 **16. Aktuelle Deployments auf ki-revolution.at**
 
-### **Problem gelöst**: GitHub Action deployte zu falschem Verzeichnis
+### **Bestehende GitHub Repositories mit funktionierender CI/CD Pipeline:**
 
-#### **Fehlerkonfiguration**:
+#### **1. endlessrunner2** ✅
+- **Repository**: https://github.com/DorianGrey-Austria/endlessrunner2
+- **Live URL**: https://ki-revolution.at/
+- **GitHub Actions**: "Deploy EndlessRunner MVP with Head Tracking"
+- **Status**: Aktiv, letzte erfolgreiche Deployments heute
+- **Secrets**: Bereits konfiguriert für ki-revolution.at
+
+### **🔧 KRITISCHER DEPLOYMENT-PFAD (30.06.2025)**
+
+**WICHTIG**: Der korrekte FTP-Deployment-Pfad ist:
 ```yaml
-# ❌ Falsch: Verschachtelte public_html Ordner
-server-dir: /domains/ki-revolution.at/public_html/
 server-dir: /public_html/
 ```
 
-#### **Korrekte Lösung**:
-```yaml
-# ✅ Richtig: Deployment ins Root-Verzeichnis
-server-dir: /
+**NICHT**:
+- ❌ `/domains/ki-revolution.at/public_html/`
+- ❌ `/ki-revolution.at/public_html/`
+- ❌ `/public_html/ki-revolution.at/`
+
+**Grund**: Die FTP-Credentials in GitHub Secrets sind bereits für die spezifische Domain `ki-revolution.at` konfiguriert, deshalb führt der Login direkt ins Domain-Verzeichnis.
+
+### **📁 Korrekte Verzeichnisstruktur nach Deployment:**
+```
+/public_html/
+├── index.html (Hauptspiel)
+├── head-tracking-demo.html (Demo)
+├── headTrackingController.js
+├── style.css
+├── script.js
+├── .htaccess
+└── ... (weitere Dateien)
 ```
 
-### **Ergebnis**:
-- **✅ Sofortige Datei-Aktualisierung** auf Hostinger
-- **✅ Korrekte Deployment-Struktur** ohne verschachtelte Ordner
-- **✅ Version 3.1** mit Version-Info erfolgreich deployed
-- **✅ Basis für Gestensteuerung-Tests** vorbereitet
+### **🚀 Erfolgreiche Workflow-Konfiguration:**
+```yaml
+- name: Deploy to Hostinger via FTP
+  uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+  with:
+    server: ${{ secrets.FTP_SERVER }}
+    username: ${{ secrets.FTP_USERNAME }}
+    password: ${{ secrets.FTP_PASSWORD }}
+    local-dir: ./deploy/
+    server-dir: /public_html/
+```
+
+### **Wichtiger Hinweis für neue Deployments:**
+Die GitHub Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD) sind **bereits konfiguriert** im Repository `endlessrunner2`. 
+
+**Für neue Features/Projekte:**
+1. Code zum bestehenden `endlessrunner2` Repository hinzufügen
+2. Workflow verwenden mit `server-dir: /public_html/`
+3. Git push → Automatisches Deployment läuft
+
+**KEINE erneute Secret-Konfiguration notwendig!**
 
 ---
 
 **📅 Erstellt**: 23. Juni 2025  
-**📅 Aktualisiert**: 30. Juni 2025 - Deployment Fix  
+**📅 Aktualisiert**: 30. Juni 2025
 **🤖 Generated with**: Claude Code (https://claude.ai/code)  
-**🔗 Live Demo**: https://ki-revolution.at/
+**🔗 Live Demo**: https://aiworkflows.at/pushup-panic/

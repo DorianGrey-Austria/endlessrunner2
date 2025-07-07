@@ -25,15 +25,22 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 3.6.1 (CRITICAL BUGFIX - Collectibles spawning wieder funktionsfähig)
-- **Previous**: 3.6.0 (Complete Gamification System - 30 Kiwi/7 Broccoli Balance)
-- **Before**: 3.5.4 (Large Magnet - Special collectible magnet powerup)
+- **Latest**: 4.0.3-FIXED (Kiwi/Broccoli Only - No Coins Fix)
+- **Previous**: 4.0.2-STABLE (Enterprise DevOps Production)
+- **Before**: 4.0.1 (HOTFIX - Critical production errors fixed)
+- **Before**: 4.0.0 (SUPER FUN EDITION - 10 Mega-Features von 5 Sub-Agents implementiert)
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (around line 440)
 2. Update this CLAUDE.md file with new version info
 3. Always mention new version when saying "test it online"
 4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
+
+### **VERSION HISTORY LOG**
+- 4.0.3-FIXED: Kiwi/Broccoli Only Mode (disabled Score Token coins)
+- 4.0.2-STABLE: Enterprise DevOps Production (monitoring, feature flags)
+- 4.0.1: HOTFIX - Critical production errors fixed
+- 4.0.0: SUPER FUN EDITION - 10 Mega-Features
 
 ### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**
 **WICHTIGE REGEL**: Nach jeder längeren Programmier-Session IMMER sofort online stellen!
@@ -43,6 +50,9 @@ This is a collection of endless runner game projects built with different techno
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
 
 ### **VERSION HISTORY LOG**
+- 4.0.2: STABLE EDITION - Production-ready (Enterprise security, DevOps monitoring, feature flags, auto-rollback, performance tracking, error recovery)
+- 4.0.1: HOTFIX - Critical production errors fixed (syntax error, CSP policy, function access)
+- 4.0.0: SUPER FUN EDITION - 10 Mega-Features (only 3/10 fully implemented: Power-Up Fusion, Adrenaline Mode, Obstacle Destruction)
 - 3.6.1: CRITICAL BUGFIX - Collectibles spawning repair (fixed totalCollectibles vs collectedKiwis confusion, spawn logic now works correctly)
 - 3.6.0: Complete gamification system (30 kiwi limit, broccoli bonuses, elongated kiwi design, duck confetti, UI progress bars, smart 30:7 spawn ratio)
 - 3.5.4: Complete collectible & power-up overhaul (max 2 per pattern + 50/50 balance + 3D horseshoe magnet + blue vignette + large collectible magnet)
