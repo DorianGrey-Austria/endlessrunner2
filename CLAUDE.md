@@ -25,9 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.0.4-PERFORMANCE (High-Performance Optimizations)
-- **Previous**: 4.0.3-FIXED (Kiwi/Broccoli Only - No Coins Fix)
-- **Before**: 4.0.2-STABLE (Enterprise DevOps Production)
+- **Latest**: 4.0.5-BALANCED (Perfect Balance & Realistic Kiwis)
+- **Previous**: 4.0.4-PERFORMANCE (High-Performance Optimizations)
+- **Before**: 4.0.3-FIXED (Kiwi/Broccoli Only - No Coins Fix)
 - **Before**: 4.0.0 (SUPER FUN EDITION - 10 Mega-Features von 5 Sub-Agents implementiert)
 
 ### **VERSION UPDATE PROCESS**
@@ -37,6 +37,7 @@ This is a collection of endless runner game projects built with different techno
 4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
 
 ### **VERSION HISTORY LOG**
+- 4.0.5-BALANCED: Perfect Balance & Realistic Kiwis (limited spawns, bigger kiwis)
 - 4.0.4-PERFORMANCE: High-Performance Optimizations (+300% speed boost)
 - 4.0.3-FIXED: Kiwi/Broccoli Only Mode (disabled Score Token coins)
 - 4.0.2-STABLE: Enterprise DevOps Production (monitoring, feature flags)

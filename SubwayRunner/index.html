@@ -1032,7 +1032,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.0.4-PERFORMANCE<br>
+            🚀 V4.0.5-BALANCED<br>
             📅 07.07.2025
         </div>
         
@@ -2872,6 +2872,7 @@
             activePowerUp: null,       // Currently active power-up
             powerUpTimeRemaining: 0,   // Time left for active power-up
             magnetActive: false,       // Magnet power-up state
+            magnetCount: 0,           // Track spawned magnets (max 2)
             shieldActive: false,       // Shield power-up state
             speedBoostActive: false,   // Speed boost power-up state
             // Fusion system
@@ -2955,6 +2956,7 @@
             
             // Mystery Box System
             mysteryBoxes: [],
+            mysteryBoxesSpawned: 0, // Track spawned mystery boxes (max 2)
             gamblingActive: false,
             gamblingStats: {
                 wins: 0,
@@ -4260,6 +4262,10 @@
             gameState.currentMultiplier = 1.0;
             gameState.scoreSurgeActive = false;
             gameState.scoreSurgeTimeRemaining = 0;
+            
+            // Reset spawn counters for new game
+            gameState.mysteryBoxesSpawned = 0;
+            gameState.magnetCount = 0;
             gameState.scoreSurgeMultiplier = 1.0;
             
             // Initialize daily challenge system
@@ -4510,9 +4516,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.0.4-PERFORMANCE<br>
-                    ⚡ High-Performance Mode<br>
-                    🥝 Kiwi/Broccoli Optimized
+                    Version: 4.0.5-BALANCED<br>
+                    🎯 Perfect Balance Mode<br>
+                    🥝 Realistic Kiwis + Limited Spawns
                 `;
             }
         });
@@ -5872,20 +5878,20 @@
         function createKiwi(lane, z, pattern = 'single') {
             const kiwiGroup = new THREE.Group();
             
-            // REDESIGNED: Elongated Kiwi Geometrie (oval shape, less coin-like)
-            const kiwiRadiusX = 0.3;   // Smaller width
-            const kiwiRadiusY = 0.5;   // Taller height 
-            const kiwiRadiusZ = 0.3;   // Smaller depth
+            // REALISTIC KIWI: Much larger and more visible (like real kiwi fruit)
+            const kiwiRadiusX = 0.6;   // Much wider for visibility
+            const kiwiRadiusY = 0.8;   // Much taller - real kiwi proportions 
+            const kiwiRadiusZ = 0.6;   // Much deeper for 3D effect
             
             // ENHANCED: Elongated ellipsoid shape for realistic kiwi appearance
             const kiwiGeometry = new THREE.SphereGeometry(1, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.8);
             kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
             
-            // ENHANCED: Verbesserte Braune Außenhaut mit Glow-Effekt
+            // REALISTIC KIWI SKIN: Brown fuzzy exterior like real kiwi
             const skinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xB8860B,  // Noch heller für bessere Sichtbarkeit
-                emissive: 0x3A2A0A,  // Leichtes Glühen
-                roughness: 0.6
+                color: 0x8B4513,  // Realistic brown kiwi skin color
+                emissive: 0x2F1B14,  // Subtle brown glow
+                roughness: 0.9  // Very rough for fuzzy skin effect
             });
             const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
             kiwiSkin.rotation.x = -Math.PI / 2;
@@ -8933,12 +8939,26 @@
                 
                 if (Math.random() < progressivePowerUpRate && !gameState.activePowerUp) {
                     // Filter out largeMagnet from regular spawning
-                    const powerUpTypes = Object.keys(POWER_UP_TYPES).filter(type => type !== 'largeMagnet');
+                    let powerUpTypes = Object.keys(POWER_UP_TYPES).filter(type => type !== 'largeMagnet');
+                    
+                    // LIMIT: Remove magnets if we already have 2
+                    if (gameState.magnetCount >= 2) {
+                        powerUpTypes = powerUpTypes.filter(type => type !== 'magnet');
+                    }
+                    
+                    // Don't spawn anything if no types available
+                    if (powerUpTypes.length === 0) return;
+                    
                     let selectedType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
                     
                     // Special handling for magnet - sometimes spawn large magnet instead
                     if (selectedType === 'magnet' && Math.random() < 0.3) { // 30% chance for large magnet
                         selectedType = 'largeMagnet';
+                    }
+                    
+                    // Track magnet spawns
+                    if (selectedType === 'magnet' || selectedType === 'largeMagnet') {
+                        gameState.magnetCount++;
                     }
                     
                     const lane = Math.floor(Math.random() * 3);
@@ -8990,10 +9010,10 @@
                         }
                     }
                     
-                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
-                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
+                    // USER REQUEST: Minimum 20 Kiwis + 7 Broccolis guaranteed
+                    // Allow up to 40 total for good gameplay
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 37) {
+                    if (collectedTotal >= 40) {
                         // Max collectibles collected, no more spawning
                         return;
                     }
@@ -9002,17 +9022,17 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 80:15 target ratio
+                    // Determine what to spawn based on 30:7 target ratio (minimum guaranteed)
                     let isKiwi;
-                    if (kiwiCount >= 80) {
-                        isKiwi = false; // Force broccoli if we have 80 kiwis
-                    } else if (broccoliCount >= 15) {
-                        isKiwi = true; // Force kiwi if we have 15 broccolis
+                    if (kiwiCount >= 30) {
+                        isKiwi = false; // Force broccoli if we have 30 kiwis
+                    } else if (broccoliCount >= 7) {
+                        isKiwi = true; // Force kiwi if we have 7 broccolis
                     } else {
-                        // Weighted spawning for 80:15 ratio (84% kiwi, 16% broccoli)
-                        const totalTarget = 95;
+                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
+                        const totalTarget = 37;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 80 / totalTarget; // ~0.84
+                        const targetRatio = 30 / totalTarget; // ~0.81
                         
                         // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
@@ -9073,19 +9093,19 @@
                             for (const lane of selectedLanes) {
                                 // BUGFIX: Check collected counts, not spawned total
                                 const currentCollectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                                if (currentCollectedTotal >= 37) break; // Safety check
+                                if (currentCollectedTotal >= 40) break; // Updated limit
                                 
                                 // FIXED: Use collected counts for proper balance
                                 const currentKiwiCount = gameState.collectedKiwis;
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 80) {
-                                    spawnKiwi = false; // Force broccoli if we have 80 kiwis
-                                } else if (currentBroccoliCount >= 15) {
-                                    spawnKiwi = true; // Force kiwi if we have 15 broccolis
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
+                                } else if (currentBroccoliCount >= 7) {
+                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.75; // 75% kiwi, 25% broccoli
+                                    spawnKiwi = Math.random() < 0.85; // 85% kiwi, 15% broccoli
                                 }
                                 
                                 console.log(`🎯 LINE BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -9117,19 +9137,19 @@
                             selectedLanes.forEach((lane, index) => {
                                 // BUGFIX: Check collected counts, not spawned total
                                 const currentCollectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                                if (currentCollectedTotal >= 37) return; // Safety check
+                                if (currentCollectedTotal >= 40) return; // Updated limit
                                 
                                 // FIXED: Use collected counts for proper balance
                                 const currentKiwiCount = gameState.collectedKiwis;
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 80) {
-                                    spawnKiwi = false; // Force broccoli if we have 80 kiwis
-                                } else if (currentBroccoliCount >= 15) {
-                                    spawnKiwi = true; // Force kiwi if we have 15 broccolis
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
+                                } else if (currentBroccoliCount >= 7) {
+                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.75; // 75% kiwi, 25% broccoli
+                                    spawnKiwi = Math.random() < 0.85; // 85% kiwi, 15% broccoli
                                 }
                                 
                                 console.log(`🌀 ARC BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -10056,8 +10076,13 @@
         // ==================== MYSTERY BOX SYSTEM ====================
         
         function spawnMysteryBox() {
+            // LIMIT: Maximum 2 mystery boxes per game
+            if (gameState.mysteryBoxesSpawned >= 2) return;
+            
             // 1% chance per obstacle spawn
             if (Math.random() > 0.01) return;
+            
+            gameState.mysteryBoxesSpawned++; // Track spawned boxes
             
             const lane = Math.floor(Math.random() * 3);
             const mysteryBoxGroup = new THREE.Group();
