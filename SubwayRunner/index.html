@@ -1032,7 +1032,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.0.3-FIXED<br>
+            🚀 V4.0.4-PERFORMANCE<br>
             📅 07.07.2025
         </div>
         
@@ -3095,6 +3095,7 @@
         // Smooth speed system
         let visualSpeed = 0.08;
         let lastFrameTime = 0;
+        let lastUIUpdateTime = 0;
         const SPEED_LERP_FACTOR = 0.05;
 
         function init() {
@@ -4509,9 +4510,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.0.3-FIXED<br>
-                    🥝 Kiwi/Broccoli Only Mode<br>
-                    🚫 No Coins - Pure Collectibles
+                    Version: 4.0.4-PERFORMANCE<br>
+                    ⚡ High-Performance Mode<br>
+                    🥝 Kiwi/Broccoli Optimized
                 `;
             }
         });
@@ -4780,18 +4781,19 @@
             // Apply performance multiplier
             particleCount = Math.max(1, Math.floor(particleCount * particleMultiplier));
             
+            // PERFORMANCE FIX: Use shared geometry and materials for particles
+            const sharedGeometry = new THREE.SphereGeometry(size, 6, 6);
+            const sharedMaterial = new THREE.MeshBasicMaterial({ 
+                color: color,
+                transparent: true
+            });
+            
             const particles = new THREE.Group();
             particles.userData.isParticle = true;
             particles.userData.createdAt = Date.now();
             
             for (let i = 0; i < particleCount; i++) {
-                const particle = new THREE.Mesh(
-                    new THREE.SphereGeometry(size, 6, 6),
-                    new THREE.MeshBasicMaterial({ 
-                        color: color,
-                        transparent: true
-                    })
-                );
+                const particle = new THREE.Mesh(sharedGeometry, sharedMaterial);
                 
                 particle.position.copy(position);
                 particle.velocity = new THREE.Vector3(
@@ -4940,6 +4942,10 @@
             const playerBBox = calculatePlayerBoundingBox();
             
             obstacles.forEach((obstacle, index) => {
+                // PERFORMANCE FIX: Early distance check before expensive collision calculations
+                const distanceZ = Math.abs(obstacle.mesh.position.z - player.position.z);
+                if (distanceZ > 3) return; // Skip distant obstacles
+                
                 // Calculate obstacle bounding box
                 const obstacleBBox = calculateObstacleBoundingBox(obstacle);
                 
@@ -8660,12 +8666,10 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // Profile the entire frame
-            DevOpsMonitor.profile('frame', () => {
-                // Calculate delta time for smooth movement
-                const currentTime = performance.now();
-                const deltaTime = currentTime - lastFrameTime;
-                lastFrameTime = currentTime;
+            // Calculate delta time for smooth movement
+            const currentTime = performance.now();
+            const deltaTime = currentTime - lastFrameTime;
+            lastFrameTime = currentTime;
             
             // Apply time scale for adrenaline mode
             const scaledDeltaTime = deltaTime * gameState.timeScaleFactor;
@@ -8953,8 +8957,8 @@
                 };
                 
                 // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCollectibleRate = 0.008; // INCREASED: More collectibles (kiwis/broccolis)
-                const maxCollectibleRate = 0.020; // INCREASED: Better kiwi/broccoli visibility
+                const baseCollectibleRate = 0.025; // MAJOR INCREASE: Much more collectibles
+                const maxCollectibleRate = 0.060; // MAJOR INCREASE: Maximum collectible density
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCollectibleRate = (baseCollectibleRate + (maxCollectibleRate - baseCollectibleRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
@@ -8998,17 +9002,17 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 30:7 target ratio
+                    // Determine what to spawn based on 80:15 target ratio
                     let isKiwi;
-                    if (kiwiCount >= 30) {
-                        isKiwi = false; // Force broccoli if we have 30 kiwis
-                    } else if (broccoliCount >= 7) {
-                        isKiwi = true; // Force kiwi if we have 7 broccolis
+                    if (kiwiCount >= 80) {
+                        isKiwi = false; // Force broccoli if we have 80 kiwis
+                    } else if (broccoliCount >= 15) {
+                        isKiwi = true; // Force kiwi if we have 15 broccolis
                     } else {
-                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
-                        const totalTarget = 37;
+                        // Weighted spawning for 80:15 ratio (84% kiwi, 16% broccoli)
+                        const totalTarget = 95;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 30 / totalTarget; // ~0.81
+                        const targetRatio = 80 / totalTarget; // ~0.84
                         
                         // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
@@ -9076,12 +9080,12 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 30) {
-                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
-                                } else if (currentBroccoliCount >= 7) {
-                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
+                                if (currentKiwiCount >= 80) {
+                                    spawnKiwi = false; // Force broccoli if we have 80 kiwis
+                                } else if (currentBroccoliCount >= 15) {
+                                    spawnKiwi = true; // Force kiwi if we have 15 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
+                                    spawnKiwi = Math.random() < 0.75; // 75% kiwi, 25% broccoli
                                 }
                                 
                                 console.log(`🎯 LINE BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -9120,12 +9124,12 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 30) {
-                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
-                                } else if (currentBroccoliCount >= 7) {
-                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
+                                if (currentKiwiCount >= 80) {
+                                    spawnKiwi = false; // Force broccoli if we have 80 kiwis
+                                } else if (currentBroccoliCount >= 15) {
+                                    spawnKiwi = true; // Force kiwi if we have 15 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
+                                    spawnKiwi = Math.random() < 0.75; // 75% kiwi, 25% broccoli
                                 }
                                 
                                 console.log(`🌀 ARC BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -9519,11 +9523,14 @@
                     gameState.lastDistanceScore = currentTime;
                 }
                 
-                updateUI();
+                // Throttle UI updates to 30fps for better performance
+                if (currentTime - lastUIUpdateTime > 33) { // 33ms = 30fps
+                    updateUI();
+                    lastUIUpdateTime = currentTime;
+                }
             }
             
             renderer.render(scene, camera);
-            }); // End of DevOpsMonitor.profile
         }
 
         // Handle near miss detection
