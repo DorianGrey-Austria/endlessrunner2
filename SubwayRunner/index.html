@@ -6,6 +6,8 @@
     <title>Subway Runner 3D - Challenge</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- MediaPipe CDN for Gesture Control -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
     <style>
         * {
             margin: 0;
@@ -62,6 +64,98 @@
             border: 1px solid rgba(255,215,0,0.5);
             font-family: monospace;
             line-height: 1.2;
+        }
+        
+        /* Visual Enhancement Styles */
+        .speed-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 50;
+        }
+        
+        .speed-line {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,0));
+            animation: speedLineMove 0.3s linear;
+        }
+        
+        @keyframes speedLineMove {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+        
+        .vignette-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%);
+            z-index: 60;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .vignette-overlay.active {
+            opacity: 1;
+        }
+        
+        /* UI Element Animations */
+        .ui-glow {
+            animation: uiGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes uiGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 5px rgba(255,215,0,0.5));
+            }
+            50% {
+                filter: drop-shadow(0 0 15px rgba(255,215,0,0.8));
+            }
+        }
+        
+        .ui-bounce {
+            animation: uiBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes uiBounce {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        /* Motion Blur Effect */
+        .motion-blur {
+            filter: blur(0px);
+            transition: filter 0.2s;
+        }
+        
+        .motion-blur.active {
+            filter: blur(2px);
         }
         
         #instructions {
@@ -135,6 +229,38 @@
             50% { opacity: 0.8; transform: scale(1.1); }
         }
         
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        /* Near Miss and Milestone displays positioning */
+        #nearMissDisplay {
+            position: absolute;
+            top: 150px;
+            right: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        #milestoneDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #multiplierDisplay {
+            opacity: 0.8;
+        }
+        
         .name-input-dialog {
             position: absolute;
             top: 50%;
@@ -202,6 +328,105 @@
             color: #4CAF50;
             font-weight: bold;
         }
+        
+        /* Gesture Control UI */
+        #gestureControls {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        #gestureToggle {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        #gestureToggle:hover {
+            background: #00cc70;
+            transform: translateY(-2px);
+        }
+        
+        #gestureToggle.active {
+            background: #ff4444;
+            color: white;
+        }
+        
+        #calibrateBtn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        #calibrateBtn:hover {
+            background: #45a049;
+        }
+        
+        #calibrateBtn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        #gestureStatus {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        /* Video preview for gesture control */
+        #gestureCanvas {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 160px;
+            height: 120px;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            background: #000;
+            z-index: 150;
+            display: none;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        #gestureCanvas.active {
+            display: block;
+        }
+        
+        /* Gesture indicator */
+        .gesture-feedback {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 250;
+        }
+        
+        .gesture-feedback.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -210,9 +435,29 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.1-FIXED<br>
-            📅 30.06.2025
+            🚀 V3.4-VISUAL<br>
+            📅 07.01.2025
         </div>
+        
+        <!-- Visual Effects Overlays -->
+        <div id="speedLines" class="speed-lines"></div>
+        <div id="vignetteOverlay" class="vignette-overlay"></div>
+        
+        <!-- Gesture Control UI -->
+        <div id="gestureControls">
+            <button id="gestureToggle" onclick="toggleGestureControl()">🎥 Gesten aktivieren</button>
+            <button id="calibrateBtn" onclick="calibrateGestures()" disabled>🎯 Kalibrieren</button>
+            <span id="gestureStatus">Gesten: Inaktiv</span>
+        </div>
+        
+        <!-- Gesture Feedback -->
+        <div class="gesture-feedback" id="gestureFeedback"></div>
+        
+        <!-- Hidden video element for camera -->
+        <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
+        
+        <!-- Canvas for gesture preview -->
+        <canvas id="gestureCanvas"></canvas>
         
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
@@ -221,11 +466,28 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             
             <!-- NEW: Power-Up & Coins UI -->
-            <div id="coinCounter" style="color: #FFD700; font-weight: bold;">
-                🪙 <span id="coinCount">0</span>
+            <div id="kiwiCounter" style="color: #8BC34A; font-weight: bold;">
+                🥝 <span id="kiwiCount">0</span>
             </div>
             <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
                 COMBO x<span id="comboMultiplier">1</span>!
+            </div>
+            
+            <!-- NEW: Near Miss Display -->
+            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 18px; font-weight: bold;">
+                NEAR MISS! x<span id="nearMissCount">1</span>
+                <div style="font-size: 14px;">+<span id="nearMissBonus">50</span> Bonus!</div>
+            </div>
+            
+            <!-- NEW: Milestone Display -->
+            <div id="milestoneDisplay" style="color: #00FF00; display: none; font-size: 24px; font-weight: bold; animation: bounce 1s;">
+                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m!</span>
+                <div style="font-size: 16px;">+<span id="milestoneBonus">500</span> Punkte!</div>
+            </div>
+            
+            <!-- NEW: Score Multiplier Display -->
+            <div id="multiplierDisplay" style="color: #FF1493; font-size: 16px; font-weight: bold; margin-top: 5px;">
+                Multiplikator: x<span id="currentMultiplier">1.0</span>
             </div>
             <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
                 <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
@@ -253,10 +515,18 @@
             <div>A/D: Spurwechsel</div>
             <div>Leertaste/W: Springen 🦘</div>
             <div>S: Ducken 🦆</div>
+            <div><strong>📱 Touch-Steuerung:</strong></div>
+            <div>← → Wischen: Spurwechsel</div>
+            <div>↑ Wischen: Springen</div>
+            <div>↓ Wischen: Ducken</div>
             <div><strong>💡 Tipps:</strong></div>
             <div>🟠 Orange/Braun: Überspringen!</div>
             <div>🔵 Blau/Grau oben: Ducken!</div>
             <div>🔴 Stacheln: Beides möglich!</div>
+            <div><strong>🎯 Neue Features:</strong></div>
+            <div>⚡ Near-Miss Bonus!</div>
+            <div>🏁 Meilenstein-Belohnungen!</div>
+            <div>🔥 Combo-Multiplikator!</div>
         </div>
         
         <div id="menu">
@@ -571,7 +841,7 @@
                     },
                     
                     coin: () => {
-                        // Magical coin collection with sparkle
+                        // Magical kiwi collection with sparkle
                         this.createTone(800, 0.12, 'sine');
                         setTimeout(() => this.createTone(1200, 0.1, 'sine'), 40);
                         setTimeout(() => this.createTone(1600, 0.08, 'triangle'), 80);
@@ -905,19 +1175,19 @@
             cameraZoom: 1.0,
             slowMotionActive: false,
             
-            // NEW: Power-Up & Coins System
+            // NEW: Power-Up & Kiwis System
             powerUps: [],              // Spawned power-ups in world
-            coins: [],                 // Spawned coins in world  
-            collectedCoins: 0,         // Current session coins
-            totalCoins: 0,             // Lifetime coins
+            kiwis: [],                 // Spawned kiwis in world  
+            collectedKiwis: 0,         // Current session kiwis
+            totalKiwis: 0,             // Lifetime kiwis
             activePowerUp: null,       // Currently active power-up
             powerUpTimeRemaining: 0,   // Time left for active power-up
             magnetActive: false,       // Magnet power-up state
             shieldActive: false,       // Shield power-up state
             speedBoostActive: false,   // Speed boost power-up state
-            coinCombo: 0,              // Current coin collection combo
+            kiwiCombo: 0,              // Current kiwi collection combo
             comboMultiplier: 1,        // Score multiplier from combos
-            lastCoinTime: 0,           // For combo timeout
+            lastKiwiTime: 0,           // For combo timeout
             
             // NEW: Advanced Skill & Combo System
             skillCombo: 0,             // Current skill move combo (dodge sequences)
@@ -931,6 +1201,23 @@
             skillMultiplier: 1,        // Score multiplier for skill moves
             comboActive: false,        // Visual indicator for active combo
             
+            // NEW: Enhanced Gameplay Features
+            nearMissStreak: 0,         // Consecutive near misses
+            lastNearMissTime: 0,       // Time of last near miss
+            nearMissMultiplier: 1,     // Bonus multiplier for near misses
+            milestoneReached: 0,       // Track distance milestones
+            lastMilestone: 0,          // Last milestone distance
+            scoreMultiplier: 1,        // Combined score multiplier
+            maxCombo: 0,               // Highest combo achieved
+            perfectRun: true,          // No hits taken
+            totalDistance: 0,          // Total distance travelled
+            
+            // Touch Controls
+            touchStartX: 0,
+            touchStartY: 0,
+            touchThreshold: 50,        // Swipe distance threshold
+            isTouchDevice: false,      // Auto-detect touch support
+            
             // Environment state
             currentEnvironment: 'street', // 'street', 'tunnel', 'tunnel_entrance', 'tunnel_exit'
             environmentTransition: false,
@@ -942,16 +1229,24 @@
             lastTunnelExit: 0,
             tunnelSegments: [], // Tunnel wall/ceiling segments
             tunnelLights: [], // Tunnel lighting
-            ambientLightIntensity: 1.0 // For tunnel dimming effect
+            ambientLightIntensity: 1.0, // For tunnel dimming effect
+            
+            // Visual Effects State
+            speedLineIntensity: 0,
+            currentFogDensity: 0.002,
+            targetFogDensity: 0.002,
+            motionBlurActive: false,
+            vignetteIntensity: 0,
+            particleEffects: []
         };
 
         // Three.js setup
         let scene, camera, renderer, player, track, obstacles = [];
         const LANE_POSITIONS = [-2, 0, 2];
         
-        // Power-Up and Coin arrays for tracking
+        // Power-Up and Kiwi arrays for tracking
         let powerUps = [];
-        let coins = [];
+        let kiwis = [];
         
         // Power-Up configuration
         const POWER_UP_TYPES = {
@@ -995,9 +1290,9 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
-                // Scene
+                // Scene with enhanced fog
                 scene = new THREE.Scene();
-                scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
+                scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -1948,9 +2243,43 @@
         }
 
         function updateUI() {
-            document.getElementById('score').textContent = gameState.score;
-            document.getElementById('speed').textContent = Math.floor(gameState.speed * 1000);
-            document.getElementById('lives').textContent = gameState.lives;
+            // Animate score changes
+            const scoreElement = document.getElementById('score');
+            const currentDisplayScore = parseInt(scoreElement.textContent) || 0;
+            const targetScore = Math.floor(gameState.score);
+            
+            if (targetScore > currentDisplayScore) {
+                scoreElement.classList.add('ui-bounce');
+                setTimeout(() => scoreElement.classList.remove('ui-bounce'), 500);
+            }
+            scoreElement.textContent = targetScore;
+            
+            // Speed display with color coding
+            const speedElement = document.getElementById('speed');
+            speedElement.textContent = Math.floor(gameState.speed * 1000);
+            const speedRatio = gameState.speed / gameState.maxSpeed;
+            if (speedRatio > 0.8) {
+                speedElement.style.color = '#FF4444';
+            } else if (speedRatio > 0.6) {
+                speedElement.style.color = '#FFA500';
+            } else if (speedRatio > 0.4) {
+                speedElement.style.color = '#FFD700';
+            } else {
+                speedElement.style.color = 'white';
+            }
+            
+            // Lives with pulse animation on change
+            const livesElement = document.getElementById('lives');
+            const currentLives = parseInt(livesElement.textContent) || 3;
+            if (gameState.lives < currentLives) {
+                livesElement.classList.add('ui-bounce');
+                livesElement.style.color = '#FF4444';
+                setTimeout(() => {
+                    livesElement.classList.remove('ui-bounce');
+                    livesElement.style.color = 'white';
+                }, 1000);
+            }
+            livesElement.textContent = gameState.lives;
             
             // Update timer with visual warnings
             const timeElement = document.getElementById('timeRemaining');
@@ -1973,6 +2302,18 @@
                 }
             } else {
                 timerElement.className = '';
+            }
+            
+            // Update multiplier display with glow effect
+            const multiplierElement = document.getElementById('currentMultiplier');
+            if (multiplierElement) {
+                const newMultiplier = gameState.scoreMultiplier.toFixed(1);
+                if (parseFloat(newMultiplier) > 1.0) {
+                    multiplierElement.parentElement.classList.add('ui-glow');
+                } else {
+                    multiplierElement.parentElement.classList.remove('ui-glow');
+                }
+                multiplierElement.textContent = newMultiplier;
             }
             
             // Update difficulty progress display
@@ -2179,6 +2520,30 @@
                     speed = 2;
                     size = 0.05;
                     break;
+                case 'nearMiss':
+                    particleCount = 10;
+                    spreadRange = 1.5;
+                    speed = 2;
+                    size = 0.03;
+                    break;
+                case 'collision':
+                    particleCount = 30;
+                    spreadRange = 4;
+                    speed = 5;
+                    size = 0.06;
+                    break;
+                case 'spark':
+                    particleCount = 8;
+                    spreadRange = 1;
+                    speed = 6;
+                    size = 0.02;
+                    break;
+                case 'dust':
+                    particleCount = 12;
+                    spreadRange = 2.5;
+                    speed = 1;
+                    size = 0.04;
+                    break;
                 default:
                     particleCount = 15;
                     spreadRange = 2;
@@ -2366,12 +2731,15 @@
                     const playerHeight = gameState.playerAction === 'ducking' ? 0.6 : 1.5;
                     let obstacleHeight = 1.8; // Default duck obstacles height
                     
-                    // Adjust for wallgap (gap height is at 1.3)
+                    // Adjust for wallgap (gap bottom is at 1.3)
+                    // FIXED: For wallgap, the obstacleHeight should be the bottom of the gap (1.3), not the gap size
+                    // Player must be below this height to pass through
                     if (obstacle.type === 'wallgap') {
                         obstacleHeight = 1.3;
                     }
                     
-                    const needsToDuck = playerHeight > (obstacleHeight - 0.1); // Must duck to fit under obstacle
+                    // FIXED: Player needs to duck if their height exceeds the obstacle clearance height
+                    const needsToDuck = playerHeight > obstacleHeight; // Must duck to fit under obstacle
                     
                     console.log(`🎯 Duck Logic: type=${obstacle.type}, inSameLane=${inSameLane}, inCollisionZone=${inCollisionZone}, needsToDuck=${needsToDuck}, playerHeight=${playerHeight}, obstacleHeight=${obstacleHeight}`);
                     
@@ -2411,8 +2779,10 @@
                         case 'duckbeam':
                         case 'wallgap':
                             // Must be ducked - check if player is low enough to pass under
+                            // FIXED: Player avoids collision when ducking if their max height is below the obstacle's min height
+                            // This allows the player to pass under overhead obstacles when ducking
                             if (gameState.playerAction === 'ducking' && 
-                                playerBBox.max.y < obstacleBBox.min.y + 0.2) {
+                                playerBBox.max.y < obstacleBBox.min.y + 0.1) {
                                 canAvoid = true;
                                 avoidanceType = 'duck';
                             }
@@ -2666,8 +3036,8 @@
                         obstacles.splice(index, 1);
                     }
                     
-                } else if (isNearMiss) {
-                    // NEAR MISS BONUS!
+                } else if (isNearMiss && obstacle.z > -1 && obstacle.z < 1) {
+                    // NEAR MISS BONUS! (only when very close)
                     handleNearMiss(obstacle, playerBBox, obstacleBBox);
                 }
             });
@@ -2700,19 +3070,19 @@
                 }
             });
             
-            // ==================== COIN COLLISION DETECTION ====================
+            // ==================== KIWI COLLISION DETECTION ====================
             
-            gameState.coins.forEach((coin, index) => {
-                const coinBBox = {
+            gameState.kiwis.forEach((kiwi, index) => {
+                const kiwiBBox = {
                     min: {
-                        x: coin.mesh.position.x - 0.3,
-                        y: coin.mesh.position.y - 0.3,
-                        z: coin.mesh.position.z - 0.3
+                        x: kiwi.mesh.position.x - 0.35,
+                        y: kiwi.mesh.position.y - 0.35,
+                        z: kiwi.mesh.position.z - 0.35
                     },
                     max: {
-                        x: coin.mesh.position.x + 0.3,
-                        y: coin.mesh.position.y + 0.3,
-                        z: coin.mesh.position.z + 0.3
+                        x: kiwi.mesh.position.x + 0.35,
+                        y: kiwi.mesh.position.y + 0.35,
+                        z: kiwi.mesh.position.z + 0.35
                     }
                 };
                 
@@ -2720,25 +3090,25 @@
                 if (gameState.magnetActive) {
                     const magnetRange = 2.5; // Magnet attraction range
                     const distance = Math.sqrt(
-                        Math.pow(coin.mesh.position.x - player.position.x, 2) +
-                        Math.pow(coin.mesh.position.y - player.position.y, 2) +
-                        Math.pow(coin.mesh.position.z - player.position.z, 2)
+                        Math.pow(kiwi.mesh.position.x - player.position.x, 2) +
+                        Math.pow(kiwi.mesh.position.y - player.position.y, 2) +
+                        Math.pow(kiwi.mesh.position.z - player.position.z, 2)
                     );
                     
-                    if (distance < magnetRange && !coin.collected) {
-                        // Attract coin towards player
+                    if (distance < magnetRange && !kiwi.collected) {
+                        // Attract kiwi towards player
                         const attractionSpeed = 0.15;
                         const direction = new THREE.Vector3()
-                            .subVectors(player.position, coin.mesh.position)
+                            .subVectors(player.position, kiwi.mesh.position)
                             .normalize()
                             .multiplyScalar(attractionSpeed);
                         
-                        coin.mesh.position.add(direction);
+                        kiwi.mesh.position.add(direction);
                         
                         // Visual effect for magnet attraction
                         if (Math.random() > 0.8) {
                             createParticleEffect(
-                                coin.mesh.position.clone(),
+                                kiwi.mesh.position.clone(),
                                 0x00FFFF,
                                 'magnet'
                             );
@@ -2746,11 +3116,11 @@
                     }
                 }
                 
-                const isCollecting = boundingBoxIntersection(playerBBox, coinBBox);
+                const isCollecting = boundingBoxIntersection(playerBBox, kiwiBBox);
                 
-                if (isCollecting && !coin.collected) {
-                    collectCoin(coin);
-                    gameState.coins.splice(index, 1);
+                if (isCollecting && !kiwi.collected) {
+                    collectKiwi(kiwi);
+                    gameState.kiwis.splice(index, 1);
                 }
             });
         }
@@ -2946,23 +3316,19 @@
                     break;
             }
             
-            // Main explosion with material-appropriate color
-            createParticleEffect(collisionPos, effectColor, 'explosion');
+            // Use new enhanced collision particle system
+            createCollisionParticles(collisionPos, obstacle.type);
             
-            // Multiple secondary explosions for dramatic effect
+            // Additional dust clouds at ground level
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
-                    const offset = new THREE.Vector3(
-                        (Math.random() - 0.5) * 2,
-                        Math.random() * 1,
-                        (Math.random() - 0.5) * 1
+                    const dustPos = new THREE.Vector3(
+                        player.position.x + (Math.random() - 0.5) * 2,
+                        0.1,
+                        player.position.z + (Math.random() - 0.5)
                     );
-                    createParticleEffect(
-                        collisionPos.clone().add(offset),
-                        effectColor,
-                        'explosion'
-                    );
-                }, i * 150);
+                    createParticleEffect(dustPos, 0x8B7355, 'dust');
+                }, i * 100);
             }
             
             // Screen shake intensity based on obstacle size
@@ -3041,46 +3407,91 @@
             return powerUpData;
         }
         
-        function createCoin(lane, z, pattern = 'single') {
-            const coinGroup = new THREE.Group();
+        function createKiwi(lane, z, pattern = 'single') {
+            const kiwiGroup = new THREE.Group();
             
-            // Main coin geometry
-            const coinGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1);
-            const coinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFD700,
-                emissive: 0x664400,
-                emissiveIntensity: 0.3
+            // Halbierte Kiwi Geometrie (flache Seite unten)
+            const kiwiRadius = 0.35;
+            const kiwiHeight = 0.35;
+            
+            // Haupt-Kiwi-Körper (Halbkugel)
+            const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            
+            // Braune Außenhaut
+            const skinMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8B6914,
+                roughness: 0.8
             });
-            const coinMesh = new THREE.Mesh(coinGeometry, coinMaterial);
-            coinMesh.position.y = 1.2; // Floating height
-            coinMesh.castShadow = true;
-            coinGroup.add(coinMesh);
+            const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
+            kiwiSkin.rotation.x = -Math.PI / 2;
+            kiwiSkin.position.y = 1.2;
+            kiwiSkin.castShadow = true;
+            kiwiGroup.add(kiwiSkin);
             
-            // Glitter effect
-            for (let i = 0; i < 4; i++) {
-                const glitterGeometry = new THREE.SphereGeometry(0.02);
-                const glitterMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0xFFFFFF,
-                    emissive: 0xFFFFFF,
-                    emissiveIntensity: 0.8
-                });
-                const glitter = new THREE.Mesh(glitterGeometry, glitterMaterial);
+            // Grünes Fruchtfleisch (flache Unterseite)
+            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.95, 32);
+            const fleshMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8FBC8F,
+                emissive: 0x2F5F2F,
+                emissiveIntensity: 0.2
+            });
+            const kiwiFlesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
+            kiwiFlesh.rotation.x = -Math.PI / 2;
+            kiwiFlesh.position.y = 1.2;
+            kiwiGroup.add(kiwiFlesh);
+            
+            // Weißer Kern in der Mitte
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.3, 16);
+            const coreMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xF5F5DC,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.1
+            });
+            const kiwiCore = new THREE.Mesh(coreGeometry, coreMaterial);
+            kiwiCore.rotation.x = -Math.PI / 2;
+            kiwiCore.position.y = 1.201;
+            kiwiGroup.add(kiwiCore);
+            
+            // Schwarze Kerne/Samen
+            const seedCount = 12;
+            for (let i = 0; i < seedCount; i++) {
+                const angle = (i / seedCount) * Math.PI * 2;
+                const distance = kiwiRadius * 0.5 + Math.random() * kiwiRadius * 0.3;
                 
-                const angle = (i / 4) * Math.PI * 2;
-                glitter.position.set(
-                    Math.cos(angle) * 0.4,
-                    1.2 + Math.sin(i) * 0.1,
-                    Math.sin(angle) * 0.4
+                const seedGeometry = new THREE.CircleGeometry(0.02, 4);
+                const seedMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x000000
+                });
+                const seed = new THREE.Mesh(seedGeometry, seedMaterial);
+                seed.rotation.x = -Math.PI / 2;
+                seed.position.set(
+                    Math.cos(angle) * distance,
+                    1.202,
+                    Math.sin(angle) * distance
                 );
-                coinGroup.add(glitter);
+                kiwiGroup.add(seed);
             }
             
-            coinGroup.position.set(LANE_POSITIONS[lane], 0, z);
-            scene.add(coinGroup);
+            // Glanz-Effekt für Frische
+            const glintGeometry = new THREE.CircleGeometry(0.08, 8);
+            const glintMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.7
+            });
+            const glint = new THREE.Mesh(glintGeometry, glintMaterial);
+            glint.rotation.x = -Math.PI / 2;
+            glint.position.set(kiwiRadius * 0.4, 1.203, kiwiRadius * 0.3);
+            kiwiGroup.add(glint);
             
-            // Store coin data
-            const coinData = {
-                mesh: coinGroup,
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            scene.add(kiwiGroup);
+            
+            // Store kiwi data
+            const kiwiData = {
+                mesh: kiwiGroup,
                 lane: lane,
                 z: z,
                 pattern: pattern,
@@ -3088,30 +3499,30 @@
                 collected: false
             };
             
-            coins.push(coinData);
-            return coinData;
+            kiwis.push(kiwiData);
+            return kiwiData;
         }
         
-        function createCoinPattern(type, baseZ) {
+        function createKiwiPattern(type, baseZ) {
             switch (type) {
                 case 'line':
-                    // 3 coins in a horizontal line
+                    // 3 kiwis in a horizontal line
                     for (let i = 0; i < 3; i++) {
-                        createCoin(i, baseZ, 'line');
+                        createKiwi(i, baseZ, 'line');
                     }
                     break;
                 case 'arc':
-                    // 5 coins in a vertical arc
+                    // 5 kiwis in a vertical arc
                     for (let i = 0; i < 5; i++) {
                         const lane = Math.floor(Math.random() * 3);
-                        createCoin(lane, baseZ - i * 2, 'arc');
+                        createKiwi(lane, baseZ - i * 2, 'arc');
                     }
                     break;
                 case 'single':
                 default:
-                    // Single coin
+                    // Single kiwi
                     const lane = Math.floor(Math.random() * 3);
-                    createCoin(lane, baseZ, 'single');
+                    createKiwi(lane, baseZ, 'single');
                     break;
             }
         }
@@ -3179,28 +3590,28 @@
             }
         }
         
-        function collectCoin(coinData) {
-            if (coinData.collected) return;
+        function collectKiwi(kiwiData) {
+            if (kiwiData.collected) return;
             
-            coinData.collected = true;
-            scene.remove(coinData.mesh);
+            kiwiData.collected = true;
+            scene.remove(kiwiData.mesh);
             
-            // Update coin count
-            gameState.collectedCoins++;
-            gameState.totalCoins++;
+            // Update kiwi count
+            gameState.collectedKiwis++;
+            gameState.totalKiwis++;
             
             // Handle combo system
             const currentTime = performance.now();
-            if (currentTime - gameState.lastCoinTime < 2000) { // 2 second combo window
-                gameState.coinCombo++;
+            if (currentTime - gameState.lastKiwiTime < 2000) { // 2 second combo window
+                gameState.kiwiCombo++;
             } else {
-                gameState.coinCombo = 1;
+                gameState.kiwiCombo = 1;
             }
-            gameState.lastCoinTime = currentTime;
+            gameState.lastKiwiTime = currentTime;
             
             // Calculate score with combo multiplier
             const baseScore = 10;
-            const comboBonus = gameState.coinCombo > 1 ? (gameState.coinCombo - 1) * 5 : 0;
+            const comboBonus = gameState.kiwiCombo > 1 ? (gameState.kiwiCombo - 1) * 5 : 0;
             const totalScore = baseScore + comboBonus;
             
             gameState.score += totalScore;
@@ -3208,30 +3619,91 @@
             // Show combo UI
             updateComboUI();
             
-            // Audio feedback with pitch variation
-            const pitchVariation = 1 + (gameState.coinCombo * 0.1);
-            audioManager.createTone(800 * pitchVariation, 0.1, 'sine');
+            // Audio feedback with pitch variation (squish sound)
+            const pitchVariation = 1 + (gameState.kiwiCombo * 0.1);
+            audioManager.createTone(600 * pitchVariation, 0.15, 'sine');
             
-            // Particle effect
-            createParticleEffect(
-                coinData.mesh.position.clone(),
-                0xFFD700,
-                'coin'
-            );
+            // Kiwi-Saft-Splash-Effekt
+            createKiwiSplashEffect(kiwiData.mesh.position.clone());
             
             // Update UI
-            updateCoinUI();
+            updateKiwiUI();
             
-            console.log(`Collected coin! Combo: ${gameState.coinCombo}, Score: +${totalScore}`);
+            console.log(`Collected kiwi! Combo: ${gameState.kiwiCombo}, Score: +${totalScore}`);
+        }
+        
+        // Kiwi-Saft-Splash-Effekt
+        function createKiwiSplashEffect(position) {
+            const splashParticles = [];
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Safttropfen-Geometrie
+                const dropSize = 0.05 + Math.random() * 0.1;
+                const dropGeometry = new THREE.SphereGeometry(dropSize, 4, 4);
+                
+                // Grüne Farbe mit Variation
+                const greenVariation = Math.random() * 0.3;
+                const dropMaterial = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color(0.5 + greenVariation, 0.8 + greenVariation * 0.5, 0.3),
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const drop = new THREE.Mesh(dropGeometry, dropMaterial);
+                drop.position.copy(position);
+                
+                // Zufällige Geschwindigkeit in alle Richtungen
+                const velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.3,
+                    Math.random() * 0.4 + 0.2,
+                    (Math.random() - 0.5) * 0.3
+                );
+                
+                scene.add(drop);
+                splashParticles.push({ mesh: drop, velocity: velocity, life: 1.0 });
+            }
+            
+            // Animate splash particles
+            const animateSplash = () => {
+                splashParticles.forEach((particle, index) => {
+                    if (particle.life > 0) {
+                        // Update position
+                        particle.mesh.position.add(particle.velocity);
+                        
+                        // Apply gravity
+                        particle.velocity.y -= 0.02;
+                        
+                        // Fade out
+                        particle.life -= 0.05;
+                        particle.mesh.material.opacity = particle.life * 0.8;
+                        
+                        // Scale down
+                        const scale = particle.life;
+                        particle.mesh.scale.set(scale, scale, scale);
+                        
+                        if (particle.life <= 0) {
+                            scene.remove(particle.mesh);
+                            splashParticles.splice(index, 1);
+                        }
+                    }
+                });
+                
+                if (splashParticles.length > 0) {
+                    requestAnimationFrame(animateSplash);
+                }
+            };
+            
+            animateSplash();
         }
         
         function updateComboUI() {
             const comboDisplay = document.getElementById('comboDisplay');
             const comboMultiplier = document.getElementById('comboMultiplier');
             
-            if (gameState.coinCombo > 1) {
+            if (gameState.kiwiCombo > 1) {
                 comboDisplay.style.display = 'block';
-                comboMultiplier.textContent = gameState.coinCombo;
+                comboMultiplier.textContent = gameState.kiwiCombo;
                 
                 // Hide after 2 seconds
                 setTimeout(() => {
@@ -3242,9 +3714,9 @@
             }
         }
         
-        function updateCoinUI() {
-            const coinCount = document.getElementById('coinCount');
-            coinCount.textContent = gameState.collectedCoins;
+        function updateKiwiUI() {
+            const kiwiCount = document.getElementById('kiwiCount');
+            kiwiCount.textContent = gameState.collectedKiwis;
         }
         
         function updateEnvironmentUI() {
@@ -3425,46 +3897,62 @@
             return bridgeGroup;
         }
         
-        function createSimpleCoin(lane, z) {
-            const coinGroup = new THREE.Group();
+        function createSimpleKiwi(lane, z) {
+            const kiwiGroup = new THREE.Group();
             
-            // Main coin
-            const coinGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 12);
-            const coinMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xFFD700,
+            // Simplified kiwi for performance (less detailed than createKiwi)
+            const kiwiRadius = 0.25;
+            
+            // Half sphere for kiwi body
+            const kiwiGeometry = new THREE.SphereGeometry(kiwiRadius, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
+            const kiwiMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x8B6914,
                 transparent: true,
                 opacity: 0.9
             });
             
-            const coin = new THREE.Mesh(coinGeometry, coinMaterial);
-            coin.rotation.z = Math.PI / 2; // Flat orientation
-            coinGroup.add(coin);
+            const kiwiBody = new THREE.Mesh(kiwiGeometry, kiwiMaterial);
+            kiwiBody.rotation.x = -Math.PI / 2;
+            kiwiGroup.add(kiwiBody);
             
-            // Simple glow effect
-            const glowGeometry = new THREE.SphereGeometry(0.25, 8, 8);
-            const glowMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xFFFF00,
+            // Simple flesh circle
+            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.9, 8);
+            const fleshMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x90EE90,
                 transparent: true,
-                opacity: 0.3
+                opacity: 0.95
             });
             
-            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-            coinGroup.add(glow);
+            const flesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
+            flesh.rotation.x = -Math.PI / 2;
+            flesh.position.y = 0.01;
+            kiwiGroup.add(flesh);
+            
+            // Simple white core
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.3, 6);
+            const coreMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xF5F5DC
+            });
+            
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.rotation.x = -Math.PI / 2;
+            core.position.y = 0.02;
+            kiwiGroup.add(core);
             
             // Position
             const LANE_POSITIONS = [-2, 0, 2];
-            coinGroup.position.set(LANE_POSITIONS[lane], 1, z);
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 1.2, z);
             
-            scene.add(coinGroup);
+            scene.add(kiwiGroup);
             
             return {
-                mesh: coinGroup,
-                type: 'coin',
+                mesh: kiwiGroup,
+                type: 'kiwi',
                 lane: lane,
                 z: z,
                 collected: false,
                 animationTime: 0,
-                baseY: 1
+                baseY: 1.2
             };
         }
         
@@ -3778,12 +4266,30 @@
             // Near-miss audio feedback
             audioManager.play('nearmiss');
             
-            // Visual feedback for near miss
+            // Enhanced visual feedback for near miss
             const effectPos = obstacle.mesh.position.clone();
-            createParticleEffect(effectPos, 0xFFFF00, 'nearmiss'); // Yellow sparkles
+            
+            // Create multiple spark effects
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const sparkPos = effectPos.clone();
+                    sparkPos.x += (Math.random() - 0.5);
+                    sparkPos.y += Math.random() * 0.5;
+                    sparkPos.z += (Math.random() - 0.5) * 0.5;
+                    createParticleEffect(sparkPos, 0xFFFF00, 'spark');
+                }, i * 30);
+            }
+            
+            // Main near miss effect
+            createParticleEffect(effectPos, 0xFFD700, 'nearMiss');
+            
+            // Camera effect for close calls
+            if (distance < 0.1) {
+                cameraZoomEffect(1.05, 150);
+            }
             
             // Show near-miss popup
-            showScorePopup(nearMissBonus, effectPos, 'CLOSE!');
+            showScorePopup(nearMissBonus, effectPos, distance < 0.1 ? 'SUPER CLOSE!' : 'CLOSE!');
         }
         
         // Update animations for moving obstacles
@@ -4075,12 +4581,22 @@
                         // Landing Audio & Visual
                         audioManager.play('land');
                         
-                        // Landing-Partikel
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xAAAAAA,
-                            'landing'
-                        );
+                        // Enhanced landing effects
+                        const landingPos = new THREE.Vector3(player.position.x, 0.1, player.position.z);
+                        
+                        // Main landing dust
+                        createParticleEffect(landingPos, 0xAAAAAA, 'landing');
+                        
+                        // Additional dust clouds
+                        for (let i = 0; i < 4; i++) {
+                            const angle = (i / 4) * Math.PI * 2;
+                            const dustPos = landingPos.clone();
+                            dustPos.x += Math.cos(angle) * 0.5;
+                            dustPos.z += Math.sin(angle) * 0.5;
+                            setTimeout(() => {
+                                createParticleEffect(dustPos, 0x8B7355, 'dust');
+                            }, i * 20);
+                        }
                         
                         // Mini screen shake for landing
                         screenShake(0.05, 100);
@@ -4159,16 +4675,48 @@
                 // Calculate game progress (0 to 1)
                 const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 at start, 1 at end
                 
-                // Progressive obstacle spawning - starts low, increases smoothly
-                const baseSpawnRate = 0.005; // Lower starting rate
-                const maxSpawnRate = 0.018; // Maximum rate at end
-                const progressiveSpawnRate = baseSpawnRate + (maxSpawnRate - baseSpawnRate) * Math.pow(gameProgress, 1.2);
+                // Optimized obstacle spawning with better difficulty curve
+                let baseSpawnRate, maxSpawnRate;
                 
-                // Add speed-based multiplier on top of progression
+                if (gameProgress < 0.2) {
+                    // Phase 1: Very gentle start (0-12s)
+                    baseSpawnRate = 0.003;
+                    maxSpawnRate = 0.008;
+                } else if (gameProgress < 0.5) {
+                    // Phase 2: Moderate challenge (12-30s)
+                    baseSpawnRate = 0.008;
+                    maxSpawnRate = 0.015;
+                } else if (gameProgress < 0.8) {
+                    // Phase 3: Challenging (30-48s)
+                    baseSpawnRate = 0.012;
+                    maxSpawnRate = 0.020;
+                } else {
+                    // Phase 4: Extreme finale (48-60s)
+                    baseSpawnRate = 0.015;
+                    maxSpawnRate = 0.025;
+                }
+                
+                const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
+                                     gameProgress < 0.5 ? (gameProgress - 0.2) / 0.3 :
+                                     gameProgress < 0.8 ? (gameProgress - 0.5) / 0.3 :
+                                     (gameProgress - 0.8) / 0.2;
+                
+                const progressiveSpawnRate = baseSpawnRate + (maxSpawnRate - baseSpawnRate) * phaseProgress;
+                
+                // Speed multiplier adjusted for combo potential
                 const speedRatio = gameState.speed / gameState.maxSpeed;
-                const spawnSpeedMultiplier = 1 + speedRatio * 0.3; // Less aggressive speed scaling
+                const spawnSpeedMultiplier = 1 + speedRatio * 0.2; // Gentler speed scaling
                 
                 let spawnRate = progressiveSpawnRate * spawnSpeedMultiplier;
+                
+                // Dynamic adjustment based on player performance
+                if (gameState.consecutiveAvoidances > 5) {
+                    // Player is doing well, slightly increase challenge
+                    spawnRate *= 1.1;
+                } else if (gameState.lives === 1) {
+                    // Player struggling, reduce difficulty slightly
+                    spawnRate *= 0.85;
+                }
                 
                 // Reduce spawn rate during bridge transitions
                 if (gameState.environmentTransition) {
@@ -4242,18 +4790,18 @@
                     gameState.powerUps.push(powerUp);
                 }
                 
-                // Progressive Coin spawning (few at start, many later)
+                // Progressive Kiwi spawning (few at start, many later)
                 const baseCoinRate = 0.003; // Low starting rate
                 const maxCoinRate = 0.015; // Higher end rate
                 const progressiveCoinRate = baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1);
                 
                 if (Math.random() < progressiveCoinRate) {
-                    // Progressive coin pattern complexity
+                    // Progressive kiwi pattern complexity
                     let pattern;
                     const patternRand = Math.random();
                     
                     if (gameProgress < 0.3) {
-                        // Early game: mostly single coins
+                        // Early game: mostly single kiwis
                         pattern = patternRand < 0.8 ? 'single' : 'line';
                     } else if (gameProgress < 0.6) {
                         // Mid game: introduce more patterns
@@ -4277,20 +4825,20 @@
                     
                     if (pattern === 'single') {
                         const lane = Math.floor(Math.random() * 3);
-                        const coin = createSimpleCoin(lane, -35);
-                        gameState.coins.push(coin);
+                        const kiwi = createSimpleKiwi(lane, -35);
+                        gameState.kiwis.push(kiwi);
                     } else if (pattern === 'line') {
                         // Spawn coins in a line across lanes
                         for (let lane = 0; lane < 3; lane++) {
-                            const coin = createSimpleCoin(lane, -35 - (lane * 2)); // Stagger them slightly
-                            gameState.coins.push(coin);
+                            const kiwi = createSimpleKiwi(lane, -35 - (lane * 2)); // Stagger them slightly
+                            gameState.kiwis.push(kiwi);
                         }
                     } else if (pattern === 'arc') {
                         // Spawn coins in arc pattern - more generous in late game
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         lanes.forEach((lane, index) => {
-                            const coin = createSimpleCoin(lane, -35 - (index * 1.5));
-                            gameState.coins.push(coin);
+                            const kiwi = createSimpleKiwi(lane, -35 - (index * 1.5));
+                            gameState.kiwis.push(kiwi);
                         });
                     }
                 }
@@ -4317,30 +4865,25 @@
                     }
                 });
                 
-                // Update Coins
-                gameState.coins.forEach((coin, index) => {
-                    coin.mesh.position.z += visualSpeed;
-                    coin.z = coin.mesh.position.z;
+                // Update Kiwis
+                gameState.kiwis.forEach((kiwi, index) => {
+                    kiwi.mesh.position.z += visualSpeed;
+                    kiwi.z = kiwi.mesh.position.z;
                     
                     // Remove if passed player
-                    if (coin.z > 10) {
-                        scene.remove(coin.mesh);
-                        gameState.coins.splice(index, 1);
+                    if (kiwi.z > 10) {
+                        scene.remove(kiwi.mesh);
+                        gameState.kiwis.splice(index, 1);
                     }
                     
-                    // Animate coin rotation and subtle floating
-                    coin.animationTime += deltaTime * 0.001;
-                    coin.mesh.rotation.y += 0.05; // Spin faster than power-ups
-                    coin.mesh.position.y = coin.baseY + Math.sin(coin.animationTime * 4) * 0.1;
-                    
-                    // Update glitter effects
-                    if (coin.glitter) {
-                        coin.glitter.rotation.y -= 0.02; // Counter-rotate
-                        coin.glitter.children.forEach((particle, pIndex) => {
-                            particle.rotation.x += 0.01;
-                            particle.rotation.z += 0.01;
-                        });
-                    }
+                    // Animate kiwi wobble and subtle floating
+                    kiwi.animationTime += deltaTime * 0.001;
+                    // Wobble rotation instead of spin
+                    kiwi.mesh.rotation.z = Math.sin(kiwi.animationTime * 3) * 0.15;
+                    kiwi.mesh.rotation.x = Math.cos(kiwi.animationTime * 2) * 0.1;
+                    // Subtle bounce
+                    const baseY = 1.2;
+                    kiwi.mesh.position.y = baseY + Math.sin(kiwi.animationTime * 4) * 0.1;
                 });
                 
                 // Handle Power-Up Time Remaining
@@ -4387,9 +4930,24 @@
                     return;
                 }
                 
-                // Progressive speed increase - exponential curve for dramatic effect
+                // Progressive speed increase - optimized curve for better gameplay
                 const timeProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 to 1
-                let speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
+                
+                // Smoother difficulty curve with multiple phases
+                let speedMultiplier;
+                if (timeProgress < 0.2) {
+                    // Phase 1: Gentle start (0-12s)
+                    speedMultiplier = 1 + timeProgress * 2; // 1x to 1.4x
+                } else if (timeProgress < 0.5) {
+                    // Phase 2: Moderate increase (12-30s)
+                    speedMultiplier = 1.4 + (timeProgress - 0.2) * 3; // 1.4x to 2.3x
+                } else if (timeProgress < 0.8) {
+                    // Phase 3: Challenging (30-48s)
+                    speedMultiplier = 2.3 + (timeProgress - 0.5) * 4; // 2.3x to 3.5x
+                } else {
+                    // Phase 4: Extreme finale (48-60s)
+                    speedMultiplier = 3.5 + Math.pow((timeProgress - 0.8) * 5, 1.5) * 2; // 3.5x to 5.5x
+                }
                 
                 // Apply Speed Boost Power-Up multiplier
                 if (gameState.speedBoostActive) {
@@ -4398,6 +4956,9 @@
                 
                 gameState.speed = gameState.baseSpeed * speedMultiplier;
                 gameState.speed = Math.min(gameState.speed, gameState.maxSpeed);
+                
+                // Update total distance (for milestones)
+                gameState.totalDistance += gameState.speed * deltaTime * 10;
                 
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
@@ -4414,10 +4975,360 @@
                 // Check collisions
                 checkCollisions();
                 
+                // Check for milestones
+                checkMilestones();
+                
+                // Update score with multipliers
+                updateScoreWithMultipliers(deltaTime);
+                
                 updateUI();
             }
             
             renderer.render(scene, camera);
+        }
+
+        // Handle near miss detection
+        function handleNearMiss(obstacle, playerBBox, obstacleBBox) {
+            const currentTime = performance.now();
+            
+            // Prevent multiple near misses for the same obstacle
+            if (obstacle.nearMissHandled) return;
+            obstacle.nearMissHandled = true;
+            
+            // Update near miss streak
+            if (currentTime - gameState.lastNearMissTime < 5000) { // 5 second window
+                gameState.nearMissStreak++;
+            } else {
+                gameState.nearMissStreak = 1;
+            }
+            gameState.lastNearMissTime = currentTime;
+            
+            // Calculate near miss bonus based on distance and streak
+            const distance = boundingBoxDistance(playerBBox, obstacleBBox);
+            const precision = 1 - (distance / 0.3); // 0.3 is max near miss distance
+            let nearMissBonus = Math.floor(50 + (precision * 50)); // 50-100 base points
+            
+            // Streak multiplier
+            nearMissBonus *= Math.min(gameState.nearMissStreak, 5); // Max 5x multiplier
+            
+            // Add to score
+            gameState.score += nearMissBonus;
+            
+            // Update near miss multiplier
+            gameState.nearMissMultiplier = Math.min(gameState.nearMissStreak * 0.2 + 1, 2); // Max 2x
+            
+            // Show near miss UI
+            showNearMissUI(nearMissBonus, gameState.nearMissStreak);
+            
+            // Audio feedback
+            audioManager.createTone(440 + (gameState.nearMissStreak * 110), 0.1, 'sine');
+            
+            // Visual effect
+            createParticleEffect(
+                player.position.clone(),
+                0xFFD700,
+                'nearMiss'
+            );
+            
+            // Camera shake for dramatic effect
+            gameState.cameraShakeIntensity = 0.05;
+            setTimeout(() => { gameState.cameraShakeIntensity = 0; }, 200);
+        }
+        
+        // Show near miss UI feedback
+        function showNearMissUI(bonus, streak) {
+            const nearMissDisplay = document.getElementById('nearMissDisplay');
+            const nearMissCount = document.getElementById('nearMissCount');
+            const nearMissBonus = document.getElementById('nearMissBonus');
+            
+            if (nearMissDisplay) {
+                nearMissDisplay.style.display = 'block';
+                nearMissCount.textContent = streak;
+                nearMissBonus.textContent = bonus;
+                
+                // Auto-hide after 2 seconds
+                setTimeout(() => {
+                    nearMissDisplay.style.display = 'none';
+                }, 2000);
+            }
+        }
+        
+        // Check and award milestone rewards
+        function checkMilestones() {
+            const distance = Math.floor(gameState.totalDistance);
+            const milestoneInterval = 500; // Every 500m
+            const currentMilestone = Math.floor(distance / milestoneInterval) * milestoneInterval;
+            
+            if (currentMilestone > gameState.lastMilestone && currentMilestone > 0) {
+                gameState.lastMilestone = currentMilestone;
+                
+                // Calculate milestone bonus
+                const milestoneBonus = currentMilestone; // Bonus equals distance
+                gameState.score += milestoneBonus;
+                
+                // Show milestone UI
+                showMilestoneUI(currentMilestone, milestoneBonus);
+                
+                // Audio celebration
+                audioManager.play('powerup');
+                audioManager.createTone(523, 0.2, 'sine'); // C5
+                setTimeout(() => audioManager.createTone(659, 0.2, 'sine'), 100); // E5
+                setTimeout(() => audioManager.createTone(784, 0.3, 'sine'), 200); // G5
+                
+                // Visual celebration
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        createParticleEffect(
+                            new THREE.Vector3(
+                                player.position.x + (Math.random() - 0.5) * 2,
+                                player.position.y + 2,
+                                player.position.z
+                            ),
+                            [0x00FF00, 0xFFD700, 0xFF00FF][i],
+                            'success'
+                        );
+                    }, i * 100);
+                }
+                
+                // Increase life at major milestones
+                if (currentMilestone % 1500 === 0 && gameState.lives < 5) {
+                    gameState.lives++;
+                    console.log('Extra life awarded!');
+                }
+            }
+        }
+        
+        // Show milestone UI feedback
+        function showMilestoneUI(distance, bonus) {
+            const milestoneDisplay = document.getElementById('milestoneDisplay');
+            const milestoneText = document.getElementById('milestoneText');
+            const milestoneBonus = document.getElementById('milestoneBonus');
+            const milestoneIcon = document.getElementById('milestoneIcon');
+            
+            if (milestoneDisplay) {
+                milestoneDisplay.style.display = 'block';
+                milestoneText.textContent = `${distance}m!`;
+                milestoneBonus.textContent = bonus;
+                
+                // Special icons for major milestones
+                if (distance >= 3000) {
+                    milestoneIcon.textContent = '🏆';
+                } else if (distance >= 2000) {
+                    milestoneIcon.textContent = '⭐';
+                } else if (distance >= 1000) {
+                    milestoneIcon.textContent = '🎯';
+                } else {
+                    milestoneIcon.textContent = '🏁';
+                }
+                
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    milestoneDisplay.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Update visual effects based on speed and game state
+        function updateVisualEffects() {
+            const speedRatio = gameState.speed / gameState.maxSpeed;
+            
+            // Update fog density based on speed
+            gameState.targetFogDensity = 0.002 + (speedRatio * 0.003);
+            gameState.currentFogDensity += (gameState.targetFogDensity - gameState.currentFogDensity) * 0.1;
+            if (scene.fog) {
+                scene.fog.density = gameState.currentFogDensity;
+            }
+            
+            // Speed lines effect
+            if (speedRatio > 0.5) {
+                gameState.speedLineIntensity = Math.min((speedRatio - 0.5) * 2, 1);
+                createSpeedLines();
+            }
+            
+            // Vignette effect at high speed
+            const vignetteOverlay = document.getElementById('vignetteOverlay');
+            if (vignetteOverlay) {
+                if (speedRatio > 0.7) {
+                    vignetteOverlay.classList.add('active');
+                } else {
+                    vignetteOverlay.classList.remove('active');
+                }
+            }
+            
+            // Motion blur simulation
+            if (speedRatio > 0.8 && !gameState.motionBlurActive) {
+                gameState.motionBlurActive = true;
+                renderer.domElement.style.filter = `blur(${(speedRatio - 0.8) * 2}px)`;
+            } else if (speedRatio <= 0.8 && gameState.motionBlurActive) {
+                gameState.motionBlurActive = false;
+                renderer.domElement.style.filter = 'none';
+            }
+            
+            // Camera shake at extreme speeds
+            if (speedRatio > 0.9) {
+                gameState.cameraShakeIntensity = (speedRatio - 0.9) * 0.5;
+            }
+            
+            // Update point lights intensity based on environment
+            const lights = scene.children.filter(child => child.type === 'PointLight');
+            lights.forEach(light => {
+                if (gameState.currentEnvironment === 'tunnel') {
+                    light.intensity = 0.8;
+                } else {
+                    light.intensity = 0.5;
+                }
+            });
+        }
+        
+        // Create speed lines for high-speed effect
+        function createSpeedLines() {
+            const speedLinesContainer = document.getElementById('speedLines');
+            if (!speedLinesContainer || Math.random() > gameState.speedLineIntensity) return;
+            
+            const speedLine = document.createElement('div');
+            speedLine.className = 'speed-line';
+            speedLine.style.left = Math.random() * 100 + '%';
+            speedLine.style.opacity = gameState.speedLineIntensity;
+            
+            speedLinesContainer.appendChild(speedLine);
+            
+            // Remove after animation
+            setTimeout(() => {
+                speedLine.remove();
+            }, 300);
+        }
+        
+        // Enhanced particle effect for collisions
+        function createCollisionParticles(position, obstacleType) {
+            // Main collision effect
+            createParticleEffect(position, 0xFF4444, 'collision');
+            
+            // Sparks
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const sparkPos = position.clone();
+                    sparkPos.x += (Math.random() - 0.5) * 2;
+                    sparkPos.y += Math.random() * 2;
+                    createParticleEffect(sparkPos, 0xFFFF00, 'spark');
+                }, i * 50);
+            }
+            
+            // Screen effects
+            screenShake(0.3, 500);
+            flashScreen(0xFF0000, 200);
+        }
+        
+        // Flash screen effect
+        function flashScreen(color, duration) {
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.height = '100%';
+            flash.style.backgroundColor = `#${color.toString(16)}`;
+            flash.style.opacity = '0.3';
+            flash.style.pointerEvents = 'none';
+            flash.style.zIndex = '100';
+            
+            document.getElementById('gameContainer').appendChild(flash);
+            
+            setTimeout(() => {
+                flash.style.transition = `opacity ${duration}ms`;
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), duration);
+            }, 10);
+        }
+        
+        // Update score with all active multipliers
+        function updateScoreWithMultipliers(deltaTime) {
+            // Calculate combined multiplier
+            gameState.scoreMultiplier = gameState.comboMultiplier * 
+                                       gameState.nearMissMultiplier * 
+                                       gameState.skillMultiplier;
+            
+            // Base score increase (distance-based)
+            const baseScoreIncrease = Math.floor(gameState.speed * deltaTime * 0.1);
+            
+            // Apply multipliers
+            const scoreIncrease = Math.floor(baseScoreIncrease * gameState.scoreMultiplier);
+            
+            // Add to score
+            gameState.score += scoreIncrease;
+            
+            // Decay multipliers over time
+            if (performance.now() - gameState.lastKiwiTime > 3000) {
+                gameState.comboMultiplier = Math.max(1, gameState.comboMultiplier - 0.01);
+            }
+            if (performance.now() - gameState.lastNearMissTime > 5000) {
+                gameState.nearMissMultiplier = Math.max(1, gameState.nearMissMultiplier - 0.01);
+            }
+            if (performance.now() - gameState.lastSkillTime > 4000) {
+                gameState.skillMultiplier = Math.max(1, gameState.skillMultiplier - 0.01);
+            }
+        }
+        
+        // Touch control handlers
+        function handleTouchStart(event) {
+            if (!gameState.isPlaying) return;
+            
+            const touch = event.touches[0];
+            gameState.touchStartX = touch.clientX;
+            gameState.touchStartY = touch.clientY;
+        }
+        
+        function handleTouchEnd(event) {
+            if (!gameState.isPlaying) return;
+            
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - gameState.touchStartX;
+            const deltaY = touch.clientY - gameState.touchStartY;
+            
+            // Determine swipe direction
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal swipe
+                if (Math.abs(deltaX) > gameState.touchThreshold) {
+                    if (deltaX > 0 && gameState.playerLane < 2) {
+                        // Swipe right
+                        gameState.playerLane++;
+                        audioManager.play('whoosh');
+                        trackPlayerMove('right', gameState.playerLane);
+                    } else if (deltaX < 0 && gameState.playerLane > 0) {
+                        // Swipe left
+                        gameState.playerLane--;
+                        audioManager.play('whoosh');
+                        trackPlayerMove('left', gameState.playerLane);
+                    }
+                }
+            } else {
+                // Vertical swipe
+                if (Math.abs(deltaY) > gameState.touchThreshold) {
+                    if (deltaY < 0 && gameState.playerAction === 'running') {
+                        // Swipe up - jump
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 10;
+                        audioManager.play('jump');
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                            0xFFFF00,
+                            'jump'
+                        );
+                        trackPlayerMove('jumping');
+                    } else if (deltaY > 0 && gameState.playerAction === 'running') {
+                        // Swipe down - duck
+                        gameState.playerAction = 'ducking';
+                        audioManager.play('duck');
+                        trackPlayerMove('ducking');
+                    }
+                }
+            }
+        }
+        
+        function handleTouchMove(event) {
+            // Prevent scrolling while playing
+            if (gameState.isPlaying) {
+                event.preventDefault();
+            }
         }
 
         function onWindowResize() {
@@ -4430,6 +5341,25 @@
         // Event listeners
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
+        
+        // Touch event listeners
+        gameState.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (gameState.isTouchDevice) {
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            
+            // Auto-release duck after swipe down
+            document.addEventListener('touchend', (event) => {
+                if (gameState.playerAction === 'ducking') {
+                    setTimeout(() => {
+                        if (gameState.playerAction === 'ducking') {
+                            gameState.playerAction = 'running';
+                        }
+                    }, 500); // Auto-release after 500ms
+                }
+            });
+        }
 
         // Debug function for testing
         window.testFunction = function() {
@@ -4444,6 +5374,513 @@
         // Initialize game
         console.log('Starting game initialization...');
         init();
+        
+        // ==================== GESTURE CONTROL SYSTEM ====================
+        
+        // Kalman Filter for smoothing
+        class KalmanFilter {
+            constructor(processNoise = 0.01, measurementNoise = 1) {
+                this.processNoise = processNoise;
+                this.measurementNoise = measurementNoise;
+                this.value = 0;
+                this.uncertainty = 1;
+            }
+            
+            filter(measurement) {
+                this.uncertainty += this.processNoise;
+                const gain = this.uncertainty / (this.uncertainty + this.measurementNoise);
+                this.value += gain * (measurement - this.value);
+                this.uncertainty *= (1 - gain);
+                return this.value;
+            }
+        }
+        
+        // Gesture Controller Class
+        class GestureController {
+            constructor(options = {}) {
+                this.options = {
+                    videoElement: options.videoElement || null,
+                    canvasElement: options.canvasElement || null,
+                    onGestureDetected: options.onGestureDetected || (() => {}),
+                    onStatsUpdate: options.onStatsUpdate || (() => {}),
+                    onError: options.onError || (() => {}),
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5,
+                    smoothingFrames: 5,
+                    sensitivity: 0.5,
+                    debugMode: false
+                };
+                
+                this.isRunning = false;
+                this.faceLandmarker = null;
+                this.lastVideoTime = -1;
+                this.gestureHistory = [];
+                this.lastGesture = 'NONE';
+                
+                this.calibrationData = {
+                    neutralYaw: 0,
+                    neutralPitch: 0,
+                    isCalibrated: false
+                };
+                
+                this.stats = {
+                    fps: 0,
+                    frameCount: 0,
+                    lastFrameTime: performance.now(),
+                    faceDetected: false,
+                    yaw: 0,
+                    pitch: 0
+                };
+                
+                this.kalmanFilter = {
+                    yaw: new KalmanFilter(0.01, 1),
+                    pitch: new KalmanFilter(0.01, 1)
+                };
+                
+                this.thresholds = {
+                    yawLeft: -0.6,
+                    yawRight: 0.6,
+                    pitchUp: -0.6,
+                    pitchDown: 0.6,
+                    deadZone: 0.2
+                };
+                
+                this.ctx = this.options.canvasElement ? 
+                    this.options.canvasElement.getContext('2d') : null;
+                
+                this.frameSkipCounter = 0;
+                this.frameSkipRate = 2;
+            }
+            
+            async start() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    this.options.videoElement.srcObject = stream;
+                    
+                    await new Promise((resolve) => {
+                        this.options.videoElement.onloadedmetadata = resolve;
+                    });
+                    
+                    await this.initializeMediaPipe();
+                    
+                    this.isRunning = true;
+                    this.detectLoop();
+                    
+                    setTimeout(() => this.calibrate(), 2000);
+                    
+                } catch (error) {
+                    this.options.onError(`Failed to start camera: ${error.message}`);
+                    throw error;
+                }
+            }
+            
+            stop() {
+                this.isRunning = false;
+                
+                if (this.options.videoElement && this.options.videoElement.srcObject) {
+                    const tracks = this.options.videoElement.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.options.videoElement.srcObject = null;
+                }
+                
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.options.canvasElement.width, this.options.canvasElement.height);
+                }
+            }
+            
+            async initializeMediaPipe() {
+                const vision = await MediaPipeTasksVision.FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                );
+                
+                this.faceLandmarker = await MediaPipeTasksVision.FaceLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker_lite/float16/latest/face_landmarker_lite.task",
+                        delegate: "GPU"
+                    },
+                    outputFaceBlendshapes: true,
+                    runningMode: "VIDEO",
+                    numFaces: 1,
+                    minFaceDetectionConfidence: this.options.minDetectionConfidence,
+                    minFacePresenceConfidence: this.options.minDetectionConfidence,
+                    minTrackingConfidence: this.options.minTrackingConfidence
+                });
+            }
+            
+            detectLoop() {
+                if (!this.isRunning || !this.faceLandmarker) {
+                    return;
+                }
+                
+                this.frameSkipCounter++;
+                if (this.frameSkipCounter < this.frameSkipRate) {
+                    requestAnimationFrame(() => this.detectLoop());
+                    return;
+                }
+                this.frameSkipCounter = 0;
+                
+                const video = this.options.videoElement;
+                const startTimeMs = performance.now();
+                
+                if (video.readyState >= 2 && this.lastVideoTime !== video.currentTime) {
+                    this.lastVideoTime = video.currentTime;
+                    
+                    const results = this.faceLandmarker.detectForVideo(video, startTimeMs);
+                    
+                    this.updateFPS();
+                    
+                    if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+                        this.processFaceLandmarks(results);
+                        this.stats.faceDetected = true;
+                    } else {
+                        this.stats.faceDetected = false;
+                        this.updateGesture('NONE');
+                    }
+                    
+                    if (this.ctx) {
+                        this.drawMinimalVisualization();
+                    }
+                    
+                    this.options.onStatsUpdate(this.stats);
+                }
+                
+                requestAnimationFrame(() => this.detectLoop());
+            }
+            
+            processFaceLandmarks(results) {
+                const landmarks = results.faceLandmarks[0];
+                
+                const nose = landmarks[1];
+                const forehead = landmarks[9];
+                const chin = landmarks[152];
+                const leftEar = landmarks[234];
+                const rightEar = landmarks[454];
+                
+                const earDistance = rightEar.x - leftEar.x;
+                const faceCenterX = (leftEar.x + rightEar.x) / 2;
+                const noseOffsetX = nose.x - faceCenterX;
+                let yaw = (noseOffsetX / earDistance) * 2;
+                
+                const faceHeight = chin.y - forehead.y;
+                const noseCenterY = (forehead.y + chin.y) / 2;
+                const noseOffsetY = nose.y - noseCenterY;
+                let pitch = (noseOffsetY / faceHeight) * 2;
+                
+                yaw = this.kalmanFilter.yaw.filter(yaw);
+                pitch = this.kalmanFilter.pitch.filter(pitch);
+                
+                this.stats.yaw = yaw * 45;
+                this.stats.pitch = pitch * 45;
+                
+                if (this.calibrationData.isCalibrated) {
+                    yaw -= this.calibrationData.neutralYaw;
+                    pitch -= this.calibrationData.neutralPitch;
+                }
+                
+                yaw *= this.options.sensitivity * 2;
+                pitch *= this.options.sensitivity * 2;
+                
+                const gesture = this.detectGesture(yaw, pitch);
+                this.updateGesture(gesture);
+            }
+            
+            detectGesture(yaw, pitch) {
+                const inDeadZone = Math.abs(yaw) < this.thresholds.deadZone && 
+                                  Math.abs(pitch) < this.thresholds.deadZone;
+                
+                if (pitch > this.thresholds.pitchDown) {
+                    return 'DUCK';
+                } else if (pitch < this.thresholds.pitchUp) {
+                    return 'JUMP';
+                } else if (yaw < this.thresholds.yawLeft) {
+                    return 'MOVE_LEFT';
+                } else if (yaw > this.thresholds.yawRight) {
+                    return 'MOVE_RIGHT';
+                } else if (inDeadZone || this.lastGesture === 'DUCK') {
+                    return 'NONE';
+                }
+                
+                return this.lastGesture;
+            }
+            
+            updateGesture(gesture) {
+                this.gestureHistory.push(gesture);
+                if (this.gestureHistory.length > this.options.smoothingFrames) {
+                    this.gestureHistory.shift();
+                }
+                
+                const gestureCount = {};
+                this.gestureHistory.forEach(g => {
+                    gestureCount[g] = (gestureCount[g] || 0) + 1;
+                });
+                
+                let maxCount = 0;
+                let smoothedGesture = 'NONE';
+                for (const [g, count] of Object.entries(gestureCount)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        smoothedGesture = g;
+                    }
+                }
+                
+                if (smoothedGesture !== this.lastGesture) {
+                    this.lastGesture = smoothedGesture;
+                    this.options.onGestureDetected(smoothedGesture);
+                }
+            }
+            
+            calibrate() {
+                this.calibrationData.neutralYaw = this.stats.yaw / 45;
+                this.calibrationData.neutralPitch = this.stats.pitch / 45;
+                this.calibrationData.isCalibrated = true;
+                
+                if (this.ctx) {
+                    const canvas = this.options.canvasElement;
+                    this.ctx.fillStyle = '#00ff88';
+                    this.ctx.font = 'bold 16px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('KALIBRIERT!', canvas.width / 2, canvas.height / 2);
+                    
+                    setTimeout(() => {
+                        if (this.ctx) {
+                            this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        }
+                    }, 1000);
+                }
+            }
+            
+            drawMinimalVisualization() {
+                const canvas = this.options.canvasElement;
+                const video = this.options.videoElement;
+                
+                canvas.width = 160;
+                canvas.height = 120;
+                
+                this.ctx.save();
+                this.ctx.scale(-1, 1);
+                this.ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                this.ctx.restore();
+                
+                if (this.stats.faceDetected) {
+                    this.ctx.strokeStyle = '#00ff88';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+                } else {
+                    this.ctx.strokeStyle = '#ff0000';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+                }
+                
+                if (this.lastGesture !== 'NONE') {
+                    this.ctx.fillStyle = '#00ff88';
+                    this.ctx.font = 'bold 12px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(this.lastGesture.replace('_', ' '), canvas.width / 2, canvas.height - 10);
+                }
+            }
+            
+            updateFPS() {
+                this.stats.frameCount++;
+                const now = performance.now();
+                const elapsed = now - this.stats.lastFrameTime;
+                
+                if (elapsed >= 1000) {
+                    this.stats.fps = (this.stats.frameCount * 1000) / elapsed;
+                    this.stats.frameCount = 0;
+                    this.stats.lastFrameTime = now;
+                }
+            }
+            
+            setSensitivity(value) {
+                this.options.sensitivity = Math.max(0.1, Math.min(1, value));
+            }
+        }
+        
+        // Global gesture controller instance
+        let gestureController = null;
+        let gestureEnabled = false;
+        
+        // Initialize gesture controller
+        function initGestureController() {
+            gestureController = new GestureController({
+                videoElement: document.getElementById('gestureVideo'),
+                canvasElement: document.getElementById('gestureCanvas'),
+                onGestureDetected: handleGestureInput,
+                onStatsUpdate: updateGestureStats,
+                onError: showGestureError
+            });
+        }
+        
+        // Handle gesture input
+        function handleGestureInput(gesture) {
+            if (!gameState.isPlaying || !gestureEnabled) return;
+            
+            const feedbackEl = document.getElementById('gestureFeedback');
+            
+            switch (gesture) {
+                case 'MOVE_LEFT':
+                    if (gameState.playerLane > 0) {
+                        gameState.playerLane--;
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        trackPlayerMove('left', gameState.playerLane);
+                        
+                        // Show feedback
+                        feedbackEl.textContent = '⬅️';
+                        feedbackEl.classList.add('show');
+                        setTimeout(() => feedbackEl.classList.remove('show'), 500);
+                    }
+                    break;
+                    
+                case 'MOVE_RIGHT':
+                    if (gameState.playerLane < 2) {
+                        gameState.playerLane++;
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        trackPlayerMove('right', gameState.playerLane);
+                        
+                        // Show feedback
+                        feedbackEl.textContent = '➡️';
+                        feedbackEl.classList.add('show');
+                        setTimeout(() => feedbackEl.classList.remove('show'), 500);
+                    }
+                    break;
+                    
+                case 'JUMP':
+                    if (gameState.playerAction === 'running') {
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 10;
+                        
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        audioManager.resume();
+                        
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                            0xFFFF00,
+                            'jump'
+                        );
+                        
+                        trackPlayerMove('jumping');
+                        
+                        // Show feedback
+                        feedbackEl.textContent = '⬆️';
+                        feedbackEl.classList.add('show');
+                        setTimeout(() => feedbackEl.classList.remove('show'), 500);
+                    }
+                    break;
+                    
+                case 'DUCK':
+                    if (gameState.playerAction === 'running') {
+                        gameState.playerAction = 'ducking';
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                        trackPlayerMove('ducking');
+                        
+                        // Show feedback
+                        feedbackEl.textContent = '⬇️';
+                        feedbackEl.classList.add('show');
+                        setTimeout(() => feedbackEl.classList.remove('show'), 500);
+                    }
+                    break;
+                    
+                case 'NONE':
+                    if (gameState.playerAction === 'ducking') {
+                        gameState.playerAction = 'running';
+                    }
+                    break;
+            }
+        }
+        
+        // Update gesture stats display
+        function updateGestureStats(stats) {
+            // Update status text
+            const statusEl = document.getElementById('gestureStatus');
+            if (stats.faceDetected) {
+                statusEl.textContent = `Gesten: Aktiv (${stats.fps.toFixed(0)} FPS)`;
+                statusEl.style.color = '#00ff88';
+            } else {
+                statusEl.textContent = 'Gesten: Kein Gesicht erkannt';
+                statusEl.style.color = '#ff4444';
+            }
+        }
+        
+        // Show gesture error
+        function showGestureError(message) {
+            const statusEl = document.getElementById('gestureStatus');
+            statusEl.textContent = `Fehler: ${message}`;
+            statusEl.style.color = '#ff4444';
+            
+            // Disable gesture controls
+            gestureEnabled = false;
+            document.getElementById('gestureToggle').textContent = '🎥 Gesten aktivieren';
+            document.getElementById('gestureToggle').classList.remove('active');
+            document.getElementById('calibrateBtn').disabled = true;
+            document.getElementById('gestureCanvas').classList.remove('active');
+        }
+        
+        // Toggle gesture control
+        async function toggleGestureControl() {
+            const toggleBtn = document.getElementById('gestureToggle');
+            const calibrateBtn = document.getElementById('calibrateBtn');
+            const canvas = document.getElementById('gestureCanvas');
+            
+            if (!gestureController) {
+                initGestureController();
+            }
+            
+            if (gestureEnabled) {
+                // Disable gesture control
+                gestureEnabled = false;
+                gestureController.stop();
+                toggleBtn.textContent = '🎥 Gesten aktivieren';
+                toggleBtn.classList.remove('active');
+                calibrateBtn.disabled = true;
+                canvas.classList.remove('active');
+                document.getElementById('gestureStatus').textContent = 'Gesten: Inaktiv';
+            } else {
+                // Enable gesture control
+                try {
+                    await gestureController.start();
+                    gestureEnabled = true;
+                    toggleBtn.textContent = '🎥 Gesten deaktivieren';
+                    toggleBtn.classList.add('active');
+                    calibrateBtn.disabled = false;
+                    canvas.classList.add('active');
+                    document.getElementById('gestureStatus').textContent = 'Gesten: Wird initialisiert...';
+                } catch (error) {
+                    showGestureError(error.message);
+                }
+            }
+        }
+        
+        // Calibrate gestures
+        function calibrateGestures() {
+            if (gestureController && gestureEnabled) {
+                gestureController.calibrate();
+                const statusEl = document.getElementById('gestureStatus');
+                statusEl.textContent = 'Kalibrierung erfolgreich!';
+                statusEl.style.color = '#4CAF50';
+                setTimeout(() => {
+                    updateGestureStats(gestureController.stats);
+                }, 2000);
+            }
+        }
+        
+        // Make functions globally available
+        window.toggleGestureControl = toggleGestureControl;
+        window.calibrateGestures = calibrateGestures;
+        window.submitHighscore = submitHighscoreInternal;
+        window.skipHighscore = skipHighscoreInternal;
+        
+        // ==================== END GESTURE CONTROL SYSTEM ====================
     </script>
 </body>
 </html>

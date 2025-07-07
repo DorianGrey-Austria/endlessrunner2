@@ -1,7 +1,28 @@
+## 📋 **ENDLESS RUNNER PROJECTS - ROADMAP**
+
+### 🚀 **SUBWAY RUNNER - UPDATES**
+
+#### **Version 3.2 - Gesture Control Integration (07.01.2025)**
+- [x] MediaPipe Face Tracking Integration
+- [x] Kalman Filter für smoothe Bewegungen
+- [x] Kopfbewegungen für Steuerung:
+  - [x] Kopf links/rechts → Spurwechsel
+  - [x] Kopf oben → Springen
+  - [x] Kopf unten → Ducken
+- [x] UI-Elemente:
+  - [x] Toggle-Button für Gestensteuerung
+  - [x] Kleine Kamera-Preview (160x120px)
+  - [x] Kalibrierungs-Button
+  - [x] Gestensteuerungs-Feedback
+- [x] Visuelle Feedback-Anzeige (Pfeile)
+- [x] FPS-Anzeige für Performance-Monitoring
+- [x] Automatische Kalibrierung nach 2 Sekunden
+
+---
+
 ## 📋 **GESTURE RUNNER PRO - DETAILLIERTE ROADMAP**
 
-
-**💡 hake erfolgreiche ie Tasks ab während du arbeitest! 
+**💡 hake erfolgreiche Tasks ab während du arbeitest! 
 
 Die grünen Häkchen in Cursor motivieren enorm! ✅
 
@@ -314,42 +335,60 @@ Die grünen Häkchen in Cursor motivieren enorm! ✅
   - [x] Supabase Integration für Highscores
   - [x] Git Versionskontrolle
 
-### **🎯 NÄCHSTE SCHRITTE - Version 3.1**
-- [x] **PHASE 1: Deployment Fix**
-  - [x] GitHub Action server-dir korrigiert
-  - [x] Erfolgreiche Hostinger-Bereitstellung
-  - [x] Version Info Display hinzugefügt
+### **✅ VERSION 3.4-VISUAL FERTIGGESTELLT** (07.01.2025)
 
-- [ ] **PHASE 2: Kritische Fixes**
-  - [ ] **🚨 OVERHEAD OBSTACLES FIX**: Ducken-Kollision reparieren
-  - [ ] Tunnel-Hindernisse sind durchfahrbar - muss gefixt werden
-  - [ ] Collision Detection für hängende Hindernisse
-  - [ ] Bessere Hitbox-Anpassungen
+#### **PHASE 1: Deployment Fix** ✅
+- [x] GitHub Action server-dir korrigiert
+- [x] Erfolgreiche Hostinger-Bereitstellung
+- [x] Version Info Display hinzugefügt
 
-- [ ] **PHASE 3: Gestensteuerung Integration**
-  - [ ] MediaPipe aus GestureRunnerPro portieren
-  - [ ] WebCam-Zugriff für SubwayRunner
-  - [ ] Basis-Gesten (Links/Rechts, Jump, Duck)
-  - [ ] Gesture Tutorial und Kalibrierung
+#### **PHASE 2: Kritische Fixes** ✅
+- [x] **🚨 OVERHEAD OBSTACLES FIX**: Ducken-Kollision repariert
+- [x] Tunnel-Hindernisse Kollisionserkennung gefixt
+- [x] Collision Detection für hängende Hindernisse korrigiert
+- [x] Hitbox-Anpassungen für Duck-State
 
-- [ ] **PHASE 4: Sound System Overhaul**
-  - [x] Background Music implementiert (✅ bereits done)
-  - [ ] Realistische Audio-Samples statt einfache Töne
-  - [ ] Dynamic Audio basierend auf Geschwindigkeit
-  - [ ] 3D Audio und Ambiente-Sounds
+#### **PHASE 3: Kiwi-Implementation** ✅
+- [x] Münzen durch halbierte Kiwis ersetzt
+- [x] Realistische 3D-Kiwi-Modelle mit Textur
+- [x] Saft-Splash-Effekt beim Sammeln
+- [x] UI und Audio angepasst
 
-- [ ] **PHASE 4: Visual Effects**
-  - [ ] Advanced Particle Systems
-  - [ ] Motion Blur und Speed Lines
-  - [ ] Impact Effects je Material-Typ
-  - [ ] Environmental Destruction
+#### **PHASE 4: Gestensteuerung Integration** ✅
+- [x] MediaPipe Face Tracking integriert
+- [x] WebCam-Zugriff implementiert
+- [x] Basis-Gesten (Kopfbewegungen)
+- [x] Gesture Tutorial und Kalibrierung
+- [x] Toggle-Button und UI-Feedback
+
+#### **PHASE 5: Gameplay-Verbesserungen** ✅
+- [x] 4-Phasen Schwierigkeitskurve
+- [x] Near-Miss Bonus System
+- [x] Meilenstein-Belohnungen
+- [x] Touch-Control Support
+- [x] Erweiterte Score-Multiplikatoren
+
+#### **PHASE 6: Visual Effects** ✅
+- [x] Advanced Particle Systems
+- [x] Motion Blur und Speed Lines
+- [x] Impact Effects (Kollision, Funken, Staub)
+- [x] Fog-System und Beleuchtung
+- [x] UI-Animationen und Glow-Effekte
 
 ### **✅ AKTUELLER FORTSCHRITT**
-- **SubwayRunner Basisversion**: 100% ████████████
-- **Sound Verbesserungen**: 0% ░░░░░░░░░░░░
-- **Collision Enhancement**: 0% ░░░░░░░░░░░░
-- **Neue Hindernisse**: 0% ░░░░░░░░░░░░
-- **Visual Effects**: 0% ░░░░░░░░░░░░
+- **SubwayRunner V3.4**: 100% ████████████
+- **Kritische Fixes**: 100% ████████████
+- **Kiwi-Implementation**: 100% ████████████
+- **Gestensteuerung**: 100% ████████████
+- **Gameplay-Updates**: 100% ████████████
+- **Visual Effects**: 100% ████████████
+
+### **🚀 NÄCHSTE FEATURES (Version 4.0)**
+- **Sound System Overhaul**: 0% ░░░░░░░░░░░░
+- **Multiplayer-Modus**: 0% ░░░░░░░░░░░░
+- **Neue Welten/Themes**: 0% ░░░░░░░░░░░░
+- **Achievement System**: 0% ░░░░░░░░░░░░
+- **Mobile App Version**: 0% ░░░░░░░░░░░░
 
 **🎮 Spiel läuft auf**: http://localhost:8001
 

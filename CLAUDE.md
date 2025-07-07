@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a collection of endless runner game projects built with different technologies:
+This is a collection of endless runner game projects built with different technologies, following a UI/UX-first development philosophy where user experience drives all technical decisions.
 
 - **SubwayRunner**: Vanilla JavaScript + Three.js (main production game, deployed via GitHub Actions)
 - **Endless3D**: Vanilla JavaScript + Three.js (perspective-based 3D runner with world system)
@@ -26,6 +26,10 @@ python -m http.server 8001
 # Deployment (automatic via GitHub Actions)
 git add . && git commit -m "message" && git push
 # Deploys to https://ki-revolution.at/ via Hostinger FTP
+
+# Run lint and typecheck before commits
+# No specific lint/typecheck commands for vanilla JS project
+# Test directly in browser at localhost:8001
 ```
 
 ### Endless3D (Vanilla JS/Three.js)
@@ -64,6 +68,10 @@ npm install          # Install dependencies
 npm run build        # Build TypeScript to JavaScript
 npm run watch        # Watch mode for development
 npm run inspector    # Run MCP inspector
+
+# Run lint and typecheck before commits
+npm run lint         # Linting (if configured)
+npm run typecheck    # TypeScript type checking
 ```
 
 ## Architecture Overview
@@ -147,12 +155,16 @@ npm run inspector    # Run MCP inspector
 - **Trigger**: Push to main branch or manual workflow_dispatch
 - **Process**: Copies SubwayRunner/index.html to root, creates deployment package
 - **Target**: Hostinger FTP deployment to root directory (server-dir: /)
-- **Secrets Required**: FTP_SERVER, FTP_USERNAME, FTP_PASSWORD
+- **Secrets Required**: FTP_SERVER (use IP address), FTP_USERNAME, FTP_PASSWORD
 - **Live URL**: https://ki-revolution.at/
+- **Important**: GitHub Secrets are repository-specific - must be reconfigured when switching repos
+- **Production**: Includes .htaccess with HTTPS enforcement, compression, caching, and security headers
 
-### Known Issues
-- **Overhead Obstacles**: Tunnel collision detection needs fixing (ducking allows pass-through)
+### Known Issues & Current Focus
+- **Critical Bug**: Overhead/tunnel obstacles are passable when ducking - collision detection needs fixing
 - **Version Display**: UI version info should appear bottom-left but may need CSS fixes
+- **Next Phase**: Gesture control integration from GestureRunnerPro into SubwayRunner
+- **Planned**: Sound system overhaul with realistic audio samples
 
 ## Project-Specific Notes
 
@@ -184,11 +196,12 @@ npm run inspector    # Run MCP inspector
 - TypeScript source compiled to JavaScript for distribution
 - Provides tools for scene management, script editing, and project operations
 
-## Code Review Suggestions
+## Additional Resources
 
-- As a senior developer, five potential improvements for the code without compromising performance or gameplay:
-  1. Implement robust error handling and logging mechanisms
-  2. Refactor repetitive code segments into reusable utility functions
-  3. Add comprehensive input validation for game parameters
-  4. Create a configuration management system for easy tuning of game mechanics
-  5. Optimize resource management with intelligent object pooling techniques
+- **DEPLOYMENT.md**: German-language deployment guide with head tracking setup
+- **ROADMAP.md**: Detailed development roadmap for GestureRunnerPro
+- **github.hostinger.connection.md**: Troubleshooting guide for GitHub Actions deployment
+
+## Development Philosophy
+
+**UI/UX First**: User experience is paramount. Every technical decision should prioritize the player's experience, ensuring intuitive controls, smooth performance, and engaging visual feedback across all devices.
