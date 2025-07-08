@@ -207,13 +207,19 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: linear-gradient(135deg, rgba(20,20,30,0.95) 0%, rgba(10,10,20,0.95) 100%);
             color: white;
             padding: 40px;
-            border-radius: 16px;
+            border-radius: 20px;
             text-align: center;
             z-index: 200;
-            min-width: 300px;
+            min-width: 600px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
         }
         
         #menu h1 {
@@ -222,18 +228,22 @@
         }
         
         #menu button {
-            background: #4CAF50;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 18px;
-            border-radius: 8px;
+            padding: 15px 40px;
+            font-size: 24px;
+            border-radius: 10px;
             cursor: pointer;
             margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            font-weight: bold;
         }
         
         #menu button:hover {
-            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,53,0.4);
         }
         
         #timer {
@@ -1141,25 +1151,14 @@
         <canvas id="gestureCanvas"></canvas>
         
         <div id="ui">
-            <div>Score: <span id="score">0</span></div>
-            <div>Speed: <span id="speed">100</span></div>
-            <div>❤️ Leben: <span id="lives">3</span></div>
-            <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
-            <div id="levelDisplay">Level 1: Subway Daylight</div>
+            <div style="font-size: 36px; font-weight: bold; text-shadow: 3px 3px 6px rgba(0,0,0,0.8);"><span id="score">0</span></div>
+            <div style="font-size: 28px; margin-top: 10px;">❤️ <span id="lives">3</span></div>
+            <div id="levelDisplay" style="font-size: 20px; color: #87CEEB; margin-top: 15px;">Level 1</div>
             
-            <!-- NEW: Power-Up & Coins UI -->
-            <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
-                <div style="font-size: 12px; margin-top: 2px;">
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
-                            <div id="kiwiProgress" style="background: #FFD700; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 40px; height: 8px; overflow: hidden;">
-                            <div id="broccoliProgress" style="background: #8BC34A; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Minimal Collectibles Counter -->
+            <div id="collectiblesCounter" style="font-size: 24px; color: #FFD700; font-weight: bold; margin-top: 20px;">
+                <div>🥝 <span id="kiwiCount">0</span></div>
+                <div style="margin-top: 5px;">🥦 <span id="broccoliCount">0</span></div>
             </div>
             <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
                 COMBO x<span id="comboMultiplier">1</span>!
@@ -1303,34 +1302,56 @@
             <div id="rouletteResult" style="margin-top: 20px; font-size: 32px; color: #FFD700; font-weight: bold;"></div>
         </div>
         
-        <div id="instructions">
-            <div><strong>🎮 Steuerung:</strong></div>
-            <div>A/D: Spurwechsel</div>
-            <div>Leertaste/W: Springen 🦘</div>
-            <div>S: Ducken 🦆</div>
-            <div><strong>📱 Touch-Steuerung:</strong></div>
-            <div>← → Wischen: Spurwechsel</div>
-            <div>↑ Wischen: Springen</div>
-            <div>↓ Wischen: Ducken</div>
-            <div><strong>💡 Tipps:</strong></div>
-            <div>🟠 Orange/Braun: Überspringen!</div>
-            <div>🔵 Blau/Grau oben: Ducken!</div>
-            <div>🔴 Stacheln: Beides möglich!</div>
-            <div><strong>🎯 Neue Features:</strong></div>
-            <div>⚡ Near-Miss Bonus!</div>
-            <div>🏁 Meilenstein-Belohnungen!</div>
-            <div>🔥 Combo-Multiplikator!</div>
-        </div>
+        <!-- Instructions now integrated into menu -->
         
         <div id="menu">
-            <h1>🚇 Subway Runner 3D</h1>
-            <h2>⏱️ 60-Sekunden Challenge!</h2>
-            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
-            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
-            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
-            <button onclick="startGame()">🎮 Challenge starten!</button>
+            <h1 style="font-size: 48px; margin-bottom: 20px;">🚇 Subway Runner 3D</h1>
+            <h2 style="font-size: 32px; color: #FFD700; margin-bottom: 30px;">⏱️ 60-Sekunden Challenge!</h2>
+            
+            <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #87CEEB; margin-bottom: 15px;">🎮 Spielmodus</h3>
+                <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
+                <p>Sammle alle <span style="color: #FFD700;">🥝 30 Kiwis</span> und <span style="color: #8BC34A;">🥦 7 Broccolis</span> für Bonuspunkte!</p>
+                <p>Nach 60 Sekunden: <span style="color: #FF00FF;">Level 2 - Neon Night Run</span></p>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #87CEEB; margin-bottom: 15px;">🎮 Steuerung</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left;">
+                    <div><strong>A/D oder ←→:</strong> Spurwechsel</div>
+                    <div><strong>W/Space oder ↑:</strong> Springen 🤘</div>
+                    <div><strong>S oder ↓:</strong> Ducken 🧎</div>
+                    <div><strong>ESC:</strong> Pause</div>
+                </div>
+                <div style="margin-top: 15px; color: #FFD700;">
+                    <strong>🎅 Touch-Steuerung:</strong> Wischen für Bewegung
+                </div>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #87CEEB; margin-bottom: 15px;">👀 Hindernisse</h3>
+                <div style="text-align: left;">
+                    <p>🟠 <strong>Orange/Braun:</strong> Überspringen!</p>
+                    <p>🔵 <strong>Blau/Grau oben:</strong> Ducken!</p>
+                    <p>🔴 <strong>Stacheln:</strong> Beides möglich!</p>
+                    <p>🟣 <strong>Bewegliche Hindernisse:</strong> Timing ist alles!</p>
+                </div>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #87CEEB; margin-bottom: 15px;">🏆 Sammlung-Bonus System</h3>
+                <div style="text-align: left;">
+                    <p>🎯 <strong>5+ von einer Sorte:</strong> +250 Punkte</p>
+                    <p>💯 <strong>Alle 30 Kiwis ODER 7 Broccolis:</strong> +500 Punkte</p>
+                    <p>✨ <strong>Perfekte Sammlung (alle 37):</strong> +1000 Punkte!</p>
+                    <p>🥦 <strong>Broccoli Master (5 Stück):</strong> +200 Punkte</p>
+                    <p>🏆 <strong>Veggie Champion (alle 7):</strong> +500 Punkte</p>
+                </div>
+            </div>
+            
+            <button onclick="startGame()" style="font-size: 24px; padding: 15px 40px; background: linear-gradient(45deg, #FF6B35, #F7931E); border: none; border-radius: 10px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s;">
+                🎮 Challenge starten!
+            </button>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -2862,6 +2883,7 @@
         // Game state
         let gameState = {
             isPlaying: false,
+            uiState: 'menu', // 'menu', 'playing', 'paused', 'gameover'
             isGameOver: false,
             isVictory: false,
             score: 0,
@@ -4684,7 +4706,8 @@
             // Start sound
             audioManager.play('powerup');
             
-            document.getElementById('menu').style.display = 'none';
+            // Update UI state to playing
+            UIStateManager.updateUIState('playing');
             updateUI();
             
             // Extra check to ensure UI is properly updated at game start
@@ -4709,6 +4732,9 @@
             // FEATURE 9: Check achievements at game end
             checkAchievements();
             checkDailyChallengeProgress();
+            
+            // Update UI state
+            UIStateManager.updateUIState('gameover');
             
             // Check for highscore
             console.log('Game ended. Checking highscore:', currentScore, 'isHighscore:', highscoreManager.isHighscore(currentScore));
@@ -4745,11 +4771,109 @@
                 }, i * 300);
             }
             
+            // Update UI state
+            UIStateManager.updateUIState('gameover');
+            
             // Always show name input for victory (it's always a highscore achievement!)
             showNameInputDialog(true);
         }
 
+        // ==================== UI STATE MANAGEMENT SYSTEM v4.1.0 ====================
+        const UIStateManager = {
+            // Define which UI elements should be visible in each state
+            uiElements: {
+                menu: ['menu', 'highscorePanel', 'instructions', 'versionInfo'],
+                playing: ['score', 'lives', 'kiwiCount', 'broccoliCount', 'levelDisplay'], // Minimal HUD
+                paused: ['score', 'lives', 'kiwiCount', 'broccoliCount', 'pauseMenu'],
+                gameover: ['menu', 'highscorePanel', 'finalScore']
+            },
+            
+            // Hide all UI elements
+            hideAllUI() {
+                const allElements = [
+                    'ui', 'menu', 'instructions', 'highscorePanel', 'versionInfo',
+                    'speed', 'timer', 'multiplierDisplay', 'powerUpDisplay', 'comboDisplay',
+                    'nearMissDisplay', 'milestoneDisplay', 'skillComboDisplay', 'environmentDisplay',
+                    'difficultyDisplay', 'perfectStreakDisplay', 'fusionContainer', 'gestureControls',
+                    'trickAnnouncer', 'mysteryBoxUI', 'gamblingStats', 'achievementPopup',
+                    'rouletteModal', 'rampageDisplay', 'flightDisplay', 'dailyChallengeDisplay',
+                    'scoreTokenDisplay', 'surgeModeDisplay', 'adrenalineStatus', 'altitudeMeter'
+                ];
+                
+                allElements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.style.display = 'none';
+                });
+            },
+            
+            // Show only essential elements for current state
+            updateUIState(newState) {
+                gameState.uiState = newState;
+                
+                // First hide everything
+                this.hideAllUI();
+                
+                // Then show appropriate elements based on state
+                switch(newState) {
+                    case 'menu':
+                        this.showMenuUI();
+                        break;
+                    case 'playing':
+                        this.showGameplayUI();
+                        break;
+                    case 'paused':
+                        this.showPausedUI();
+                        break;
+                    case 'gameover':
+                        this.showGameOverUI();
+                        break;
+                }
+            },
+            
+            showMenuUI() {
+                document.getElementById('menu').style.display = 'block';
+                document.getElementById('highscorePanel').style.display = 'block';
+                document.getElementById('versionInfo').style.display = 'block';
+            },
+            
+            showGameplayUI() {
+                // Show only minimal HUD during gameplay
+                document.getElementById('ui').style.display = 'block';
+                
+                // Hide all non-essential UI elements within the main UI
+                const essentialOnly = ['score', 'lives', 'collectiblesCounter', 'levelDisplay'];
+                const uiChildren = document.getElementById('ui').children;
+                
+                for (let child of uiChildren) {
+                    if (child.id && !essentialOnly.some(id => child.id.includes(id))) {
+                        child.style.display = 'none';
+                    }
+                }
+                
+                // Keep version info small and unobtrusive
+                const versionInfo = document.getElementById('versionInfo');
+                if (versionInfo) {
+                    versionInfo.style.display = 'block';
+                    versionInfo.style.opacity = '0.3';
+                    versionInfo.style.fontSize = '10px';
+                }
+            },
+            
+            showPausedUI() {
+                // TODO: Implement pause menu
+                this.showGameplayUI();
+            },
+            
+            showGameOverUI() {
+                document.getElementById('menu').style.display = 'block';
+                document.getElementById('highscorePanel').style.display = 'block';
+            }
+        };
+
         function updateUI() {
+            // Only update if we're in playing state
+            if (gameState.uiState !== 'playing') return;
+            
             // Animate score changes
             const scoreElement = document.getElementById('score');
             const currentDisplayScore = parseInt(scoreElement.textContent) || 0;
@@ -4760,20 +4884,6 @@
                 setTimeout(() => scoreElement.classList.remove('ui-bounce'), 500);
             }
             scoreElement.textContent = targetScore;
-            
-            // Speed display with color coding
-            const speedElement = document.getElementById('speed');
-            speedElement.textContent = Math.floor(gameState.speed * 1000);
-            const speedRatio = gameState.speed / gameState.maxSpeed;
-            if (speedRatio > 0.8) {
-                speedElement.style.color = '#FF4444';
-            } else if (speedRatio > 0.6) {
-                speedElement.style.color = '#FFA500';
-            } else if (speedRatio > 0.4) {
-                speedElement.style.color = '#FFD700';
-            } else {
-                speedElement.style.color = 'white';
-            }
             
             // Lives with pulse animation on change
             const livesElement = document.getElementById('lives');
@@ -4787,44 +4897,6 @@
                 }, 1000);
             }
             livesElement.textContent = gameState.lives;
-            
-            // Update timer with visual warnings
-            const timeElement = document.getElementById('timeRemaining');
-            const timerElement = document.getElementById('timer');
-            timeElement.textContent = Math.max(0, Math.ceil(gameState.timeRemaining));
-            
-            // Timer visual states with audio warnings
-            const timeLeft = Math.ceil(gameState.timeRemaining);
-            if (timeLeft <= 10) {
-                timerElement.className = 'timer-critical';
-                // Final countdown beeps
-                if (timeLeft <= 5 && timeLeft > 0 && Math.ceil(gameState.timeRemaining) !== Math.ceil(gameState.timeRemaining + 0.016)) {
-                    audioManager.play('coin'); // High pitched beep
-                }
-            } else if (timeLeft <= 20) {
-                timerElement.className = 'timer-warning';
-                // Warning at 20 seconds
-                if (timeLeft === 20 && Math.abs(gameState.timeRemaining - 20) < 0.1) {
-                    audioManager.play('duck'); // Warning sound
-                }
-            } else {
-                timerElement.className = '';
-            }
-            
-            // Update multiplier display with glow effect
-            const multiplierElement = document.getElementById('currentMultiplier');
-            if (multiplierElement) {
-                const newMultiplier = gameState.scoreMultiplier.toFixed(1);
-                if (parseFloat(newMultiplier) > 1.0) {
-                    multiplierElement.parentElement.classList.add('ui-glow');
-                } else {
-                    multiplierElement.parentElement.classList.remove('ui-glow');
-                }
-                multiplierElement.textContent = newMultiplier;
-            }
-            
-            // Update difficulty progress display
-            updateDifficultyUI();
             
             // Update collectible counters
             updateKiwiUI();
@@ -4926,7 +4998,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.1.0-LEVELS<br>
+                    Version: 4.1.1-MINIMAL-UI<br>
                     🎯 Pure Collectibles Only<br>
                     🥝 Kiwis + Broccolis + 2 Mystery Boxes
                 `;
