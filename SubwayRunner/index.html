@@ -1223,6 +1223,66 @@
         #difficultyLevel {
             display: none !important;
         }
+        
+        /* Ghost Leaderboard Styles */
+        #ghostLeaderboard {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #00FFFF;
+            color: white;
+            font-family: Arial, sans-serif;
+            min-width: 200px;
+            z-index: 150;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        #ghostLeaderboard h3 {
+            margin: 0 0 10px 0;
+            color: #00FFFF;
+            font-size: 18px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .ghost-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .ghost-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .ghost-name {
+            color: #00FFFF;
+            font-weight: bold;
+        }
+        
+        .ghost-score {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .ghost-status {
+            font-size: 12px;
+            color: #8BC34A;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .no-ghost {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -1231,7 +1291,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.1.3-UI-PURE<br>
+            🚀 V4.2.0-GHOST-MODE<br>
             📅 08.07.2025
         </div>
         
@@ -1353,6 +1413,14 @@
         <!-- Temporary Event Notifications Container -->
         <div id="eventNotifications" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 500;">
             <!-- All temporary notifications will be dynamically added here -->
+        </div>
+        
+        <!-- Ghost Leaderboard Display -->
+        <div id="ghostLeaderboard">
+            <h3>👻 Daily Ghost</h3>
+            <div id="ghostLeaderboardContent">
+                <div class="no-ghost">Loading ghost data...</div>
+            </div>
         </div>
         
         <!-- Hidden UI elements for internal use only -->
@@ -3506,6 +3574,366 @@
             }
         };
         
+        // ==================== GHOST MODE SYSTEM v4.2.0 ====================
+        const GhostSystem = {
+            // Daily seed for consistent tracks
+            getDailySeed() {
+                const today = new Date();
+                const dateString = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+                // Generate seed from date string
+                let seed = 0;
+                for (let i = 0; i < dateString.length; i++) {
+                    seed += dateString.charCodeAt(i) * (i + 1);
+                }
+                return seed;
+            },
+            
+            // Seeded random number generator
+            seededRandom: null,
+            initSeededRandom(seed) {
+                this.seededRandom = {
+                    seed: seed,
+                    next() {
+                        this.seed = (this.seed * 9301 + 49297) % 233280;
+                        return this.seed / 233280;
+                    }
+                };
+            },
+            
+            // Ghost recording data
+            recording: {
+                active: false,
+                frames: [],
+                obstacles: [],
+                collectibles: [],
+                startTime: 0,
+                seed: 0,
+                playerName: 'Anonymous',
+                finalScore: 0,
+                completed: false
+            },
+            
+            // Ghost playback data
+            playback: {
+                active: false,
+                data: null,
+                currentFrame: 0,
+                mesh: null,
+                startTime: 0
+            },
+            
+            // Start recording
+            startRecording() {
+                this.recording = {
+                    active: true,
+                    frames: [],
+                    obstacles: [],
+                    collectibles: [],
+                    startTime: Date.now(),
+                    seed: this.getDailySeed(),
+                    playerName: localStorage.getItem('playerName') || 'Anonymous',
+                    finalScore: 0,
+                    completed: false
+                };
+                console.log('👻 Ghost recording started with seed:', this.recording.seed);
+            },
+            
+            // Record frame
+            recordFrame() {
+                if (!this.recording.active) return;
+                
+                const frame = {
+                    time: Date.now() - this.recording.startTime,
+                    lane: gameState.playerLane,
+                    action: gameState.playerAction,
+                    y: gameState.playerY,
+                    score: gameState.score
+                };
+                
+                this.recording.frames.push(frame);
+            },
+            
+            // Record obstacle spawn
+            recordObstacle(type, lane, z) {
+                if (!this.recording.active) return;
+                
+                this.recording.obstacles.push({
+                    time: Date.now() - this.recording.startTime,
+                    type: type,
+                    lane: lane,
+                    z: z
+                });
+            },
+            
+            // Record collectible spawn
+            recordCollectible(type, lane, z) {
+                if (!this.recording.active) return;
+                
+                this.recording.collectibles.push({
+                    time: Date.now() - this.recording.startTime,
+                    type: type,
+                    lane: lane,
+                    z: z
+                });
+            },
+            
+            // Stop recording and save to Supabase
+            async stopRecording() {
+                if (!this.recording.active) return;
+                
+                this.recording.active = false;
+                this.recording.finalScore = gameState.score;
+                this.recording.completed = gameState.timeRemaining === 0 && gameState.lives > 0;
+                
+                console.log('👻 Ghost recording stopped. Frames:', this.recording.frames.length);
+                
+                // Save to Supabase if we have a good run
+                if (this.recording.frames.length > 100 && supabase) {
+                    try {
+                        // Check if this is better than existing ghost
+                        const { data: existingGhost } = await supabase
+                            .from('subway_runner_ghosts')
+                            .select('*')
+                            .eq('seed', this.recording.seed)
+                            .single();
+                        
+                        if (!existingGhost || existingGhost.score < this.recording.finalScore) {
+                            // This is a new best - save it
+                            const ghostData = {
+                                seed: this.recording.seed,
+                                player_name: this.recording.playerName,
+                                score: this.recording.finalScore,
+                                completed: this.recording.completed,
+                                frames: JSON.stringify(this.recording.frames),
+                                obstacles: JSON.stringify(this.recording.obstacles),
+                                collectibles: JSON.stringify(this.recording.collectibles),
+                                recorded_at: new Date().toISOString()
+                            };
+                            
+                            await supabase
+                                .from('subway_runner_ghosts')
+                                .upsert(ghostData, { onConflict: 'seed' });
+                            
+                            console.log('👻 New best ghost saved!');
+                            showEventNotification('👻 NEW BEST GHOST!', 3000, 'large', '#FFD700');
+                        }
+                    } catch (error) {
+                        console.error('Error saving ghost:', error);
+                    }
+                }
+            },
+            
+            // Load ghost data from Supabase
+            async loadDailyGhost() {
+                if (!supabase) return null;
+                
+                try {
+                    const todaySeed = this.getDailySeed();
+                    const { data: ghost, error } = await supabase
+                        .from('subway_runner_ghosts')
+                        .select('*')
+                        .eq('seed', todaySeed)
+                        .single();
+                    
+                    if (error || !ghost) {
+                        console.log('👻 No ghost data for today');
+                        return null;
+                    }
+                    
+                    // Parse the JSON data
+                    ghost.frames = JSON.parse(ghost.frames);
+                    ghost.obstacles = JSON.parse(ghost.obstacles);
+                    ghost.collectibles = JSON.parse(ghost.collectibles);
+                    
+                    console.log('👻 Loaded daily ghost:', ghost.player_name, 'Score:', ghost.score);
+                    return ghost;
+                } catch (error) {
+                    console.error('Error loading ghost:', error);
+                    return null;
+                }
+            },
+            
+            // Start ghost playback
+            async startPlayback() {
+                const ghostData = await this.loadDailyGhost();
+                if (!ghostData || ghostData.frames.length === 0) return;
+                
+                this.playback = {
+                    active: true,
+                    data: ghostData,
+                    currentFrame: 0,
+                    mesh: null,
+                    startTime: Date.now()
+                };
+                
+                // Create ghost visual
+                this.createGhostMesh();
+                
+                console.log('👻 Ghost playback started');
+                showEventNotification(`👻 Racing against ${ghostData.player_name}!`, 2000, 'large', '#00FFFF');
+            },
+            
+            // Create ghost visual representation
+            createGhostMesh() {
+                const ghostGroup = new THREE.Group();
+                
+                // Ghost body (semi-transparent)
+                const bodyGeometry = new THREE.BoxGeometry(0.6, 1, 0.4);
+                const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x00FFFF, 
+                    transparent: true, 
+                    opacity: 0.4,
+                    emissive: 0x00FFFF,
+                    emissiveIntensity: 0.3
+                });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.position.y = 0.5;
+                ghostGroup.add(body);
+                
+                // Ghost head
+                const headGeometry = new THREE.SphereGeometry(0.3);
+                const head = new THREE.Mesh(headGeometry, bodyMaterial);
+                head.position.y = 1.4;
+                ghostGroup.add(head);
+                
+                // Ghost trail effect
+                const trailGeometry = new THREE.PlaneGeometry(0.5, 2);
+                const trailMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x00FFFF,
+                    transparent: true,
+                    opacity: 0.2,
+                    side: THREE.DoubleSide
+                });
+                const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+                trail.position.z = 0.5;
+                trail.rotation.x = Math.PI / 2;
+                ghostGroup.add(trail);
+                
+                // Add glow effect
+                const glowLight = new THREE.PointLight(0x00FFFF, 0.5, 5);
+                glowLight.position.y = 1;
+                ghostGroup.add(glowLight);
+                
+                scene.add(ghostGroup);
+                this.playback.mesh = ghostGroup;
+            },
+            
+            // Update ghost position
+            updatePlayback() {
+                if (!this.playback.active || !this.playback.data || !this.playback.mesh) return;
+                
+                const elapsedTime = Date.now() - this.playback.startTime;
+                const frames = this.playback.data.frames;
+                
+                // Find the appropriate frame
+                while (this.playback.currentFrame < frames.length - 1 && 
+                       frames[this.playback.currentFrame + 1].time <= elapsedTime) {
+                    this.playback.currentFrame++;
+                }
+                
+                if (this.playback.currentFrame >= frames.length) {
+                    // Ghost finished
+                    this.stopPlayback();
+                    return;
+                }
+                
+                // Update ghost position
+                const frame = frames[this.playback.currentFrame];
+                const nextFrame = frames[Math.min(this.playback.currentFrame + 1, frames.length - 1)];
+                
+                // Interpolate between frames
+                const t = (elapsedTime - frame.time) / (nextFrame.time - frame.time);
+                const lerpedLane = frame.lane + (nextFrame.lane - frame.lane) * t;
+                const lerpedY = frame.y + (nextFrame.y - frame.y) * t;
+                
+                this.playback.mesh.position.x = LANE_POSITIONS[Math.round(lerpedLane)];
+                this.playback.mesh.position.y = lerpedY;
+                
+                // Update ghost animation
+                if (frame.action === 'jumping') {
+                    this.playback.mesh.rotation.x = -0.2;
+                } else if (frame.action === 'ducking') {
+                    this.playback.mesh.scale.y = 0.5;
+                    this.playback.mesh.position.y = lerpedY * 0.5;
+                } else {
+                    this.playback.mesh.rotation.x = 0;
+                    this.playback.mesh.scale.y = 1;
+                }
+            },
+            
+            // Stop ghost playback
+            stopPlayback() {
+                if (this.playback.mesh) {
+                    scene.remove(this.playback.mesh);
+                }
+                
+                this.playback = {
+                    active: false,
+                    data: null,
+                    currentFrame: 0,
+                    mesh: null,
+                    startTime: 0
+                };
+                
+                console.log('👻 Ghost playback stopped');
+            },
+            
+            // Get seeded random value
+            getRandom() {
+                if (!this.seededRandom) {
+                    this.initSeededRandom(this.getDailySeed());
+                }
+                return this.seededRandom.next();
+            }
+        };
+        
+        // Create Supabase table if needed (run once)
+        async function createGhostTable() {
+            // This would be run once to create the table structure
+            // CREATE TABLE subway_runner_ghosts (
+            //     id SERIAL PRIMARY KEY,
+            //     seed INTEGER UNIQUE NOT NULL,
+            //     player_name VARCHAR(50) NOT NULL,
+            //     score INTEGER NOT NULL,
+            //     completed BOOLEAN DEFAULT FALSE,
+            //     frames JSONB NOT NULL,
+            //     obstacles JSONB NOT NULL,
+            //     collectibles JSONB NOT NULL,
+            //     recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            // );
+        }
+        
+        // Update ghost leaderboard display
+        async function updateGhostLeaderboard() {
+            const leaderboardContent = document.getElementById('ghostLeaderboardContent');
+            if (!leaderboardContent) return;
+            
+            try {
+                const ghostData = await GhostSystem.loadDailyGhost();
+                
+                if (ghostData) {
+                    leaderboardContent.innerHTML = `
+                        <div class="ghost-entry">
+                            <span class="ghost-name">${ghostData.player_name}</span>
+                            <span class="ghost-score">${ghostData.score}</span>
+                        </div>
+                        <div class="ghost-status">
+                            ${ghostData.completed ? '✅ Completed Run' : '⏱️ Best Attempt'}
+                        </div>
+                    `;
+                } else {
+                    leaderboardContent.innerHTML = `
+                        <div class="no-ghost">Be the first to set a ghost!</div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error updating ghost leaderboard:', error);
+                leaderboardContent.innerHTML = `
+                    <div class="no-ghost">Ghost data unavailable</div>
+                `;
+            }
+        }
+        
         // Smooth speed system
         let visualSpeed = 0.08;
         let lastFrameTime = 0;
@@ -4878,6 +5306,15 @@
                 updateKiwiUI();
                 console.log('✅ Game started - UI updated after delay');
             }, 100);
+            
+            // Initialize Ghost System
+            GhostSystem.initSeededRandom(GhostSystem.getDailySeed());
+            GhostSystem.startRecording();
+            GhostSystem.startPlayback();
+            console.log('👻 Ghost system initialized with daily seed:', GhostSystem.getDailySeed());
+            
+            // Update ghost leaderboard display
+            updateGhostLeaderboard();
         }
 
         function endGame() {
@@ -4895,6 +5332,10 @@
             // FEATURE 9: Check achievements at game end
             checkAchievements();
             checkDailyChallengeProgress();
+            
+            // Stop Ghost recording
+            GhostSystem.stopRecording();
+            GhostSystem.stopPlayback();
             
             // Update UI state
             UIStateManager.updateUIState('gameover');
@@ -4945,10 +5386,10 @@
         const UIStateManager = {
             // Define which UI elements should be visible in each state
             uiElements: {
-                menu: ['menu', 'highscorePanel', 'instructions', 'versionInfo'],
-                playing: ['score', 'lives', 'kiwiCount', 'broccoliCount', 'levelDisplay'], // Minimal HUD
-                paused: ['score', 'lives', 'kiwiCount', 'broccoliCount', 'pauseMenu'],
-                gameover: ['menu', 'highscorePanel', 'finalScore']
+                menu: ['menu', 'highscorePanel', 'instructions', 'versionInfo', 'ghostLeaderboard'],
+                playing: ['score', 'lives', 'kiwiCount', 'broccoliCount', 'levelDisplay', 'ghostLeaderboard'], // Minimal HUD + ghost
+                paused: ['score', 'lives', 'kiwiCount', 'broccoliCount', 'pauseMenu', 'ghostLeaderboard'],
+                gameover: ['menu', 'highscorePanel', 'finalScore', 'ghostLeaderboard']
             },
             
             // Hide all UI elements
@@ -4960,7 +5401,8 @@
                     'difficultyDisplay', 'perfectStreakDisplay', 'fusionContainer', 'gestureControls',
                     'trickAnnouncer', 'mysteryBoxUI', 'gamblingStats', 'achievementPopup',
                     'rouletteModal', 'rampageDisplay', 'flightDisplay', 'dailyChallengeDisplay',
-                    'scoreTokenDisplay', 'surgeModeDisplay', 'adrenalineStatus', 'altitudeMeter'
+                    'scoreTokenDisplay', 'surgeModeDisplay', 'adrenalineStatus', 'altitudeMeter',
+                    'ghostLeaderboard'
                 ];
                 
                 allElements.forEach(id => {
@@ -4997,6 +5439,7 @@
                 document.getElementById('menu').style.display = 'block';
                 document.getElementById('highscorePanel').style.display = 'block';
                 document.getElementById('versionInfo').style.display = 'block';
+                document.getElementById('ghostLeaderboard').style.display = 'block';
             },
             
             showGameplayUI() {
@@ -5020,6 +5463,9 @@
                     versionInfo.style.opacity = '0.3';
                     versionInfo.style.fontSize = '10px';
                 }
+                
+                // Show ghost leaderboard
+                document.getElementById('ghostLeaderboard').style.display = 'block';
             },
             
             showPausedUI() {
@@ -5030,6 +5476,7 @@
             showGameOverUI() {
                 document.getElementById('menu').style.display = 'block';
                 document.getElementById('highscorePanel').style.display = 'block';
+                document.getElementById('ghostLeaderboard').style.display = 'block';
             }
         };
 
@@ -9497,6 +9944,10 @@
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
+                // Update Ghost System
+                GhostSystem.recordFrame();
+                GhostSystem.updatePlayback();
+                
                 // OPTIMIZED: Frustum culling for obstacles
                 const frustum = new THREE.Frustum();
                 const cameraMatrix = new THREE.Matrix4();
@@ -9709,7 +10160,7 @@
                 const timeSinceLastObstacle = currentTime - gameState.lastObstacleSpawnTime;
                 const forceSpawn = timeSinceLastObstacle > gameState.maxObstacleGap;
                 
-                if (forceSpawn || Math.random() < spawnRate) {
+                if (forceSpawn || GhostSystem.getRandom() < spawnRate) {
                     if (forceSpawn) {
                         console.log(`Force spawning obstacle after ${timeSinceLastObstacle}ms gap`);
                     }
@@ -9725,7 +10176,7 @@
                         const level2Obstacles = ['laser_wall', 'neon_barrier'];
                         
                         let type;
-                        const rand = Math.random();
+                        const rand = GhostSystem.getRandom();
                         
                         // Progressive difficulty for obstacle types
                         // Early game: mostly simple obstacles
@@ -9754,13 +10205,13 @@
                         // Early game balance - make it more interesting
                         if (gameProgress < 0.1) {
                             // First 6 seconds: only easy obstacles
-                            type = Math.random() < 0.7 ? 'spikes' : 'lowbarrier';
-                        } else if (gameState.currentLevel >= 2 && Math.random() < 0.3) {
+                            type = GhostSystem.getRandom() < 0.7 ? 'spikes' : 'lowbarrier';
+                        } else if (gameState.currentLevel >= 2 && GhostSystem.getRandom() < 0.3) {
                             // Level 2 specific obstacles
-                            type = level2Obstacles[Math.floor(Math.random() * level2Obstacles.length)];
+                            type = level2Obstacles[Math.floor(GhostSystem.getRandom() * level2Obstacles.length)];
                         } else if (rand < movingChance) {
                             // Moving obstacles (progressive introduction)
-                            type = movingObstacles[Math.floor(Math.random() * movingObstacles.length)];
+                            type = movingObstacles[Math.floor(GhostSystem.getRandom() * movingObstacles.length)];
                             // Check clustering for moving obstacles
                             if (window.spawnManager.checkClustering('obstacle', type)) {
                                 // Pick a different type
@@ -9769,20 +10220,23 @@
                         } else if (rand < movingChance + complexChance) {
                             // Complex static obstacles (hurdleset, highbarrier)
                             const complexObstacles = ['hurdleset', 'highbarrier'];
-                            type = complexObstacles[Math.floor(Math.random() * complexObstacles.length)];
+                            type = complexObstacles[Math.floor(GhostSystem.getRandom() * complexObstacles.length)];
                         } else if (rand < movingChance + complexChance + 0.3) {
                             // Jump obstacles (basic)
-                            type = jumpObstacles[Math.floor(Math.random() * jumpObstacles.length)];
+                            type = jumpObstacles[Math.floor(GhostSystem.getRandom() * jumpObstacles.length)];
                         } else if (rand < movingChance + complexChance + 0.6) {
                             // Duck obstacles (basic)
-                            type = duckObstacles[Math.floor(Math.random() * duckObstacles.length)];
+                            type = duckObstacles[Math.floor(GhostSystem.getRandom() * duckObstacles.length)];
                         } else {
                             // Flexible obstacles (easiest)
-                            type = flexibleObstacles[Math.floor(Math.random() * flexibleObstacles.length)];
+                            type = flexibleObstacles[Math.floor(GhostSystem.getRandom() * flexibleObstacles.length)];
                         }
                         
-                        const lane = Math.floor(Math.random() * 3);
+                        const lane = Math.floor(GhostSystem.getRandom() * 3);
                         createObstacle(type, lane, spawnZ);
+                        
+                        // Record obstacle for ghost
+                        GhostSystem.recordObstacle(type, lane, spawnZ);
                         
                         // Update last obstacle spawn time for guaranteed spawn timer
                         gameState.lastObstacleSpawnTime = currentTime;
@@ -9791,7 +10245,7 @@
                         window.spawnManager.registerSpawn('obstacle', type, spawnZ);
                         
                         // Spawn mystery box with obstacle (1% chance, max 2 per game)
-                        if (gameState.mysteryBoxesSpawned < 2 && Math.random() < 0.01) {
+                        if (gameState.mysteryBoxesSpawned < 2 && GhostSystem.getRandom() < 0.01) {
                             spawnMysteryBox();
                         }
                     }
@@ -9827,7 +10281,7 @@
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCollectibleRate = (baseCollectibleRate + (maxCollectibleRate - baseCollectibleRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
-                if (Math.random() < progressiveCollectibleRate) {
+                if (GhostSystem.getRandom() < progressiveCollectibleRate) {
                     // Check spawn manager for safe position
                     const spawnZ = window.spawnManager.getSafeSpawnZ('collectible');
                     
@@ -9836,7 +10290,7 @@
                     }
                     // Progressive kiwi pattern complexity
                     let pattern;
-                    const patternRand = Math.random();
+                    const patternRand = GhostSystem.getRandom();
                     
                     if (gameProgress < 0.3) {
                         // Early game: mostly single kiwis
@@ -9887,9 +10341,9 @@
                         
                         // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
-                            isKiwi = Math.random() < 0.85; // Strong bias toward kiwis
+                            isKiwi = GhostSystem.getRandom() < 0.85; // Strong bias toward kiwis
                         } else {
-                            isKiwi = Math.random() < 0.25; // Strong bias toward broccolis
+                            isKiwi = GhostSystem.getRandom() < 0.25; // Strong bias toward broccolis
                         }
                     }
                     
@@ -9906,7 +10360,7 @@
                         }
                         
                         if (safeLanes.length > 0) {
-                            const lane = safeLanes[Math.floor(Math.random() * safeLanes.length)];
+                            const lane = safeLanes[Math.floor(GhostSystem.getRandom() * safeLanes.length)];
                             
                             // Check clustering before spawning
                             const collectibleType = isKiwi ? 'kiwi' : 'broccoli';
@@ -9914,9 +10368,11 @@
                                 if (isKiwi) {
                                     const kiwi = createSimpleKiwi(lane, spawnZ);
                                     gameState.kiwis.push(kiwi);
+                                    GhostSystem.recordCollectible('kiwi', lane, spawnZ);
                                 } else {
                                     const broccoli = createBroccoli(lane, spawnZ, 'single');
                                     gameState.broccolis.push(broccoli);
+                                    GhostSystem.recordCollectible('broccoli', lane, spawnZ);
                                 }
                                 window.spawnManager.registerSpawn('collectible', collectibleType, spawnZ);
                             }
@@ -9938,7 +10394,7 @@
                             const selectedLanes = [];
                             
                             // Shuffle and select up to 2 lanes
-                            const shuffledLanes = [...safeLanes].sort(() => Math.random() - 0.5);
+                            const shuffledLanes = [...safeLanes].sort(() => GhostSystem.getRandom() - 0.5);
                             for (let i = 0; i < maxLanes; i++) {
                                 selectedLanes.push(shuffledLanes[i]);
                             }
@@ -9960,7 +10416,7 @@
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.85; // 85% kiwi, 15% broccoli
+                                    spawnKiwi = GhostSystem.getRandom() < 0.85; // 85% kiwi, 15% broccoli
                                 }
                                 
                                 console.log(`🎯 LINE BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -9981,7 +10437,7 @@
                     } else if (pattern === 'arc') {
                         // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
                         // FIXED: Arc spawning with proper spacing behind obstacles
-                        const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
+                        const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(GhostSystem.getRandom() * 2), Math.floor(GhostSystem.getRandom() * 2) + 1];
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, spawnZ));
                         
                         if (safeLanes.length >= 2) {  // Only spawn arc if at least 2 safe lanes
@@ -10006,7 +10462,7 @@
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
-                                    spawnKiwi = Math.random() < 0.85; // 85% kiwi, 15% broccoli
+                                    spawnKiwi = GhostSystem.getRandom() < 0.85; // 85% kiwi, 15% broccoli
                                 }
                                 
                                 console.log(`🌀 ARC BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
@@ -10016,10 +10472,12 @@
                                     const kiwi = createSimpleKiwi(lane, spawnZ - (index * spacing));
                                     gameState.kiwis.push(kiwi);
                                     window.spawnManager.registerSpawn('collectible', 'kiwi', spawnZ - (index * spacing));
+                                    GhostSystem.recordCollectible('kiwi', lane, spawnZ - (index * spacing));
                                 } else {
                                     const broccoli = createBroccoli(lane, spawnZ - (index * spacing), 'arc');
                                     gameState.broccolis.push(broccoli);
                                     window.spawnManager.registerSpawn('collectible', 'broccoli', spawnZ - (index * spacing));
+                                    GhostSystem.recordCollectible('broccoli', lane, spawnZ - (index * spacing));
                                 }
                             });
                         }
@@ -10816,6 +11274,9 @@
         console.log('Starting game initialization...');
         init();
         initializeFusionSystem();
+        
+        // Initialize ghost leaderboard display on page load
+        updateGhostLeaderboard();
         
         // ==================== TRICK SYSTEM ====================
         
