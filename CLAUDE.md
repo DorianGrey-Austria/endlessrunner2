@@ -25,8 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.1.1-MINIMAL-UI (Minimalist UI Design - Clean Gameplay Experience)
-- **Previous**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
+- **Latest**: 4.1.2-GAMEPLAY-FIX (Jump Physics Fix + Exciting Early Game Spawn)
+- **Previous**: 4.1.1-MINIMAL-UI (Minimalist UI Design - Clean Gameplay Experience)
+- **Before**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
 - **Before**: 4.0.8-TURBO (Massive Performance Optimization + Better Graphics)
 - **Before**: 4.0.7-SMART (Intelligent Spawn Distribution System)
 - **Before**: 4.0.6-PURE (Pure Collectibles Only)
@@ -41,6 +42,7 @@ This is a collection of endless runner game projects built with different techno
 4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
 
 ### **VERSION HISTORY LOG**
+- 4.1.2-GAMEPLAY-FIX: Jump Physics Fix (epsilon landing, 5x spawn rate, guaranteed spawns, exciting early game)
 - 4.1.1-MINIMAL-UI: Minimalist UI Design (UI state system, clean HUD, all info in menu, 100% gameplay focus)
 - 4.1.0-LEVELS: Level System Implementation (2 levels, Neon Night Run, smooth transitions, new obstacles)
 - 4.0.8-TURBO: Massive Performance Optimization (material cache, object pooling, frustum culling, 50% less draw calls)

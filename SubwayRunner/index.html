@@ -2899,7 +2899,9 @@
             playerY: 0,
             jumpVelocity: 0,
             jumpStartTime: 0,  // BUGFIX: Track jump start time for safety
-            maxJumpDuration: 2000, // Maximum 2 seconds jump duration
+            maxJumpDuration: 1200, // Maximum 1.2 seconds jump duration (reduced for better physics)
+            lastObstacleSpawnTime: 0, // Track time since last obstacle spawn
+            maxObstacleGap: 3000, // Maximum 3 seconds between obstacles
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -4602,6 +4604,7 @@
             gameState.timeScale = 1.0;
             gameState.cameraShakeIntensity = 0;
             gameState.slowMotionActive = false;
+            gameState.lastObstacleSpawnTime = Date.now(); // Reset spawn timer
             
             // Reset level system
             gameState.currentLevel = 1;
@@ -4998,7 +5001,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.1.1-MINIMAL-UI<br>
+                    Version: 4.1.2-GAMEPLAY-FIX<br>
                     🎯 Pure Collectibles Only<br>
                     🥝 Kiwis + Broccolis + 2 Mystery Boxes
                 `;
@@ -5126,8 +5129,7 @@
                         const hasRocketMode = gameState.activeFusion === 'shield_speedboost';
                         if (gameState.playerAction === 'running' || hasRocketMode) {
                             gameState.playerAction = 'jumping';
-                            gameState.jumpVelocity = 10;
-                            gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time // Höherer Sprung
+                            gameState.jumpVelocity = 12; // Increased from 10 for better feel
                             gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                             
                             // Audio & Visual Feedback with speed dynamics
@@ -9279,11 +9281,20 @@
                         gameState.playerAction = 'running';
                     }
                     
-                    // Landing with safety check
-                    if (gameState.playerY <= 0) {
+                    // Landing with epsilon threshold for floating point precision
+                    if (gameState.playerY <= 0.1) {  // Epsilon threshold to prevent floating
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
+                        
+                        // Landing Audio & Visual
+                        audioManager.play('land');
+                    }
+                    
+                    // Additional velocity dampening near ground
+                    if (gameState.playerY < 0.5 && gameState.jumpVelocity < 0) {
+                        // Prevent excessive downward velocity near ground
+                        gameState.jumpVelocity = Math.max(gameState.jumpVelocity, -10);
                     }
                     
                     // BUGFIX: Enhanced safety check - trigger earlier at Y < -2
@@ -9423,8 +9434,16 @@
                         obstacleHistory: [], // Track last 3 obstacle types
                         collectibleHistory: [], // Track last 5 collectible spawns
                         
-                        // Calculate dynamic spawn distance based on speed
+                        // Calculate dynamic spawn distance based on speed and game progress
                         getSpawnDistance: function(baseDistance, currentSpeed) {
+                            const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime);
+                            
+                            // Reduced distances for early game excitement
+                            if (gameProgress < 0.2) {
+                                // Early game: Much smaller gaps for immediate action
+                                baseDistance = Math.min(20, baseDistance * 0.5);
+                            }
+                            
                             const speedFactor = Math.max(1, currentSpeed / 100);
                             const minDistance = baseDistance * speedFactor;
                             const reactionBuffer = Math.max(0, (currentSpeed - 100) * 0.5);
@@ -9514,21 +9533,21 @@
                 let baseSpawnRate, maxSpawnRate;
                 
                 if (gameProgress < 0.2) {
-                    // Phase 1: Very gentle start (0-12s)
-                    baseSpawnRate = 0.003;
-                    maxSpawnRate = 0.008;
+                    // Phase 1: EXCITING START (0-12s) - Much higher spawn rate!
+                    baseSpawnRate = 0.015;  // Was 0.003 - 5x increase!
+                    maxSpawnRate = 0.025;   // Was 0.008 - 3x increase!
                 } else if (gameProgress < 0.5) {
-                    // Phase 2: Moderate challenge (12-30s)
-                    baseSpawnRate = 0.008;
-                    maxSpawnRate = 0.015;
+                    // Phase 2: Building challenge (12-30s)
+                    baseSpawnRate = 0.020;  // Was 0.008
+                    maxSpawnRate = 0.035;   // Was 0.015
                 } else if (gameProgress < 0.8) {
-                    // Phase 3: Challenging (30-48s)
-                    baseSpawnRate = 0.012;
-                    maxSpawnRate = 0.020;
+                    // Phase 3: Intense action (30-48s)
+                    baseSpawnRate = 0.025;  // Was 0.012
+                    maxSpawnRate = 0.045;   // Was 0.020
                 } else {
-                    // Phase 4: Extreme finale (48-60s)
-                    baseSpawnRate = 0.015;
-                    maxSpawnRate = 0.025;
+                    // Phase 4: Maximum chaos (48-60s)
+                    baseSpawnRate = 0.030;  // Was 0.015
+                    maxSpawnRate = 0.055;   // Was 0.025
                 }
                 
                 const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
@@ -9540,7 +9559,7 @@
                 
                 // Speed multiplier adjusted for combo potential
                 const speedRatio = gameState.speed / gameState.maxSpeed;
-                const spawnSpeedMultiplier = 1 + speedRatio * 0.2; // Gentler speed scaling
+                const spawnSpeedMultiplier = 1 + speedRatio * 0.5; // Stronger speed influence for better scaling
                 
                 let spawnRate = progressiveSpawnRate * spawnSpeedMultiplier;
                 
@@ -9568,7 +9587,14 @@
                     spawnRate = 0;
                 }
                 
-                if (Math.random() < spawnRate) {
+                // Guaranteed spawn timer - ensure obstacles spawn regularly
+                const timeSinceLastObstacle = currentTime - gameState.lastObstacleSpawnTime;
+                const forceSpawn = timeSinceLastObstacle > gameState.maxObstacleGap;
+                
+                if (forceSpawn || Math.random() < spawnRate) {
+                    if (forceSpawn) {
+                        console.log(`Force spawning obstacle after ${timeSinceLastObstacle}ms gap`);
+                    }
                     // Check if we can spawn using the spawn manager
                     const spawnZ = window.spawnManager.getSafeSpawnZ('obstacle');
                     
@@ -9639,6 +9665,9 @@
                         
                         const lane = Math.floor(Math.random() * 3);
                         createObstacle(type, lane, spawnZ);
+                        
+                        // Update last obstacle spawn time for guaranteed spawn timer
+                        gameState.lastObstacleSpawnTime = currentTime;
                         
                         // Register the spawn
                         window.spawnManager.registerSpawn('obstacle', type, spawnZ);
