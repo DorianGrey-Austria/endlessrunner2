@@ -3106,6 +3106,104 @@
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
+                
+                // ==================== PERFORMANCE OPTIMIZATION SYSTEM v4.0.8 ====================
+                // Global material cache to reduce draw calls
+                window.materialCache = {
+                    // Basic materials that can be reused
+                    basic: {
+                        red: new THREE.MeshLambertMaterial({ color: 0xff0000 }),
+                        blue: new THREE.MeshLambertMaterial({ color: 0x0000ff }),
+                        green: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
+                        yellow: new THREE.MeshLambertMaterial({ color: 0xffff00 }),
+                        orange: new THREE.MeshLambertMaterial({ color: 0xffa500 }),
+                        purple: new THREE.MeshLambertMaterial({ color: 0x800080 }),
+                        gray: new THREE.MeshLambertMaterial({ color: 0x808080 }),
+                        darkGray: new THREE.MeshLambertMaterial({ color: 0x404040 }),
+                        brown: new THREE.MeshLambertMaterial({ color: 0x8B4513 }),
+                        black: new THREE.MeshLambertMaterial({ color: 0x000000 }),
+                        white: new THREE.MeshLambertMaterial({ color: 0xffffff })
+                    },
+                    // Emissive materials for glowing effects
+                    emissive: {
+                        gold: new THREE.MeshLambertMaterial({ 
+                            color: 0xFFD700, 
+                            emissive: 0xFFD700, 
+                            emissiveIntensity: 0.3 
+                        }),
+                        cyan: new THREE.MeshLambertMaterial({ 
+                            color: 0x00ffff, 
+                            emissive: 0x00ffff, 
+                            emissiveIntensity: 0.5 
+                        })
+                    },
+                    // Particle materials
+                    particle: {
+                        sparkle: new THREE.MeshBasicMaterial({ 
+                            color: 0xffffaa, 
+                            transparent: true, 
+                            opacity: 0.8 
+                        })
+                    },
+                    // Shared geometries
+                    geometries: {
+                        box: new THREE.BoxGeometry(1, 1, 1),
+                        sphere: new THREE.SphereGeometry(0.5, 8, 6), // Low poly for performance
+                        cylinder: new THREE.CylinderGeometry(0.5, 0.5, 1, 8),
+                        plane: new THREE.PlaneGeometry(1, 1)
+                    }
+                };
+                
+                // Performance monitoring
+                window.performanceMonitor = {
+                    fps: 60,
+                    drawCalls: 0,
+                    triangles: 0,
+                    lastCheck: performance.now(),
+                    frameCount: 0,
+                    
+                    update: function() {
+                        this.frameCount++;
+                        const now = performance.now();
+                        if (now - this.lastCheck > 1000) {
+                            this.fps = Math.round(this.frameCount * 1000 / (now - this.lastCheck));
+                            this.frameCount = 0;
+                            this.lastCheck = now;
+                            
+                            // Auto-adjust quality based on FPS
+                            if (this.fps < 30 && renderer.shadowMap.enabled) {
+                                renderer.shadowMap.enabled = false;
+                                console.log('🔧 Disabled shadows for performance');
+                            } else if (this.fps > 50 && !renderer.shadowMap.enabled) {
+                                renderer.shadowMap.enabled = true;
+                                console.log('✨ Re-enabled shadows');
+                            }
+                        }
+                    }
+                };
+                
+                // Object pooling system
+                window.objectPool = {
+                    particles: [],
+                    obstacles: [],
+                    
+                    getParticle: function() {
+                        if (this.particles.length > 0) {
+                            return this.particles.pop();
+                        }
+                        // Create new particle if pool is empty
+                        const particle = new THREE.Mesh(
+                            materialCache.geometries.sphere,
+                            materialCache.particle.sparkle
+                        );
+                        return particle;
+                    },
+                    
+                    returnParticle: function(particle) {
+                        particle.visible = false;
+                        this.particles.push(particle);
+                    }
+                };
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -4516,7 +4614,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.0.7-SMART<br>
+                    Version: 4.0.8-TURBO<br>
                     🎯 Pure Collectibles Only<br>
                     🥝 Kiwis + Broccolis + 2 Mystery Boxes
                 `;
@@ -4787,19 +4885,25 @@
             // Apply performance multiplier
             particleCount = Math.max(1, Math.floor(particleCount * particleMultiplier));
             
-            // PERFORMANCE FIX: Use shared geometry and materials for particles
-            const sharedGeometry = new THREE.SphereGeometry(size, 6, 6);
-            const sharedMaterial = new THREE.MeshBasicMaterial({ 
-                color: color,
-                transparent: true
-            });
-            
+            // OPTIMIZED: Use object pool and material cache
             const particles = new THREE.Group();
             particles.userData.isParticle = true;
             particles.userData.createdAt = Date.now();
             
+            // Get material from cache or create if needed
+            const materialKey = `particle_${color.toString(16)}`;
+            if (!materialCache.particle[materialKey]) {
+                materialCache.particle[materialKey] = new THREE.MeshBasicMaterial({ 
+                    color: color,
+                    transparent: true
+                });
+            }
+            
             for (let i = 0; i < particleCount; i++) {
-                const particle = new THREE.Mesh(sharedGeometry, sharedMaterial);
+                const particle = objectPool.getParticle();
+                particle.material = materialCache.particle[materialKey];
+                particle.scale.setScalar(size * 10); // Adjust for base sphere size
+                particle.visible = true;
                 
                 particle.position.copy(position);
                 particle.velocity = new THREE.Vector3(
@@ -4846,6 +4950,8 @@
                     
                     if (particle.life <= 0) {
                         particles.remove(particle);
+                        // Return particle to pool
+                        objectPool.returnParticle(particle);
                     }
                 });
                 
@@ -6001,26 +6107,40 @@
             const stemHeight = 0.4;
             const headRadius = 0.4;
             
-            // Stiel (Stamm)
-            const stemGeometry = new THREE.CylinderGeometry(stemRadius, stemRadius * 1.2, stemHeight, 8);
-            const stemMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x4A6741,  // Dunkles Grün für Stiel
-                emissive: 0x1A241A
-            });
-            const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
+            // OPTIMIZED: Use cached materials and geometries
+            if (!materialCache.broccoli) {
+                materialCache.broccoli = {
+                    stem: new THREE.MeshLambertMaterial({ 
+                        color: 0x4A6741,  // Dunkles Grün für Stiel
+                        emissive: 0x1A241A
+                    }),
+                    floret: new THREE.MeshLambertMaterial({ 
+                        color: 0x228B22,  // Helleres Grün für Florettes
+                        emissive: 0x0F3F0F,  // Grünes Glühen
+                        roughness: 0.7
+                    })
+                };
+                
+                // Cache stem geometry
+                materialCache.geometries.broccoliStem = new THREE.CylinderGeometry(stemRadius, stemRadius * 1.2, stemHeight, 8);
+            }
+            
+            // Use cached materials
+            const broccoliStem = new THREE.Mesh(
+                materialCache.geometries.broccoliStem,
+                materialCache.broccoli.stem
+            );
             broccoliStem.position.y = 1.0;
-            broccoliStem.castShadow = true;
+            broccoliStem.castShadow = false; // Disable for performance
             broccoliGroup.add(broccoliStem);
             
-            // Kopf (florettes) - mehrere kleine Kugeln
-            for (let i = 0; i < 8; i++) {
-                const floretGeometry = new THREE.SphereGeometry(0.12 + Math.random() * 0.08, 8, 6);
-                const floretMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x228B22,  // Helleres Grün für Florettes
-                    emissive: 0x0F3F0F,  // Grünes Glühen
-                    roughness: 0.7
-                });
-                const floret = new THREE.Mesh(floretGeometry, floretMaterial);
+            // Kopf (florettes) - reduced to 5 for performance
+            for (let i = 0; i < 5; i++) {
+                const floret = new THREE.Mesh(
+                    materialCache.geometries.sphere,
+                    materialCache.broccoli.floret
+                );
+                floret.scale.setScalar(0.3 + Math.random() * 0.2);
                 
                 // Zufällige Position um den Kopf
                 const angle = (i / 8) * Math.PI * 2;
@@ -6030,7 +6150,7 @@
                     1.25 + Math.random() * 0.2,
                     Math.sin(angle) * radius
                 );
-                floret.castShadow = true;
+                floret.castShadow = false; // Disable for performance
                 broccoliGroup.add(floret);
             }
             
@@ -7776,39 +7896,52 @@
             const kiwiRadiusY = 0.35;  // Taller height 
             const kiwiRadiusZ = 0.2;   // Smaller depth
             
-            // Half ellipsoid for kiwi body
-            const kiwiGeometry = new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
-            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
-            const kiwiMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x8B6914,
-                transparent: true,
-                opacity: 0.9
-            });
+            // OPTIMIZED: Use cached materials and geometries
+            // Create kiwi-specific materials if not cached
+            if (!materialCache.kiwi) {
+                materialCache.kiwi = {
+                    skin: new THREE.MeshBasicMaterial({ 
+                        color: 0x8B6914,
+                        transparent: true,
+                        opacity: 0.9
+                    }),
+                    flesh: new THREE.MeshBasicMaterial({ 
+                        color: 0x90EE90,
+                        transparent: true,
+                        opacity: 0.95
+                    }),
+                    core: new THREE.MeshBasicMaterial({ 
+                        color: 0xF5F5DC
+                    })
+                };
+                
+                // Cache geometries too
+                materialCache.geometries.kiwiBody = new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
+                materialCache.geometries.kiwiBody.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);
+                materialCache.geometries.kiwiFlesh = new THREE.CircleGeometry(kiwiRadiusX * 0.9, 8);
+                materialCache.geometries.kiwiCore = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 6);
+            }
             
-            const kiwiBody = new THREE.Mesh(kiwiGeometry, kiwiMaterial);
+            // Use cached geometries and materials
+            const kiwiBody = new THREE.Mesh(
+                materialCache.geometries.kiwiBody,
+                materialCache.kiwi.skin
+            );
             kiwiBody.rotation.x = -Math.PI / 2;
             kiwiGroup.add(kiwiBody);
             
-            // Simple flesh ellipse
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.9, 8);
-            const fleshMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x90EE90,
-                transparent: true,
-                opacity: 0.95
-            });
-            
-            const flesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
+            const flesh = new THREE.Mesh(
+                materialCache.geometries.kiwiFlesh,
+                materialCache.kiwi.flesh
+            );
             flesh.rotation.x = -Math.PI / 2;
             flesh.position.y = 0.01;
             kiwiGroup.add(flesh);
             
-            // Simple white core
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 6);
-            const coreMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xF5F5DC
-            });
-            
-            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            const core = new THREE.Mesh(
+                materialCache.geometries.kiwiCore,
+                materialCache.kiwi.core
+            );
             core.rotation.x = -Math.PI / 2;
             core.position.y = 0.02;
             kiwiGroup.add(core);
@@ -8672,6 +8805,11 @@
         function animate() {
             requestAnimationFrame(animate);
             
+            // Update performance monitor
+            if (window.performanceMonitor) {
+                performanceMonitor.update();
+            }
+            
             // Calculate delta time for smooth movement
             const currentTime = performance.now();
             const deltaTime = currentTime - lastFrameTime;
@@ -8789,10 +8927,23 @@
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
-                // Move obstacles with smooth speed
+                // OPTIMIZED: Frustum culling for obstacles
+                const frustum = new THREE.Frustum();
+                const cameraMatrix = new THREE.Matrix4();
+                cameraMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                frustum.setFromProjectionMatrix(cameraMatrix);
+                
+                // Move obstacles with smooth speed and frustum culling
                 obstacles.forEach((obstacle, index) => {
                     obstacle.mesh.position.z += visualSpeed * gameState.timeScaleFactor;
                     obstacle.z = obstacle.mesh.position.z;
+                    
+                    // Hide objects outside camera view
+                    if (obstacle.z < -60 || obstacle.z > 15) {
+                        obstacle.mesh.visible = false;
+                    } else {
+                        obstacle.mesh.visible = true;
+                    }
                     
                     // Check if obstacle just passed the player (perfect avoidance)
                     if (obstacle.z > 2 && obstacle.z < 3 && !obstacle.passedPlayer) {
@@ -9649,6 +9800,41 @@
                     updateUI();
                     lastUIUpdateTime = currentTime;
                 }
+            }
+            
+            // OPTIMIZED: Simple bloom effect when FPS is good
+            if (performanceMonitor.fps > 45 && !window.simpleBloom) {
+                // Create simple bloom effect
+                window.simpleBloom = {
+                    enabled: true,
+                    renderTarget: new THREE.WebGLRenderTarget(
+                        window.innerWidth / 2, 
+                        window.innerHeight / 2
+                    )
+                };
+            }
+            
+            if (window.simpleBloom && window.simpleBloom.enabled && performanceMonitor.fps > 45) {
+                // Render bright parts only
+                scene.traverse((obj) => {
+                    if (obj.material && obj.material.emissive) {
+                        obj.userData.originalMaterial = obj.material;
+                        obj.material = materialCache.basic.black;
+                    }
+                });
+                
+                renderer.setRenderTarget(window.simpleBloom.renderTarget);
+                renderer.render(scene, camera);
+                
+                // Restore materials
+                scene.traverse((obj) => {
+                    if (obj.userData.originalMaterial) {
+                        obj.material = obj.userData.originalMaterial;
+                        delete obj.userData.originalMaterial;
+                    }
+                });
+                
+                renderer.setRenderTarget(null);
             }
             
             renderer.render(scene, camera);
