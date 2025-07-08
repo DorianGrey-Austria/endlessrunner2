@@ -25,8 +25,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.0.6-PURE (Pure Collectibles Only)
-- **Previous**: 4.0.5-BALANCED (Perfect Balance & Realistic Kiwis)
+- **Latest**: 4.0.7-SMART (Intelligent Spawn Distribution System)
+- **Previous**: 4.0.6-PURE (Pure Collectibles Only)
+- **Before**: 4.0.5-BALANCED (Perfect Balance & Realistic Kiwis)
 - **Before**: 4.0.4-PERFORMANCE (High-Performance Optimizations)
 - **Before**: 4.0.0 (SUPER FUN EDITION - 10 Mega-Features von 5 Sub-Agents implementiert)
 
@@ -37,6 +38,7 @@ This is a collection of endless runner game projects built with different techno
 4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
 
 ### **VERSION HISTORY LOG**
+- 4.0.7-SMART: Intelligent Spawn Distribution System (speed-adaptive spacing, anti-clustering, early game boost)
 - 4.0.6-PURE: Pure Collectibles Only (removed all power-ups, fixed spacing)
 - 4.0.5-BALANCED: Perfect Balance & Realistic Kiwis (limited spawns, bigger kiwis)
 - 4.0.4-PERFORMANCE: High-Performance Optimizations (+300% speed boost)
@@ -52,7 +54,7 @@ This is a collection of endless runner game projects built with different techno
 - Nutzer sollen immer die neueste Version testen können
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
 
-### **VERSION HISTORY LOG**
+### **EXTENDED VERSION HISTORY LOG**
 - 4.0.2: STABLE EDITION - Production-ready (Enterprise security, DevOps monitoring, feature flags, auto-rollback, performance tracking, error recovery)
 - 4.0.1: HOTFIX - Critical production errors fixed (syntax error, CSP policy, function access)
 - 4.0.0: SUPER FUN EDITION - 10 Mega-Features (only 3/10 fully implemented: Power-Up Fusion, Adrenaline Mode, Obstacle Destruction)
@@ -250,7 +252,7 @@ npm run inspector    # Run MCP inspector
 - **Development Port**: 8001 (python -m http.server)
 - **Production**: Single HTML file deployment (index.html)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 3.5.0 with tiered bonus system
+- **Current Version**: 4.0.6-PURE (Pure Collectibles Only)
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 
 ### Endless3D
