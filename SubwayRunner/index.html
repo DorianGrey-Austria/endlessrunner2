@@ -278,6 +278,63 @@
             60% { transform: translateY(-10px); }
         }
         
+        /* Event Notification Styles */
+        .event-notification {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            animation: notificationFade 1s ease-out forwards;
+            pointer-events: none;
+            position: absolute;
+            white-space: nowrap;
+        }
+        
+        .event-notification.small {
+            font-size: 24px;
+        }
+        
+        .event-notification.large {
+            font-size: 48px;
+        }
+        
+        @keyframes notificationFade {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) translateY(20px);
+            }
+            20% {
+                opacity: 1;
+                transform: scale(1.1) translateY(0);
+            }
+            30% {
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+        }
+        
+        /* Visual HUD Styles */
+        .life-heart {
+            transition: opacity 0.3s;
+        }
+        
+        .life-heart.lost {
+            opacity: 0.2;
+        }
+        
+        .progress-dot.filled {
+            background: rgba(255,215,0,1) !important;
+            box-shadow: 0 0 4px rgba(255,215,0,0.8);
+        }
+        
+        .progress-dot.filled-broccoli {
+            background: rgba(139,195,74,1) !important;
+            box-shadow: 0 0 4px rgba(139,195,74,0.8);
+        }
+        
         /* Near Miss and Milestone displays positioning */
         #nearMissDisplay {
             position: absolute;
@@ -1067,6 +1124,105 @@
             bottom: 0;
             transition: height 0.2s ease;
         }
+        
+        /* Event Notification Styles */
+        #eventNotifications {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 500;
+        }
+        
+        .event-notification {
+            position: absolute;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,255,0.3);
+            white-space: nowrap;
+            opacity: 0;
+            animation: notificationPop 1s ease-out;
+        }
+        
+        .event-notification.normal {
+            font-size: 24px;
+        }
+        
+        .event-notification.large {
+            font-size: 36px;
+        }
+        
+        @keyframes notificationPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) translateY(20px);
+            }
+            20% {
+                opacity: 1;
+                transform: scale(1.2) translateY(-10px);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            90% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+        }
+        
+        /* Visual-only progress indicators */
+        .progress-dot {
+            width: 6px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .progress-dot.filled {
+            background: #FFD700;
+            box-shadow: 0 0 6px #FFD700;
+            transform: scale(1.2);
+        }
+        
+        .progress-dot.filled-broccoli {
+            background: #8BC34A;
+            box-shadow: 0 0 6px #8BC34A;
+            transform: scale(1.2);
+        }
+        
+        .life-heart {
+            transition: all 0.3s;
+        }
+        
+        .life-heart.lost {
+            opacity: 0.3;
+            filter: grayscale(100%);
+            transform: scale(0.8);
+        }
+        
+        /* Hide all permanent text displays during gameplay */
+        #powerUpDisplay,
+        #dailyChallengeDisplay,
+        #perfectStreakDisplay,
+        #scoreTokenDisplay,
+        #rampageDisplay,
+        #flightDisplay,
+        #skillComboDisplay,
+        #achievementPopup {
+            display: none !important;
+        }
+        
+        /* Hide permanent UI text elements */
+        #currentEnvironment,
+        #difficultyLevel {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1075,8 +1231,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.0.6-PURE<br>
-            📅 07.07.2025
+            🚀 V4.1.3-UI-PURE<br>
+            📅 08.07.2025
         </div>
         
         <!-- DevOps Monitoring Panel -->
@@ -1121,14 +1277,14 @@
             <div class="altitude-indicator" id="altitudeIndicator"></div>
         </div>
         
-        <!-- Perfect Streak Display -->
-        <div id="perfectStreakDisplay">
+        <!-- Perfect Streak Display (Hidden - using notifications only) -->
+        <div id="perfectStreakDisplay" style="display: none;">
             <div>PERFECT STREAK: <span id="streakCount">0</span></div>
             <div id="adrenalineStatus" style="font-size: 18px; color: #FFD700;"></div>
         </div>
         
-        <!-- Power-Up Fusion UI -->
-        <div id="fusionContainer">
+        <!-- Power-Up Fusion UI (Hidden - using notifications only) -->
+        <div id="fusionContainer" style="display: none;">
             <div class="fusion-slot" id="fusionSlot1" data-slot="1"></div>
             <button class="fusion-combine-btn" id="fusionCombineBtn">⚡</button>
             <div class="fusion-slot" id="fusionSlot2" data-slot="2"></div>
@@ -1150,85 +1306,80 @@
         <!-- Canvas for gesture preview -->
         <canvas id="gestureCanvas"></canvas>
         
-        <div id="ui">
-            <div style="font-size: 36px; font-weight: bold; text-shadow: 3px 3px 6px rgba(0,0,0,0.8);"><span id="score">0</span></div>
-            <div style="font-size: 28px; margin-top: 10px;">❤️ <span id="lives">3</span></div>
-            <div id="levelDisplay" style="font-size: 20px; color: #87CEEB; margin-top: 15px;">Level 1</div>
-            
-            <!-- Minimal Collectibles Counter -->
-            <div id="collectiblesCounter" style="font-size: 24px; color: #FFD700; font-weight: bold; margin-top: 20px;">
-                <div>🥝 <span id="kiwiCount">0</span></div>
-                <div style="margin-top: 5px;">🥦 <span id="broccoliCount">0</span></div>
-            </div>
-            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
-                COMBO x<span id="comboMultiplier">1</span>!
+        <!-- Minimal Visual HUD - NO TEXT during gameplay -->
+        <div id="ui" style="opacity: 0.7;">
+            <!-- Score Bar (visual only) -->
+            <div id="scoreBar" style="width: 200px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-bottom: 10px;">
+                <div id="scoreProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FFD700, #FF6B35); border-radius: 2px; transition: width 0.3s;"></div>
             </div>
             
-            <!-- NEW: Near Miss Display -->
-            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 18px; font-weight: bold;">
-                NEAR MISS! x<span id="nearMissCount">1</span>
-                <div style="font-size: 14px;">+<span id="nearMissBonus">50</span> Bonus!</div>
+            <!-- Lives (hearts only, no text) -->
+            <div id="livesDisplay" style="font-size: 20px; margin-bottom: 10px;">
+                <span class="life-heart">❤️</span>
+                <span class="life-heart">❤️</span>
+                <span class="life-heart">❤️</span>
             </div>
             
-            <!-- NEW: Milestone Display -->
-            <div id="milestoneDisplay" style="color: #00FF00; display: none; font-size: 24px; font-weight: bold; animation: bounce 1s;">
-                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m!</span>
-                <div style="font-size: 16px;">+<span id="milestoneBonus">500</span> Punkte!</div>
+            <!-- Collectibles Progress (dots only) -->
+            <div id="collectiblesDisplay" style="display: flex; gap: 15px; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 16px;">🥝</span>
+                    <div id="kiwiProgress" style="display: flex; gap: 2px;">
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(255,215,0,0.3); border-radius: 50%;"></span>
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(255,215,0,0.3); border-radius: 50%;"></span>
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(255,215,0,0.3); border-radius: 50%;"></span>
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(255,215,0,0.3); border-radius: 50%;"></span>
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(255,215,0,0.3); border-radius: 50%;"></span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 16px;">🥦</span>
+                    <div id="broccoliProgress" style="display: flex; gap: 2px;">
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(139,195,74,0.3); border-radius: 50%;"></span>
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(139,195,74,0.3); border-radius: 50%;"></span>
+                        <span class="progress-dot" style="width: 6px; height: 6px; background: rgba(139,195,74,0.3); border-radius: 50%;"></span>
+                    </div>
+                </div>
             </div>
             
-            <!-- NEW: Score Multiplier Display -->
-            <div id="multiplierDisplay" style="color: #FF1493; font-size: 16px; font-weight: bold; margin-top: 5px;">
-                Multiplikator: x<span id="currentMultiplier">1.0</span>
-            </div>
-            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
-                <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
-            </div>
-            
-            <!-- NEW: Skill Combo UI -->
-            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <span id="skillComboIcon">🔥</span> SKILL COMBO x<span id="skillComboCount">1</span>! 
-                <div style="font-size: 14px; color: #FFD700;"><span id="skillComboBonus">+100</span> Punkte!</div>
-            </div>
-            
-            <!-- NEW: Environment Display -->
-            <div id="environmentDisplay" style="color: #87CEEB; font-weight: bold; margin-top: 10px;">
-                🏙️ <span id="currentEnvironment">Straße</span>
-            </div>
-            
-            <!-- NEW: Difficulty Progress Display -->
-            <div id="difficultyDisplay" style="color: #FFB347; font-weight: bold; margin-top: 5px; font-size: 14px;">
-                📈 Schwierigkeit: <span id="difficultyLevel">Leicht</span>
-            </div>
-            
-            <!-- FEATURE 7: Rampage Mode Display -->
-            <div id="rampageDisplay" style="color: #FF0000; display: none; font-weight: bold; margin-top: 10px; font-size: 20px;">
-                💪 RAMPAGE MODE! <span id="rampageTime">10</span>s
-                <div style="font-size: 14px;">Destruction Streak: <span id="destructionStreak">0</span></div>
-            </div>
-            
-            <!-- FEATURE 8: Flight Mode Display -->
-            <div id="flightDisplay" style="color: #00CCFF; display: none; font-weight: bold; margin-top: 10px;">
-                🚀 FLIGHT MODE! <span id="flightTime">3</span>s
-                <div style="font-size: 14px;">Altitude: <span id="flightAltitude">0</span>m</div>
-                <div style="font-size: 12px; color: #87CEEB;">W/S to control altitude</div>
-            </div>
-            
-            <!-- FEATURE 9: Daily Challenge Display -->
-            <div id="dailyChallengeDisplay" style="color: #FFD700; display: none; font-weight: bold; margin-top: 10px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px;">
-                📅 Daily: <span id="challengeName">Loading...</span>
-                <div style="font-size: 12px;">Progress: <span id="challengeProgress">0</span>/<span id="challengeTarget">0</span></div>
-                <div id="challengeCompleteStatus" style="font-size: 14px; color: #00FF00; display: none;">✅ COMPLETE! +<span id="challengeReward">0</span></div>
-            </div>
-            
-            <!-- FEATURE 10: Multiplier & Roulette Display - DISABLED (User wants NO coins) -->
-            <div id="scoreTokenDisplay" style="color: #FFD700; display: none; font-weight: bold; margin-top: 5px;">
-                🪙 Score Tokens: <span id="tokenCount">0</span>/3
-                <div id="rouletteReady" style="font-size: 14px; color: #00FF00; display: none;">🎰 ROULETTE READY!</div>
-            </div>
-            <div id="surgeModeDisplay" style="color: #FF00FF; display: none; font-weight: bold; margin-top: 5px; font-size: 18px; animation: rainbow 2s linear infinite;">
-                💎 SCORE SURGE MODE! x<span id="surgeMultiplier">2</span>
-                <div style="font-size: 14px;">Time: <span id="surgeTime">15</span>s</div>
-            </div>
+            <!-- Hidden elements for data storage -->
+            <span id="score" style="display: none;">0</span>
+            <span id="lives" style="display: none;">3</span>
+            <span id="kiwiCount" style="display: none;">0</span>
+            <span id="broccoliCount" style="display: none;">0</span>
+        </div>
+        </div>
+        
+        <!-- Temporary Event Notifications Container -->
+        <div id="eventNotifications" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 500;">
+            <!-- All temporary notifications will be dynamically added here -->
+        </div>
+        
+        <!-- Hidden UI elements for internal use only -->
+        <div style="display: none;">
+            <span id="comboMultiplier">1</span>
+            <span id="nearMissCount">1</span>
+            <span id="nearMissBonus">50</span>
+            <span id="milestoneText">500m</span>
+            <span id="milestoneBonus">500</span>
+            <span id="currentMultiplier">1.0</span>
+            <span id="powerUpName">Speed</span>
+            <span id="powerUpTime">8</span>
+            <span id="skillComboCount">1</span>
+            <span id="skillComboBonus">100</span>
+            <span id="currentEnvironment">Straße</span>
+            <span id="difficultyLevel">Leicht</span>
+            <span id="rampageTime">10</span>
+            <span id="destructionStreak">0</span>
+            <span id="flightTime">3</span>
+            <span id="flightAltitude">0</span>
+            <span id="challengeName">Loading...</span>
+            <span id="challengeProgress">0</span>
+            <span id="challengeTarget">0</span>
+            <span id="challengeReward">0</span>
+            <span id="tokenCount">0</span>
+            <span id="surgeMultiplier">2</span>
+            <span id="surgeTime">15</span>
         </div>
         
         <!-- Trick Announcer -->
@@ -3070,7 +3221,16 @@
             scoreSurgeActive: false,       // Score surge mode active
             scoreSurgeTimeRemaining: 0,    // Time left in surge mode
             scoreSurgeMultiplier: 1.0,     // Additional surge multiplier
-            rouletteHistory: []            // History of roulette results
+            rouletteHistory: [],           // History of roulette results
+            
+            // UI Notification Tracking
+            lastEnvironment: null,         // Track environment changes
+            lastDifficulty: null,          // Track difficulty changes
+            powerUpNotified: false,        // Track power-up notifications
+            rampageNotified: false,        // Track rampage notifications
+            flightNotified: false,         // Track flight notifications
+            challenge50Notified: false,    // Track 50% challenge progress
+            challenge75Notified: false     // Track 75% challenge progress
         };
 
         // Three.js setup
@@ -4873,36 +5033,85 @@
             }
         };
 
+        // ==================== EVENT NOTIFICATION SYSTEM ====================
+        function showEventNotification(text, duration = 1000, size = 'normal', color = '#FFFFFF') {
+            const container = document.getElementById('eventNotifications');
+            const notification = document.createElement('div');
+            notification.className = `event-notification ${size}`;
+            notification.style.color = color;
+            notification.textContent = text;
+            
+            // Random offset to prevent overlapping
+            const randomX = (Math.random() - 0.5) * 100;
+            const randomY = (Math.random() - 0.5) * 50;
+            notification.style.left = randomX + 'px';
+            notification.style.top = randomY + 'px';
+            
+            container.appendChild(notification);
+            
+            // Remove after animation
+            setTimeout(() => {
+                notification.remove();
+            }, duration);
+        }
+        
         function updateUI() {
             // Only update if we're in playing state
             if (gameState.uiState !== 'playing') return;
             
-            // Animate score changes
+            // Update hidden score element
             const scoreElement = document.getElementById('score');
-            const currentDisplayScore = parseInt(scoreElement.textContent) || 0;
-            const targetScore = Math.floor(gameState.score);
+            scoreElement.textContent = Math.floor(gameState.score);
             
-            if (targetScore > currentDisplayScore) {
-                scoreElement.classList.add('ui-bounce');
-                setTimeout(() => scoreElement.classList.remove('ui-bounce'), 500);
-            }
-            scoreElement.textContent = targetScore;
+            // Update score progress bar
+            const scoreProgress = document.getElementById('scoreProgress');
+            const scorePercentage = Math.min(100, (gameState.score / 10000) * 100); // 10k = full bar
+            scoreProgress.style.width = scorePercentage + '%';
             
-            // Lives with pulse animation on change
+            // Update lives display (visual hearts only)
             const livesElement = document.getElementById('lives');
             const currentLives = parseInt(livesElement.textContent) || 3;
-            if (gameState.lives < currentLives) {
-                livesElement.classList.add('ui-bounce');
-                livesElement.style.color = '#FF4444';
-                setTimeout(() => {
-                    livesElement.classList.remove('ui-bounce');
-                    livesElement.style.color = 'white';
-                }, 1000);
-            }
             livesElement.textContent = gameState.lives;
             
-            // Update collectible counters
-            updateKiwiUI();
+            if (gameState.lives < currentLives) {
+                // Lost a life - update hearts visually
+                const hearts = document.querySelectorAll('.life-heart');
+                hearts.forEach((heart, index) => {
+                    if (index >= gameState.lives) {
+                        heart.classList.add('lost');
+                    }
+                });
+                
+                // Show temporary notification
+                showEventNotification('❤️‍🔥', 1500, 'large', '#FF4444');
+            }
+            
+            // Update collectible progress dots
+            updateCollectibleDots();
+        }
+        
+        function updateCollectibleDots() {
+            // Update kiwi progress dots
+            const kiwiDots = document.querySelectorAll('#kiwiProgress .progress-dot');
+            const kiwiProgress = Math.floor((gameState.collectedKiwis / 30) * 5); // 5 dots for 30 kiwis
+            kiwiDots.forEach((dot, index) => {
+                if (index < kiwiProgress) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+            
+            // Update broccoli progress dots
+            const broccoliDots = document.querySelectorAll('#broccoliProgress .progress-dot');
+            const broccoliProgress = Math.floor((gameState.collectedBroccolis / 7) * 3); // 3 dots for 7 broccolis
+            broccoliDots.forEach((dot, index) => {
+                if (index < broccoliProgress) {
+                    dot.classList.add('filled-broccoli');
+                } else {
+                    dot.classList.remove('filled-broccoli');
+                }
+            });
         }
 
         function showNameInputDialog(isVictory) {
@@ -5001,9 +5210,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.1.2-GAMEPLAY-FIX<br>
-                    🎯 Pure Collectibles Only<br>
-                    🥝 Kiwis + Broccolis + 2 Mystery Boxes
+                    Version: 4.1.3-UI-PURE<br>
+                    🎯 NO Permanent Text<br>
+                    ✨ Temporary Notifications Only
                 `;
             }
         });
@@ -6062,9 +6271,13 @@
                         if (aerial.type === 'kiwi') {
                             gameState.collectedKiwis++;
                             audioManager.play('coin');
+                            // Show collection notification
+                            showEventNotification('+1 🥝', 800, 'small', '#FFD700');
                         } else {
                             gameState.collectedBroccolis++;
                             audioManager.play('powerup');
+                            // Show collection notification
+                            showEventNotification('+1 🥦', 800, 'small', '#8BC34A');
                         }
                         
                         // Update UI
@@ -6631,27 +6844,18 @@
         }
         
         function updatePowerUpUI() {
-            const powerUpDisplay = document.getElementById('powerUpDisplay');
-            const powerUpIcon = document.getElementById('powerUpIcon');
-            const powerUpName = document.getElementById('powerUpName');
-            const powerUpTime = document.getElementById('powerUpTime');
-            
-            if (gameState.activePowerUp || gameState.activeFusion) {
+            // Show power-up activation as temporary notification only
+            if ((gameState.activePowerUp || gameState.activeFusion) && !gameState.powerUpNotified) {
                 if (gameState.activeFusion) {
                     const fusion = FUSION_COMBINATIONS[gameState.activeFusion];
-                    powerUpDisplay.style.display = 'block';
-                    powerUpIcon.textContent = fusion.icon;
-                    powerUpName.textContent = fusion.name;
-                    powerUpTime.textContent = Math.ceil(gameState.fusionTimeRemaining / 1000);
+                    showEventNotification(`${fusion.icon} ${fusion.name}!`, 2500, 'large', fusion.color || '#FFD700');
                 } else {
                     const config = POWER_UP_TYPES[gameState.activePowerUp];
-                    powerUpDisplay.style.display = 'block';
-                    powerUpIcon.textContent = config.icon;
-                    powerUpName.textContent = config.name;
-                    powerUpTime.textContent = Math.ceil(gameState.powerUpTimeRemaining / 1000);
+                    showEventNotification(`${config.icon} ${config.name}!`, 2000, 'large', '#00FF00');
                 }
-            } else {
-                powerUpDisplay.style.display = 'none';
+                gameState.powerUpNotified = true;
+            } else if (!gameState.activePowerUp && !gameState.activeFusion) {
+                gameState.powerUpNotified = false;
             }
         }
         
@@ -6707,42 +6911,30 @@
         }
         
         function updateFusionUI() {
-            const slot1 = document.getElementById('fusionSlot1');
-            const slot2 = document.getElementById('fusionSlot2');
-            const combineBtn = document.getElementById('fusionCombineBtn');
-            
-            // Update slot 1
-            if (gameState.fusionSlots[0]) {
-                const config = POWER_UP_TYPES[gameState.fusionSlots[0]];
-                slot1.textContent = config.icon;
-                slot1.classList.add('filled');
-            } else {
-                slot1.textContent = '';
-                slot1.classList.remove('filled', 'ready');
+            // Hide fusion UI completely - only show notifications for fusion events
+            const fusionContainer = document.getElementById('fusionContainer');
+            if (fusionContainer) {
+                fusionContainer.style.display = 'none';
             }
             
-            // Update slot 2
-            if (gameState.fusionSlots[1]) {
-                const config = POWER_UP_TYPES[gameState.fusionSlots[1]];
-                slot2.textContent = config.icon;
-                slot2.classList.add('filled');
-            } else {
-                slot2.textContent = '';
-                slot2.classList.remove('filled', 'ready');
-            }
-            
-            // Check if fusion is ready
-            if (gameState.fusionSlots[0] && gameState.fusionSlots[1]) {
-                const fusionKey = [gameState.fusionSlots[0], gameState.fusionSlots[1]].sort().join('_');
-                if (FUSION_COMBINATIONS[fusionKey]) {
-                    slot1.classList.add('ready');
-                    slot2.classList.add('ready');
-                    combineBtn.classList.add('active');
-                } else {
-                    combineBtn.classList.remove('active');
+            // Show fusion slot updates as temporary notifications
+            if (gameState.fusionSlots[0] || gameState.fusionSlots[1]) {
+                const items = [];
+                if (gameState.fusionSlots[0]) {
+                    const config = POWER_UP_TYPES[gameState.fusionSlots[0]];
+                    items.push(config.icon);
                 }
-            } else {
-                combineBtn.classList.remove('active');
+                if (gameState.fusionSlots[1]) {
+                    const config = POWER_UP_TYPES[gameState.fusionSlots[1]];
+                    items.push(config.icon);
+                }
+                
+                if (items.length === 2) {
+                    const fusionKey = [gameState.fusionSlots[0], gameState.fusionSlots[1]].sort().join('_');
+                    if (FUSION_COMBINATIONS[fusionKey]) {
+                        showEventNotification(`⚡ ${items.join(' + ')} → FUSION READY!`, 2000, 'large', '#FFD700');
+                    }
+                }
             }
         }
         
@@ -7111,7 +7303,7 @@
             
             // Visual effects
             document.getElementById('rampageOverlay').classList.add('active');
-            document.getElementById('rampageDisplay').style.display = 'block';
+            // No permanent display - using notifications only
             
             // Player glow effect
             const rampageGlow = new THREE.PointLight(0xFF0000, 3, 10);
@@ -7139,7 +7331,7 @@
             
             // Remove visual effects
             document.getElementById('rampageOverlay').classList.remove('active');
-            document.getElementById('rampageDisplay').style.display = 'none';
+            // No permanent display to hide
             
             // Remove player glow
             if (player.userData.rampageGlow) {
@@ -7151,13 +7343,12 @@
         }
         
         function updateRampageUI() {
-            const rampageDisplay = document.getElementById('rampageDisplay');
-            const rampageTime = document.getElementById('rampageTime');
-            const destructionStreak = document.getElementById('destructionStreak');
-            
-            if (gameState.rampageActive) {
-                rampageTime.textContent = Math.ceil(gameState.rampageTimeRemaining / 1000);
-                destructionStreak.textContent = gameState.destructionStreak;
+            // Show rampage status as temporary notifications only
+            if (gameState.rampageActive && !gameState.rampageNotified) {
+                showEventNotification(`💥 RAMPAGE MODE! Streak: ${gameState.destructionStreak}`, 3000, 'large', '#FF0000');
+                gameState.rampageNotified = true;
+            } else if (!gameState.rampageActive) {
+                gameState.rampageNotified = false;
             }
         }
         
@@ -7179,8 +7370,7 @@
             
             // Visual effects
             document.getElementById('flightOverlay').classList.add('active');
-            document.getElementById('flightDisplay').style.display = 'block';
-            document.getElementById('altitudeMeter').classList.add('active');
+            // No permanent displays - using notifications only
             
             // Player jet effects
             createJetStream();
@@ -7205,8 +7395,7 @@
             
             // Remove visual effects
             document.getElementById('flightOverlay').classList.remove('active');
-            document.getElementById('flightDisplay').style.display = 'none';
-            document.getElementById('altitudeMeter').classList.remove('active');
+            // No permanent displays to hide
             
             // Remove jet effects
             if (player.userData.jetStream) {
@@ -7315,17 +7504,18 @@
         }
         
         function updateFlightUI() {
-            if (gameState.flightMode) {
-                const flightTime = document.getElementById('flightTime');
-                const flightAltitude = document.getElementById('flightAltitude');
-                const altitudeIndicator = document.getElementById('altitudeIndicator');
-                
-                flightTime.textContent = Math.ceil(gameState.flightTimeRemaining / 1000);
-                flightAltitude.textContent = gameState.flightAltitude.toFixed(1);
-                
-                // Update altitude meter
-                const altitudePercent = (gameState.flightAltitude / 5) * 100;
-                altitudeIndicator.style.height = `${altitudePercent}%`;
+            // Show flight mode status as temporary notifications only
+            if (gameState.flightMode && !gameState.flightNotified) {
+                showEventNotification(`🚀 FLIGHT MODE!`, 2000, 'large', '#00CCFF');
+                gameState.flightNotified = true;
+            } else if (!gameState.flightMode) {
+                gameState.flightNotified = false;
+            }
+            
+            // Hide altitude meter UI
+            const altitudeMeter = document.getElementById('altitudeMeter');
+            if (altitudeMeter) {
+                altitudeMeter.style.display = 'none';
             }
         }
         
@@ -7440,19 +7630,9 @@
         }
         
         function updateDailyChallengeUI() {
-            const display = document.getElementById('dailyChallengeDisplay');
-            const challengeName = document.getElementById('challengeName');
-            const challengeProgress = document.getElementById('challengeProgress');
-            const challengeTarget = document.getElementById('challengeTarget');
-            const completeStatus = document.getElementById('challengeCompleteStatus');
-            const challengeReward = document.getElementById('challengeReward');
-            
-            if (gameState.dailyChallenge && display) {
-                display.style.display = 'block';
-                challengeName.textContent = gameState.dailyChallenge.name;
-                challengeTarget.textContent = gameState.dailyChallenge.target;
-                
-                // Update progress based on challenge type
+            // Show daily challenge notifications only when relevant
+            if (gameState.dailyChallenge && !gameState.dailyChallengeCompleted) {
+                // Track progress internally
                 let progress = 0;
                 if (gameState.dailyChallenge.trackStat === 'collectedKiwis') {
                     progress = gameState.collectedKiwis;
@@ -7463,14 +7643,21 @@
                     progress = gameState.challengeStats[gameState.dailyChallenge.trackStat] || 0;
                 }
                 
-                challengeProgress.textContent = Math.min(progress, gameState.dailyChallenge.target);
-                
-                if (gameState.dailyChallengeCompleted) {
-                    completeStatus.style.display = 'block';
-                    challengeReward.textContent = gameState.dailyChallenge.reward;
-                } else {
-                    completeStatus.style.display = 'none';
+                // Show progress notification at key milestones only
+                const percentComplete = Math.floor((progress / gameState.dailyChallenge.target) * 100);
+                if (percentComplete >= 50 && !gameState.challenge50Notified) {
+                    showEventNotification(`📅 Challenge 50% Complete!`, 2000, 'normal', '#FFA500');
+                    gameState.challenge50Notified = true;
+                } else if (percentComplete >= 75 && !gameState.challenge75Notified) {
+                    showEventNotification(`📅 Challenge 75% Complete!`, 2000, 'normal', '#FFD700');
+                    gameState.challenge75Notified = true;
                 }
+            }
+            
+            // Hide permanent display
+            const display = document.getElementById('dailyChallengeDisplay');
+            if (display) {
+                display.style.display = 'none';
             }
         }
         
@@ -7569,26 +7756,17 @@
         }
         
         function showAchievementPopup(icon, title, description, reward) {
-            const popup = document.getElementById('achievementPopup');
-            const iconEl = document.getElementById('achievementIcon');
-            const titleEl = document.getElementById('achievementTitle');
-            const descEl = document.getElementById('achievementDescription');
-            const rewardEl = document.getElementById('achievementReward');
-            
-            iconEl.textContent = icon;
-            titleEl.textContent = title;
-            descEl.textContent = description;
-            rewardEl.textContent = reward;
-            
-            popup.style.display = 'block';
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                popup.style.display = 'none';
-            }, 3000);
+            // Show achievement as temporary notification
+            showEventNotification(`${icon} ${title}: ${description} +${reward}`, 3500, 'large', '#FFD700');
             
             // Sound effect
             audioManager.play('success');
+            
+            // Hide permanent popup
+            const popup = document.getElementById('achievementPopup');
+            if (popup) {
+                popup.style.display = 'none';
+            }
         }
         
         // ==================== FEATURE 10: MULTIPLIER ROULETTE & SCORE SURGE ====================
@@ -7684,17 +7862,19 @@
         }
         
         function updateScoreTokenUI() {
-            const display = document.getElementById('scoreTokenDisplay');
-            const count = document.getElementById('tokenCount');
-            const ready = document.getElementById('rouletteReady');
-            
+            // Show token collection as temporary notification
             if (gameState.collectedTokens > 0) {
-                display.style.display = 'block';
-                count.textContent = gameState.collectedTokens;
+                showEventNotification(`🪙 Tokens: ${gameState.collectedTokens}/3`, 1500, 'normal', '#FFD700');
                 
                 if (gameState.collectedTokens >= 3) {
-                    ready.style.display = 'block';
+                    showEventNotification(`🎰 ROULETTE READY!`, 2000, 'large', '#00FF00');
                 }
+            }
+            
+            // Hide permanent display
+            const display = document.getElementById('scoreTokenDisplay');
+            if (display) {
+                display.style.display = 'none';
             }
         }
         
@@ -7880,6 +8060,9 @@
             gameState.collectedKiwis++;
             gameState.totalKiwis++;
             
+            // Show collection notification
+            showEventNotification('+1 🥝', 800, 'small', '#FFD700');
+            
             console.log(`🥝 COLLECTED KIWI - Session: ${gameState.collectedKiwis}, Total Lifetime: ${gameState.totalKiwis}`);
             
             // Handle combo system
@@ -7931,6 +8114,9 @@
             // Update broccoli count with debug logging
             gameState.collectedBroccolis++;
             gameState.totalBroccolis++;
+            
+            // Show collection notification
+            showEventNotification('+1 🥦', 800, 'small', '#8BC34A');
             
             console.log(`🥦 COLLECTED BROCCOLI - Session: ${gameState.collectedBroccolis}, Total Lifetime: ${gameState.totalBroccolis}`);
             
@@ -8021,154 +8207,128 @@
         }
         
         function updateComboUI() {
-            const comboDisplay = document.getElementById('comboDisplay');
-            const comboMultiplier = document.getElementById('comboMultiplier');
-            
+            // Show temporary combo notification
             if (gameState.kiwiCombo > 1) {
-                comboDisplay.style.display = 'block';
-                comboMultiplier.textContent = gameState.kiwiCombo;
-                
-                // Hide after 2 seconds
-                setTimeout(() => {
-                    comboDisplay.style.display = 'none';
-                }, 2000);
-            } else {
-                comboDisplay.style.display = 'none';
+                showEventNotification(`x${gameState.kiwiCombo}!`, 1500, 'normal', '#FF6B35');
             }
         }
         
         function updateKiwiUI() {
+            // Update hidden counters
             const kiwiCount = document.getElementById('kiwiCount');
             const broccoliCount = document.getElementById('broccoliCount');
-            const kiwiProgress = document.getElementById('kiwiProgress');
-            const broccoliProgress = document.getElementById('broccoliProgress');
-            
-            // Debug logging
-            console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
             
             if (kiwiCount) {
                 kiwiCount.textContent = gameState.collectedKiwis || 0;
-            } else {
-                console.error('❌ kiwiCount element not found!');
             }
             
             if (broccoliCount) {
                 broccoliCount.textContent = gameState.collectedBroccolis || 0;
-            } else {
-                console.error('❌ broccoliCount element not found!');
             }
             
-            // Update progress bars for 30:7 goals
-            if (kiwiProgress) {
-                const kiwiPercent = Math.min((gameState.collectedKiwis / 30) * 100, 100);
-                kiwiProgress.style.width = kiwiPercent + '%';
-            }
-            
-            if (broccoliProgress) {
-                const broccoliPercent = Math.min((gameState.collectedBroccolis / 7) * 100, 100);
-                broccoliProgress.style.width = broccoliPercent + '%';
-            }
-            
-            // Also update the total for percentage calculation
-            const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-            console.log(`📊 Total collected: ${collectedTotal}/${gameState.totalCollectibles} (${gameState.totalCollectibles > 0 ? (collectedTotal/gameState.totalCollectibles*100).toFixed(0) : 0}%)`);
+            // Update visual progress dots (handled by updateCollectibleDots in updateUI)
         }
         
         function updateEnvironmentUI() {
-            const environmentDisplay = document.getElementById('currentEnvironment');
-            if (environmentDisplay) {
+            // Show environment change as temporary notification only
+            if (gameState.lastEnvironment !== gameState.currentEnvironment) {
+                let envText = '';
+                let envEmoji = '';
+                
                 switch (gameState.currentEnvironment) {
                     case 'street':
-                        environmentDisplay.innerHTML = '🏙️ Straße';
+                        envEmoji = '🏙️';
+                        envText = 'Straße';
                         break;
                     case 'tunnel_entrance':
-                        environmentDisplay.innerHTML = '🚇 Tunnel Eingang';
+                        envEmoji = '🚇';
+                        envText = 'Tunnel Eingang';
                         break;
                     case 'tunnel':
-                        environmentDisplay.innerHTML = '🚇 Tunnel';
+                        envEmoji = '🚇';
+                        envText = 'Tunnel';
                         break;
                     case 'tunnel_exit':
-                        environmentDisplay.innerHTML = '🌅 Tunnel Ausgang';
+                        envEmoji = '🌅';
+                        envText = 'Tunnel Ausgang';
                         break;
                     default:
-                        environmentDisplay.innerHTML = '🏙️ Straße';
+                        envEmoji = '🏙️';
+                        envText = 'Straße';
                 }
+                
+                // Show temporary notification for environment change
+                if (gameState.lastEnvironment) {
+                    showEventNotification(`${envEmoji} ${envText}`, 2000, 'normal', '#87CEEB');
+                }
+                
+                gameState.lastEnvironment = gameState.currentEnvironment;
             }
         }
         
         function updateDifficultyUI() {
-            const difficultyLevel = document.getElementById('difficultyLevel');
-            if (difficultyLevel) {
-                const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime);
-                
-                if (gameProgress < 0.2) {
-                    difficultyLevel.textContent = 'Leicht';
-                    difficultyLevel.style.color = '#90EE90';
-                } else if (gameProgress < 0.4) {
-                    difficultyLevel.textContent = 'Mittel';
-                    difficultyLevel.style.color = '#FFD700';
-                } else if (gameProgress < 0.6) {
-                    difficultyLevel.textContent = 'Schwer';
-                    difficultyLevel.style.color = '#FFA500';
-                } else if (gameProgress < 0.8) {
-                    difficultyLevel.textContent = 'Extrem';
-                    difficultyLevel.style.color = '#FF4500';
-                } else {
-                    difficultyLevel.textContent = 'Wahnsinn!';
-                    difficultyLevel.style.color = '#FF0000';
-                }
+            // Show difficulty changes as temporary notifications only
+            const gameProgress = 1 - (gameState.timeRemaining / gameState.gameTime);
+            let currentDifficulty = '';
+            let difficultyColor = '#FFFFFF';
+            
+            if (gameProgress < 0.2) {
+                currentDifficulty = 'Leicht';
+                difficultyColor = '#90EE90';
+            } else if (gameProgress < 0.4) {
+                currentDifficulty = 'Mittel';
+                difficultyColor = '#FFD700';
+            } else if (gameProgress < 0.6) {
+                currentDifficulty = 'Schwer';
+                difficultyColor = '#FFA500';
+            } else if (gameProgress < 0.8) {
+                currentDifficulty = 'Extrem';
+                difficultyColor = '#FF4500';
+            } else {
+                currentDifficulty = 'Wahnsinn!';
+                difficultyColor = '#FF0000';
+            }
+            
+            // Only show notification when difficulty changes
+            if (gameState.lastDifficulty !== currentDifficulty) {
+                showEventNotification(`⚡ ${currentDifficulty}`, 2000, 'large', difficultyColor);
+                gameState.lastDifficulty = currentDifficulty;
             }
         }
         
         // ==================== SKILL COMBO SYSTEM ====================
         
         function showSkillCombo(bonusPoints, comboMessage) {
-            const skillComboDisplay = document.getElementById('skillComboDisplay');
-            const skillComboCount = document.getElementById('skillComboCount');
-            const skillComboBonus = document.getElementById('skillComboBonus');
-            const skillComboIcon = document.getElementById('skillComboIcon');
+            // Show skill combos as temporary notifications only
+            let icon = '⭐';
+            let color = '#FFD700';
             
-            if (skillComboDisplay) {
-                skillComboDisplay.style.display = 'block';
-                skillComboCount.textContent = gameState.consecutiveAvoidances;
-                skillComboBonus.textContent = `+${bonusPoints}`;
-                
-                // Dynamic icon based on combo type
-                if (comboMessage.includes('ZIGZAG')) {
-                    skillComboIcon.textContent = '⚡';
-                } else if (comboMessage.includes('LIGHTNING')) {
-                    skillComboIcon.textContent = '⚡';
-                } else if (comboMessage.includes('PERFECT')) {
-                    skillComboIcon.textContent = '💎';
-                } else if (comboMessage.includes('RAPID')) {
-                    skillComboIcon.textContent = '🔥';
-                } else {
-                    skillComboIcon.textContent = '⭐';
-                }
-                
-                // Update combo message in UI
-                const comboTextElement = skillComboDisplay.querySelector('div');
-                if (comboTextElement) {
-                    comboTextElement.innerHTML = `<span style="color: #FFD700;">+${bonusPoints} ${comboMessage}</span>`;
-                }
-                
-                // Auto-hide after 3 seconds
-                setTimeout(() => {
-                    skillComboDisplay.style.display = 'none';
-                }, 3000);
-                
-                // Enhanced audio for combos
-                if (bonusPoints > 200) {
-                    audioManager.createTone(880, 0.3, 'sine'); // High achievement sound
-                    audioManager.createTone(660, 0.4, 'sine'); // Chord
-                } else if (bonusPoints > 100) {
-                    audioManager.createTone(660, 0.2, 'sine'); // Medium achievement
-                } else {
-                    audioManager.createTone(440, 0.15, 'sine'); // Basic skill sound
-                }
-                
-                console.log(`SKILL COMBO: ${comboMessage} - +${bonusPoints} points`);
+            // Dynamic icon based on combo type
+            if (comboMessage.includes('ZIGZAG') || comboMessage.includes('LIGHTNING')) {
+                icon = '⚡';
+                color = '#00FFFF';
+            } else if (comboMessage.includes('PERFECT')) {
+                icon = '💎';
+                color = '#FF69B4';
+            } else if (comboMessage.includes('RAPID')) {
+                icon = '🔥';
+                color = '#FF4500';
             }
+            
+            // Show as temporary event notification
+            showEventNotification(`${icon} +${bonusPoints} ${comboMessage}`, 2500, 'large', color);
+            
+            // Enhanced audio for combos
+            if (bonusPoints > 200) {
+                audioManager.createTone(880, 0.3, 'sine'); // High achievement sound
+                audioManager.createTone(660, 0.4, 'sine'); // Chord
+            } else if (bonusPoints > 100) {
+                audioManager.createTone(660, 0.2, 'sine'); // Medium achievement
+            } else {
+                audioManager.createTone(440, 0.15, 'sine'); // Basic skill sound
+            }
+            
+            console.log(`SKILL COMBO: ${comboMessage} - +${bonusPoints} points`);
         }
         
         function trackPlayerMove(moveType, lane = null) {
@@ -8781,8 +8941,8 @@
         
         // NEW: Show collection achievement UI
         function showCollectionAchievement(achievement, points) {
-            // Create achievement popup (you can enhance this with actual UI)
-            const total = gameState.collectedKiwis + gameState.collectedBroccolis;
+            // Show temporary achievement notification
+            showEventNotification(`🏆 ${achievement}!`, 2500, 'large', '#FFD700');
             
             // For now, show in console - can be enhanced with visual UI later
             console.log(`
@@ -9072,55 +9232,13 @@
         }
         
         function showLevelCompleteMessage() {
-            const message = document.createElement('div');
-            message.className = 'level-complete';
-            message.innerHTML = `
-                <h2>LEVEL ${gameState.currentLevel} COMPLETE!</h2>
-                <p>Get ready for ${LevelManager.getNextLevel()?.name || 'the next challenge'}...</p>
-            `;
-            message.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.9);
-                color: #00ff00;
-                padding: 40px;
-                border-radius: 20px;
-                font-size: 24px;
-                text-align: center;
-                z-index: 1000;
-                border: 3px solid #00ff00;
-                box-shadow: 0 0 30px #00ff00;
-                animation: levelPulse 0.5s ease-in-out;
-            `;
-            document.body.appendChild(message);
-            
-            setTimeout(() => {
-                document.body.removeChild(message);
-            }, 2500);
+            // Show temporary level complete notification
+            showEventNotification(`LEVEL ${gameState.currentLevel} COMPLETE!`, 2500, 'large', '#00FF00');
         }
         
         function showLevelStartMessage(levelName) {
-            const message = document.createElement('div');
-            message.className = 'level-start';
-            message.innerHTML = `
-                <h2>LEVEL ${gameState.currentLevel}</h2>
-                <h1>${levelName}</h1>
-            `;
-            message.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: #ff00ff;
-                font-size: 48px;
-                text-align: center;
-                z-index: 1000;
-                text-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
-                animation: levelStart 1.5s ease-out;
-                pointer-events: none;
-            `;
+            // Show temporary level start notification
+            showEventNotification(`LEVEL ${gameState.currentLevel}`, 2000, 'large', '#FF00FF');
             document.body.appendChild(message);
             
             setTimeout(() => {
@@ -10395,19 +10513,11 @@
         
         // Show near miss UI feedback
         function showNearMissUI(bonus, streak) {
-            const nearMissDisplay = document.getElementById('nearMissDisplay');
-            const nearMissCount = document.getElementById('nearMissCount');
-            const nearMissBonus = document.getElementById('nearMissBonus');
-            
-            if (nearMissDisplay) {
-                nearMissDisplay.style.display = 'block';
-                nearMissCount.textContent = streak;
-                nearMissBonus.textContent = bonus;
-                
-                // Auto-hide after 2 seconds
-                setTimeout(() => {
-                    nearMissDisplay.style.display = 'none';
-                }, 2000);
+            // Only show temporary notification
+            if (streak > 1) {
+                showEventNotification(`NICE! x${streak}`, 1500, 'normal', '#FFD700');
+            } else {
+                showEventNotification('CLOSE!', 1000, 'small', '#FFA500');
             }
         }
         
@@ -10463,32 +10573,17 @@
         
         // Show milestone UI feedback
         function showMilestoneUI(distance, bonus) {
-            const milestoneDisplay = document.getElementById('milestoneDisplay');
-            const milestoneText = document.getElementById('milestoneText');
-            const milestoneBonus = document.getElementById('milestoneBonus');
-            const milestoneIcon = document.getElementById('milestoneIcon');
-            
-            if (milestoneDisplay) {
-                milestoneDisplay.style.display = 'block';
-                milestoneText.textContent = `${distance}m!`;
-                milestoneBonus.textContent = bonus;
-                
-                // Special icons for major milestones
-                if (distance >= 3000) {
-                    milestoneIcon.textContent = '🏆';
-                } else if (distance >= 2000) {
-                    milestoneIcon.textContent = '⭐';
-                } else if (distance >= 1000) {
-                    milestoneIcon.textContent = '🎯';
-                } else {
-                    milestoneIcon.textContent = '🏁';
-                }
-                
-                // Auto-hide after 3 seconds
-                setTimeout(() => {
-                    milestoneDisplay.style.display = 'none';
-                }, 3000);
+            // Show temporary milestone notification
+            let icon = '🏁';
+            if (distance >= 30) {
+                icon = '🏆';
+            } else if (distance >= 20) {
+                icon = '⭐';
+            } else if (distance >= 10) {
+                icon = '🎯';
             }
+            
+            showEventNotification(`${icon} ${distance}s!`, 2000, 'large', '#00FF00');
         }
         
         // Update visual effects based on speed and game state
