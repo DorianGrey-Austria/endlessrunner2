@@ -1556,7 +1556,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.5.5-ULTIMATE-FIX<br>
+            🚀 V4.5.6-THREEJS-FIX<br>
             📅 09.07.2025
         </div>
         
@@ -3313,7 +3313,8 @@
         };
 
         // Supabase Configuration - Using working credentials
-        const SUPABASE_URL = 'https://umvrurelsxpxmyzcvrcd.supabase.co'
+        // TEMPORARILY DISABLED - Invalid Supabase URL
+        const SUPABASE_URL = null; // 'https://umvrurelsxpxmyzcvrcd.supabase.co'
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdnJ1cmVsc3hweG15emN2cmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ5OTYsImV4cCI6MjA1MDkxMDk5Nn0.xpBgJ0BQN86JqhNtKzKNl1kchO1IU_oXI7SYpgfLBJU'
         
         // Initialize Supabase client
@@ -3324,13 +3325,13 @@
 
         // Initialize Supabase connection
         try {
-            if (window.supabase) {
+            if (SUPABASE_URL && window.supabase) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 console.log('✅ Supabase initialized successfully');
                 console.log('🔗 Database URL:', SUPABASE_URL);
                 console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
             } else {
-                throw new Error('Supabase library not loaded');
+                throw new Error('Supabase disabled - no valid URL configured');
             }
         } catch (error) {
             console.log('⚠️ Supabase initialization failed, using offline mode:', error);
@@ -17867,26 +17868,31 @@
         debugLog('PAGE LOAD: Script reached initialization check', 'success');
         debugLog(`Document readyState: ${document.readyState}`, 'info');
         
-        if (document.readyState === 'loading') {
-            debugLog('DOM still loading, waiting for DOMContentLoaded', 'warning');
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('Starting game initialization...');
-                debugLog('DOMContentLoaded fired, starting init', 'success');
-                init();
-                initializeFusionSystem();
-                
-                // Initialize ghost leaderboard display on page load
-                updateGhostLeaderboard();
-            });
-        } else {
-            // DOM is already loaded
-            console.log('Starting game initialization...');
-            debugLog('DOM already loaded, initializing immediately', 'warning');
+        // Wait for Three.js to load before initializing
+        function startGameWhenReady() {
+            if (typeof THREE === 'undefined') {
+                console.log('Waiting for Three.js to load...');
+                debugLog('Three.js not loaded yet, waiting...', 'warning');
+                setTimeout(startGameWhenReady, 100);
+                return;
+            }
+            
+            console.log('Three.js loaded, starting game initialization...');
+            debugLog('Three.js loaded successfully', 'success');
             init();
             initializeFusionSystem();
             
             // Initialize ghost leaderboard display on page load
             updateGhostLeaderboard();
+        }
+        
+        if (document.readyState === 'loading') {
+            debugLog('DOM still loading, waiting for DOMContentLoaded', 'warning');
+            document.addEventListener('DOMContentLoaded', startGameWhenReady);
+        } else {
+            // DOM is already loaded
+            debugLog('DOM already loaded, checking Three.js', 'warning');
+            startGameWhenReady();
         }
         
         // ==================== TRICK SYSTEM ====================
