@@ -406,6 +406,219 @@
             cursor: not-allowed;
         }
         
+        /* CHARACTER SELECTION STYLES */
+        .character-selection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .character-selection-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        
+        .character-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            backdrop-filter: blur(10px);
+        }
+        
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .character-card.selected {
+            border-color: #FFD700;
+            background: rgba(255,215,0,0.2);
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        
+        .character-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: radial-gradient(circle, #FF6B35, #F7931E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .character-card h3 {
+            color: white;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .character-card p {
+            color: #CCCCCC;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .character-level {
+            color: #FFD700;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .character-preview {
+            flex: 1;
+            display: flex;
+            gap: 30px;
+            min-height: 300px;
+        }
+        
+        .character-preview-left {
+            flex: 1;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .character-3d-preview {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            border-radius: 10px;
+            background: radial-gradient(circle, #1a1a2e, #0f0f23);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFD700;
+            font-size: 24px;
+        }
+        
+        .character-preview-right {
+            flex: 1;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+        }
+        
+        .character-info h2 {
+            color: #FFD700;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .character-info h3 {
+            color: #CCCCCC;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .character-info p {
+            color: #AAAAAA;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .character-stats h4 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        .ability-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #FFD700;
+        }
+        
+        .character-progression {
+            margin-top: 20px;
+        }
+        
+        .experience-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .experience-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FF6B35);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        
+        .character-selection-controls {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .start-game-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-right: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .start-game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
         .highscore-panel {
             position: absolute;
             top: 20px;
@@ -1568,8 +1781,8 @@
                 </div>
             </div>
             
-            <button onclick="startGame()" style="font-size: 24px; padding: 15px 40px; background: linear-gradient(45deg, #FF6B35, #F7931E); border: none; border-radius: 10px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s;">
-                🎮 Challenge starten!
+            <button onclick="showCharacterSelection()" style="font-size: 24px; padding: 15px 40px; background: linear-gradient(45deg, #FF6B35, #F7931E); border: none; border-radius: 10px; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s;">
+                🎮 Character wählen & starten!
             </button>
         </div>
         
@@ -1585,6 +1798,58 @@
             <br>
             <button onclick="submitHighscore()">💾 Speichern</button>
             <button onclick="skipHighscore()">⏭️ Überspringen</button>
+        </div>
+        
+        <!-- CHARACTER SELECTION SCREEN -->
+        <div id="characterSelection" class="character-selection" style="display: none;">
+            <div class="character-selection-content">
+                <h1 style="text-align: center; color: #FFD700; margin-bottom: 30px; font-size: 36px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                    🎮 Wähle deinen Charakter
+                </h1>
+                
+                <div class="character-grid" id="characterGrid">
+                    <!-- Characters will be dynamically populated -->
+                </div>
+                
+                <div class="character-preview" id="characterPreview">
+                    <div class="character-preview-left">
+                        <div class="character-3d-preview" id="character3DPreview">
+                            <!-- 3D character preview will be rendered here -->
+                        </div>
+                    </div>
+                    
+                    <div class="character-preview-right">
+                        <div class="character-info" id="characterInfo">
+                            <h2 id="characterName">NEON-7</h2>
+                            <h3 id="characterTitle">Digital Ghost</h3>
+                            <p id="characterDescription">A consciousness trapped between digital and physical realms</p>
+                            
+                            <div class="character-stats">
+                                <h4>Fähigkeiten:</h4>
+                                <div id="characterAbilities">
+                                    <!-- Abilities will be populated -->
+                                </div>
+                            </div>
+                            
+                            <div class="character-progression">
+                                <h4>Level: <span id="characterLevel">1</span></h4>
+                                <div class="experience-bar">
+                                    <div class="experience-fill" id="experienceBar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="character-selection-controls">
+                    <button onclick="startGameWithCharacter()" class="start-game-btn" id="startGameBtn">
+                        🚀 Mit NEON-7 starten!
+                    </button>
+                    <button onclick="hideCharacterSelection()" class="back-btn">
+                        ← Zurück zum Menü
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3083,6 +3348,142 @@
                 console.error('Error in startGame:', error);
             }
         };
+        
+        // CHARACTER SELECTION FUNCTIONS
+        window.showCharacterSelection = function() {
+            console.log('showCharacterSelection called');
+            document.getElementById('characterSelection').style.display = 'block';
+            initializeCharacterSelection();
+        };
+        
+        window.hideCharacterSelection = function() {
+            console.log('hideCharacterSelection called');
+            document.getElementById('characterSelection').style.display = 'none';
+        };
+        
+        window.selectCharacter = function(characterId) {
+            console.log('selectCharacter called with:', characterId);
+            gameState.selectedCharacter = characterId;
+            updateCharacterSelection();
+        };
+        
+        window.startGameWithCharacter = function() {
+            console.log('startGameWithCharacter called with:', gameState.selectedCharacter);
+            hideCharacterSelection();
+            startGameInternal();
+        };
+        
+        function initializeCharacterSelection() {
+            const characterGrid = document.getElementById('characterGrid');
+            characterGrid.innerHTML = '';
+            
+            // Create character cards
+            gameState.availableCharacters.forEach(charId => {
+                const charDef = characterDefinitions[charId];
+                const charProgression = gameState.characterProgression[charId];
+                
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                if (charId === gameState.selectedCharacter) {
+                    card.classList.add('selected');
+                }
+                
+                card.onclick = () => selectCharacter(charId);
+                
+                const avatar = getCharacterAvatar(charId);
+                
+                card.innerHTML = `
+                    <div class="character-avatar" style="background: linear-gradient(135deg, ${charDef.visualStyle.primaryColor.toString(16)}, ${charDef.visualStyle.secondaryColor.toString(16)})">
+                        ${avatar}
+                    </div>
+                    <h3>${charDef.name}</h3>
+                    <p>${charDef.title}</p>
+                    <div class="character-level">Level ${charProgression.level}</div>
+                `;
+                
+                characterGrid.appendChild(card);
+            });
+            
+            updateCharacterPreview();
+        }
+        
+        function updateCharacterSelection() {
+            const cards = document.querySelectorAll('.character-card');
+            cards.forEach((card, index) => {
+                const charId = gameState.availableCharacters[index];
+                if (charId === gameState.selectedCharacter) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+            
+            updateCharacterPreview();
+        }
+        
+        function updateCharacterPreview() {
+            const selectedChar = characterDefinitions[gameState.selectedCharacter];
+            const progression = gameState.characterProgression[gameState.selectedCharacter];
+            
+            document.getElementById('characterName').textContent = selectedChar.name;
+            document.getElementById('characterTitle').textContent = selectedChar.title;
+            document.getElementById('characterDescription').textContent = selectedChar.description;
+            document.getElementById('characterLevel').textContent = progression.level;
+            document.getElementById('startGameBtn').textContent = `🚀 Mit ${selectedChar.name} starten!`;
+            
+            // Update abilities
+            const abilitiesContainer = document.getElementById('characterAbilities');
+            abilitiesContainer.innerHTML = '';
+            
+            const abilities = [
+                { name: 'Passiv', description: selectedChar.abilities.passive },
+                { name: 'Level 1', description: selectedChar.abilities.level1 },
+                { name: 'Level 5', description: selectedChar.abilities.level5 },
+                { name: 'Level 10', description: selectedChar.abilities.level10 }
+            ];
+            
+            abilities.forEach(ability => {
+                const abilityDiv = document.createElement('div');
+                abilityDiv.className = 'ability-item';
+                abilityDiv.innerHTML = `
+                    <strong>${ability.name}:</strong> ${ability.description}
+                `;
+                abilitiesContainer.appendChild(abilityDiv);
+            });
+            
+            // Update experience bar
+            const experienceBar = document.getElementById('experienceBar');
+            const experiencePercent = (progression.experience % 100); // Simple progression system
+            experienceBar.style.width = experiencePercent + '%';
+            
+            // Update 3D preview
+            update3DCharacterPreview();
+        }
+        
+        function getCharacterAvatar(charId) {
+            const avatars = {
+                neon7: '🤖',
+                void: '🚀',
+                lara: '🏛️',
+                bjorn: '❄️',
+                seraphina: '💎'
+            };
+            return avatars[charId] || '❓';
+        }
+        
+        function update3DCharacterPreview() {
+            const previewDiv = document.getElementById('character3DPreview');
+            const selectedChar = characterDefinitions[gameState.selectedCharacter];
+            
+            // Simple preview for now - can be enhanced with actual 3D rendering later
+            previewDiv.innerHTML = `
+                <div style="text-align: center; color: #${selectedChar.visualStyle.primaryColor.toString(16)}">
+                    <div style="font-size: 64px; margin-bottom: 20px;">${getCharacterAvatar(gameState.selectedCharacter)}</div>
+                    <div style="font-size: 18px; color: #FFD700;">${selectedChar.name}</div>
+                    <div style="font-size: 14px; color: #CCCCCC; margin-top: 10px;">${selectedChar.theme}</div>
+                </div>
+            `;
+        }
 
         window.submitHighscore = function() {
             console.log('submitHighscore called');
@@ -3247,6 +3648,32 @@
                 losses: 0,
                 totalBoxes: 0,
                 netPoints: 0
+            },
+            
+            // CHARACTER SYSTEM v4.5.0
+            selectedCharacter: 'neon7', // Default character ID
+            characterSelectionVisible: false,
+            availableCharacters: ['neon7', 'void', 'lara', 'bjorn', 'seraphina'],
+            characterProgression: {
+                neon7: { level: 1, experience: 0, unlockedAbilities: ['hack_basic'] },
+                void: { level: 1, experience: 0, unlockedAbilities: ['jetpack_basic'] },
+                lara: { level: 1, experience: 0, unlockedAbilities: ['archaeology_basic'] },
+                bjorn: { level: 1, experience: 0, unlockedAbilities: ['ice_trail_basic'] },
+                seraphina: { level: 1, experience: 0, unlockedAbilities: ['crystal_attraction_basic'] }
+            },
+            characterAbilities: {
+                activeAbility: null,
+                abilityCooldown: 0,
+                abilityDuration: 0,
+                abilityCharges: 0
+            },
+            characterStats: {
+                memoryFragments: 0,      // Neon-7's humanity tracker
+                temporalAnchors: 0,      // Void's time stabilizers
+                ancientTotems: 0,        // Lara's curse reversers
+                frostRunes: 0,           // Bjorn's redemption items
+                organicEssences: 0       // Seraphina's corruption resisters
+            }
             },
             pausedForGambling: false,
             savedGameSpeed: 0,
@@ -4334,10 +4761,571 @@
             }
         }
 
+        // CHARACTER DEFINITIONS
+        const characterDefinitions = {
+            neon7: {
+                name: "NEON-7",
+                title: "Digital Ghost",
+                description: "A consciousness trapped between digital and physical realms",
+                theme: "cyberpunk",
+                gender: "female",
+                backstory: "Sarah Chen died in a corporate raid but was uploaded as pure code",
+                conflict: "Slowly forgetting human memories, fears becoming pure data",
+                visualStyle: {
+                    primaryColor: 0x00FFFF,
+                    secondaryColor: 0xFF00FF,
+                    emissiveColor: 0x0088FF,
+                    skinTone: 0x8A2BE2,
+                    hairColor: 0x00FFFF
+                },
+                abilities: {
+                    passive: "Digital Immunity - Immune to tech obstacles",
+                    level1: "Ghost Protocol - Phase through walls (2s cooldown)",
+                    level5: "Memory Recovery - Reveals hidden collectibles",
+                    level10: "System Override - 5s invincibility"
+                },
+                levelAdvantages: {
+                    2: 200, // Cyberpunk level bonus percentage
+                    8: 150  // Space station bonus
+                },
+                animations: {
+                    run: "hack_run",
+                    jump: "data_jump", 
+                    duck: "neural_duck",
+                    boost: "system_boost",
+                    slide: "glitch_slide"
+                }
+            },
+            void: {
+                name: "Commander Void",
+                title: "Time-Lost Astronaut",
+                description: "1960s astronaut displaced to the future", 
+                theme: "retro_space",
+                gender: "male",
+                backstory: "Lost in space 1969, emerged through wormhole in 2087",
+                conflict: "Family died the day he disappeared, can never return home",
+                visualStyle: {
+                    primaryColor: 0x4169E1,
+                    secondaryColor: 0xFFFFFF,
+                    emissiveColor: 0xFF6600,
+                    skinTone: 0xF5DEB3,
+                    suitColor: 0x2F4F4F
+                },
+                abilities: {
+                    passive: "Zero-G Adaptation - Unique floaty physics",
+                    level1: "Temporal Echo - Rewind 1 second (15s cooldown)",
+                    level5: "Enhanced Thrusters - Double jump height",
+                    level10: "Combat Mode - Destroys obstacles on contact"
+                },
+                levelAdvantages: {
+                    8: 300, // Space station mastery
+                    3: 150  // Sky level bonus
+                },
+                animations: {
+                    run: "jetpack_run",
+                    jump: "gravity_jump",
+                    duck: "magnetic_duck", 
+                    boost: "boost_burst",
+                    slide: "shield_deploy"
+                }
+            },
+            lara: {
+                name: "Lara Thornwood",
+                title: "Cursed Archaeologist",
+                description: "Racing against her own transformation",
+                theme: "jungle_adventure",
+                gender: "female", 
+                backstory: "Cursed by ancient artifact, slowly becoming jungle spirit",
+                conflict: "Each day without relics, loses more humanity",
+                visualStyle: {
+                    primaryColor: 0x8B4513,
+                    secondaryColor: 0x228B22,
+                    emissiveColor: 0xFFD700,
+                    skinTone: 0xDEB887,
+                    hairColor: 0x8B4513
+                },
+                abilities: {
+                    passive: "Artifact Sense - Collectibles glow and attract",
+                    level1: "Archaeological Insight - Reveals hidden items", 
+                    level5: "Primal Agility - Temporary wall climbing",
+                    level10: "Ancient Powers - Protective jungle spirits"
+                },
+                levelAdvantages: {
+                    7: 300, // Jungle temple mastery
+                    4: 175, // Underwater ruins bonus
+                    5: 150  // Volcanic exploration
+                },
+                animations: {
+                    run: "vine_swing_run",
+                    jump: "parkour_jump",
+                    duck: "serpent_duck",
+                    boost: "spirit_animal_boost", 
+                    slide: "archaeological_slide"
+                }
+            },
+            bjorn: {
+                name: "Bjorn Frostbeard",
+                title: "Guilt-Ridden Viking", 
+                description: "Seeking redemption for his destroyed clan",
+                theme: "norse_ice",
+                gender: "male",
+                backstory: "Accidentally summoned blizzard that destroyed his village",
+                conflict: "Haunted by dead clan, seeking magical resurrection",
+                visualStyle: {
+                    primaryColor: 0x87CEEB,
+                    secondaryColor: 0xFFFFFF,
+                    emissiveColor: 0x4682B4,
+                    skinTone: 0xB0E0E6,
+                    hairColor: 0xF0F8FF
+                },
+                abilities: {
+                    passive: "Ancestral Spirits - Dead clan appears when injured",
+                    level1: "Ice Trail - Creates slippery path behind",
+                    level5: "Frost Armor - 50% damage reduction", 
+                    level10: "Ragnarök Mode - Becomes giant, destroys everything"
+                },
+                levelAdvantages: {
+                    6: 400, // Ice caves immunity and mastery
+                    1: 125, // Subway bonus (tough environment)
+                    2: 125  // Urban warrior bonus
+                },
+                animations: {
+                    run: "berserker_run",
+                    jump: "valkyrie_jump",
+                    duck: "frost_duck",
+                    boost: "rage_boost",
+                    slide: "shield_wall_slide"
+                }
+            },
+            seraphina: {
+                name: "Seraphina Prism",
+                title: "Reality Refugee",
+                description: "Last organic being from crystallized dimension",
+                theme: "crystal_mysticism",
+                gender: "female",
+                backstory: "Escaped dimension where crystals enslaved all life",
+                conflict: "Crystals whisper commands to join the collective",
+                visualStyle: {
+                    primaryColor: 0xFF00FF,
+                    secondaryColor: 0x9400D3,
+                    emissiveColor: 0xDDA0DD,
+                    skinTone: 0xF8F8FF,
+                    hairColor: 0xC0C0C0
+                },
+                abilities: {
+                    passive: "Crystal Resonance - Attracts all crystal collectibles",
+                    level1: "Prismatic Shield - Reflects obstacles as rainbows",
+                    level5: "Dimensional Phase - Brief parallel dimension travel",
+                    level10: "Ascension - Becomes pure energy, passes through all"
+                },
+                levelAdvantages: {
+                    9: 500, // Crystal mines transcendence
+                    10: 300, // Final dimension mastery
+                    3: 150   // Sky level (ethereal connection)
+                },
+                animations: {
+                    run: "prismatic_run",
+                    jump: "dimensional_jump",
+                    duck: "refraction_duck",
+                    boost: "crystal_resonance_boost",
+                    slide: "portal_slide"
+                }
+            }
+        };
+        
         function createPlayer() {
+            const selectedCharacter = characterDefinitions[gameState.selectedCharacter];
+            console.log('Creating player with character:', gameState.selectedCharacter);
+            
             const playerGroup = new THREE.Group();
             
-            // Player body (torso)
+            // Create character-specific player based on selected character
+            switch (gameState.selectedCharacter) {
+                case 'neon7':
+                    return createNeon7Player();
+                case 'void':
+                    return createVoidPlayer();
+                case 'lara':
+                    return createLaraPlayer();
+                case 'bjorn':
+                    return createBjornPlayer();
+                case 'seraphina':
+                    return createSeraphinaPlayer();
+                default:
+                    return createDefaultPlayer();
+            }
+        }
+        
+        function createNeon7Player() {
+            const playerGroup = new THREE.Group();
+            
+            // Cyberpunk digital ghost body
+            const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x00FFFF,
+                emissive: 0x004444,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.9
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.7;
+            body.castShadow = true;
+            playerGroup.add(body);
+            
+            // Digital glitch effects
+            const glitchGeometry = new THREE.BoxGeometry(0.62, 0.82, 0.32);
+            const glitchMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF00FF,
+                transparent: true,
+                opacity: 0.2,
+                wireframe: true
+            });
+            const glitch = new THREE.Mesh(glitchGeometry, glitchMaterial);
+            glitch.position.y = 0.7;
+            playerGroup.add(glitch);
+            
+            // Cybernetic head
+            const headGeometry = new THREE.SphereGeometry(0.25);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8A2BE2,
+                emissive: 0x220044,
+                emissiveIntensity: 0.2
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.35;
+            head.castShadow = true;
+            playerGroup.add(head);
+            
+            // Cybernetic eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.05);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                emissive: 0x00FFFF,
+                emissiveIntensity: 1.0
+            });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.08, 1.4, 0.2);
+            playerGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.08, 1.4, 0.2);
+            playerGroup.add(rightEye);
+            
+            // Add fiber optic hair
+            for (let i = 0; i < 20; i++) {
+                const hairGeometry = new THREE.CylinderGeometry(0.005, 0.005, 0.3);
+                const hairMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00FFFF,
+                    emissive: 0x00FFFF,
+                    emissiveIntensity: 0.5
+                });
+                const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+                hair.position.set(
+                    (Math.random() - 0.5) * 0.4,
+                    1.5 + Math.random() * 0.2,
+                    (Math.random() - 0.5) * 0.4
+                );
+                hair.rotation.z = (Math.random() - 0.5) * 0.5;
+                playerGroup.add(hair);
+            }
+            
+            playerGroup.userData.characterType = 'neon7';
+            return playerGroup;
+        }
+        
+        function createVoidPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Space suit body
+            const bodyGeometry = new THREE.BoxGeometry(0.7, 0.9, 0.4);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x2F4F4F,
+                emissive: 0x111111,
+                emissiveIntensity: 0.1
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.7;
+            body.castShadow = true;
+            playerGroup.add(body);
+            
+            // Space helmet
+            const helmetGeometry = new THREE.SphereGeometry(0.3);
+            const helmetMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFFF,
+                transparent: true,
+                opacity: 0.8
+            });
+            const helmet = new THREE.Mesh(helmetGeometry, helmetMaterial);
+            helmet.position.y = 1.35;
+            helmet.castShadow = true;
+            playerGroup.add(helmet);
+            
+            // Helmet visor
+            const visorGeometry = new THREE.SphereGeometry(0.28);
+            const visorMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x000080,
+                transparent: true,
+                opacity: 0.6
+            });
+            const visor = new THREE.Mesh(visorGeometry, visorMaterial);
+            visor.position.y = 1.35;
+            playerGroup.add(visor);
+            
+            // Jetpack
+            const jetpackGeometry = new THREE.BoxGeometry(0.4, 0.8, 0.3);
+            const jetpackMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4169E1,
+                emissive: 0x000022,
+                emissiveIntensity: 0.2
+            });
+            const jetpack = new THREE.Mesh(jetpackGeometry, jetpackMaterial);
+            jetpack.position.set(0, 0.7, -0.4);
+            jetpack.castShadow = true;
+            playerGroup.add(jetpack);
+            
+            // Jetpack thrusters
+            const thrusterGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.2);
+            const thrusterMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF6600,
+                emissive: 0xFF6600,
+                emissiveIntensity: 0.8
+            });
+            
+            const leftThruster = new THREE.Mesh(thrusterGeometry, thrusterMaterial);
+            leftThruster.position.set(-0.15, 0.3, -0.5);
+            playerGroup.add(leftThruster);
+            
+            const rightThruster = new THREE.Mesh(thrusterGeometry, thrusterMaterial);
+            rightThruster.position.set(0.15, 0.3, -0.5);
+            playerGroup.add(rightThruster);
+            
+            playerGroup.userData.characterType = 'void';
+            return playerGroup;
+        }
+        
+        function createLaraPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Adventurer body
+            const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8B4513,
+                emissive: 0x221100,
+                emissiveIntensity: 0.1
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.7;
+            body.castShadow = true;
+            playerGroup.add(body);
+            
+            // Adventurer head
+            const headGeometry = new THREE.SphereGeometry(0.25);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xDEB887
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.35;
+            head.castShadow = true;
+            playerGroup.add(head);
+            
+            // Braided hair
+            const hairGeometry = new THREE.BoxGeometry(0.1, 0.6, 0.1);
+            const hairMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x654321
+            });
+            const braid = new THREE.Mesh(hairGeometry, hairMaterial);
+            braid.position.set(0, 1.2, -0.3);
+            playerGroup.add(braid);
+            
+            // Tribal tattoos (glowing)
+            const tattooGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+            const tattooMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFD700,
+                emissive: 0xFFD700,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.6
+            });
+            const tattoo = new THREE.Mesh(tattooGeometry, tattooMaterial);
+            tattoo.position.set(0.25, 0.8, 0.16);
+            playerGroup.add(tattoo);
+            
+            // Archaeological tool belt
+            const beltGeometry = new THREE.TorusGeometry(0.35, 0.05, 8, 16);
+            const beltMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8B4513
+            });
+            const belt = new THREE.Mesh(beltGeometry, beltMaterial);
+            belt.position.y = 0.5;
+            belt.rotation.x = Math.PI / 2;
+            playerGroup.add(belt);
+            
+            playerGroup.userData.characterType = 'lara';
+            return playerGroup;
+        }
+        
+        function createBjornPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Viking warrior body
+            const bodyGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.4);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x87CEEB,
+                emissive: 0x002244,
+                emissiveIntensity: 0.2
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.7;
+            body.castShadow = true;
+            playerGroup.add(body);
+            
+            // Viking head
+            const headGeometry = new THREE.SphereGeometry(0.3);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xB0E0E6
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.4;
+            head.castShadow = true;
+            playerGroup.add(head);
+            
+            // Ice crystal beard
+            const beardGeometry = new THREE.BoxGeometry(0.4, 0.3, 0.2);
+            const beardMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xF0F8FF,
+                emissive: 0x4682B4,
+                emissiveIntensity: 0.3
+            });
+            const beard = new THREE.Mesh(beardGeometry, beardMaterial);
+            beard.position.set(0, 1.2, 0.25);
+            playerGroup.add(beard);
+            
+            // Viking helmet with horns
+            const helmetGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.2, 8);
+            const helmetMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x2F4F4F
+            });
+            const helmet = new THREE.Mesh(helmetGeometry, helmetMaterial);
+            helmet.position.y = 1.6;
+            playerGroup.add(helmet);
+            
+            // Horns
+            const hornGeometry = new THREE.ConeGeometry(0.05, 0.3, 6);
+            const hornMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFE0
+            });
+            
+            const leftHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+            leftHorn.position.set(-0.2, 1.8, 0);
+            leftHorn.rotation.z = -0.3;
+            playerGroup.add(leftHorn);
+            
+            const rightHorn = new THREE.Mesh(hornGeometry, hornMaterial);
+            rightHorn.position.set(0.2, 1.8, 0);
+            rightHorn.rotation.z = 0.3;
+            playerGroup.add(rightHorn);
+            
+            playerGroup.userData.characterType = 'bjorn';
+            return playerGroup;
+        }
+        
+        function createSeraphinaPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Ethereal crystalline body
+            const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xF8F8FF,
+                emissive: 0x9400D3,
+                emissiveIntensity: 0.4,
+                transparent: true,
+                opacity: 0.8
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.7;
+            body.castShadow = true;
+            playerGroup.add(body);
+            
+            // Crystal head
+            const headGeometry = new THREE.SphereGeometry(0.25);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xDDA0DD,
+                emissive: 0x663366,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.9
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.35;
+            head.castShadow = true;
+            playerGroup.add(head);
+            
+            // Prismatic eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.05);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 1.0
+            });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.08, 1.4, 0.2);
+            playerGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.08, 1.4, 0.2);
+            playerGroup.add(rightEye);
+            
+            // Floating crystal hair
+            for (let i = 0; i < 15; i++) {
+                const crystalGeometry = new THREE.OctahedronGeometry(0.03);
+                const crystalMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xC0C0C0,
+                    emissive: 0x9400D3,
+                    emissiveIntensity: 0.6
+                });
+                const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+                crystal.position.set(
+                    (Math.random() - 0.5) * 0.6,
+                    1.5 + Math.random() * 0.3,
+                    (Math.random() - 0.5) * 0.6
+                );
+                crystal.userData.floatSpeed = 0.5 + Math.random() * 1;
+                playerGroup.add(crystal);
+            }
+            
+            // Orbiting crystal gems
+            for (let i = 0; i < 6; i++) {
+                const gemGeometry = new THREE.OctahedronGeometry(0.05);
+                const gemMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFF00FF,
+                    emissive: 0xFF00FF,
+                    emissiveIntensity: 0.8
+                });
+                const gem = new THREE.Mesh(gemGeometry, gemMaterial);
+                
+                const angle = (i / 6) * Math.PI * 2;
+                const radius = 0.8;
+                gem.position.set(
+                    Math.cos(angle) * radius,
+                    1.0,
+                    Math.sin(angle) * radius
+                );
+                gem.userData.orbitAngle = angle;
+                gem.userData.orbitRadius = radius;
+                playerGroup.add(gem);
+            }
+            
+            playerGroup.userData.characterType = 'seraphina';
+            return playerGroup;
+        }
+        
+        function createDefaultPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Default player body (original design)
             const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
             const bodyMaterial = new THREE.MeshLambertMaterial({ 
                 color: 0x4A90E2
@@ -9703,7 +10691,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.4.0-VISUAL-OVERHAUL<br>
+                    Version: 4.5.0-CHARACTER-SYSTEM<br>
                     🎮 10 Epic Levels<br>
                     🌟 Unique Mechanics Each Level
                 `;
