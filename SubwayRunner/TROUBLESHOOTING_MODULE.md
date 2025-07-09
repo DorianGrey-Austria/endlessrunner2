@@ -218,6 +218,34 @@ After deployment, check:
 - [ ] Level 2 can be selected and loaded
 - [ ] No 404 errors in Network tab
 
+## 🧲 Magnet Power-Up Visual Effects (KEEP AS IS!)
+
+**STATUS**: The current magnet effects are working perfectly and should be preserved!
+
+### Current Implementation:
+- **Visual Effect**: Blue vignette overlay when magnet is active
+- **Collection Range**: 2.5 units attraction radius
+- **Duration**: 15 seconds for both regular and large magnets
+- **Particle Effects**: Attraction particles when collectibles are pulled
+- **UI Indicator**: Shows remaining time with golden background
+
+### Code to Preserve:
+```javascript
+// Magnet attraction logic (lines 3727-3732, 3780-3786)
+if (gameState.magnetActive) {
+    const magnetRange = 2.5;
+    // Attraction calculation and movement
+}
+
+// Blue vignette effect (lines 6473-6480)
+if (gameState.magnetActive) {
+    magnetVignette.classList.add('active');
+}
+```
+
+**IMPORTANT**: Do not modify the magnet visual effects or attraction behavior - they're working perfectly as implemented!
+
 ---
 
 *Created after module integration issues on July 9, 2025*
+*Updated with magnet effect preservation notes on July 9, 2025*

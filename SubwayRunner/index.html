@@ -262,15 +262,158 @@
             border-radius: 8px;
         }
         
+        /* Minimal UI System from v4.x */
         #ui {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             z-index: 100;
+        }
+        
+        .ui-element {
+            position: absolute;
+            color: white;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+            opacity: 0.9;
+        }
+        
+        /* Top HUD - Minimal stats */
+        #minimalHUD {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            align-items: center;
+        }
+        
+        .hud-left {
+            display: flex;
+            gap: 25px;
+            font-size: 20px;
+        }
+        
+        .hud-center {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        
+        .hud-right {
+            display: flex;
+            gap: 25px;
+            font-size: 20px;
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Temporary notifications */
+        #notifications {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .notification {
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 30px;
+            font-size: 18px;
+            animation: fadeInOut 2s ease-out;
+            backdrop-filter: blur(15px);
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        
+        /* Power-up indicator */
+        #powerUpIndicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            background: rgba(139, 195, 74, 0.3);
+            border: 2px solid rgba(139, 195, 74, 0.8);
+            border-radius: 30px;
+            font-size: 20px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Game over overlay - minimal style */
+        #gameOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            backdrop-filter: blur(5px);
+        }
+        
+        .overlay-content {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        
+        .overlay-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+        
+        .overlay-stats {
+            font-size: 24px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        
+        .restart-button {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: rgba(139, 195, 74, 0.8);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        
+        .restart-button:hover {
+            background: rgba(139, 195, 74, 1);
+            transform: scale(1.05);
         }
         
         #versionInfo {
@@ -716,67 +859,55 @@
         <canvas id="gestureCanvas"></canvas>
         
         <div id="ui">
-            <div>Score: <span id="score">0</span></div>
-            <div>Speed: <span id="speed">100</span></div>
-            <div>❤️ Leben: <span id="lives">3</span></div>
-            <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
-            
-            <!-- NEW: Power-Up & Coins UI -->
-            <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
-                <div style="font-size: 12px; margin-top: 2px;">
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
-                            <div id="kiwiProgress" style="background: #FFD700; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 40px; height: 8px; overflow: hidden;">
-                            <div id="broccoliProgress" style="background: #8BC34A; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                        </div>
-                    </div>
+            <!-- Minimal HUD from v4.x -->
+            <div id="minimalHUD">
+                <div class="hud-left">
+                    <div class="status-indicator">❤️ <span id="lives">3</span></div>
+                    <div class="status-indicator">⏱️ <span id="timeRemaining">60</span>s</div>
+                </div>
+                <div class="hud-center">
+                    <span id="score">0</span>
+                </div>
+                <div class="hud-right">
+                    <div class="status-indicator">🥝 <span id="kiwiCount">0</span>/30</div>
+                    <div class="status-indicator">🥦 <span id="broccoliCount">0</span>/7</div>
                 </div>
             </div>
-            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
-                COMBO x<span id="comboMultiplier">1</span>!
-            </div>
             
-            <!-- NEW: Near Miss Display -->
-            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 18px; font-weight: bold;">
-                NEAR MISS! x<span id="nearMissCount">1</span>
-                <div style="font-size: 14px;">+<span id="nearMissBonus">50</span> Bonus!</div>
-            </div>
+            <!-- Notifications container -->
+            <div id="notifications"></div>
             
-            <!-- NEW: Milestone Display -->
-            <div id="milestoneDisplay" style="color: #00FF00; display: none; font-size: 24px; font-weight: bold; animation: bounce 1s;">
-                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m!</span>
-                <div style="font-size: 16px;">+<span id="milestoneBonus">500</span> Punkte!</div>
-            </div>
+            <!-- Power-up indicator (shows only when active) -->
+            <div id="powerUpIndicator"></div>
             
-            <!-- NEW: Score Multiplier Display -->
-            <div id="multiplierDisplay" style="color: #FF1493; font-size: 16px; font-weight: bold; margin-top: 5px;">
-                Multiplikator: x<span id="currentMultiplier">1.0</span>
-            </div>
-            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
-                <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
-            </div>
-            
-            <!-- NEW: Skill Combo UI -->
-            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <span id="skillComboIcon">🔥</span> SKILL COMBO x<span id="skillComboCount">1</span>! 
-                <div style="font-size: 14px; color: #FFD700;"><span id="skillComboBonus">+100</span> Punkte!</div>
-            </div>
-            
-            <!-- NEW: Environment Display -->
-            <div id="environmentDisplay" style="color: #87CEEB; font-weight: bold; margin-top: 10px;">
-                🏙️ <span id="currentEnvironment">Straße</span>
-            </div>
-            
-            <!-- NEW: Difficulty Progress Display -->
-            <div id="difficultyDisplay" style="color: #FFB347; font-weight: bold; margin-top: 5px; font-size: 14px;">
-                📈 Schwierigkeit: <span id="difficultyLevel">Leicht</span>
+            <!-- Game overlay for game over/pause -->
+            <div id="gameOverlay">
+                <div class="overlay-content">
+                    <h1 class="overlay-title">GAME OVER</h1>
+                    <div class="overlay-stats">
+                        <div>Score: <span id="finalScore">0</span></div>
+                        <div>🥝 Kiwis: <span id="finalKiwis">0</span>/30</div>
+                        <div>🥦 Broccolis: <span id="finalBroccolis">0</span>/7</div>
+                    </div>
+                    <button class="restart-button" onclick="restartGame()">NOCHMAL SPIELEN</button>
+                </div>
+        </div>
+        
+        
+        <!-- Start screen overlay -->
+        <div id="startScreen" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 300;">
+            <div style="text-align: center; color: white; padding: 40px;">
+                <h1 style="font-size: 64px; font-weight: 700; margin-bottom: 20px; letter-spacing: 5px;">SUBWAY RUNNER</h1>
+                <p style="font-size: 24px; margin-bottom: 40px; opacity: 0.8;">Sammle 30 Kiwis und 7 Broccolis!</p>
+                <button class="restart-button" onclick="startGame()" style="font-size: 28px; padding: 20px 60px;">START</button>
+                <div style="margin-top: 40px; font-size: 18px; opacity: 0.7;">
+                    <p>← → Seitlich bewegen</p>
+                    <p>↑ Springen | ↓ Ducken</p>
+                </div>
             </div>
         </div>
         
-        <div id="instructions">
+        <div id="instructions" style="display: none;">
             <div><strong>🎮 Steuerung:</strong></div>
             <div>A/D: Spurwechsel</div>
             <div>Leertaste/W: Springen 🦘</div>
@@ -1698,6 +1829,10 @@
                 // Start render loop
                 animate();
                 console.log('Three.js initialization complete');
+                
+                // Show start screen
+                gameState.isPlaying = false;
+                document.getElementById('startScreen').style.display = 'flex';
             } catch (error) {
                 console.error('Error initializing Three.js:', error);
             }
@@ -2637,43 +2772,128 @@
             showNameInputDialog(true);
         }
 
-        function showNotification(message, duration = 3000) {
+        function showNotification(message, duration = 2000) {
+            const notifications = document.getElementById('notifications');
             const notification = document.createElement('div');
+            notification.className = 'notification';
             notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 255, 255, 0.9);
-                color: black;
-                padding: 20px 40px;
-                border-radius: 10px;
-                font-size: 24px;
-                font-weight: bold;
-                z-index: 10000;
-                animation: notificationSlide 0.5s ease-out;
-            `;
             
-            // Add animation
-            if (!document.getElementById('notificationStyle')) {
-                const style = document.createElement('style');
-                style.id = 'notificationStyle';
-                style.textContent = `
-                    @keyframes notificationSlide {
-                        from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
-                        to { transform: translateX(-50%) translateY(0); opacity: 1; }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
+            notifications.appendChild(notification);
             
-            document.body.appendChild(notification);
-            
+            // Auto-remove after duration
             setTimeout(() => {
-                notification.style.animation = 'notificationSlide 0.5s ease-in reverse';
-                setTimeout(() => notification.remove(), 500);
+                notification.remove();
             }, duration);
+        }
+        
+        function loseLife() {
+            gameState.lives--;
+            updateUI();
+            
+            if (gameState.lives <= 0) {
+                gameOver();
+            } else {
+                showNotification(`Leben verloren! ${gameState.lives} übrig`, 1500);
+            }
+        }
+        
+        function gameOver() {
+            gameState.isPlaying = false;
+            gameState.isGameOver = true;
+            
+            // Update final stats
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalKiwis').textContent = gameState.collectedKiwis;
+            document.getElementById('finalBroccolis').textContent = gameState.collectedBroccolis;
+            
+            // Show game over overlay
+            document.getElementById('gameOverlay').style.display = 'flex';
+            
+            // Hide start screen if visible
+            document.getElementById('startScreen').style.display = 'none';
+        }
+        
+        function restartGame() {
+            // Reset game state
+            gameState = {
+                isPlaying: true,
+                isGameOver: false,
+                isVictory: false,
+                score: 0,
+                speed: 100,
+                playerLane: 1,
+                playerAction: null,
+                jumpProgress: 0,
+                kiwis: [],
+                broccolis: [],
+                totalKiwis: 0,
+                totalBroccolis: 0,
+                collectedKiwis: 0,
+                collectedBroccolis: 0,
+                currentEnvironment: 'street',
+                environmentProgress: 0,
+                cameraShakeIntensity: 0,
+                lives: 3,
+                timeRemaining: 60,
+                powerUps: [],
+                activePowerUp: null,
+                powerUpTimeRemaining: 0,
+                magnetActive: false,
+                shieldActive: false,
+                speedBoostActive: false,
+                kiwiCombo: 0,
+                comboMultiplier: 1,
+                lastKiwiTime: 0,
+                nearMissCount: 0,
+                lastNearMissTime: 0,
+                lastMilestone: 0,
+                maxCombo: 0,
+                totalNearMisses: 0,
+                skillCombo: 0,
+                lastSkillTime: 0,
+                ambientLightIntensity: 1.0,
+                spawnCooldown: 0,
+                lastSpawnZ: -50,
+                obstaclesSinceLastCollectible: 0,
+                lastPattern: '',
+                maxKiwis: 30,
+                maxBroccolis: 7,
+                totalCollectiblesSpawned: 0,
+                collectibleSpawnHistory: []
+            };
+            
+            // Clear scene
+            obstacles.forEach(obstacle => scene.remove(obstacle.mesh));
+            obstacles = [];
+            
+            gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
+            gameState.kiwis = [];
+            
+            gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
+            gameState.broccolis = [];
+            
+            gameState.powerUps.forEach(powerUp => scene.remove(powerUp.mesh));
+            gameState.powerUps = [];
+            
+            // Reset player position
+            player.position.set(0, 0, 0);
+            
+            // Hide overlay
+            document.getElementById('gameOverlay').style.display = 'none';
+            
+            // Update UI
+            updateUI();
+            
+            // Reset timer
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            startTimer();
+        }
+        
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            restartGame();
         }
         
         function updateUI() {
@@ -4233,19 +4453,24 @@
         }
         
         function updatePowerUpUI() {
-            const powerUpDisplay = document.getElementById('powerUpDisplay');
-            const powerUpIcon = document.getElementById('powerUpIcon');
-            const powerUpName = document.getElementById('powerUpName');
-            const powerUpTime = document.getElementById('powerUpTime');
+            const powerUpIndicator = document.getElementById('powerUpIndicator');
             
             if (gameState.activePowerUp) {
                 const config = POWER_UP_TYPES[gameState.activePowerUp];
-                powerUpDisplay.style.display = 'block';
-                powerUpIcon.textContent = config.icon;
-                powerUpName.textContent = config.name;
-                powerUpTime.textContent = Math.ceil(gameState.powerUpTimeRemaining / 1000);
+                const timeLeft = Math.ceil(gameState.powerUpTimeRemaining / 1000);
+                powerUpIndicator.innerHTML = `${config.icon} ${config.name}: ${timeLeft}s`;
+                powerUpIndicator.style.display = 'block';
+                
+                // Update style based on power-up type
+                if (gameState.activePowerUp === 'magnet' || gameState.activePowerUp === 'largeMagnet') {
+                    powerUpIndicator.style.background = 'rgba(255, 215, 0, 0.3)';
+                    powerUpIndicator.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+                } else {
+                    powerUpIndicator.style.background = 'rgba(139, 195, 74, 0.3)';
+                    powerUpIndicator.style.borderColor = 'rgba(139, 195, 74, 0.8)';
+                }
             } else {
-                powerUpDisplay.style.display = 'none';
+                powerUpIndicator.style.display = 'none';
             }
         }
         
@@ -4661,7 +4886,7 @@
             kiwiGroup.add(flesh);
             
             // Simple white core
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.3, 6);
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 6);
             const coreMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xF5F5DC
             });
@@ -5527,6 +5752,14 @@
             }
         }
         
+        // Helper function to check if lane is safe for collectible spawning
+        function isLaneClearForCollectible(lane, zPosition, safeDistance = 12) {
+            return !obstacles.some(obs => 
+                Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
+                Math.abs(obs.position.z - zPosition) < safeDistance
+            );
+        }
+        
         function animate() {
             requestAnimationFrame(animate);
             
@@ -5794,13 +6027,6 @@
                 }
                 
                 // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
-                // Helper function to check if lane is safe for collectible spawning
-                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
-                    return !obstacles.some(obs => 
-                        Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
-                        Math.abs(obs.position.z - zPosition) < safeDistance
-                    );
-                };
                 
                 // Dynamic spawn rate based on speed (reduce at high speeds)
                 const baseCoinRate = 0.003; // Low starting rate
