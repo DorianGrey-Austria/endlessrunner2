@@ -3365,7 +3365,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const characterSelectButton = document.getElementById('characterSelectButton');
             if (characterSelectButton) {
-                characterSelectButton.addEventListener('click', showCharacterSelection);
+                characterSelectButton.addEventListener('click', window.showCharacterSelection);
             }
         });
         
@@ -17689,13 +17689,25 @@
             console.log('renderer:', renderer);
         };
 
-        // Initialize game
-        console.log('Starting game initialization...');
-        init();
-        initializeFusionSystem();
-        
-        // Initialize ghost leaderboard display on page load
-        updateGhostLeaderboard();
+        // Initialize game when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Starting game initialization...');
+                init();
+                initializeFusionSystem();
+                
+                // Initialize ghost leaderboard display on page load
+                updateGhostLeaderboard();
+            });
+        } else {
+            // DOM is already loaded
+            console.log('Starting game initialization...');
+            init();
+            initializeFusionSystem();
+            
+            // Initialize ghost leaderboard display on page load
+            updateGhostLeaderboard();
+        }
         
         // ==================== TRICK SYSTEM ====================
         
