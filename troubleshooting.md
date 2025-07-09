@@ -1088,3 +1088,34 @@ Nach intensiver Analyse mit Git History und Vergleich mit letzten funktionierend
 
 ---
 EOF < /dev/null
+## 🚨 **VERSUCH 6 (13:05 Uhr): CSP BLOCKIERT CDN\! v4.5.9**
+
+### **Das WIRKLICHE Problem gefunden\!**
+
+**ERROR:** Content Security Policy blockiert cdnjs.cloudflare.com\!
+```
+Refused to load the script 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.min.js' 
+because it violates the following Content Security Policy directive: 
+"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com"
+```
+
+**URSACHE:** 
+- Der Hostinger Server hat eine CSP Policy die NUR unpkg.com erlaubt
+- cdnjs.cloudflare.com ist NICHT in der Whitelist
+- Deshalb 5 Sekunden Timeout, dann Fehlermeldung
+
+### **LÖSUNG v4.5.9:**
+```html
+<\!-- Zurück zu unpkg.com (von CSP erlaubt) -->
+<script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+```
+
+### **Warum die alte Version noch online ist:**
+- GitHub Actions Deployment braucht manchmal länger
+- Cache auf Hostinger Server
+- Mehrere Deployments in kurzer Zeit können sich überschneiden
+
+**STATUS:** Mit unpkg.com sollte es JETZT funktionieren\!
+
+---
+EOF < /dev/null
