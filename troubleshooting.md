@@ -1,18 +1,18 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **RESOLVED** - Version 4.5.5-ULTIMATE-FIX erfolgreich deployed
+## **Aktueller Status**: 🔴 **CRITICAL** - Three.js CDN Loading Failure
 
 ---
 
-## ✅ **GAME START FAILURE - ERFOLGREICH BEHOBEN** - 9. Juli 2025
+## 🚨 **GAME START FAILURE - Three.js CDN Loading Issue** - 9. Juli 2025
 
-### **LÖSUNG: Syntax-Fehler bei Zeile 8638 gefunden und behoben!**
+### **NEUES PROBLEM: Three.js lädt nicht von CDN!**
 
-#### **Behobene Fehler (Stand: 13:45 Uhr)**:
-1. ✅ **SyntaxError at line 8638** - Code war außerhalb der Funktion - BEHOBEN
-2. ✅ **CSP Violation** - Temporär deaktiviert für Debugging
-3. ⚠️ **Three.js deprecated warning** - Updated to v0.161.0
-4. ✅ **Alle kritischen Syntax-Fehler behoben**
+#### **Aktuelle Fehler (Stand: 12:55 Uhr)**:
+1. ❌ **Three.js lädt nicht** - CDN URL war falsch formatiert (r161 statt 0.161.0)
+2. ✅ **SyntaxError BEHOBEN** - Code außerhalb Funktion wurde gefixt
+3. ⚠️ **Audio 404 Errors** - Sounds fehlen (nicht kritisch)
+4. ❌ **Veraltete Version online** - v4.5.4 statt v4.5.7
 
 ---
 
@@ -1043,3 +1043,48 @@ Nach intensiver Suche mit Binary Search wurde der kritische Fehler gefunden:
 Code außerhalb von Funktionen ist der häufigste Grund für mysteriöse Syntax-Fehler, die schwer zu finden sind, weil der Parser abbricht bevor Fehlermeldungen generiert werden können.
 
 ---
+
+## 🎯 **VERSUCH 5 (12:55 Uhr): CDN URL FIX v4.5.8 - DER WAHRE FEHLER\!**
+
+### **Senior Developer Root Cause Analysis**:
+
+Nach intensiver Analyse mit Git History und Vergleich mit letzten funktionierenden Versionen:
+
+**DER KRITISCHE FEHLER:**
+```javascript
+// FALSCH (404 Error):
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r161/three.min.js"></script>
+
+// RICHTIG:
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.min.js"></script>
+```
+
+**Warum der Fehler passierte:**
+- Bei unpkg.com funktioniert die "r" Notation (r158, r161)
+- Bei cdnjs.com muss es die volle Versionsnummer sein (0.161.0)
+- Beim Wechsel des CDN wurde das Format nicht angepasst
+
+### **Implementierte Lösung v4.5.8:**
+1. ✅ **CDN URL korrigiert** - Von r161 zu 0.161.0
+2. ✅ **Fallback beibehalten** - Falls primärer CDN ausfällt
+3. ✅ **Timeout Protection** - Nach 5 Sekunden Fehlermeldung
+
+### **Lessons Learned für die Zukunft:**
+1. **CDN URLs immer testen** - Jeder CDN hat eigene URL-Struktur
+2. **Versionsformate beachten** - r158 vs 0.158.0
+3. **Funktionierende Versionen dokumentieren** - Git Tags für stable releases
+4. **Keine "Senior Developer Optimierungen"** - If it ain't broke, don't fix it
+
+### **Stabile Konfiguration für die Zukunft:**
+```html
+<\!-- Option 1: Bewährte unpkg Version -->
+<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+
+<\!-- Option 2: cdnjs mit korrektem Format -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.min.js"></script>
+```
+
+**Status:** Deployment läuft, sollte in 2-3 Minuten funktionieren\!
+
+---
+EOF < /dev/null
