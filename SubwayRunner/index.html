@@ -4676,6 +4676,161 @@
         }
         
         // Level 2 Cyberpunk Environment Elements
+        // LEVEL 1: ENHANCED SUBWAY ENVIRONMENT
+        // Add level 1 environment call
+        function createLevel1Environment() {
+            // Enhanced subway tunnel atmosphere
+            const tunnelGeometry = new THREE.CylinderGeometry(15, 15, 200, 32);
+            const tunnelMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x2C2C2C,
+                emissive: 0x111111,
+                emissiveIntensity: 0.1
+            });
+            const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+            tunnel.rotation.z = Math.PI / 2;
+            tunnel.position.y = 5;
+            tunnel.position.z = -50;
+            tunnel.userData = { type: 'subwayTunnel' };
+            scene.add(tunnel);
+            
+            // Subway tiles on walls
+            for (let i = 0; i < 20; i++) {
+                for (let j = 0; j < 10; j++) {
+                    const tileGeometry = new THREE.PlaneGeometry(1, 1);
+                    const tileMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xF0F0F0,
+                        emissive: 0x222222,
+                        emissiveIntensity: 0.05
+                    });
+                    const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+                    tile.position.set(-8 + Math.random() * 16, 1 + j * 1.1, -i * 10);
+                    tile.userData = { type: 'subwayTile' };
+                    scene.add(tile);
+                }
+            }
+            
+            // Steam vents with particle effects
+            for (let i = 0; i < 8; i++) {
+                const ventGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.5, 8);
+                const ventMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                const vent = new THREE.Mesh(ventGeometry, ventMaterial);
+                vent.position.set(-6 + Math.random() * 12, 0.25, -i * 12 - 5);
+                vent.userData = { type: 'steamVent' };
+                scene.add(vent);
+                
+                // Steam particle system
+                createSteamParticles(vent.position.x, vent.position.z);
+            }
+            
+            // Subway platform lights
+            for (let i = 0; i < 15; i++) {
+                const lightGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8);
+                const lightMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFAA,
+                    emissive: 0xFFFFAA,
+                    emissiveIntensity: 0.8
+                });
+                const light = new THREE.Mesh(lightGeometry, lightMaterial);
+                light.position.set(Math.random() > 0.5 ? -7 : 7, 8, -i * 8);
+                light.userData = { type: 'subwayLight' };
+                scene.add(light);
+                
+                // Light glow effect
+                const glowLight = new THREE.PointLight(0xFFFFAA, 0.5, 10);
+                glowLight.position.copy(light.position);
+                scene.add(glowLight);
+            }
+            
+            // Subway tracks with sparks
+            for (let i = 0; i < 50; i++) {
+                const trackGeometry = new THREE.BoxGeometry(0.2, 0.1, 2);
+                const trackMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x666666,
+                    emissive: 0x222222,
+                    emissiveIntensity: 0.1
+                });
+                const track = new THREE.Mesh(trackGeometry, trackMaterial);
+                track.position.set(-3 + Math.random() * 6, 0.05, -i * 2);
+                track.userData = { type: 'subwayTrack' };
+                scene.add(track);
+                
+                // Occasional sparks
+                if (Math.random() < 0.1) {
+                    createSparkEffect(track.position.x, track.position.z);
+                }
+            }
+            
+            // Subway atmosphere fog
+            scene.fog = new THREE.FogExp2(0x444444, 0.01);
+        }
+        
+        function createSteamParticles(x, z) {
+            const particleCount = 20;
+            const particles = new THREE.Group();
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.05, 4, 4);
+                const particleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                particle.position.set(
+                    x + (Math.random() - 0.5) * 0.5,
+                    0.5 + Math.random() * 3,
+                    z + (Math.random() - 0.5) * 0.5
+                );
+                
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        0.02 + Math.random() * 0.01,
+                        (Math.random() - 0.5) * 0.02
+                    ),
+                    life: 1.0,
+                    decay: 0.005 + Math.random() * 0.005
+                };
+                
+                particles.add(particle);
+            }
+            
+            particles.userData = { type: 'steamParticles' };
+            scene.add(particles);
+        }
+        
+        function createSparkEffect(x, z) {
+            const sparkCount = 10;
+            const sparks = new THREE.Group();
+            
+            for (let i = 0; i < sparkCount; i++) {
+                const sparkGeometry = new THREE.SphereGeometry(0.02, 3, 3);
+                const sparkMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFAA00,
+                    emissive: 0xFFAA00,
+                    emissiveIntensity: 1.0
+                });
+                const spark = new THREE.Mesh(sparkGeometry, sparkMaterial);
+                
+                spark.position.set(x, 0.1, z);
+                spark.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.1,
+                        Math.random() * 0.1,
+                        (Math.random() - 0.5) * 0.1
+                    ),
+                    life: 1.0,
+                    decay: 0.02
+                };
+                
+                sparks.add(spark);
+            }
+            
+            sparks.userData = { type: 'sparkEffect' };
+            scene.add(sparks);
+        }
+        
         function createLevel2Environment() {
             // Remove regular street elements
             scene.children.forEach(child => {
@@ -4685,36 +4840,185 @@
                 }
             });
             
-            // Neon grid floor
+            // Enhanced neon grid floor with pulsing effects
             const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
             gridHelper.position.y = -0.95;
-            gridHelper.userData = { type: 'level2Grid' };
+            gridHelper.userData = { 
+                type: 'level2Grid',
+                pulseSpeed: 2.0,
+                baseIntensity: 0.5
+            };
             scene.add(gridHelper);
             
-            // Create neon buildings
-            for (let i = 0; i < 20; i++) {
-                createCyberpunkBuilding(-20 - Math.random() * 10, -i * 10, 'left');
-                createCyberpunkBuilding(20 + Math.random() * 10, -i * 10, 'right');
+            // Neon street lights with particle streams
+            for (let i = 0; i < 30; i++) {
+                const lightPost = new THREE.Group();
+                
+                // Light post structure
+                const postGeometry = new THREE.CylinderGeometry(0.1, 0.1, 8, 8);
+                const postMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x333355,
+                    emissive: 0x111133
+                });
+                const post = new THREE.Mesh(postGeometry, postMaterial);
+                post.position.y = 4;
+                lightPost.add(post);
+                
+                // Neon light head
+                const lightGeometry = new THREE.SphereGeometry(0.3, 12, 8);
+                const lightColor = Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF;
+                const lightMaterial = new THREE.MeshBasicMaterial({ 
+                    color: lightColor,
+                    emissive: lightColor,
+                    emissiveIntensity: 1.0
+                });
+                const light = new THREE.Mesh(lightGeometry, lightMaterial);
+                light.position.y = 8;
+                lightPost.add(light);
+                
+                // Particle stream
+                createNeonParticleStream(0, 8, lightColor);
+                
+                lightPost.position.set(
+                    Math.random() > 0.5 ? -8 : 8,
+                    0,
+                    -i * 6 - 5
+                );
+                lightPost.userData = { type: 'neonStreetLight' };
+                scene.add(lightPost);
             }
             
-            // Create holographic billboards
-            for (let i = 0; i < 10; i++) {
-                createHolographicBillboard(-15, -i * 20 - 10);
-                createHolographicBillboard(15, -i * 20 - 10);
+            // Create enhanced neon buildings
+            for (let i = 0; i < 25; i++) {
+                createCyberpunkBuilding(-20 - Math.random() * 15, -i * 8, 'left');
+                createCyberpunkBuilding(20 + Math.random() * 15, -i * 8, 'right');
             }
             
-            // Create flying vehicles
-            for (let i = 0; i < 5; i++) {
+            // Create holographic billboards with animations
+            for (let i = 0; i < 15; i++) {
+                createHolographicBillboard(-15, -i * 15 - 10);
+                createHolographicBillboard(15, -i * 15 - 10);
+            }
+            
+            // Create flying vehicles with trails
+            for (let i = 0; i < 8; i++) {
                 createFlyingVehicle();
             }
             
-            // Add fog for atmosphere
-            scene.fog = new THREE.FogExp2(0x001133, 0.02);
+            // Digital rain effect
+            createDigitalRain();
+            
+            // Holographic ground projections
+            for (let i = 0; i < 20; i++) {
+                createHolographicGroundProjection(-i * 5);
+            }
+            
+            // Enhanced cyberpunk fog
+            scene.fog = new THREE.FogExp2(0x001133, 0.025);
             
             // Change ambient light to cyberpunk colors
             if (scene.children.find(child => child.type === 'AmbientLight')) {
                 scene.children.find(child => child.type === 'AmbientLight').color = new THREE.Color(0x221155);
             }
+        }
+        
+        function createNeonParticleStream(x, y, color) {
+            const particleCount = 15;
+            const particles = new THREE.Group();
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.03, 6, 6);
+                const particleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.8,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                particle.position.set(
+                    x + (Math.random() - 0.5) * 0.3,
+                    y - i * 0.5,
+                    (Math.random() - 0.5) * 0.3
+                );
+                
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.01,
+                        -0.02 - Math.random() * 0.01,
+                        (Math.random() - 0.5) * 0.01
+                    ),
+                    life: 1.0,
+                    decay: 0.003 + Math.random() * 0.002,
+                    pulse: Math.random() * Math.PI * 2
+                };
+                
+                particles.add(particle);
+            }
+            
+            particles.userData = { type: 'neonParticles' };
+            scene.add(particles);
+        }
+        
+        function createDigitalRain() {
+            const rainCount = 100;
+            const digitalRain = new THREE.Group();
+            
+            for (let i = 0; i < rainCount; i++) {
+                const dropGeometry = new THREE.PlaneGeometry(0.1, 0.5);
+                const dropMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00FF00,
+                    emissive: 0x00FF00,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const drop = new THREE.Mesh(dropGeometry, dropMaterial);
+                
+                drop.position.set(
+                    (Math.random() - 0.5) * 100,
+                    10 + Math.random() * 20,
+                    -Math.random() * 200
+                );
+                
+                drop.userData = {
+                    speed: 5 + Math.random() * 10,
+                    resetHeight: 30,
+                    opacity: 0.3 + Math.random() * 0.4
+                };
+                
+                digitalRain.add(drop);
+            }
+            
+            digitalRain.userData = { type: 'digitalRain' };
+            scene.add(digitalRain);
+        }
+        
+        function createHolographicGroundProjection(z) {
+            const projectionGeometry = new THREE.CircleGeometry(2, 16);
+            const projectionMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const projection = new THREE.Mesh(projectionGeometry, projectionMaterial);
+            
+            projection.position.set(
+                (Math.random() - 0.5) * 10,
+                0.01,
+                z
+            );
+            projection.rotation.x = -Math.PI / 2;
+            
+            projection.userData = {
+                type: 'holographicProjection',
+                pulseSpeed: 1 + Math.random() * 2,
+                baseOpacity: 0.2 + Math.random() * 0.3
+            };
+            
+            scene.add(projection);
         }
         
         function createCyberpunkBuilding(x, z, side) {
@@ -4938,22 +5242,279 @@
         // ========== LEVEL 3-10 ENVIRONMENT FUNCTIONS ==========
         
         // Level 3: Sky High Environment
+        // LEVEL 3: ENHANCED SKY HIGH ENVIRONMENT
         function createLevel3Environment() {
-            // Change sky to bright blue
+            // Change sky to bright blue with gradient
             scene.fog = new THREE.Fog(0x87CEEB, 10, 200);
             renderer.setClearColor(0x87CEEB);
             
-            // Create floating clouds
-            for (let i = 0; i < 30; i++) {
+            // Create floating clouds with particle effects
+            for (let i = 0; i < 40; i++) {
                 createFloatingCloud(
-                    -30 + Math.random() * 60,
-                    5 + Math.random() * 20,
-                    -50 - Math.random() * 100
+                    -40 + Math.random() * 80,
+                    3 + Math.random() * 25,
+                    -60 - Math.random() * 120
                 );
+            }
+            
+            // Create cloud particles
+            for (let i = 0; i < 20; i++) {
+                createCloudParticleSystem(
+                    -20 + Math.random() * 40,
+                    8 + Math.random() * 15,
+                    -30 - Math.random() * 100
+                );
+            }
+            
+            // Create wind streamers
+            for (let i = 0; i < 15; i++) {
+                createWindStreamer(
+                    -15 + Math.random() * 30,
+                    5 + Math.random() * 10,
+                    -20 - Math.random() * 80
+                );
+            }
+            
+            // Create floating islands
+            for (let i = 0; i < 8; i++) {
+                createFloatingIsland(
+                    -25 + Math.random() * 50,
+                    15 + Math.random() * 10,
+                    -30 - Math.random() * 60
+                );
+            }
+            
+            // Create flying birds
+            for (let i = 0; i < 12; i++) {
+                createFlyingBird();
             }
             
             // Create rainbow
             createRainbow();
+            
+            // Create sun rays
+            createSunRays();
+            
+            // Create sky gradient background
+            createSkyGradient();
+        }
+        
+        function createCloudParticleSystem(x, y, z) {
+            const particleCount = 30;
+            const particles = new THREE.Group();
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.1, 6, 6);
+                const particleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                particle.position.set(
+                    x + (Math.random() - 0.5) * 6,
+                    y + (Math.random() - 0.5) * 4,
+                    z + (Math.random() - 0.5) * 6
+                );
+                
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        (Math.random() - 0.5) * 0.01,
+                        (Math.random() - 0.5) * 0.02
+                    ),
+                    life: 1.0,
+                    decay: 0.001 + Math.random() * 0.002,
+                    float: Math.random() * Math.PI * 2
+                };
+                
+                particles.add(particle);
+            }
+            
+            particles.userData = { type: 'cloudParticles' };
+            scene.add(particles);
+        }
+        
+        function createWindStreamer(x, y, z) {
+            const streamerGeometry = new THREE.PlaneGeometry(8, 0.3);
+            const streamerMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xCCEEFF,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+            const streamer = new THREE.Mesh(streamerGeometry, streamerMaterial);
+            
+            streamer.position.set(x, y, z);
+            streamer.userData = {
+                type: 'windStreamer',
+                waveSpeed: 2 + Math.random() * 3,
+                waveAmplitude: 0.5 + Math.random() * 0.5,
+                baseRotation: Math.random() * Math.PI * 2
+            };
+            
+            scene.add(streamer);
+        }
+        
+        function createFloatingIsland(x, y, z) {
+            const islandGroup = new THREE.Group();
+            
+            // Island base
+            const islandGeometry = new THREE.CylinderGeometry(3, 4, 2, 12);
+            const islandMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8B7355,
+                emissive: 0x332211,
+                emissiveIntensity: 0.1
+            });
+            const island = new THREE.Mesh(islandGeometry, islandMaterial);
+            islandGroup.add(island);
+            
+            // Grass top
+            const grassGeometry = new THREE.CylinderGeometry(3.2, 3.2, 0.3, 12);
+            const grassMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x32CD32,
+                emissive: 0x0A4A0A,
+                emissiveIntensity: 0.2
+            });
+            const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+            grass.position.y = 1.1;
+            islandGroup.add(grass);
+            
+            // Small trees
+            for (let i = 0; i < 3; i++) {
+                const treeGeometry = new THREE.ConeGeometry(0.5, 2, 8);
+                const treeMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+                const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+                tree.position.set(
+                    (Math.random() - 0.5) * 4,
+                    2.5,
+                    (Math.random() - 0.5) * 4
+                );
+                islandGroup.add(tree);
+            }
+            
+            islandGroup.position.set(x, y, z);
+            islandGroup.userData = {
+                type: 'floatingIsland',
+                bobSpeed: 0.5 + Math.random() * 0.5,
+                bobRange: 1 + Math.random() * 0.5,
+                baseY: y
+            };
+            
+            scene.add(islandGroup);
+        }
+        
+        function createFlyingBird() {
+            const birdGroup = new THREE.Group();
+            
+            // Bird body
+            const bodyGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x4169E1 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            birdGroup.add(body);
+            
+            // Wings
+            const wingGeometry = new THREE.PlaneGeometry(0.8, 0.3);
+            const wingMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4169E1,
+                side: THREE.DoubleSide
+            });
+            
+            const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+            leftWing.position.set(-0.4, 0, 0);
+            leftWing.rotation.y = Math.PI / 6;
+            birdGroup.add(leftWing);
+            
+            const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
+            rightWing.position.set(0.4, 0, 0);
+            rightWing.rotation.y = -Math.PI / 6;
+            birdGroup.add(rightWing);
+            
+            // Random flight path
+            birdGroup.position.set(
+                -30 + Math.random() * 60,
+                8 + Math.random() * 15,
+                -50 - Math.random() * 100
+            );
+            
+            birdGroup.userData = {
+                type: 'flyingBird',
+                speed: 8 + Math.random() * 5,
+                flapSpeed: 4 + Math.random() * 2,
+                direction: new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.5,
+                    (Math.random() - 0.5) * 0.2,
+                    0.5 + Math.random() * 0.5
+                )
+            };
+            
+            scene.add(birdGroup);
+        }
+        
+        function createSunRays() {
+            const rayCount = 12;
+            const rayGroup = new THREE.Group();
+            
+            for (let i = 0; i < rayCount; i++) {
+                const rayGeometry = new THREE.PlaneGeometry(100, 2);
+                const rayMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFAA,
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.DoubleSide
+                });
+                const ray = new THREE.Mesh(rayGeometry, rayMaterial);
+                
+                ray.position.set(0, 20, -50);
+                ray.rotation.z = (i / rayCount) * Math.PI * 2;
+                
+                rayGroup.add(ray);
+            }
+            
+            rayGroup.userData = {
+                type: 'sunRays',
+                rotationSpeed: 0.2
+            };
+            
+            scene.add(rayGroup);
+        }
+        
+        function createSkyGradient() {
+            // Sky dome
+            const skyGeometry = new THREE.SphereGeometry(300, 32, 32);
+            const skyMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    topColor: { value: new THREE.Color(0x0077be) },
+                    bottomColor: { value: new THREE.Color(0x87CEEB) },
+                    offset: { value: 0.3 },
+                    exponent: { value: 0.6 }
+                },
+                vertexShader: `
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                        vWorldPosition = worldPosition.xyz;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 topColor;
+                    uniform vec3 bottomColor;
+                    uniform float offset;
+                    uniform float exponent;
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        float h = normalize(vWorldPosition + offset).y;
+                        gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+                    }
+                `,
+                side: THREE.BackSide
+            });
+            
+            const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+            skyDome.userData = { type: 'skyDome' };
+            scene.add(skyDome);
         }
         
         function createFloatingCloud(x, y, z) {
@@ -5007,24 +5568,293 @@
         }
         
         // Level 4: Underwater Tunnel Environment
+        // LEVEL 4: ENHANCED UNDERWATER ENVIRONMENT
         function createLevel4Environment() {
             scene.fog = new THREE.FogExp2(0x006994, 0.08);
             renderer.setClearColor(0x003366);
             
-            // Water caustics effect
+            // Enhanced water caustics effect
             const causticsLight = new THREE.DirectionalLight(0x00CCFF, 0.3);
             causticsLight.position.set(0, 10, 0);
             scene.add(causticsLight);
             
-            // Create underwater elements
-            for (let i = 0; i < 20; i++) {
-                createSeaweed(-10 + Math.random() * 20, -i * 10);
+            // Create underwater caustic lighting
+            createCausticLighting();
+            
+            // Create enhanced seaweed forests
+            for (let i = 0; i < 30; i++) {
+                createSeaweed(-15 + Math.random() * 30, -i * 8);
             }
             
-            // Create fish schools
-            for (let i = 0; i < 5; i++) {
+            // Create bubble streams
+            for (let i = 0; i < 15; i++) {
+                createBubbleStream(
+                    -10 + Math.random() * 20,
+                    0,
+                    -10 - Math.random() * 80
+                );
+            }
+            
+            // Create coral reefs
+            for (let i = 0; i < 12; i++) {
+                createCoralReef(
+                    -12 + Math.random() * 24,
+                    -i * 10
+                );
+            }
+            
+            // Create swimming fish schools
+            for (let i = 0; i < 8; i++) {
                 createFishSchool();
             }
+            
+            // Create floating jellyfish
+            for (let i = 0; i < 6; i++) {
+                createJellyfish();
+            }
+            
+            // Create underwater ruins
+            for (let i = 0; i < 5; i++) {
+                createUnderwaterRuins(
+                    -20 + Math.random() * 40,
+                    -i * 20
+                );
+            }
+            
+            // Create sunlight shafts
+            createSunlightShafts();
+        }
+        
+        function createCausticLighting() {
+            // Create caustic light patterns
+            const causticCount = 20;
+            const causticGroup = new THREE.Group();
+            
+            for (let i = 0; i < causticCount; i++) {
+                const causticGeometry = new THREE.PlaneGeometry(10, 10);
+                const causticMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00CCFF,
+                    transparent: true,
+                    opacity: 0.2,
+                    side: THREE.DoubleSide
+                });
+                const caustic = new THREE.Mesh(causticGeometry, causticMaterial);
+                
+                caustic.position.set(
+                    (Math.random() - 0.5) * 50,
+                    20 + Math.random() * 10,
+                    -i * 10
+                );
+                caustic.rotation.x = -Math.PI / 2;
+                
+                caustic.userData = {
+                    type: 'causticLight',
+                    waveSpeed: 1 + Math.random() * 2,
+                    wavePhase: Math.random() * Math.PI * 2
+                };
+                
+                causticGroup.add(caustic);
+            }
+            
+            causticGroup.userData = { type: 'causticLighting' };
+            scene.add(causticGroup);
+        }
+        
+        function createBubbleStream(x, y, z) {
+            const bubbleCount = 25;
+            const bubbleStream = new THREE.Group();
+            
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubbleGeometry = new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 8, 6);
+                const bubbleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xCCFFFF,
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+                
+                bubble.position.set(
+                    x + (Math.random() - 0.5) * 2,
+                    y + i * 0.5,
+                    z + (Math.random() - 0.5) * 2
+                );
+                
+                bubble.userData = {
+                    riseSpeed: 0.5 + Math.random() * 0.5,
+                    wobbleSpeed: 2 + Math.random() * 3,
+                    wobbleAmount: 0.3 + Math.random() * 0.2,
+                    baseX: bubble.position.x,
+                    life: 1.0
+                };
+                
+                bubbleStream.add(bubble);
+            }
+            
+            bubbleStream.userData = { type: 'bubbleStream' };
+            scene.add(bubbleStream);
+        }
+        
+        function createCoralReef(x, z) {
+            const reefGroup = new THREE.Group();
+            
+            // Various coral shapes
+            for (let i = 0; i < 8; i++) {
+                const coralTypes = [
+                    new THREE.ConeGeometry(0.3, 1.5, 6),
+                    new THREE.SphereGeometry(0.4, 8, 6),
+                    new THREE.CylinderGeometry(0.2, 0.4, 2, 8)
+                ];
+                
+                const coralGeometry = coralTypes[Math.floor(Math.random() * coralTypes.length)];
+                const coralColors = [0xFF6347, 0xFF1493, 0x00CED1, 0x9370DB, 0xFFB6C1];
+                const coralMaterial = new THREE.MeshLambertMaterial({ 
+                    color: coralColors[Math.floor(Math.random() * coralColors.length)],
+                    emissive: 0x001122,
+                    emissiveIntensity: 0.2
+                });
+                
+                const coral = new THREE.Mesh(coralGeometry, coralMaterial);
+                coral.position.set(
+                    (Math.random() - 0.5) * 6,
+                    0.5 + Math.random() * 1,
+                    (Math.random() - 0.5) * 6
+                );
+                coral.rotation.y = Math.random() * Math.PI * 2;
+                
+                reefGroup.add(coral);
+            }
+            
+            reefGroup.position.set(x, 0, z);
+            reefGroup.userData = { type: 'coralReef' };
+            scene.add(reefGroup);
+        }
+        
+        function createJellyfish() {
+            const jellyfishGroup = new THREE.Group();
+            
+            // Bell/dome
+            const bellGeometry = new THREE.SphereGeometry(0.8, 12, 8);
+            const bellMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x9370DB,
+                transparent: true,
+                opacity: 0.6,
+                emissive: 0x4B0082,
+                emissiveIntensity: 0.3
+            });
+            const bell = new THREE.Mesh(bellGeometry, bellMaterial);
+            bell.scale.y = 0.6;
+            jellyfishGroup.add(bell);
+            
+            // Tentacles
+            for (let i = 0; i < 8; i++) {
+                const tentacleGeometry = new THREE.CylinderGeometry(0.02, 0.02, 2, 4);
+                const tentacleMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x9370DB,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const tentacle = new THREE.Mesh(tentacleGeometry, tentacleMaterial);
+                
+                const angle = (i / 8) * Math.PI * 2;
+                tentacle.position.set(
+                    Math.cos(angle) * 0.6,
+                    -1.5,
+                    Math.sin(angle) * 0.6
+                );
+                
+                tentacle.userData = {
+                    swaySpeed: 2 + Math.random() * 2,
+                    swayAmount: 0.3 + Math.random() * 0.2,
+                    baseRotation: tentacle.rotation.clone()
+                };
+                
+                jellyfishGroup.add(tentacle);
+            }
+            
+            jellyfishGroup.position.set(
+                -15 + Math.random() * 30,
+                3 + Math.random() * 8,
+                -20 - Math.random() * 60
+            );
+            
+            jellyfishGroup.userData = {
+                type: 'jellyfish',
+                floatSpeed: 0.5 + Math.random() * 0.5,
+                floatRange: 2 + Math.random() * 2,
+                baseY: jellyfishGroup.position.y,
+                pulseSpeed: 1 + Math.random() * 2
+            };
+            
+            scene.add(jellyfishGroup);
+        }
+        
+        function createUnderwaterRuins(x, z) {
+            const ruinGroup = new THREE.Group();
+            
+            // Broken pillars
+            for (let i = 0; i < 3; i++) {
+                const pillarGeometry = new THREE.CylinderGeometry(0.5, 0.6, 3 + Math.random() * 3, 8);
+                const pillarMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x696969,
+                    emissive: 0x111111,
+                    emissiveIntensity: 0.1
+                });
+                const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+                
+                pillar.position.set(
+                    (Math.random() - 0.5) * 8,
+                    1.5 + Math.random(),
+                    (Math.random() - 0.5) * 8
+                );
+                pillar.rotation.z = (Math.random() - 0.5) * 0.3;
+                
+                ruinGroup.add(pillar);
+            }
+            
+            // Broken arches
+            const archGeometry = new THREE.TorusGeometry(2, 0.3, 8, 16, Math.PI);
+            const archMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x696969,
+                emissive: 0x111111,
+                emissiveIntensity: 0.1
+            });
+            const arch = new THREE.Mesh(archGeometry, archMaterial);
+            arch.position.y = 3;
+            arch.rotation.z = Math.PI / 2;
+            ruinGroup.add(arch);
+            
+            ruinGroup.position.set(x, 0, z);
+            ruinGroup.userData = { type: 'underwaterRuins' };
+            scene.add(ruinGroup);
+        }
+        
+        function createSunlightShafts() {
+            const shaftCount = 8;
+            const shaftGroup = new THREE.Group();
+            
+            for (let i = 0; i < shaftCount; i++) {
+                const shaftGeometry = new THREE.CylinderGeometry(2, 4, 30, 8, 1, true);
+                const shaftMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00AAFF,
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.DoubleSide
+                });
+                const shaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
+                
+                shaft.position.set(
+                    (Math.random() - 0.5) * 40,
+                    15,
+                    -i * 15
+                );
+                shaft.rotation.x = (Math.random() - 0.5) * 0.3;
+                shaft.rotation.z = (Math.random() - 0.5) * 0.3;
+                
+                shaftGroup.add(shaft);
+            }
+            
+            shaftGroup.userData = { type: 'sunlightShafts' };
+            scene.add(shaftGroup);
         }
         
         function createSeaweed(x, z) {
@@ -5085,28 +5915,275 @@
             environmentObjects.fishSchools.push(schoolGroup);
         }
         
-        // Level 5: Volcanic Rush Environment
+        // LEVEL 5: ENHANCED VOLCANIC ENVIRONMENT
         function createLevel5Environment() {
             scene.fog = new THREE.FogExp2(0xFF4500, 0.06);
             renderer.setClearColor(0x8B0000);
             
-            // Lava glow lighting
+            // Enhanced lava glow lighting
             const lavaLight = new THREE.PointLight(0xFF6600, 2, 50);
             lavaLight.position.set(0, -5, 0);
             scene.add(lavaLight);
             
-            // Create lava pools
-            for (let i = 0; i < 15; i++) {
+            // Multiple ambient lava lights
+            for (let i = 0; i < 5; i++) {
+                const ambientLavaLight = new THREE.PointLight(0xFF4500, 1, 30);
+                ambientLavaLight.position.set(
+                    -20 + Math.random() * 40,
+                    2 + Math.random() * 5,
+                    -i * 20
+                );
+                scene.add(ambientLavaLight);
+            }
+            
+            // Create enhanced lava pools
+            for (let i = 0; i < 20; i++) {
                 createLavaPool(
-                    -15 + Math.random() * 30,
-                    -i * 15
+                    -18 + Math.random() * 36,
+                    -i * 10
                 );
             }
             
             // Create volcanic smoke
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 15; i++) {
                 createVolcanicSmoke();
             }
+            
+            // Create ember particle systems
+            for (let i = 0; i < 12; i++) {
+                createEmberParticles(
+                    -15 + Math.random() * 30,
+                    2 + Math.random() * 8,
+                    -i * 15
+                );
+            }
+            
+            // Create volcanic geysers
+            for (let i = 0; i < 6; i++) {
+                createVolcanicGeyser(
+                    -12 + Math.random() * 24,
+                    -i * 25
+                );
+            }
+            
+            // Create heat shimmer effects
+            createHeatShimmer();
+            
+            // Create volcanic rock formations
+            for (let i = 0; i < 10; i++) {
+                createVolcanicRocks(
+                    -20 + Math.random() * 40,
+                    -i * 18
+                );
+            }
+            
+            // Create lava waterfalls
+            for (let i = 0; i < 4; i++) {
+                createLavaWaterfall(
+                    Math.random() > 0.5 ? -15 : 15,
+                    -i * 30
+                );
+            }
+        }
+        
+        function createEmberParticles(x, y, z) {
+            const emberCount = 30;
+            const emberGroup = new THREE.Group();
+            
+            for (let i = 0; i < emberCount; i++) {
+                const emberGeometry = new THREE.SphereGeometry(0.02 + Math.random() * 0.03, 6, 6);
+                const emberMaterial = new THREE.MeshBasicMaterial({ 
+                    color: Math.random() > 0.5 ? 0xFF4500 : 0xFF6600,
+                    emissive: 0xFF0000,
+                    emissiveIntensity: 0.8,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const ember = new THREE.Mesh(emberGeometry, emberMaterial);
+                
+                ember.position.set(
+                    x + (Math.random() - 0.5) * 4,
+                    y + Math.random() * 2,
+                    z + (Math.random() - 0.5) * 4
+                );
+                
+                ember.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        0.01 + Math.random() * 0.02,
+                        (Math.random() - 0.5) * 0.02
+                    ),
+                    life: 1.0,
+                    decay: 0.002 + Math.random() * 0.003,
+                    flicker: Math.random() * Math.PI * 2
+                };
+                
+                emberGroup.add(ember);
+            }
+            
+            emberGroup.userData = { type: 'emberParticles' };
+            scene.add(emberGroup);
+        }
+        
+        function createVolcanicGeyser(x, z) {
+            const geyserGroup = new THREE.Group();
+            
+            // Geyser base
+            const baseGeometry = new THREE.CylinderGeometry(1, 1.5, 0.5, 8);
+            const baseMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4A4A4A,
+                emissive: 0x2A2A2A,
+                emissiveIntensity: 0.2
+            });
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = 0.25;
+            geyserGroup.add(base);
+            
+            // Lava stream
+            const streamGeometry = new THREE.CylinderGeometry(0.3, 0.3, 8, 8);
+            const streamMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF4500,
+                emissive: 0xFF0000,
+                emissiveIntensity: 1.0,
+                transparent: true,
+                opacity: 0.8
+            });
+            const stream = new THREE.Mesh(streamGeometry, streamMaterial);
+            stream.position.y = 4;
+            
+            stream.userData = {
+                type: 'lavaStream',
+                pulseSpeed: 2 + Math.random() * 3,
+                baseHeight: 4,
+                maxHeight: 8
+            };
+            
+            geyserGroup.add(stream);
+            
+            geyserGroup.position.set(x, 0, z);
+            geyserGroup.userData = { type: 'volcanicGeyser' };
+            scene.add(geyserGroup);
+        }
+        
+        function createHeatShimmer() {
+            const shimmerCount = 15;
+            const shimmerGroup = new THREE.Group();
+            
+            for (let i = 0; i < shimmerCount; i++) {
+                const shimmerGeometry = new THREE.PlaneGeometry(8, 12);
+                const shimmerMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.05,
+                    side: THREE.DoubleSide
+                });
+                const shimmer = new THREE.Mesh(shimmerGeometry, shimmerMaterial);
+                
+                shimmer.position.set(
+                    (Math.random() - 0.5) * 40,
+                    2 + Math.random() * 8,
+                    -i * 12
+                );
+                
+                shimmer.userData = {
+                    type: 'heatShimmer',
+                    waveSpeed: 3 + Math.random() * 4,
+                    waveAmplitude: 0.5 + Math.random() * 0.5,
+                    baseOpacity: 0.05
+                };
+                
+                shimmerGroup.add(shimmer);
+            }
+            
+            shimmerGroup.userData = { type: 'heatShimmerGroup' };
+            scene.add(shimmerGroup);
+        }
+        
+        function createVolcanicRocks(x, z) {
+            const rockGroup = new THREE.Group();
+            
+            // Various rock formations
+            for (let i = 0; i < 6; i++) {
+                const rockGeometry = new THREE.SphereGeometry(0.5 + Math.random() * 1.5, 8, 6);
+                const rockMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x2F2F2F,
+                    emissive: 0x1A1A1A,
+                    emissiveIntensity: 0.1
+                });
+                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+                
+                rock.position.set(
+                    (Math.random() - 0.5) * 8,
+                    0.5 + Math.random() * 2,
+                    (Math.random() - 0.5) * 8
+                );
+                rock.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                
+                // Add glowing cracks
+                const crackGeometry = new THREE.PlaneGeometry(0.1, 2);
+                const crackMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFF4500,
+                    emissive: 0xFF0000,
+                    emissiveIntensity: 0.6,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const crack = new THREE.Mesh(crackGeometry, crackMaterial);
+                crack.position.copy(rock.position);
+                crack.position.y += 0.5;
+                
+                rockGroup.add(rock);
+                rockGroup.add(crack);
+            }
+            
+            rockGroup.position.set(x, 0, z);
+            rockGroup.userData = { type: 'volcanicRocks' };
+            scene.add(rockGroup);
+        }
+        
+        function createLavaWaterfall(x, z) {
+            const waterfallGroup = new THREE.Group();
+            
+            // Waterfall stream
+            const streamGeometry = new THREE.PlaneGeometry(1, 15);
+            const streamMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF4500,
+                emissive: 0xFF0000,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.9,
+                side: THREE.DoubleSide
+            });
+            const stream = new THREE.Mesh(streamGeometry, streamMaterial);
+            stream.position.y = 7.5;
+            
+            stream.userData = {
+                type: 'lavaWaterfall',
+                flowSpeed: 2 + Math.random() * 2,
+                waveAmplitude: 0.2
+            };
+            
+            waterfallGroup.add(stream);
+            
+            // Splash pool at bottom
+            const poolGeometry = new THREE.CylinderGeometry(2, 2, 0.3, 12);
+            const poolMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF4500,
+                emissive: 0xFF0000,
+                emissiveIntensity: 1.0
+            });
+            const pool = new THREE.Mesh(poolGeometry, poolMaterial);
+            pool.position.y = 0.15;
+            
+            waterfallGroup.add(pool);
+            
+            waterfallGroup.position.set(x, 0, z);
+            waterfallGroup.userData = { type: 'lavaWaterfall' };
+            scene.add(waterfallGroup);
         }
         
         function createLavaPool(x, z) {
@@ -5172,32 +6249,294 @@
             environmentObjects.volcanicSmoke.push(smokeGroup);
         }
         
-        // Level 6: Ice Caverns Environment
+        // LEVEL 6: ENHANCED ICE CAVES ENVIRONMENT
         function createLevel6Environment() {
             scene.fog = new THREE.Fog(0xE0FFFF, 10, 150);
             renderer.setClearColor(0xB0E0E6);
             
-            // Ice crystal lighting
+            // Enhanced ice crystal lighting
             const iceLight = new THREE.DirectionalLight(0x87CEEB, 0.5);
             iceLight.position.set(0, 10, 10);
             scene.add(iceLight);
             
-            // Create icicles
-            for (let i = 0; i < 25; i++) {
+            // Aurora lighting effects
+            createAuroraLighting();
+            
+            // Create enhanced icicles
+            for (let i = 0; i < 35; i++) {
                 createIcicle(
-                    -20 + Math.random() * 40,
-                    8 + Math.random() * 4,
+                    -25 + Math.random() * 50,
+                    8 + Math.random() * 6,
+                    -i * 6
+                );
+            }
+            
+            // Create ice crystal formations
+            for (let i = 0; i < 25; i++) {
+                createIceCrystalFormation(
+                    -18 + Math.random() * 36,
                     -i * 8
                 );
             }
             
-            // Create ice crystals
-            for (let i = 0; i < 20; i++) {
-                createIceCrystalFormation(
+            // Create frost particle effects
+            for (let i = 0; i < 15; i++) {
+                createFrostParticles(
                     -15 + Math.random() * 30,
+                    2 + Math.random() * 8,
+                    -i * 12
+                );
+            }
+            
+            // Create ice walls
+            for (let i = 0; i < 10; i++) {
+                createIceWall(
+                    Math.random() > 0.5 ? -15 : 15,
+                    -i * 20
+                );
+            }
+            
+            // Create frozen pools
+            for (let i = 0; i < 8; i++) {
+                createFrozenPool(
+                    -12 + Math.random() * 24,
+                    -i * 15
+                );
+            }
+            
+            // Create ice stalactites
+            for (let i = 0; i < 20; i++) {
+                createIceStalactite(
+                    -20 + Math.random() * 40,
                     -i * 10
                 );
             }
+            
+            // Create snow effects
+            createSnowEffect();
+        }
+        
+        function createAuroraLighting() {
+            const auroraCount = 6;
+            const auroraGroup = new THREE.Group();
+            
+            for (let i = 0; i < auroraCount; i++) {
+                const auroraGeometry = new THREE.PlaneGeometry(30, 15);
+                const auroraMaterial = new THREE.MeshBasicMaterial({ 
+                    color: [0x00FF7F, 0x00BFFF, 0x9370DB, 0xFF69B4][Math.floor(Math.random() * 4)],
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                const aurora = new THREE.Mesh(auroraGeometry, auroraMaterial);
+                
+                aurora.position.set(
+                    (Math.random() - 0.5) * 60,
+                    15 + Math.random() * 10,
+                    -i * 20
+                );
+                aurora.rotation.x = -Math.PI / 2;
+                aurora.rotation.z = Math.random() * Math.PI * 2;
+                
+                aurora.userData = {
+                    type: 'aurora',
+                    waveSpeed: 0.5 + Math.random() * 1,
+                    colorShift: Math.random() * Math.PI * 2,
+                    baseOpacity: 0.2 + Math.random() * 0.2
+                };
+                
+                auroraGroup.add(aurora);
+            }
+            
+            auroraGroup.userData = { type: 'auroraLighting' };
+            scene.add(auroraGroup);
+        }
+        
+        function createFrostParticles(x, y, z) {
+            const particleCount = 25;
+            const frostGroup = new THREE.Group();
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.03 + Math.random() * 0.02, 6, 6);
+                const particleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.6,
+                    emissive: 0xCCFFFF,
+                    emissiveIntensity: 0.3
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                particle.position.set(
+                    x + (Math.random() - 0.5) * 5,
+                    y + (Math.random() - 0.5) * 3,
+                    z + (Math.random() - 0.5) * 5
+                );
+                
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.01,
+                        (Math.random() - 0.5) * 0.01,
+                        (Math.random() - 0.5) * 0.01
+                    ),
+                    life: 1.0,
+                    sparkle: Math.random() * Math.PI * 2
+                };
+                
+                frostGroup.add(particle);
+            }
+            
+            frostGroup.userData = { type: 'frostParticles' };
+            scene.add(frostGroup);
+        }
+        
+        function createIceWall(x, z) {
+            const wallGroup = new THREE.Group();
+            
+            // Main wall structure
+            const wallGeometry = new THREE.BoxGeometry(2, 12, 1);
+            const wallMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x87CEEB,
+                transparent: true,
+                opacity: 0.8,
+                shininess: 100,
+                emissive: 0x4682B4,
+                emissiveIntensity: 0.1
+            });
+            const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall.position.y = 6;
+            wallGroup.add(wall);
+            
+            // Ice crystals on wall
+            for (let i = 0; i < 8; i++) {
+                const crystalGeometry = new THREE.OctahedronGeometry(0.2 + Math.random() * 0.3);
+                const crystalMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xADD8E6,
+                    emissive: 0x4682B4,
+                    emissiveIntensity: 0.3,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+                
+                crystal.position.set(
+                    (Math.random() - 0.5) * 1.5,
+                    (Math.random() - 0.5) * 10,
+                    0.6
+                );
+                crystal.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                
+                wallGroup.add(crystal);
+            }
+            
+            wallGroup.position.set(x, 0, z);
+            wallGroup.userData = { type: 'iceWall' };
+            scene.add(wallGroup);
+        }
+        
+        function createFrozenPool(x, z) {
+            const poolGroup = new THREE.Group();
+            
+            // Ice surface
+            const surfaceGeometry = new THREE.CylinderGeometry(2.5, 2.5, 0.2, 16);
+            const surfaceMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xE0FFFF,
+                transparent: true,
+                opacity: 0.9,
+                shininess: 100,
+                emissive: 0x87CEEB,
+                emissiveIntensity: 0.2
+            });
+            const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+            surface.position.y = 0.1;
+            poolGroup.add(surface);
+            
+            // Frozen bubbles underneath
+            for (let i = 0; i < 5; i++) {
+                const bubbleGeometry = new THREE.SphereGeometry(0.1 + Math.random() * 0.2, 8, 6);
+                const bubbleMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+                
+                bubble.position.set(
+                    (Math.random() - 0.5) * 4,
+                    -0.2 - Math.random() * 0.5,
+                    (Math.random() - 0.5) * 4
+                );
+                
+                poolGroup.add(bubble);
+            }
+            
+            poolGroup.position.set(x, 0, z);
+            poolGroup.userData = { type: 'frozenPool' };
+            scene.add(poolGroup);
+        }
+        
+        function createIceStalactite(x, z) {
+            const stalactiteGeometry = new THREE.ConeGeometry(0.4, 3 + Math.random() * 4, 8);
+            const stalactiteMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x87CEEB,
+                transparent: true,
+                opacity: 0.8,
+                shininess: 100,
+                emissive: 0x4682B4,
+                emissiveIntensity: 0.1
+            });
+            const stalactite = new THREE.Mesh(stalactiteGeometry, stalactiteMaterial);
+            
+            stalactite.position.set(
+                x,
+                10 + Math.random() * 3,
+                z
+            );
+            stalactite.rotation.x = Math.PI;
+            
+            stalactite.userData = {
+                type: 'iceStalactite',
+                swaySpeed: 0.5 + Math.random() * 0.5,
+                swayAmount: 0.1 + Math.random() * 0.1
+            };
+            
+            scene.add(stalactite);
+        }
+        
+        function createSnowEffect() {
+            const snowCount = 100;
+            const snowGroup = new THREE.Group();
+            
+            for (let i = 0; i < snowCount; i++) {
+                const snowGeometry = new THREE.SphereGeometry(0.02 + Math.random() * 0.02, 6, 6);
+                const snowMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
+                
+                snowflake.position.set(
+                    (Math.random() - 0.5) * 100,
+                    10 + Math.random() * 20,
+                    -Math.random() * 200
+                );
+                
+                snowflake.userData = {
+                    fallSpeed: 0.3 + Math.random() * 0.5,
+                    drift: (Math.random() - 0.5) * 0.02,
+                    resetHeight: 30
+                };
+                
+                snowGroup.add(snowflake);
+            }
+            
+            snowGroup.userData = { type: 'snowEffect' };
+            scene.add(snowGroup);
         }
         
         function createIcicle(x, y, z) {
@@ -5247,31 +6586,178 @@
             environmentObjects.iceCrystals.push(formationGroup);
         }
         
-        // Level 7: Jungle Temple Environment
+        // LEVEL 7: ENHANCED JUNGLE TEMPLE ENVIRONMENT
         function createLevel7Environment() {
             scene.fog = new THREE.FogExp2(0x228B22, 0.05);
             renderer.setClearColor(0x3CB371);
             
-            // Jungle lighting
+            // Enhanced jungle lighting
             const sunLight = new THREE.DirectionalLight(0xFFD700, 0.6);
             sunLight.position.set(5, 10, 5);
             scene.add(sunLight);
             
-            // Create temple ruins
-            for (let i = 0; i < 10; i++) {
+            // Create enhanced temple ruins
+            for (let i = 0; i < 15; i++) {
                 createTempleRuin(
-                    -20 + Math.random() * 40,
-                    -i * 20
+                    -25 + Math.random() * 50,
+                    -i * 15
                 );
             }
             
             // Create jungle trees
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 30; i++) {
                 createJungleTree(
-                    -25 + Math.random() * 50,
+                    -30 + Math.random() * 60,
+                    -i * 8
+                );
+            }
+            
+            // Create vine animations
+            for (let i = 0; i < 20; i++) {
+                createAnimatedVines(
+                    -15 + Math.random() * 30,
                     -i * 10
                 );
             }
+            
+            // Create fireflies
+            for (let i = 0; i < 25; i++) {
+                createFirefly();
+            }
+            
+            // Create ancient symbols
+            for (let i = 0; i < 8; i++) {
+                createAncientSymbol(
+                    -12 + Math.random() * 24,
+                    -i * 18
+                );
+            }
+            
+            // Create jungle mist
+            createJungleMist();
+        }
+        
+        function createAnimatedVines(x, z) {
+            const vineGroup = new THREE.Group();
+            
+            for (let i = 0; i < 5; i++) {
+                const vineGeometry = new THREE.CylinderGeometry(0.05, 0.05, 8, 6);
+                const vineMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x228B22,
+                    emissive: 0x0A2A0A,
+                    emissiveIntensity: 0.1
+                });
+                const vine = new THREE.Mesh(vineGeometry, vineMaterial);
+                
+                vine.position.set(
+                    (Math.random() - 0.5) * 3,
+                    4,
+                    (Math.random() - 0.5) * 3
+                );
+                
+                vine.userData = {
+                    swaySpeed: 1 + Math.random() * 2,
+                    swayAmount: 0.3 + Math.random() * 0.4,
+                    baseRotation: vine.rotation.clone()
+                };
+                
+                vineGroup.add(vine);
+            }
+            
+            vineGroup.position.set(x, 0, z);
+            vineGroup.userData = { type: 'animatedVines' };
+            scene.add(vineGroup);
+        }
+        
+        function createFirefly() {
+            const fireflyGeometry = new THREE.SphereGeometry(0.05, 8, 6);
+            const fireflyMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFF00,
+                emissive: 0xFFFF00,
+                emissiveIntensity: 1.0
+            });
+            const firefly = new THREE.Mesh(fireflyGeometry, fireflyMaterial);
+            
+            firefly.position.set(
+                -20 + Math.random() * 40,
+                2 + Math.random() * 6,
+                -20 - Math.random() * 80
+            );
+            
+            firefly.userData = {
+                type: 'firefly',
+                speed: 2 + Math.random() * 3,
+                direction: new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 1,
+                    (Math.random() - 0.5) * 2
+                ).normalize(),
+                glowSpeed: 2 + Math.random() * 3,
+                baseIntensity: 0.8 + Math.random() * 0.4
+            };
+            
+            scene.add(firefly);
+        }
+        
+        function createAncientSymbol(x, z) {
+            const symbolGeometry = new THREE.PlaneGeometry(2, 2);
+            const symbolMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFD700,
+                emissive: 0xFFAA00,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.8
+            });
+            const symbol = new THREE.Mesh(symbolGeometry, symbolMaterial);
+            
+            symbol.position.set(
+                x,
+                3 + Math.random() * 2,
+                z
+            );
+            symbol.rotation.y = Math.random() * Math.PI * 2;
+            
+            symbol.userData = {
+                type: 'ancientSymbol',
+                pulseSpeed: 1 + Math.random() * 2,
+                baseIntensity: 0.5
+            };
+            
+            scene.add(symbol);
+        }
+        
+        function createJungleMist() {
+            const mistGroup = new THREE.Group();
+            
+            for (let i = 0; i < 15; i++) {
+                const mistGeometry = new THREE.SphereGeometry(3, 8, 6);
+                const mistMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.1
+                });
+                const mist = new THREE.Mesh(mistGeometry, mistMaterial);
+                
+                mist.position.set(
+                    (Math.random() - 0.5) * 50,
+                    1 + Math.random() * 3,
+                    -i * 15
+                );
+                
+                mist.userData = {
+                    driftSpeed: 0.5 + Math.random() * 1,
+                    driftDirection: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.5,
+                        0,
+                        0.2 + Math.random() * 0.3
+                    )
+                };
+                
+                mistGroup.add(mist);
+            }
+            
+            mistGroup.userData = { type: 'jungleMist' };
+            scene.add(mistGroup);
         }
         
         function createTempleRuin(x, z) {
@@ -5329,27 +6815,136 @@
             environmentObjects.jungleTrees.push(treeGroup);
         }
         
-        // Level 8: Space Station Environment
+        // LEVEL 8: ENHANCED SPACE STATION ENVIRONMENT
         function createLevel8Environment() {
             scene.fog = new THREE.FogExp2(0x000033, 0.02);
             renderer.setClearColor(0x000000);
             
-            // Create starfield
+            // Create enhanced starfield
             createStarField();
             
             // Create space station parts
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 createSpaceStationModule(
-                    -30 + Math.random() * 60,
-                    5 + Math.random() * 10,
-                    -i * 25
+                    -35 + Math.random() * 70,
+                    5 + Math.random() * 15,
+                    -i * 20
                 );
             }
             
             // Create asteroids
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 20; i++) {
                 createFloatingAsteroid();
             }
+            
+            // Create holographic displays
+            for (let i = 0; i < 10; i++) {
+                createHolographicDisplay(
+                    -15 + Math.random() * 30,
+                    -i * 15
+                );
+            }
+            
+            // Create energy fields
+            for (let i = 0; i < 8; i++) {
+                createEnergyField(
+                    -20 + Math.random() * 40,
+                    -i * 20
+                );
+            }
+            
+            // Create space debris
+            for (let i = 0; i < 15; i++) {
+                createSpaceDebris();
+            }
+        }
+        
+        function createHolographicDisplay(x, z) {
+            const displayGroup = new THREE.Group();
+            
+            // Display screen
+            const screenGeometry = new THREE.PlaneGeometry(3, 2);
+            const screenMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                emissive: 0x00AAFF,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.y = 4;
+            
+            screen.userData = {
+                type: 'holographicDisplay',
+                flickerSpeed: 3 + Math.random() * 4,
+                colorShift: Math.random() * Math.PI * 2
+            };
+            
+            displayGroup.add(screen);
+            displayGroup.position.set(x, 0, z);
+            displayGroup.userData = { type: 'holographicDisplay' };
+            scene.add(displayGroup);
+        }
+        
+        function createEnergyField(x, z) {
+            const fieldGeometry = new THREE.SphereGeometry(2, 16, 12);
+            const fieldMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FF00,
+                emissive: 0x00AA00,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true
+            });
+            const field = new THREE.Mesh(fieldGeometry, fieldMaterial);
+            
+            field.position.set(
+                x,
+                3 + Math.random() * 4,
+                z
+            );
+            
+            field.userData = {
+                type: 'energyField',
+                pulseSpeed: 2 + Math.random() * 3,
+                rotationSpeed: 1 + Math.random() * 2,
+                baseScale: 1.0
+            };
+            
+            scene.add(field);
+        }
+        
+        function createSpaceDebris() {
+            const debrisGeometry = new THREE.BoxGeometry(
+                0.5 + Math.random() * 1,
+                0.5 + Math.random() * 1,
+                0.5 + Math.random() * 1
+            );
+            const debrisMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x666666,
+                emissive: 0x333333,
+                emissiveIntensity: 0.1
+            });
+            const debris = new THREE.Mesh(debrisGeometry, debrisMaterial);
+            
+            debris.position.set(
+                -30 + Math.random() * 60,
+                -5 + Math.random() * 20,
+                -30 - Math.random() * 100
+            );
+            
+            debris.userData = {
+                type: 'spaceDebris',
+                tumbleSpeed: new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2
+                ),
+                driftSpeed: 1 + Math.random() * 2
+            };
+            
+            scene.add(debris);
         }
         
         function createStarField() {
@@ -5442,10 +7037,164 @@
             environmentObjects.floatingAsteroids.push(asteroid);
         }
         
-        // Level 9: Crystal Mines Environment
+        // LEVEL 9: ENHANCED CRYSTAL MINES ENVIRONMENT
         function createLevel9Environment() {
             scene.fog = new THREE.FogExp2(0x9400D3, 0.04);
             renderer.setClearColor(0x4B0082);
+            
+            // Enhanced crystal lighting
+            const crystalLight = new THREE.DirectionalLight(0xFF00FF, 0.8);
+            crystalLight.position.set(0, 10, 5);
+            scene.add(crystalLight);
+            
+            // Create crystal formations
+            for (let i = 0; i < 25; i++) {
+                createCrystalFormation(
+                    -20 + Math.random() * 40,
+                    -i * 8
+                );
+            }
+            
+            // Create light beams
+            for (let i = 0; i < 15; i++) {
+                createLightBeam(
+                    -15 + Math.random() * 30,
+                    -i * 12
+                );
+            }
+            
+            // Create gem sparkles
+            for (let i = 0; i < 30; i++) {
+                createGemSparkle();
+            }
+            
+            // Create crystal reflections
+            createCrystalReflections();
+        }
+        
+        function createCrystalFormation(x, z) {
+            const formationGroup = new THREE.Group();
+            
+            for (let i = 0; i < 8; i++) {
+                const crystalGeometry = new THREE.OctahedronGeometry(0.5 + Math.random() * 1);
+                const crystalColors = [0xFF00FF, 0x9400D3, 0x00FFFF, 0xFF69B4, 0xDDA0DD];
+                const crystalMaterial = new THREE.MeshPhongMaterial({ 
+                    color: crystalColors[Math.floor(Math.random() * crystalColors.length)],
+                    emissive: crystalColors[Math.floor(Math.random() * crystalColors.length)],
+                    emissiveIntensity: 0.4,
+                    transparent: true,
+                    opacity: 0.8,
+                    shininess: 100
+                });
+                
+                const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+                crystal.position.set(
+                    (Math.random() - 0.5) * 6,
+                    0.5 + Math.random() * 4,
+                    (Math.random() - 0.5) * 6
+                );
+                crystal.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                
+                crystal.userData = {
+                    pulseSpeed: 1 + Math.random() * 2,
+                    rotationSpeed: 0.5 + Math.random() * 1,
+                    baseIntensity: 0.4
+                };
+                
+                formationGroup.add(crystal);
+            }
+            
+            formationGroup.position.set(x, 0, z);
+            formationGroup.userData = { type: 'crystalFormation' };
+            scene.add(formationGroup);
+        }
+        
+        function createLightBeam(x, z) {
+            const beamGeometry = new THREE.CylinderGeometry(0.1, 0.5, 10, 8);
+            const beamMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF00FF,
+                emissive: 0xFF00FF,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.6
+            });
+            const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+            
+            beam.position.set(
+                x,
+                5,
+                z
+            );
+            
+            beam.userData = {
+                type: 'lightBeam',
+                pulseSpeed: 2 + Math.random() * 3,
+                sway: Math.random() * 0.3
+            };
+            
+            scene.add(beam);
+        }
+        
+        function createGemSparkle() {
+            const sparkleGeometry = new THREE.SphereGeometry(0.02, 6, 6);
+            const sparkleMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 1.0
+            });
+            const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
+            
+            sparkle.position.set(
+                -25 + Math.random() * 50,
+                1 + Math.random() * 8,
+                -25 - Math.random() * 100
+            );
+            
+            sparkle.userData = {
+                type: 'gemSparkle',
+                life: 1.0,
+                decay: 0.01 + Math.random() * 0.02,
+                twinkle: Math.random() * Math.PI * 2
+            };
+            
+            scene.add(sparkle);
+        }
+        
+        function createCrystalReflections() {
+            const reflectionGroup = new THREE.Group();
+            
+            for (let i = 0; i < 20; i++) {
+                const reflectionGeometry = new THREE.PlaneGeometry(2, 2);
+                const reflectionMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x9400D3,
+                    transparent: true,
+                    opacity: 0.2,
+                    side: THREE.DoubleSide
+                });
+                const reflection = new THREE.Mesh(reflectionGeometry, reflectionMaterial);
+                
+                reflection.position.set(
+                    (Math.random() - 0.5) * 40,
+                    0.1,
+                    -i * 10
+                );
+                reflection.rotation.x = -Math.PI / 2;
+                
+                reflection.userData = {
+                    type: 'crystalReflection',
+                    shimmerSpeed: 1 + Math.random() * 2
+                };
+                
+                reflectionGroup.add(reflection);
+            }
+            
+            reflectionGroup.userData = { type: 'crystalReflections' };
+            scene.add(reflectionGroup);
+        }
             
             // Crystal glow lighting
             const crystalLight1 = new THREE.PointLight(0xFF00FF, 1, 30);
@@ -5517,8 +7266,206 @@
             }
         }
         
-        // Level 10: Final Dimension Environment
+        // LEVEL 10: ENHANCED FINAL DIMENSION ENVIRONMENT
         function createLevel10Environment() {
+            scene.fog = new THREE.FogExp2(0x000000, 0.08);
+            renderer.setClearColor(0x000000);
+            
+            // Create reality distortion effects
+            createRealityDistortion();
+            
+            // Create portal effects
+            for (let i = 0; i < 8; i++) {
+                createPortalEffect(
+                    -20 + Math.random() * 40,
+                    -i * 15
+                );
+            }
+            
+            // Create energy waves
+            for (let i = 0; i < 12; i++) {
+                createEnergyWave(
+                    -15 + Math.random() * 30,
+                    -i * 10
+                );
+            }
+            
+            // Create dimensional rifts
+            for (let i = 0; i < 6; i++) {
+                createDimensionalRift(
+                    -25 + Math.random() * 50,
+                    -i * 25
+                );
+            }
+            
+            // Create void particles
+            createVoidParticles();
+        }
+        
+        function createRealityDistortion() {
+            const distortionGroup = new THREE.Group();
+            
+            for (let i = 0; i < 10; i++) {
+                const distortionGeometry = new THREE.TorusGeometry(3, 0.5, 8, 16);
+                const distortionMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFF0080,
+                    emissive: 0xFF0080,
+                    emissiveIntensity: 0.8,
+                    transparent: true,
+                    opacity: 0.4,
+                    wireframe: true
+                });
+                const distortion = new THREE.Mesh(distortionGeometry, distortionMaterial);
+                
+                distortion.position.set(
+                    (Math.random() - 0.5) * 50,
+                    2 + Math.random() * 8,
+                    -i * 20
+                );
+                
+                distortion.userData = {
+                    type: 'realityDistortion',
+                    warpSpeed: 1 + Math.random() * 3,
+                    rotationSpeed: 0.5 + Math.random() * 1.5
+                };
+                
+                distortionGroup.add(distortion);
+            }
+            
+            distortionGroup.userData = { type: 'realityDistortions' };
+            scene.add(distortionGroup);
+        }
+        
+        function createPortalEffect(x, z) {
+            const portalGroup = new THREE.Group();
+            
+            // Portal ring
+            const ringGeometry = new THREE.TorusGeometry(2, 0.3, 8, 16);
+            const ringMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                emissive: 0x00FFFF,
+                emissiveIntensity: 1.0
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            
+            // Portal interior
+            const interiorGeometry = new THREE.CircleGeometry(2, 16);
+            const interiorMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x000080,
+                emissive: 0x000080,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const interior = new THREE.Mesh(interiorGeometry, interiorMaterial);
+            
+            portalGroup.add(ring);
+            portalGroup.add(interior);
+            
+            portalGroup.position.set(x, 3, z);
+            portalGroup.userData = {
+                type: 'portalEffect',
+                spinSpeed: 2 + Math.random() * 3,
+                pulseSpeed: 1 + Math.random() * 2
+            };
+            
+            scene.add(portalGroup);
+        }
+        
+        function createEnergyWave(x, z) {
+            const waveGeometry = new THREE.SphereGeometry(1, 16, 8);
+            const waveMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF00FF,
+                emissive: 0xFF00FF,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true
+            });
+            const wave = new THREE.Mesh(waveGeometry, waveMaterial);
+            
+            wave.position.set(
+                x,
+                2 + Math.random() * 4,
+                z
+            );
+            
+            wave.userData = {
+                type: 'energyWave',
+                expandSpeed: 2 + Math.random() * 3,
+                maxScale: 3 + Math.random() * 2,
+                baseScale: 1.0
+            };
+            
+            scene.add(wave);
+        }
+        
+        function createDimensionalRift(x, z) {
+            const riftGeometry = new THREE.PlaneGeometry(4, 8);
+            const riftMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x800080,
+                emissive: 0x800080,
+                emissiveIntensity: 0.9,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const rift = new THREE.Mesh(riftGeometry, riftMaterial);
+            
+            rift.position.set(
+                x,
+                4,
+                z
+            );
+            rift.rotation.y = Math.random() * Math.PI * 2;
+            
+            rift.userData = {
+                type: 'dimensionalRift',
+                flickerSpeed: 4 + Math.random() * 6,
+                waveAmount: 0.5 + Math.random() * 0.5
+            };
+            
+            scene.add(rift);
+        }
+        
+        function createVoidParticles() {
+            const particleCount = 100;
+            const particleGroup = new THREE.Group();
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.03, 6, 6);
+                const particleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    emissive: 0xFFFFFF,
+                    emissiveIntensity: 1.0,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                particle.position.set(
+                    (Math.random() - 0.5) * 100,
+                    (Math.random() - 0.5) * 50,
+                    -Math.random() * 200
+                );
+                
+                particle.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.05,
+                        (Math.random() - 0.5) * 0.05,
+                        (Math.random() - 0.5) * 0.05
+                    ),
+                    life: 1.0,
+                    flicker: Math.random() * Math.PI * 2
+                };
+                
+                particleGroup.add(particle);
+            }
+            
+            particleGroup.userData = { type: 'voidParticles' };
+            scene.add(particleGroup);
+        }
             scene.fog = new THREE.FogExp2(0xFF1493, 0.07);
             renderer.setClearColor(0x8B008B);
             
@@ -7756,7 +9703,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.3.0-MEGA-LEVELS<br>
+                    Version: 4.4.0-VISUAL-OVERHAUL<br>
                     🎮 10 Epic Levels<br>
                     🌟 Unique Mechanics Each Level
                 `;
