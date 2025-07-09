@@ -1,5 +1,36 @@
 # 🔧 SubwayRunner Module System Troubleshooting
 
+## 🔴 CRITICAL DISCOVERY: GitHub Actions Deployment Issue
+
+### The Real Problem (Found July 9, 2025)
+
+**GitHub Actions only copies index.html, NOT the entire SubwayRunner folder!**
+
+```yaml
+# From hostinger-deploy.yml line 26:
+cp SubwayRunner/index.html index.html
+
+# What it SHOULD do:
+cp -r SubwayRunner/* deploy/
+```
+
+This explains why all module files return 404 - they're never uploaded to the server!
+
+### Immediate Solution: Embed Modules in index.html
+
+Since fixing the GitHub Actions workflow requires repository access, the fastest solution is to embed all modules directly in index.html:
+
+```html
+<!-- Instead of external files -->
+<script src="SubwayRunner/js/core/GameCore.js"></script>
+
+<!-- Embed directly -->
+<script>
+// GameCore.js content here
+const GameCore = { ... };
+</script>
+```
+
 ## 🚨 Critical Issues After Module Integration
 
 ### Issue #1: 404 Errors for Module Files

@@ -8,14 +8,230 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://*.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- MediaPipe CDN for Gesture Control -->
+    <!-- MediaPipe temporarily disabled due to CSP issues
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    -->
     
-    <!-- Modular Game System -->
-    <script src="SubwayRunner/js/core/GameCore.js"></script>
-    <script src="SubwayRunner/js/levels/LevelManager.js"></script>
-    <script src="SubwayRunner/js/levels/Level2.js"></script>
-    <script src="SubwayRunner/js/ui/LevelSelector.js"></script>
+    <!-- Modular Game System (Embedded due to deployment issues) -->
+    <script>
+    // GameCore.js - Central game management system
+    const GameCore = {
+        version: "4.0.0-modular",
+        modules: {},
+        initialized: false,
+        
+        registerModule: function(name, module) {
+            if (this.modules[name]) {
+                console.warn(`Module ${name} already registered, overwriting...`);
+            }
+            this.modules[name] = module;
+            console.log(`✅ Module registered: ${name}`);
+            
+            if (this.initialized && module.init) {
+                module.init();
+            }
+        },
+        
+        getModule: function(name) {
+            if (!this.modules[name]) {
+                console.error(`Module ${name} not found!`);
+                return null;
+            }
+            return this.modules[name];
+        },
+        
+        init: function() {
+            console.log('🚀 Initializing GameCore v' + this.version);
+            
+            const initOrder = ['utils', 'levels', 'characters', 'ui', 'effects'];
+            
+            initOrder.forEach(moduleName => {
+                const module = this.modules[moduleName];
+                if (module && module.init) {
+                    console.log(`Initializing ${moduleName}...`);
+                    module.init();
+                }
+            });
+            
+            Object.entries(this.modules).forEach(([name, module]) => {
+                if (!initOrder.includes(name) && module.init) {
+                    console.log(`Initializing ${name}...`);
+                    module.init();
+                }
+            });
+            
+            this.initialized = true;
+            console.log('✅ GameCore initialization complete');
+        },
+        
+        update: function(deltaTime) {
+            Object.values(this.modules).forEach(module => {
+                if (module.update) {
+                    module.update(deltaTime);
+                }
+            });
+        },
+        
+        cleanup: function() {
+            Object.values(this.modules).forEach(module => {
+                if (module.cleanup) {
+                    module.cleanup();
+                }
+            });
+            this.modules = {};
+            this.initialized = false;
+        }
+    };
+    
+    window.GameCore = GameCore;
+    
+    // LevelManager.js - Manages all game levels
+    const LevelManager = {
+        levels: {},
+        currentLevel: 1,
+        scene: null,
+        renderer: null,
+        
+        init: function() {
+            console.log('🎮 LevelManager initialized');
+            
+            this.registerLevel(1, {
+                name: "Classic Subway",
+                description: "The original subway tunnel",
+                load: function(scene) {
+                    console.log('Loading Level 1: Classic Subway');
+                },
+                update: function(deltaTime) {},
+                cleanup: function() {}
+            });
+        },
+        
+        registerLevel: function(id, levelModule) {
+            this.levels[id] = levelModule;
+            console.log(`✅ Level ${id} registered: ${levelModule.name}`);
+        },
+        
+        loadLevel: function(id, scene, renderer) {
+            const level = this.levels[id];
+            if (!level) {
+                console.error(`Level ${id} not found!`);
+                return false;
+            }
+            
+            if (this.currentLevel && this.levels[this.currentLevel] && this.levels[this.currentLevel].cleanup) {
+                this.levels[this.currentLevel].cleanup();
+            }
+            
+            console.log(`🌟 Loading Level ${id}: ${level.name}`);
+            
+            this.scene = scene;
+            this.renderer = renderer;
+            this.currentLevel = id;
+            
+            if (level.load) {
+                level.load(scene, renderer);
+            }
+            
+            if (window.gameState) {
+                window.gameState.currentLevel = id;
+            }
+            
+            return true;
+        },
+        
+        getCurrentLevel: function() {
+            return this.levels[this.currentLevel];
+        },
+        
+        getAvailableLevels: function() {
+            return Object.entries(this.levels).map(([id, level]) => ({
+                id: parseInt(id),
+                name: level.name,
+                description: level.description || ''
+            }));
+        },
+        
+        update: function(deltaTime) {
+            const currentLevel = this.levels[this.currentLevel];
+            if (currentLevel && currentLevel.update) {
+                currentLevel.update(deltaTime);
+            }
+        },
+        
+        checkLevelTransition: function(score) {
+            const nextLevelScore = this.currentLevel * 1000;
+            if (score >= nextLevelScore && this.levels[this.currentLevel + 1]) {
+                console.log(`🎉 Level transition triggered! Moving to level ${this.currentLevel + 1}`);
+                this.loadLevel(this.currentLevel + 1, this.scene, this.renderer);
+                return true;
+            }
+            return false;
+        },
+        
+        reset: function() {
+            this.loadLevel(1, this.scene, this.renderer);
+        }
+    };
+    
+    GameCore.registerModule('levels', LevelManager);
+    
+    // Level2 - Neon Night Run (Simplified)
+    const Level2 = {
+        name: "Neon Night Run",
+        description: "Cyberpunk city with neon lights",
+        id: 2,
+        
+        load: function(scene, renderer) {
+            console.log('🌃 Loading Level 2: Neon Night Run');
+            
+            // Hide base game elements
+            scene.children.forEach(child => {
+                if (child.userData && (child.userData.type === 'streetLine' || 
+                    child.userData.type === 'sidewalk')) {
+                    child.visible = false;
+                }
+            });
+            
+            // Neon grid floor
+            const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
+            gridHelper.position.y = -0.95;
+            scene.add(gridHelper);
+            
+            // Cyberpunk fog
+            scene.fog = new THREE.FogExp2(0x001133, 0.025);
+            renderer.setClearColor(0x001133);
+            
+            // Update ambient lighting
+            const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
+            if (ambientLight) {
+                ambientLight.color = new THREE.Color(0x221155);
+                ambientLight.intensity = 0.5;
+            }
+            
+            // Add neon lights
+            for (let i = 0; i < 20; i++) {
+                const lightColor = Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF;
+                const light = new THREE.PointLight(lightColor, 1, 10);
+                light.position.set(
+                    (Math.random() - 0.5) * 40,
+                    5 + Math.random() * 10,
+                    -i * 10
+                );
+                scene.add(light);
+            }
+            
+            console.log('✅ Level 2 loaded successfully!');
+        },
+        
+        update: function(deltaTime) {},
+        cleanup: function() {}
+    };
+    
+    // Register Level 2
+    if (window.GameCore && window.GameCore.getModule('levels')) {
+        window.GameCore.getModule('levels').registerLevel(2, Level2);
+    }
+    </script>
     <style>
         * {
             margin: 0;
