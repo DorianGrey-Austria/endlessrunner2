@@ -16,7 +16,7 @@
     <script>
     // GameCore.js - Central game management system
     const GameCore = {
-        version: "3.6.3-MERGED",
+        version: "4.5.10-LEVEL-PROGRESSION",
         modules: {},
         initialized: false,
         
@@ -162,7 +162,20 @@
             const nextLevelScore = this.currentLevel * 1000;
             if (score >= nextLevelScore && this.levels[this.currentLevel + 1]) {
                 console.log(`🎉 Level transition triggered! Moving to level ${this.currentLevel + 1}`);
+                
+                // Add visual effect before transition
+                if (window.showNotification) {
+                    window.showNotification(`🎉 Level ${this.currentLevel + 1} unlocked!`, 3000);
+                }
+                
                 this.loadLevel(this.currentLevel + 1, this.scene, this.renderer);
+                
+                // Increase difficulty gradually
+                if (window.gameState) {
+                    window.gameState.speed *= 1.2;
+                    window.gameState.spawnRate *= 1.1;
+                }
+                
                 return true;
             }
             return false;
@@ -175,14 +188,30 @@
     
     GameCore.registerModule('levels', LevelManager);
     
-    // Level2 - Neon Night Run (Simplified)
+    // Level2 - Neon Night Run (Enhanced)
     const Level2 = {
         name: "Neon Night Run",
-        description: "Cyberpunk city with neon lights",
+        description: "Cyberpunk city with neon lights and flying vehicles",
         id: 2,
+        
+        // Store references to level-specific objects
+        objects: {
+            cyberpunkBuildings: [],
+            billboards: [],
+            flyingVehicles: [],
+            neonLights: [],
+            gridHelper: null
+        },
         
         load: function(scene, renderer) {
             console.log('🌃 Loading Level 2: Neon Night Run');
+            
+            // Store references
+            this.scene = scene;
+            this.renderer = renderer;
+            
+            // Clear previous level objects
+            this.cleanup();
             
             // Hide base game elements
             scene.children.forEach(child => {
@@ -192,12 +221,14 @@
                 }
             });
             
-            // Neon grid floor
+            // Create neon grid floor
             const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
             gridHelper.position.y = -0.95;
+            gridHelper.userData = { type: 'level2Grid' };
             scene.add(gridHelper);
+            this.objects.gridHelper = gridHelper;
             
-            // Cyberpunk fog
+            // Cyberpunk fog and lighting
             scene.fog = new THREE.FogExp2(0x001133, 0.025);
             renderer.setClearColor(0x001133);
             
@@ -208,7 +239,14 @@
                 ambientLight.intensity = 0.5;
             }
             
-            // Add neon lights
+            // Create cyberpunk environment
+            this.createEnvironment();
+            
+            console.log('✅ Level 2 loaded successfully!');
+        },
+        
+        createEnvironment: function() {
+            // Create neon street lights
             for (let i = 0; i < 20; i++) {
                 const lightColor = Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF;
                 const light = new THREE.PointLight(lightColor, 1, 10);
@@ -217,14 +255,259 @@
                     5 + Math.random() * 10,
                     -i * 10
                 );
-                scene.add(light);
+                light.userData = { type: 'neonLight', pulseSpeed: 1 + Math.random() * 2 };
+                this.scene.add(light);
+                this.objects.neonLights.push(light);
             }
             
-            console.log('✅ Level 2 loaded successfully!');
+            // Create simplified cyberpunk buildings
+            for (let i = 0; i < 15; i++) {
+                this.createSimpleBuilding(-15 - Math.random() * 10, -i * 10);
+                this.createSimpleBuilding(15 + Math.random() * 10, -i * 10);
+            }
+            
+            // Create holographic billboards
+            for (let i = 0; i < 10; i++) {
+                this.createHolographicBillboard(-12, -i * 20 - 10);
+                this.createHolographicBillboard(12, -i * 20 - 10);
+            }
+            
+            // Create flying vehicles
+            for (let i = 0; i < 5; i++) {
+                this.createFlyingVehicle();
+            }
         },
         
-        update: function(deltaTime) {},
-        cleanup: function() {}
+        createSimpleBuilding: function(x, z) {
+            const buildingGroup = new THREE.Group();
+            
+            // Building body
+            const height = 15 + Math.random() * 20;
+            const width = 4 + Math.random() * 4;
+            const depth = 4 + Math.random() * 4;
+            
+            const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+            const buildingMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x222244,
+                emissive: 0x111122
+            });
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            building.position.y = height / 2;
+            buildingGroup.add(building);
+            
+            // Add glowing windows
+            const windowsPerFloor = Math.floor(width / 1.5);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let w = 0; w < windowsPerFloor; w++) {
+                    const windowGeometry = new THREE.PlaneGeometry(0.8, 1.5);
+                    const windowColor = Math.random() > 0.7 ? 0x00FFFF : 0xFF00FF;
+                    const windowMaterial = new THREE.MeshBasicMaterial({ 
+                        color: windowColor,
+                        emissive: windowColor,
+                        emissiveIntensity: 0.5
+                    });
+                    
+                    const window = new THREE.Mesh(windowGeometry, windowMaterial);
+                    window.position.set(
+                        -width/2 + 1 + w * 1.5,
+                        floor * 3 + 2,
+                        depth/2 + 0.01
+                    );
+                    
+                    buildingGroup.add(window);
+                }
+            }
+            
+            buildingGroup.position.set(x, 0, z);
+            buildingGroup.userData = { type: 'cyberpunkBuilding' };
+            this.scene.add(buildingGroup);
+            this.objects.cyberpunkBuildings.push(buildingGroup);
+        },
+        
+        createHolographicBillboard: function(x, z) {
+            const billboardGroup = new THREE.Group();
+            
+            // Frame
+            const frameGeometry = new THREE.BoxGeometry(4, 3, 0.1);
+            const frameMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x222222
+            });
+            const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+            frame.position.y = 5;
+            billboardGroup.add(frame);
+            
+            // Holographic display
+            const displayGeometry = new THREE.PlaneGeometry(3.8, 2.8);
+            const displayMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const display = new THREE.Mesh(displayGeometry, displayMaterial);
+            display.position.y = 5;
+            display.position.z = 0.1;
+            display.userData = { flickerTime: 0 };
+            billboardGroup.add(display);
+            
+            billboardGroup.position.set(x, 0, z);
+            billboardGroup.userData = { type: 'holographicBillboard' };
+            this.scene.add(billboardGroup);
+            this.objects.billboards.push(billboardGroup);
+        },
+        
+        createFlyingVehicle: function() {
+            const vehicleGroup = new THREE.Group();
+            
+            // Vehicle body
+            const bodyGeometry = new THREE.ConeGeometry(0.5, 2, 6);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x444466,
+                emissive: 0x222244
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.rotation.z = Math.PI / 2;
+            vehicleGroup.add(body);
+            
+            // Engine glow
+            const glowGeometry = new THREE.SphereGeometry(0.3);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                transparent: true,
+                opacity: 0.8
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.x = -1;
+            vehicleGroup.add(glow);
+            
+            // Position
+            const side = Math.random() > 0.5 ? 1 : -1;
+            vehicleGroup.position.set(
+                side * (15 + Math.random() * 10),
+                10 + Math.random() * 10,
+                -30 - Math.random() * 30
+            );
+            
+            vehicleGroup.userData = {
+                type: 'flyingVehicle',
+                speed: 15 + Math.random() * 10,
+                direction: side,
+                wobbleSpeed: 1 + Math.random() * 2,
+                baseY: vehicleGroup.position.y
+            };
+            
+            this.scene.add(vehicleGroup);
+            this.objects.flyingVehicles.push(vehicleGroup);
+        },
+        
+        update: function(deltaTime) {
+            // Animate neon lights
+            const time = performance.now() * 0.001;
+            
+            // Pulse neon lights
+            this.objects.neonLights.forEach(light => {
+                if (light.userData.pulseSpeed) {
+                    const pulse = 0.7 + Math.sin(time * light.userData.pulseSpeed) * 0.3;
+                    light.intensity = pulse;
+                }
+            });
+            
+            // Animate billboards
+            this.objects.billboards.forEach(billboard => {
+                const display = billboard.children.find(child => child.material && child.material.opacity !== undefined);
+                if (display) {
+                    // Flicker effect
+                    if (Math.random() > 0.98) {
+                        display.material.opacity = Math.random() > 0.5 ? 0.7 : 0.3;
+                    }
+                    // Color shift
+                    const hue = (time * 0.1) % 1;
+                    display.material.color.setHSL(hue, 1, 0.5);
+                }
+            });
+            
+            // Animate flying vehicles
+            this.objects.flyingVehicles.forEach(vehicle => {
+                vehicle.position.z += vehicle.userData.speed * deltaTime * 0.001;
+                vehicle.position.y = vehicle.userData.baseY + 
+                    Math.sin(time * vehicle.userData.wobbleSpeed) * 2;
+                
+                // Reset position when out of view
+                if (vehicle.position.z > 50) {
+                    vehicle.position.z = -50 - Math.random() * 30;
+                    vehicle.userData.baseY = 10 + Math.random() * 10;
+                }
+            });
+            
+            // Pulse ambient light
+            if (window.gameState && window.gameState.isPlaying) {
+                const pulseIntensity = 0.5 + Math.sin(time * 2) * 0.2;
+                const ambientLight = this.scene.children.find(child => child.type === 'AmbientLight');
+                if (ambientLight) {
+                    ambientLight.intensity = pulseIntensity;
+                }
+            }
+        },
+        
+        cleanup: function() {
+            // Remove all level-specific objects
+            Object.values(this.objects).forEach(objArray => {
+                if (Array.isArray(objArray)) {
+                    objArray.forEach(obj => {
+                        if (obj.parent) {
+                            obj.parent.remove(obj);
+                        }
+                        // Dispose geometries and materials
+                        obj.traverse(child => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(m => m.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    });
+                } else if (objArray && objArray.parent) {
+                    objArray.parent.remove(objArray);
+                    if (objArray.geometry) objArray.geometry.dispose();
+                    if (objArray.material) objArray.material.dispose();
+                }
+            });
+            
+            // Reset object arrays
+            this.objects = {
+                cyberpunkBuildings: [],
+                billboards: [],
+                flyingVehicles: [],
+                neonLights: [],
+                gridHelper: null
+            };
+            
+            // Reset environment
+            if (this.scene && this.renderer) {
+                this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.03);
+                this.renderer.setClearColor(0x87CEEB);
+                
+                // Reset ambient light
+                const ambientLight = this.scene.children.find(child => child.type === 'AmbientLight');
+                if (ambientLight) {
+                    ambientLight.color = new THREE.Color(0xFFFFFF);
+                    ambientLight.intensity = 0.8;
+                }
+                
+                // Show base game elements
+                this.scene.children.forEach(child => {
+                    if (child.userData && (child.userData.type === 'streetLine' || 
+                        child.userData.type === 'sidewalk')) {
+                        child.visible = true;
+                    }
+                });
+            }
+        }
     };
     
     // Register Level 2
@@ -1838,111 +2121,6 @@
             }
         }
 
-        // Particle Effect System for Jump Effects
-        function createParticleEffect(position, color, type) {
-            let particleCount, spreadRange, speed, size;
-            
-            switch (type) {
-                case 'jump':
-                    particleCount = 15;
-                    spreadRange = 2;
-                    speed = 3;
-                    size = 0.04;
-                    break;
-                case 'landing':
-                    particleCount = 20;
-                    spreadRange = 3;
-                    speed = 2;
-                    size = 0.05;
-                    break;
-                case 'success':
-                    particleCount = 25;
-                    spreadRange = 3;
-                    speed = 4;
-                    size = 0.06;
-                    break;
-                case 'dust':
-                    particleCount = 12;
-                    spreadRange = 2.5;
-                    speed = 1;
-                    size = 0.04;
-                    break;
-                default:
-                    particleCount = 15;
-                    spreadRange = 2;
-                    speed = 3;
-                    size = 0.05;
-            }
-            
-            const particles = new THREE.Group();
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = new THREE.Mesh(
-                    new THREE.SphereGeometry(size, 6, 6),
-                    new THREE.MeshBasicMaterial({ 
-                        color: color,
-                        transparent: true
-                    })
-                );
-                
-                particle.position.copy(position);
-                particle.velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * spreadRange,
-                    Math.random() * speed + 0.5,
-                    (Math.random() - 0.5) * spreadRange
-                );
-                particle.life = 1.0;
-                particles.add(particle);
-            }
-            
-            scene.add(particles);
-            
-            // Animate particles
-            const animateParticles = () => {
-                particles.children.forEach((particle, index) => {
-                    particle.position.add(particle.velocity.clone().multiplyScalar(0.016));
-                    particle.velocity.y -= 0.15; // Gravity
-                    particle.life -= 0.02;
-                    
-                    particle.material.opacity = particle.life;
-                    
-                    if (particle.life <= 0) {
-                        particles.remove(particle);
-                    }
-                });
-                
-                if (particles.children.length > 0) {
-                    requestAnimationFrame(animateParticles);
-                } else {
-                    scene.remove(particles);
-                }
-            };
-            animateParticles();
-        }
-
-        // Show temporary notification
-        function showNotification(message, duration = 2000) {
-            const notifications = document.getElementById('notifications');
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = message;
-            
-            notifications.appendChild(notification);
-            
-            // Fade in
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
-            
-            // Remove after duration
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, duration);
-        }
-
         function createPlayer() {
             const playerGroup = new THREE.Group();
             
@@ -2320,6 +2498,29 @@
             
             let obstacleGeometry, obstacleMaterial, height;
             
+            // Check current level and override obstacles for Level 2
+            const currentLevel = window.GameCore && window.GameCore.getModule('levels') ? 
+                window.GameCore.getModule('levels').currentLevel : 1;
+            
+            // For Level 2, use cyberpunk-themed obstacles
+            if (currentLevel === 2) {
+                // Map standard obstacles to cyberpunk equivalents
+                const level2ObstacleMap = {
+                    'lowbarrier': 'hologrambarrier',
+                    'highbarrier': 'plasmagate',
+                    'spikes': 'energyspikes',
+                    'jumpblock': 'datablock',
+                    'duckbeam': 'laserbeam',
+                    'hurdleset': 'energyfield',
+                    'wallgap': 'cyberwall'
+                };
+                
+                // Override type for Level 2
+                if (level2ObstacleMap[type]) {
+                    type = level2ObstacleMap[type];
+                }
+            }
+            
             switch (type) {
                 case 'lowbarrier':
                     // Niedrige Barriere - muss übersprungen werden
@@ -2668,12 +2869,271 @@
                     obstacleGroup.add(laserGroup);
                     height = 1.4; // Laser height
                     break;
+                    
+                // ==================== LEVEL 2 CYBERPUNK OBSTACLES ====================
+                case 'hologrambarrier':
+                    // Holographic barrier - must jump over
+                    const hologramGroup = new THREE.Group();
+                    
+                    // Base projectors
+                    for (let i = 0; i < 2; i++) {
+                        const projectorGeometry = new THREE.CylinderGeometry(0.1, 0.15, 0.3);
+                        const projectorMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0x333344,
+                            emissive: 0x0000FF
+                        });
+                        const projector = new THREE.Mesh(projectorGeometry, projectorMaterial);
+                        projector.position.set((i - 0.5) * 1.4, 0.15, 0);
+                        hologramGroup.add(projector);
+                    }
+                    
+                    // Holographic barrier
+                    const barrierGeometry = new THREE.BoxGeometry(1.5, 0.8, 0.05);
+                    const barrierMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x00FFFF,
+                        emissive: 0x00AAAA,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    const barrier = new THREE.Mesh(barrierGeometry, barrierMaterial);
+                    barrier.position.y = 0.4;
+                    hologramGroup.add(barrier);
+                    
+                    // Add flickering grid lines
+                    const gridLineGeometry = new THREE.PlaneGeometry(1.5, 0.8);
+                    const gridLineMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0xFFFFFF,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.DoubleSide
+                    });
+                    const gridLines = new THREE.Mesh(gridLineGeometry, gridLineMaterial);
+                    gridLines.position.y = 0.4;
+                    gridLines.position.z = 0.06;
+                    hologramGroup.add(gridLines);
+                    
+                    obstacleGroup.add(hologramGroup);
+                    height = 0.8;
+                    break;
+                    
+                case 'plasmagate':
+                    // Plasma gate - must duck under
+                    const plasmaGroup = new THREE.Group();
+                    
+                    // Gate pillars
+                    for (let i = 0; i < 2; i++) {
+                        const pillarGeometry = new THREE.BoxGeometry(0.3, 2.5, 0.3);
+                        const pillarMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0x222255,
+                            emissive: 0xFF00FF
+                        });
+                        const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+                        pillar.position.set((i - 0.5) * 2, 1.25, 0);
+                        plasmaGroup.add(pillar);
+                    }
+                    
+                    // Plasma field
+                    const plasmaGeometry = new THREE.BoxGeometry(1.8, 0.4, 0.1);
+                    const plasmaMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xFF00FF,
+                        emissive: 0xFF00FF,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    const plasma = new THREE.Mesh(plasmaGeometry, plasmaMaterial);
+                    plasma.position.y = 1.4;
+                    plasmaGroup.add(plasma);
+                    
+                    obstacleGroup.add(plasmaGroup);
+                    height = 0.4;
+                    break;
+                    
+                case 'energyspikes':
+                    // Energy spikes - glowing cyberpunk spikes
+                    const spikeGroup = new THREE.Group();
+                    
+                    for (let i = 0; i < 3; i++) {
+                        const spikeGeometry = new THREE.ConeGeometry(0.2, 0.8, 4);
+                        const spikeMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0x00FF00,
+                            emissive: 0x00FF00,
+                            emissiveIntensity: 0.5
+                        });
+                        const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
+                        spike.position.set((i - 1) * 0.4, 0.4, 0);
+                        spike.rotation.z = (Math.random() - 0.5) * 0.2;
+                        spikeGroup.add(spike);
+                        
+                        // Add glow effect
+                        const glowGeometry = new THREE.SphereGeometry(0.15);
+                        const glowMaterial = new THREE.MeshBasicMaterial({ 
+                            color: 0x00FF00,
+                            transparent: true,
+                            opacity: 0.5
+                        });
+                        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                        glow.position.copy(spike.position);
+                        glow.position.y = 0.8;
+                        spikeGroup.add(glow);
+                    }
+                    
+                    obstacleGroup.add(spikeGroup);
+                    height = 0.8;
+                    break;
+                    
+                case 'datablock':
+                    // Data block - digital cube to jump over
+                    const dataGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+                    const dataMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x0088FF,
+                        emissive: 0x004488
+                    });
+                    const dataBlock = new THREE.Mesh(dataGeometry, dataMaterial);
+                    dataBlock.position.y = 0.6;
+                    obstacleGroup.add(dataBlock);
+                    
+                    // Add binary code texture effect
+                    const codeGeometry = new THREE.PlaneGeometry(1.1, 1.1);
+                    const codeMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0x00FF00,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+                    
+                    // Add code on all visible sides
+                    for (let face = 0; face < 4; face++) {
+                        const code = new THREE.Mesh(codeGeometry, codeMaterial);
+                        const angle = face * Math.PI / 2;
+                        code.position.set(
+                            Math.sin(angle) * 0.61,
+                            0.6,
+                            Math.cos(angle) * 0.61
+                        );
+                        code.rotation.y = angle;
+                        obstacleGroup.add(code);
+                    }
+                    
+                    height = 1.2;
+                    break;
+                    
+                case 'laserbeam':
+                    // Laser beam - horizontal laser to duck under
+                    const laserBeamGroup = new THREE.Group();
+                    
+                    // Emitters
+                    for (let i = 0; i < 2; i++) {
+                        const emitterGeometry = new THREE.SphereGeometry(0.15);
+                        const emitterMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xFF0000,
+                            emissive: 0xFF0000
+                        });
+                        const emitter = new THREE.Mesh(emitterGeometry, emitterMaterial);
+                        emitter.position.set((i - 0.5) * 2.5, 1.4, 0);
+                        laserBeamGroup.add(emitter);
+                    }
+                    
+                    // Laser beam
+                    const beamGeometry = new THREE.BoxGeometry(2.2, 0.15, 0.15);
+                    const beamMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xFF0000,
+                        emissive: 0xFF0000,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+                    beam.position.y = 1.4;
+                    laserBeamGroup.add(beam);
+                    
+                    obstacleGroup.add(laserBeamGroup);
+                    height = 0.3;
+                    break;
+                    
+                case 'energyfield':
+                    // Energy field - multiple energy barriers
+                    for (let i = 0; i < 3; i++) {
+                        const fieldGeometry = new THREE.BoxGeometry(1.6, 0.6, 0.05);
+                        const fieldMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xFFFF00,
+                            emissive: 0xFFAA00,
+                            transparent: true,
+                            opacity: 0.6
+                        });
+                        const field = new THREE.Mesh(fieldGeometry, fieldMaterial);
+                        field.position.set(0, 0.3, -0.8 + i * 0.8);
+                        field.position.y = 0.3;
+                        obstacleGroup.add(field);
+                        
+                        // Add energy particles
+                        const particleGeometry = new THREE.SphereGeometry(0.05);
+                        const particleMaterial = new THREE.MeshBasicMaterial({ 
+                            color: 0xFFFFFF
+                        });
+                        for (let j = 0; j < 3; j++) {
+                            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                            particle.position.set(
+                                (Math.random() - 0.5) * 1.4,
+                                0.3 + Math.random() * 0.4,
+                                -0.8 + i * 0.8
+                            );
+                            obstacleGroup.add(particle);
+                        }
+                    }
+                    height = 0.6;
+                    break;
+                    
+                case 'cyberwall':
+                    // Cyber wall with digital gap
+                    const wallMat = new THREE.MeshLambertMaterial({ 
+                        color: 0x112233,
+                        emissive: 0x001122
+                    });
+                    
+                    // Left wall
+                    const leftWall = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.8, 2.5, 0.4),
+                        wallMat
+                    );
+                    leftWall.position.set(-0.5, 1.25, 0);
+                    obstacleGroup.add(leftWall);
+                    
+                    // Right wall
+                    const rightWall = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.8, 2.5, 0.4),
+                        wallMat
+                    );
+                    rightWall.position.set(0.5, 1.25, 0);
+                    obstacleGroup.add(rightWall);
+                    
+                    // Top wall
+                    const topWall = new THREE.Mesh(
+                        new THREE.BoxGeometry(1.8, 0.8, 0.4),
+                        wallMat
+                    );
+                    topWall.position.set(0, 2.1, 0);
+                    obstacleGroup.add(topWall);
+                    
+                    // Digital effect in gap
+                    const digitalGeometry = new THREE.PlaneGeometry(0.6, 1.2);
+                    const digitalMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0x00FFFF,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.DoubleSide
+                    });
+                    const digitalEffect = new THREE.Mesh(digitalGeometry, digitalMaterial);
+                    digitalEffect.position.set(0, 0.7, 0);
+                    obstacleGroup.add(digitalEffect);
+                    
+                    height = 1.3;
+                    break;
             }
             
             // Für einfache Hindernisse (nicht die komplexen oder neuen Typen)
             if (type !== 'hurdleset' && type !== 'wallgap' && 
                 type !== 'rotatingblade' && type !== 'swinginghammer' && type !== 'movingwall' &&
-                type !== 'bouncingball' && type !== 'spinninglaser') {
+                type !== 'bouncingball' && type !== 'spinninglaser' &&
+                type !== 'hologrambarrier' && type !== 'plasmagate' && type !== 'energyspikes' &&
+                type !== 'datablock' && type !== 'laserbeam' && type !== 'energyfield' && type !== 'cyberwall') {
                 const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
                 obstacle.castShadow = true;
                 
@@ -3274,6 +3734,7 @@
                     if (gameState.playerAction === 'running') {
                         gameState.playerAction = 'jumping';
                         gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time // Höherer Sprung
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         
                         // Audio & Visual Feedback with speed dynamics
@@ -3281,12 +3742,8 @@
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
                         
-                        // Jump particle effect
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
                         
                         // Track jump for skill combos
                         trackPlayerMove('jumping');
@@ -5902,30 +6359,10 @@
                     }
                     
                     // Landing with safety check
-                    if (gameState.playerY <= 0 && gameState.jumpVelocity < 0) {
+                    if (gameState.playerY <= 0) {
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
-                        
-                        // Landing effects
-                        const landingPos = new THREE.Vector3(player.position.x, 0.1, player.position.z);
-                        
-                        // Main landing dust
-                        createParticleEffect(landingPos, 0xAAAAAA, 'landing');
-                        
-                        // Additional dust clouds
-                        for (let i = 0; i < 4; i++) {
-                            const angle = (i / 4) * Math.PI * 2;
-                            const dustPos = landingPos.clone();
-                            dustPos.x += Math.cos(angle) * 0.5;
-                            dustPos.z += Math.sin(angle) * 0.5;
-                            setTimeout(() => {
-                                createParticleEffect(dustPos, 0x8B7355, 'dust');
-                            }, i * 20);
-                        }
-                        
-                        // Landing sound
-                        audioManager.play('land');
                     }
                     
                     // BUGFIX: Enhanced safety check - trigger earlier at Y < -2
@@ -6855,14 +7292,8 @@
                         gameState.jumpVelocity = 10;
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         audioManager.play('jump');
-                        
-                        // Jump particle effect
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
-                        
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
                         trackPlayerMove('jumping');
                     } else if (deltaY > 0 && gameState.playerAction === 'running') {
                         // Swipe down - duck

@@ -16,7 +16,7 @@
     <script>
     // GameCore.js - Central game management system
     const GameCore = {
-        version: "3.6.3-MERGED",
+        version: "4.0.0-modular",
         modules: {},
         initialized: false,
         
@@ -1838,111 +1838,6 @@
             }
         }
 
-        // Particle Effect System for Jump Effects
-        function createParticleEffect(position, color, type) {
-            let particleCount, spreadRange, speed, size;
-            
-            switch (type) {
-                case 'jump':
-                    particleCount = 15;
-                    spreadRange = 2;
-                    speed = 3;
-                    size = 0.04;
-                    break;
-                case 'landing':
-                    particleCount = 20;
-                    spreadRange = 3;
-                    speed = 2;
-                    size = 0.05;
-                    break;
-                case 'success':
-                    particleCount = 25;
-                    spreadRange = 3;
-                    speed = 4;
-                    size = 0.06;
-                    break;
-                case 'dust':
-                    particleCount = 12;
-                    spreadRange = 2.5;
-                    speed = 1;
-                    size = 0.04;
-                    break;
-                default:
-                    particleCount = 15;
-                    spreadRange = 2;
-                    speed = 3;
-                    size = 0.05;
-            }
-            
-            const particles = new THREE.Group();
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = new THREE.Mesh(
-                    new THREE.SphereGeometry(size, 6, 6),
-                    new THREE.MeshBasicMaterial({ 
-                        color: color,
-                        transparent: true
-                    })
-                );
-                
-                particle.position.copy(position);
-                particle.velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * spreadRange,
-                    Math.random() * speed + 0.5,
-                    (Math.random() - 0.5) * spreadRange
-                );
-                particle.life = 1.0;
-                particles.add(particle);
-            }
-            
-            scene.add(particles);
-            
-            // Animate particles
-            const animateParticles = () => {
-                particles.children.forEach((particle, index) => {
-                    particle.position.add(particle.velocity.clone().multiplyScalar(0.016));
-                    particle.velocity.y -= 0.15; // Gravity
-                    particle.life -= 0.02;
-                    
-                    particle.material.opacity = particle.life;
-                    
-                    if (particle.life <= 0) {
-                        particles.remove(particle);
-                    }
-                });
-                
-                if (particles.children.length > 0) {
-                    requestAnimationFrame(animateParticles);
-                } else {
-                    scene.remove(particles);
-                }
-            };
-            animateParticles();
-        }
-
-        // Show temporary notification
-        function showNotification(message, duration = 2000) {
-            const notifications = document.getElementById('notifications');
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = message;
-            
-            notifications.appendChild(notification);
-            
-            // Fade in
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
-            
-            // Remove after duration
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, duration);
-        }
-
         function createPlayer() {
             const playerGroup = new THREE.Group();
             
@@ -3274,6 +3169,7 @@
                     if (gameState.playerAction === 'running') {
                         gameState.playerAction = 'jumping';
                         gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time // Höherer Sprung
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         
                         // Audio & Visual Feedback with speed dynamics
@@ -3281,12 +3177,8 @@
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
                         
-                        // Jump particle effect
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
                         
                         // Track jump for skill combos
                         trackPlayerMove('jumping');
@@ -5902,30 +5794,10 @@
                     }
                     
                     // Landing with safety check
-                    if (gameState.playerY <= 0 && gameState.jumpVelocity < 0) {
+                    if (gameState.playerY <= 0) {
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
-                        
-                        // Landing effects
-                        const landingPos = new THREE.Vector3(player.position.x, 0.1, player.position.z);
-                        
-                        // Main landing dust
-                        createParticleEffect(landingPos, 0xAAAAAA, 'landing');
-                        
-                        // Additional dust clouds
-                        for (let i = 0; i < 4; i++) {
-                            const angle = (i / 4) * Math.PI * 2;
-                            const dustPos = landingPos.clone();
-                            dustPos.x += Math.cos(angle) * 0.5;
-                            dustPos.z += Math.sin(angle) * 0.5;
-                            setTimeout(() => {
-                                createParticleEffect(dustPos, 0x8B7355, 'dust');
-                            }, i * 20);
-                        }
-                        
-                        // Landing sound
-                        audioManager.play('land');
                     }
                     
                     // BUGFIX: Enhanced safety check - trigger earlier at Y < -2
@@ -6855,14 +6727,8 @@
                         gameState.jumpVelocity = 10;
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
                         audioManager.play('jump');
-                        
-                        // Jump particle effect
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
-                        
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
                         trackPlayerMove('jumping');
                     } else if (deltaY > 0 && gameState.playerAction === 'running') {
                         // Swipe down - duck
