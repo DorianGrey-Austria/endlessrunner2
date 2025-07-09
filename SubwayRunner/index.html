@@ -10,6 +10,12 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    
+    <!-- Modular Game System -->
+    <script src="js/core/GameCore.js"></script>
+    <script src="js/levels/LevelManager.js"></script>
+    <script src="js/levels/Level2.js"></script>
+    <script src="js/ui/LevelSelector.js"></script>
     <style>
         * {
             margin: 0;
@@ -1408,6 +1414,9 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
+                // Initialize GameCore system
+                GameCore.init();
+                
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
@@ -2412,7 +2421,58 @@
             showNameInputDialog(true);
         }
 
+        function showNotification(message, duration = 3000) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 255, 255, 0.9);
+                color: black;
+                padding: 20px 40px;
+                border-radius: 10px;
+                font-size: 24px;
+                font-weight: bold;
+                z-index: 10000;
+                animation: notificationSlide 0.5s ease-out;
+            `;
+            
+            // Add animation
+            if (!document.getElementById('notificationStyle')) {
+                const style = document.createElement('style');
+                style.id = 'notificationStyle';
+                style.textContent = `
+                    @keyframes notificationSlide {
+                        from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+                        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'notificationSlide 0.5s ease-in reverse';
+                setTimeout(() => notification.remove(), 500);
+            }, duration);
+        }
+        
         function updateUI() {
+            // Check for level progression
+            if (window.GameCore && gameState.isPlaying) {
+                const levelManager = GameCore.getModule('levels');
+                if (levelManager && levelManager.checkLevelTransition(gameState.score)) {
+                    // Level changed!
+                    const newLevel = levelManager.getCurrentLevel();
+                    if (newLevel) {
+                        showNotification(`Level ${levelManager.currentLevel}: ${newLevel.name}!`);
+                    }
+                }
+            }
+            
             // Animate score changes
             const scoreElement = document.getElementById('score');
             const currentDisplayScore = parseInt(scoreElement.textContent) || 0;
@@ -5257,6 +5317,11 @@
             // Calculate delta time for smooth movement
             const currentTime = performance.now();
             const deltaTime = currentTime - lastFrameTime;
+            
+            // Update GameCore modules
+            if (window.GameCore) {
+                GameCore.update(deltaTime);
+            }
             lastFrameTime = currentTime;
             
             if (gameState.isPlaying) {
