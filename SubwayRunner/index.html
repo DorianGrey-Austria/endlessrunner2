@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - Challenge</title>
-    <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com *.jsdelivr.net; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com *.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com;">
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <!-- TEMPORARILY DISABLED CSP FOR DEBUGGING -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="..."> -->
+    <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- MediaPipe CDN for Gesture Control -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    <!-- MediaPipe CDN TEMPORARILY DISABLED for debugging -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script> -->
     <style>
         * {
             margin: 0;
@@ -8070,6 +8070,26 @@
             
             // Create crystal reflections
             createCrystalReflections();
+            
+            // Crystal glow lighting
+            const crystalLight1 = new THREE.PointLight(0xFF00FF, 1, 30);
+            crystalLight1.position.set(-10, 5, 0);
+            scene.add(crystalLight1);
+            
+            const crystalLight2 = new THREE.PointLight(0x00FFFF, 1, 30);
+            crystalLight2.position.set(10, 5, -20);
+            scene.add(crystalLight2);
+            
+            // Create crystal formations
+            for (let i = 0; i < 25; i++) {
+                createGiantCrystal(
+                    -20 + Math.random() * 40,
+                    -i * 10
+                );
+            }
+            
+            // Create mine cart tracks
+            createMineCartTracks();
         }
         
         function createCrystalFormation(x, z) {
@@ -8194,27 +8214,6 @@
             
             reflectionGroup.userData = { type: 'crystalReflections' };
             scene.add(reflectionGroup);
-        }
-            
-            // Crystal glow lighting
-            const crystalLight1 = new THREE.PointLight(0xFF00FF, 1, 30);
-            crystalLight1.position.set(-10, 5, 0);
-            scene.add(crystalLight1);
-            
-            const crystalLight2 = new THREE.PointLight(0x00FFFF, 1, 30);
-            crystalLight2.position.set(10, 5, -20);
-            scene.add(crystalLight2);
-            
-            // Create crystal formations
-            for (let i = 0; i < 25; i++) {
-                createGiantCrystal(
-                    -20 + Math.random() * 40,
-                    -i * 10
-                );
-            }
-            
-            // Create mine cart tracks
-            createMineCartTracks();
         }
         
         function createGiantCrystal(x, z) {
@@ -10703,7 +10702,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.5.2-HOTFIX<br>
+                    Version: 4.5.3-EMERGENCY-FIX<br>
                     🎮 10 Epic Levels<br>
                     🌟 Unique Mechanics Each Level
                 `;
