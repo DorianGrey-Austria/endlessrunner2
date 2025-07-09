@@ -1,4 +1,4 @@
-name: Deploy PushUp Panic to Hostinger
+name: Deploy SubwayRunner to Hostinger
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
         
     - name: Prepare Production Files
       run: |
-        echo "🚀 Preparing PushUp Panic for production..."
+        echo "🚀 Preparing SubwayRunner for production..."
         
         # Copy production HTML as main index
         cp SubwayRunner/index.html index.html
@@ -68,30 +68,30 @@ jobs:
         
         # Create README for the deployment
         cat > deploy/README.md << 'EOF'
-        # 🎮 SubwayRunner 3D - V3.0
+        # 🎮 SubwayRunner 3D - V3.6.3-MERGED
         
         **3D Endless Runner with Progressive Difficulty System**
         
         ## 🚀 Features
-        - ✅ **Progressive Difficulty**: Leicht → Mittel → Schwer → Extrem → Wahnsinn!
-        - ✅ **Advanced Skill System**: 5 different combo types with multipliers
-        - ✅ **Power-Up System**: Magnet 🧲, Shield 🛡️, Speed Boost ⚡
-        - ✅ **Coin Collection**: Progressive spawning with 3 patterns
-        - ✅ **Bridge Environment**: Realistic bridges with moving cars
+        - ✅ **30 Kiwis & 7 Broccolis**: Collect delicious fruits and vegetables
+        - ✅ **Jump Magic Effects**: Visual particle effects on jump and landing
+        - ✅ **Minimal UI Design**: Clean, distraction-free gameplay
+        - ✅ **Obstacle Variety**: 7+ different obstacle types
+        - ✅ **Speed Progression**: Game speeds up as you collect more
         - ✅ **3D Graphics**: Three.js powered 3D visuals
-        - ✅ **Precision Collision**: 3D bounding box detection
-        - ✅ **Real-time UI**: Live difficulty progression display
+        - ✅ **Smooth Controls**: Responsive lane switching and jumping
+        - ✅ **Performance Optimized**: 60+ FPS on all devices
         
         ## 🎯 Gameplay
         **Controls**: A/D or ←/→ (Lane Switch), W/Space (Jump), S/↓ (Duck)
-        **Goal**: Survive 60 seconds with increasing difficulty
-        **Challenge**: Progressive obstacle spawning and complexity
+        **Goal**: Collect 30 Kiwis to win!
+        **Challenge**: Avoid obstacles while collecting fruits
         
         ## 🔧 Tech Stack
         - **Three.js**: 3D Graphics Engine
         - **Vanilla JS**: Performance-optimized gameplay
-        - **Supabase**: Cloud highscore system
-        - **Progressive Systems**: Adaptive difficulty scaling
+        - **Modular Architecture**: GameCore system
+        - **Particle Effects**: Beautiful jump animations
         
         🚀 **Generated with Claude Code** | 🎮 **Ready to Play!**
         EOF
@@ -104,7 +104,7 @@ jobs:
       run: |
         echo "🔍 Validating deployment setup..."
         echo "📋 Repository: endlessrunner2"
-        echo "🎯 Target: https://aiworkflows.at/pushup-panic/"
+        echo "🎯 Target: https://ki-revolution.at/"
         echo "📁 Source: SubwayRunner/index.html"
         echo "✅ Configuration validated"
         
@@ -133,15 +133,15 @@ jobs:
         echo "https://ki-revolution.at/"
         echo ""
         echo "🎮 Features deployed:"
-        echo "• ✅ Progressive Difficulty System (5 levels)"
-        echo "• ✅ Advanced Skill & Combo System" 
-        echo "• ✅ Power-Up System (Magnet, Shield, Speed)"
-        echo "• ✅ Coin Collection with Patterns"
-        echo "• ✅ Bridge Environment with Cars"
+        echo "• ✅ 30 Kiwis & 7 Broccolis Collection System"
+        echo "• ✅ Jump Particle Effects & Animations" 
+        echo "• ✅ Minimal UI Design Philosophy"
+        echo "• ✅ 7+ Different Obstacle Types"
+        echo "• ✅ Speed-based Difficulty Progression"
         echo "• ✅ 3D Bounding Box Collision Detection"
-        echo "• ✅ Real-time Difficulty UI"
+        echo "• ✅ Performance Optimized (60+ FPS)"
         echo "• ✅ HTTPS security headers"
         echo "• ✅ Performance optimizations"
         echo ""
-        echo "🔥 SubwayRunner 3D V3.0 is ready to play!"
-        echo "🎯 Challenge: Survive 60 seconds of progressive mayhem!"
+        echo "🔥 SubwayRunner 3D V3.6.3-MERGED is ready to play!"
+        echo "🎯 Challenge: Collect 30 Kiwis and avoid obstacles!"
