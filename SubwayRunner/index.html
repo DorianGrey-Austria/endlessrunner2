@@ -68,6 +68,41 @@
             line-height: 1.2;
         }
         
+        #debugPanel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 400px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.9);
+            color: #00FF00;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 2px solid #00FF00;
+            border-radius: 5px;
+            z-index: 10000;
+        }
+        
+        .debug-entry {
+            margin: 2px 0;
+            padding: 2px;
+            border-bottom: 1px solid rgba(0,255,0,0.2);
+        }
+        
+        .debug-error {
+            color: #FF0000;
+        }
+        
+        .debug-warning {
+            color: #FFFF00;
+        }
+        
+        .debug-success {
+            color: #00FF00;
+        }
+        
         /* Visual Enhancement Styles */
         .speed-lines {
             position: absolute;
@@ -1563,6 +1598,12 @@
             <div class="fusion-slot" id="fusionSlot2" data-slot="2"></div>
         </div>
         
+        <!-- DEBUG PANEL -->
+        <div id="debugPanel">
+            <h3 style="color: #00FF00; margin: 0 0 10px 0;">🔍 DEBUG CONSOLE</h3>
+            <div id="debugMessages"></div>
+        </div>
+        
         <!-- Gesture Control UI -->
         <div id="gestureControls">
             <button id="gestureToggle" onclick="toggleGestureControl()">🎥 Gesten aktivieren</button>
@@ -1854,6 +1895,34 @@
     </div>
 
     <script>
+        // EARLY DEBUG INITIALIZATION
+        window.debugLog = function(message, type = 'info') {
+            console.log(`🔍 DEBUG: ${message}`);
+            
+            // Try to update debug panel if it exists
+            try {
+                const debugPanel = document.getElementById('debugMessages');
+                if (debugPanel) {
+                    const entry = document.createElement('div');
+                    entry.className = `debug-entry debug-${type}`;
+                    const timestamp = new Date().toLocaleTimeString();
+                    entry.innerHTML = `[${timestamp}] ${message}`;
+                    debugPanel.insertBefore(entry, debugPanel.firstChild);
+                    
+                    // Keep only last 50 messages
+                    while (debugPanel.children.length > 50) {
+                        debugPanel.removeChild(debugPanel.lastChild);
+                    }
+                }
+            } catch (e) {
+                // Silent fail if DOM not ready
+            }
+        };
+        
+        debugLog('SCRIPT START: JavaScript execution begun', 'success');
+        debugLog(`Page URL: ${window.location.href}`, 'info');
+        debugLog(`Three.js loaded: ${typeof THREE !== 'undefined' ? 'YES' : 'NO'}`, typeof THREE !== 'undefined' ? 'success' : 'error');
+        
         // Audio System
         class AudioManager {
             constructor() {
@@ -3349,11 +3418,49 @@
             }
         };
         
+        // DEBUG HELPER FUNCTION
+        window.debugLog = function(message, type = 'info') {
+            console.log(`🔍 DEBUG: ${message}`);
+            
+            const debugPanel = document.getElementById('debugMessages');
+            if (debugPanel) {
+                const entry = document.createElement('div');
+                entry.className = `debug-entry debug-${type}`;
+                const timestamp = new Date().toLocaleTimeString();
+                entry.innerHTML = `[${timestamp}] ${message}`;
+                debugPanel.insertBefore(entry, debugPanel.firstChild);
+                
+                // Keep only last 50 messages
+                while (debugPanel.children.length > 50) {
+                    debugPanel.removeChild(debugPanel.lastChild);
+                }
+            }
+        };
+        
         // CHARACTER SELECTION FUNCTIONS
         window.showCharacterSelection = function() {
+            debugLog('showCharacterSelection called', 'success');
             console.log('showCharacterSelection called');
-            document.getElementById('characterSelection').style.display = 'block';
-            initializeCharacterSelection();
+            
+            const charSelectionDiv = document.getElementById('characterSelection');
+            debugLog(`characterSelection div found: ${charSelectionDiv ? 'YES' : 'NO'}`, charSelectionDiv ? 'success' : 'error');
+            
+            if (charSelectionDiv) {
+                charSelectionDiv.style.display = 'block';
+                debugLog('characterSelection display set to block', 'success');
+            } else {
+                debugLog('ERROR: characterSelection div not found!', 'error');
+                alert('ERROR: Character selection div not found!');
+                return;
+            }
+            
+            try {
+                initializeCharacterSelection();
+                debugLog('initializeCharacterSelection called successfully', 'success');
+            } catch (error) {
+                debugLog(`ERROR in initializeCharacterSelection: ${error.message}`, 'error');
+                console.error('Error in initializeCharacterSelection:', error);
+            }
         };
         
         window.hideCharacterSelection = function() {
@@ -3361,11 +3468,28 @@
             document.getElementById('characterSelection').style.display = 'none';
         };
 
-        // Add event listener for character select button
+        // Add event listener for character select button WITH DEBUGGING
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 DEBUG: DOMContentLoaded event fired');
             const characterSelectButton = document.getElementById('characterSelectButton');
+            console.log('🔍 DEBUG: Character select button found:', characterSelectButton);
+            
             if (characterSelectButton) {
-                characterSelectButton.addEventListener('click', window.showCharacterSelection);
+                characterSelectButton.addEventListener('click', function(e) {
+                    console.log('🔍 DEBUG: Character select button CLICKED!');
+                    console.log('🔍 DEBUG: Event:', e);
+                    console.log('🔍 DEBUG: showCharacterSelection exists?', typeof window.showCharacterSelection);
+                    
+                    try {
+                        window.showCharacterSelection();
+                    } catch (error) {
+                        console.error('🔍 DEBUG: Error calling showCharacterSelection:', error);
+                        alert('ERROR: ' + error.message);
+                    }
+                });
+                console.log('🔍 DEBUG: Click listener attached successfully');
+            } else {
+                console.error('🔍 DEBUG: Character select button NOT FOUND!');
             }
         });
         
@@ -4599,6 +4723,8 @@
 
         function init() {
             console.log('Initializing Three.js scene...');
+            debugLog('INIT FUNCTION STARTED', 'success');
+            
             try {
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
@@ -10702,7 +10828,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.5.3-EMERGENCY-FIX<br>
+                    Version: 4.5.4-DEBUG-ENHANCED<br>
                     🎮 10 Epic Levels<br>
                     🌟 Unique Mechanics Each Level
                 `;
@@ -17689,9 +17815,14 @@
         };
 
         // Initialize game when DOM is ready
+        debugLog('PAGE LOAD: Script reached initialization check', 'success');
+        debugLog(`Document readyState: ${document.readyState}`, 'info');
+        
         if (document.readyState === 'loading') {
+            debugLog('DOM still loading, waiting for DOMContentLoaded', 'warning');
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('Starting game initialization...');
+                debugLog('DOMContentLoaded fired, starting init', 'success');
                 init();
                 initializeFusionSystem();
                 
@@ -17701,6 +17832,7 @@
         } else {
             // DOM is already loaded
             console.log('Starting game initialization...');
+            debugLog('DOM already loaded, initializing immediately', 'warning');
             init();
             initializeFusionSystem();
             
