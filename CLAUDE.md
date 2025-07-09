@@ -42,25 +42,16 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.5.9-UNPKG-CSP-FIX (Switched back to unpkg.com due to CSP)
-- **Previous**: 4.5.5-ULTIMATE-FIX (Critical Syntax Error Resolution)
-- **Previous**: 4.5.4-DEBUG-ENHANCED (Comprehensive debugging added)
-- **Previous**: 4.5.3-EMERGENCY-FIX (Desperate attempt to fix persistent startup issues)
-- **Previous**: 4.5.2-HOTFIX (Critical Bug Fixes - Game Start Issues)
-- **Previous**: 4.5.1-SENIOR-OPTIMIZED (Senior Developer Code Quality Improvements)
-- **Previous**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters with Multi-Agent Development)
+- **Latest**: 4.5.10-LEVEL-PROGRESSION (Enhanced Level 1→2 Transition)
+- **Previous**: 4.5.9-UNPKG-CSP-FIX (Switched back to unpkg.com due to CSP)
+- **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 - **Before**: 4.4.0-VISUAL-OVERHAUL (Massive Visual Enhancement for All 10 Levels)
 - **Before**: 4.3.0-MEGA-LEVELS (10 Epic Levels with Unique Mechanics)
-- **Before**: 4.2.1-LEVEL2 (Enhanced Level 2 with Cyberpunk Elements)
 - **Before**: 4.2.0-GHOST-MODE (Daily Ghost Racing with Seeded Levels)
-- **Before**: 4.1.3-UI-PURE (Complete UI Overhaul - NO Permanent Text)
-- **Before**: 4.1.2-GAMEPLAY-FIX (Jump Physics Fix + Exciting Early Game Spawn)
-- **Before**: 4.1.1-MINIMAL-UI (Minimalist UI Design - Clean Gameplay Experience)
 - **Before**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
-- **Before**: 4.0.8-TURBO (Massive Performance Optimization + Better Graphics)
 
 ### **CURRENT CODEBASE STATUS**
-The game exists in a transitional state from v4.x back to v3.6.2-MINIMAL-UI based on git history. The SubwayRunner/index.html contains embedded modules from the v4.x era but was rolled back to a stable v3.6.1 base.
+The game is currently at version 4.5.10-LEVEL-PROGRESSION. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (search for "version:" string)
@@ -74,48 +65,15 @@ The game exists in a transitional state from v4.x back to v3.6.2-MINIMAL-UI base
 - **Function Testing**: `SubwayRunner/function_test.html`, `SubwayRunner/quick_test.html`
 - **Development Backups**: Multiple .backup files in SubwayRunner/ for version rollbacks
 
-### **VERSION HISTORY LOG**
-- 4.5.0-CHARACTER-SYSTEM: 5 Unique Playable Characters with Multi-Agent Development
-  - **Character Selection UI**: Full-screen character selection with previews and progression
-  - **NEON-7 (Cyberpunk Female)**: Digital ghost with glitch effects, fiber optic hair, cybernetic eyes
-  - **Commander Void (Space Male)**: Time-displaced astronaut with jetpack, space helmet, retro-futuristic design
-  - **Lara Thornwood (Jungle Female)**: Cursed archaeologist with tribal tattoos, braided hair, adventure gear
-  - **Bjorn Frostbeard (Ice Male)**: Viking warrior with ice crystal beard, horned helmet, frost effects
-  - **Seraphina Prism (Crystal Female)**: Ethereal sorceress with floating crystal hair, orbiting gems, prismatic effects
-  - **Unique Abilities**: Each character has passive abilities, level-based unlocks, and special mechanics
-  - **Character Progression**: Experience system, ability unlocks, character-specific stats tracking
-  - **Multi-Agent Development**: Senior Developer + 5 Sub-Agents collaborative character creation process
-- 4.4.0-VISUAL-OVERHAUL: Massive Visual Enhancement for All 10 Levels
-  - Level 1: Enhanced subway with steam vents, sparks, tunnel atmosphere
-  - Level 2: Cyberpunk city with neon particles, digital rain, holographic projections
-  - Level 3: Sky high with cloud particles, wind streamers, floating islands, flying birds
-  - Level 4: Underwater with bubble streams, caustic lighting, jellyfish, coral reefs
-  - Level 5: Volcanic with ember particles, lava geysers, heat shimmer, volcanic rocks
-  - Level 6: Ice caves with aurora lighting, frost particles, ice walls, snow effects
-  - Level 7: Jungle temple with animated vines, fireflies, ancient symbols, jungle mist
-  - Level 8: Space station with holographic displays, energy fields, space debris
-  - Level 9: Crystal mines with light beams, gem sparkles, crystal reflections
-  - Level 10: Final dimension with reality distortion, portal effects, energy waves
-- 4.3.0-MEGA-LEVELS: 10 Epic Levels (Sky High, Underwater, Volcanic Rush, Ice Caverns, Jungle Temple, Space Station, Crystal Mines, Final Dimension)
-  - Unique obstacles per level: cloud barriers, lava bursts, ice spikes, gravity wells, reality tears
-  - Special mechanics: low gravity, water physics, heat damage, slippery surfaces, vine swinging, zero gravity
-  - Level-specific collectibles: cloud coins, pearls, lava gems, ice crystals, golden idols, space gems, dimension shards
-  - Dynamic environments: floating clouds, fish schools, lava pools, crystal formations, time distortions
-- 4.2.1-LEVEL2: Enhanced Level 2 Cyberpunk (hologram barriers, plasma gates, energy orbs, data chips, speed boosts)
-- 4.2.0-GHOST-MODE: Daily Ghost Racing (daily seed-based levels, ghost recording/playback, Supabase integration, leaderboard display)
-- 4.1.3-UI-PURE: Complete UI Overhaul (NO permanent text, temporary notifications only, visual indicators)
-- 4.1.2-GAMEPLAY-FIX: Jump Physics Fix (epsilon landing, 5x spawn rate, guaranteed spawns, exciting early game)
-- 4.1.1-MINIMAL-UI: Minimalist UI Design (UI state system, clean HUD, all info in menu, 100% gameplay focus)
-- 4.1.0-LEVELS: Level System Implementation (2 levels, Neon Night Run, smooth transitions, new obstacles)
-- 4.0.8-TURBO: Massive Performance Optimization (material cache, object pooling, frustum culling, 50% less draw calls)
-- 4.0.7-SMART: Intelligent Spawn Distribution System (speed-adaptive spacing, anti-clustering, early game boost)
-- 4.0.6-PURE: Pure Collectibles Only (removed all power-ups, fixed spacing)
-- 4.0.5-BALANCED: Perfect Balance & Realistic Kiwis (limited spawns, bigger kiwis)
-- 4.0.4-PERFORMANCE: High-Performance Optimizations (+300% speed boost)
-- 4.0.3-FIXED: Kiwi/Broccoli Only Mode (disabled Score Token coins)
-- 4.0.2-STABLE: Enterprise DevOps Production (monitoring, feature flags)
-- 4.0.1: HOTFIX - Critical production errors fixed
-- 4.0.0: SUPER FUN EDITION - 10 Mega-Features
+### **KEY FEATURES IMPLEMENTED**
+- **10 Unique Levels**: Each with distinct themes, obstacles, and mechanics
+- **5 Playable Characters**: NEON-7 (Cyberpunk), Commander Void (Space), Lara Thornwood (Jungle), Bjorn Frostbeard (Ice), Seraphina Prism (Crystal)
+- **Level System**: Automatic progression every 1000 points
+- **Visual Effects**: Enhanced graphics with particles, shaders, and post-processing
+- **Gesture Control**: MediaPipe integration for head tracking
+- **Ghost Racing**: Daily challenges with Supabase integration
+- **Collectibles**: Kiwis, Broccolis, and Mystery Boxes (strict no-power-ups rule)
+- **Performance**: Object pooling, frustum culling, adaptive quality
 
 ### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**
 **WICHTIGE REGEL**: Nach jeder längeren Programmier-Session IMMER sofort online stellen!
@@ -123,20 +81,6 @@ The game exists in a transitional state from v4.x back to v3.6.2-MINIMAL-UI base
 - GitHub Actions deployed automatisch zu https://ki-revolution.at/
 - Nutzer sollen immer die neueste Version testen können
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
-
-### **EXTENDED VERSION HISTORY LOG**
-- 4.0.2: STABLE EDITION - Production-ready (Enterprise security, DevOps monitoring, feature flags, auto-rollback, performance tracking, error recovery)
-- 4.0.1: HOTFIX - Critical production errors fixed (syntax error, CSP policy, function access)
-- 4.0.0: SUPER FUN EDITION - 10 Mega-Features (only 3/10 fully implemented: Power-Up Fusion, Adrenaline Mode, Obstacle Destruction)
-- 3.6.1: CRITICAL BUGFIX - Collectibles spawning repair (fixed totalCollectibles vs collectedKiwis confusion, spawn logic now works correctly)
-- 3.6.0: Complete gamification system (30 kiwi limit, broccoli bonuses, elongated kiwi design, duck confetti, UI progress bars, smart 30:7 spawn ratio)
-- 3.5.4: Complete collectible & power-up overhaul (max 2 per pattern + 50/50 balance + 3D horseshoe magnet + blue vignette + large collectible magnet)
-- 3.5.2: Smart collectible spawning + obstacle avoidance + counter fixes + speed-based density
-- 3.5.1: Kiwi visual improvements + duck obstacle height fixes + duck scoring system
-- 3.5.0: Complete tiered bonus system implementation
-- 3.4.2: Gamification (Kiwi/Broccoli collectibles, 80% achievement, jump fix)
-- 3.4.1: Score system emergency overhaul (centralized scoring, throttling)
-- 3.4.0: Visual effects, gesture control, collision fixes
 
 ## Common Development Commands
 
@@ -296,7 +240,8 @@ npm run inspector    # Run MCP inspector
 - Implement proper cleanup in component lifecycle methods
 
 ### Testing Strategy
-- **SubwayRunner**: No specific test framework - rely on browser testing
+- **SubwayRunner**: Custom test runner (`test-runner.js`) + Playwright tests (`npm run test`)
+- **Test Commands**: `npm run test` for full suite, `npm run test:watch` for development
 - **Godot projects**: Test in Godot editor and exported builds
 - **MCP server**: Test with MCP inspector tool
 
@@ -322,10 +267,11 @@ npm run inspector    # Run MCP inspector
 - **Development Port**: 8001 (python -m http.server)
 - **Production**: Single HTML file deployment (index.html)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 4.5.9-UNPKG-CSP-FIX (rolled back to stable v3.6.1 base)
+- **Current Version**: 4.5.10-LEVEL-PROGRESSION
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 - **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
 - **Key Features**: 10 levels, 5 characters, gesture control, ghost racing, visual effects
+- **Testing**: Playwright test suite (`npm run test`), custom test runner (`test-runner.js`)
 
 ### Endless3D
 - Fully modular world system - add new worlds via JSON config
