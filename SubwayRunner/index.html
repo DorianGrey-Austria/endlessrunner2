@@ -3503,6 +3503,11 @@
                         
                         // Show level start message
                         showLevelStartMessage(nextLevel.name);
+                        
+                        // Create Level 2 environment if transitioning to Level 2
+                        if (gameState.currentLevel === 2) {
+                            createLevel2Environment();
+                        }
                     } else {
                         requestAnimationFrame(transition);
                     }
@@ -4451,6 +4456,266 @@
             scene.add(lampGroup);
             environmentObjects.streetLamps.push(lampGroup);
         }
+        
+        // Level 2 Cyberpunk Environment Elements
+        function createLevel2Environment() {
+            // Remove regular street elements
+            scene.children.forEach(child => {
+                if (child.userData && (child.userData.type === 'streetLine' || 
+                    child.userData.type === 'sidewalk')) {
+                    child.visible = false;
+                }
+            });
+            
+            // Neon grid floor
+            const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
+            gridHelper.position.y = -0.95;
+            gridHelper.userData = { type: 'level2Grid' };
+            scene.add(gridHelper);
+            
+            // Create neon buildings
+            for (let i = 0; i < 20; i++) {
+                createCyberpunkBuilding(-20 - Math.random() * 10, -i * 10, 'left');
+                createCyberpunkBuilding(20 + Math.random() * 10, -i * 10, 'right');
+            }
+            
+            // Create holographic billboards
+            for (let i = 0; i < 10; i++) {
+                createHolographicBillboard(-15, -i * 20 - 10);
+                createHolographicBillboard(15, -i * 20 - 10);
+            }
+            
+            // Create flying vehicles
+            for (let i = 0; i < 5; i++) {
+                createFlyingVehicle();
+            }
+            
+            // Add fog for atmosphere
+            scene.fog = new THREE.FogExp2(0x001133, 0.02);
+            
+            // Change ambient light to cyberpunk colors
+            if (scene.children.find(child => child.type === 'AmbientLight')) {
+                scene.children.find(child => child.type === 'AmbientLight').color = new THREE.Color(0x221155);
+            }
+        }
+        
+        function createCyberpunkBuilding(x, z, side) {
+            const buildingGroup = new THREE.Group();
+            
+            const width = 6 + Math.random() * 4;
+            const depth = 6 + Math.random() * 4;
+            const height = 20 + Math.random() * 30;
+            
+            // Dark metallic building
+            const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+            const buildingMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x111122,
+                emissive: 0x000011,
+                emissiveIntensity: 0.2
+            });
+            
+            const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+            building.position.y = height / 2;
+            buildingGroup.add(building);
+            
+            // Neon edge lighting
+            const edgeGeometry = new THREE.BoxGeometry(width + 0.1, height + 0.1, depth + 0.1);
+            const edgeMaterial = new THREE.MeshBasicMaterial({ 
+                color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                wireframe: true
+            });
+            const edges = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            edges.position.y = height / 2;
+            buildingGroup.add(edges);
+            
+            // Glowing windows
+            const windowsPerFloor = Math.floor(width / 1.2);
+            const floors = Math.floor(height / 2.5);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let w = 0; w < windowsPerFloor; w++) {
+                    const windowGeometry = new THREE.PlaneGeometry(0.8, 1.5);
+                    const windowColor = Math.random() > 0.7 ? 0x00FFFF : 
+                                      (Math.random() > 0.5 ? 0xFF00FF : 0x0088FF);
+                    const windowMaterial = new THREE.MeshBasicMaterial({ 
+                        color: windowColor,
+                        emissive: windowColor,
+                        emissiveIntensity: 0.5
+                    });
+                    
+                    const window = new THREE.Mesh(windowGeometry, windowMaterial);
+                    const windowX = -width/2 + 1 + w * 1.2;
+                    const windowY = floor * 2.5 + 2;
+                    const windowZ = side === 'left' ? depth/2 + 0.01 : -depth/2 - 0.01;
+                    
+                    window.position.set(windowX, windowY, windowZ);
+                    if (side === 'right') window.rotation.y = Math.PI;
+                    
+                    // Animate window
+                    window.userData = {
+                        pulseSpeed: 1 + Math.random() * 2,
+                        baseIntensity: 0.5 + Math.random() * 0.3
+                    };
+                    
+                    buildingGroup.add(window);
+                }
+            }
+            
+            buildingGroup.position.set(x, 0, z);
+            buildingGroup.userData = { 
+                type: 'cyberpunkBuilding', 
+                initialZ: z,
+                parallaxSpeed: 0.6 + Math.random() * 0.2
+            };
+            scene.add(buildingGroup);
+            
+            if (!environmentObjects.cyberpunkBuildings) environmentObjects.cyberpunkBuildings = [];
+            environmentObjects.cyberpunkBuildings.push(buildingGroup);
+        }
+        
+        function createHolographicBillboard(x, z) {
+            const billboardGroup = new THREE.Group();
+            
+            // Billboard frame
+            const frameGeometry = new THREE.BoxGeometry(4, 3, 0.1);
+            const frameMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x222222,
+                emissive: 0x111111
+            });
+            const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+            frame.position.y = 5;
+            billboardGroup.add(frame);
+            
+            // Holographic display
+            const displayGeometry = new THREE.PlaneGeometry(3.8, 2.8);
+            const displayMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const display = new THREE.Mesh(displayGeometry, displayMaterial);
+            display.position.y = 5;
+            display.position.z = 0.1;
+            
+            // Animated scanlines
+            display.userData = {
+                scanlineOffset: 0,
+                flickerTime: 0
+            };
+            
+            billboardGroup.add(display);
+            
+            billboardGroup.position.set(x, 0, z);
+            billboardGroup.userData = { 
+                type: 'holographicBillboard', 
+                initialZ: z,
+                parallaxSpeed: 0.7
+            };
+            scene.add(billboardGroup);
+            
+            if (!environmentObjects.billboards) environmentObjects.billboards = [];
+            environmentObjects.billboards.push(billboardGroup);
+        }
+        
+        function createFlyingVehicle() {
+            const vehicleGroup = new THREE.Group();
+            
+            // Futuristic vehicle body
+            const bodyGeometry = new THREE.ConeGeometry(0.5, 2, 6);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x444466,
+                emissive: 0x222244
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.rotation.z = Math.PI / 2;
+            vehicleGroup.add(body);
+            
+            // Engine glow
+            const glowGeometry = new THREE.SphereGeometry(0.3);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00FFFF,
+                transparent: true,
+                opacity: 0.8
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.x = -1;
+            vehicleGroup.add(glow);
+            
+            // Random flight path
+            const side = Math.random() > 0.5 ? 1 : -1;
+            vehicleGroup.position.set(
+                side * (20 + Math.random() * 10),
+                10 + Math.random() * 10,
+                -50 - Math.random() * 50
+            );
+            
+            vehicleGroup.userData = {
+                type: 'flyingVehicle',
+                speed: 20 + Math.random() * 10,
+                direction: side,
+                wobbleSpeed: 1 + Math.random() * 2,
+                baseY: vehicleGroup.position.y
+            };
+            
+            scene.add(vehicleGroup);
+            
+            if (!environmentObjects.flyingVehicles) environmentObjects.flyingVehicles = [];
+            environmentObjects.flyingVehicles.push(vehicleGroup);
+        }
+        
+        // Update Level 2 environmental animations
+        function updateLevel2Environment(deltaTime) {
+            // Animate cyberpunk buildings
+            if (environmentObjects.cyberpunkBuildings) {
+                environmentObjects.cyberpunkBuildings.forEach(building => {
+                    building.children.forEach(child => {
+                        if (child.userData && child.userData.pulseSpeed) {
+                            const pulse = Math.sin(Date.now() * 0.001 * child.userData.pulseSpeed);
+                            child.material.emissiveIntensity = child.userData.baseIntensity + pulse * 0.2;
+                        }
+                    });
+                });
+            }
+            
+            // Animate holographic billboards
+            if (environmentObjects.billboards) {
+                environmentObjects.billboards.forEach(billboard => {
+                    billboard.children.forEach(child => {
+                        if (child.userData && child.userData.scanlineOffset !== undefined) {
+                            // Flicker effect
+                            child.userData.flickerTime += deltaTime * 0.01;
+                            if (Math.random() > 0.98) {
+                                child.material.opacity = Math.random() > 0.5 ? 0.7 : 0.3;
+                            }
+                            
+                            // Color shift
+                            const hue = (Date.now() * 0.0001) % 1;
+                            child.material.color.setHSL(hue, 1, 0.5);
+                        }
+                    });
+                });
+            }
+            
+            // Animate flying vehicles
+            if (environmentObjects.flyingVehicles) {
+                environmentObjects.flyingVehicles.forEach(vehicle => {
+                    // Move forward
+                    vehicle.position.z += vehicle.userData.speed * deltaTime * 0.001;
+                    
+                    // Wobble motion
+                    vehicle.position.y = vehicle.userData.baseY + 
+                        Math.sin(Date.now() * 0.001 * vehicle.userData.wobbleSpeed) * 2;
+                    
+                    // Reset when too far
+                    if (vehicle.position.z > 100) {
+                        vehicle.position.z = -100 - Math.random() * 50;
+                        vehicle.userData.baseY = 10 + Math.random() * 10;
+                        vehicle.position.y = vehicle.userData.baseY;
+                    }
+                });
+            }
+        }
 
         function createTrafficSign(x, z) {
             const signGroup = new THREE.Group();
@@ -4842,18 +5107,20 @@
                     // Neon laser wall for Level 2
                     const laserWallGroup = new THREE.Group();
                     
-                    // Base frame
+                    // Base frame with holographic effect
                     const frameGeometry = new THREE.BoxGeometry(2, 2.5, 0.1);
                     const frameMaterial = new THREE.MeshLambertMaterial({
                         color: 0x1a0033,
                         emissive: 0x9900ff,
-                        emissiveIntensity: 0.3
+                        emissiveIntensity: 0.3,
+                        transparent: true,
+                        opacity: 0.9
                     });
                     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
                     frame.position.y = 1.25;
                     laserWallGroup.add(frame);
                     
-                    // Laser grid
+                    // Animated laser grid
                     const laserCount = 5;
                     for (let i = 0; i < laserCount; i++) {
                         const laserGeom = new THREE.CylinderGeometry(0.02, 0.02, 2);
@@ -4868,21 +5135,44 @@
                         // Vertical lasers
                         const vLaser = new THREE.Mesh(laserGeom, laserMat);
                         vLaser.position.set((i - 2) * 0.4, 1.25, 0);
+                        vLaser.userData.animOffset = i * 0.5; // For pulsing animation
                         laserWallGroup.add(vLaser);
                         
                         // Horizontal lasers
                         const hLaser = new THREE.Mesh(laserGeom, laserMat);
                         hLaser.rotation.z = Math.PI / 2;
                         hLaser.position.set(0, 0.5 + i * 0.4, 0);
+                        hLaser.userData.animOffset = (i + laserCount) * 0.5;
                         laserWallGroup.add(hLaser);
                     }
                     
+                    // Add holographic particles
+                    for (let j = 0; j < 8; j++) {
+                        const particleGeom = new THREE.SphereGeometry(0.05);
+                        const particleMat = new THREE.MeshBasicMaterial({
+                            color: 0x00ffff,
+                            emissive: 0x00ffff,
+                            transparent: true,
+                            opacity: 0.6
+                        });
+                        const particle = new THREE.Mesh(particleGeom, particleMat);
+                        particle.position.set(
+                            (Math.random() - 0.5) * 2,
+                            Math.random() * 2.5,
+                            (Math.random() - 0.5) * 0.5
+                        );
+                        particle.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+                        laserWallGroup.add(particle);
+                    }
+                    
                     obstacleGroup.add(laserWallGroup);
+                    obstacleGroup.userData.isLevel2Obstacle = true;
+                    obstacleGroup.userData.pulseSpeed = 2;
                     height = 2.5;
                     break;
                     
                 case 'neon_barrier':
-                    // Glowing neon barrier
+                    // Glowing neon barrier with energy field
                     const neonGroup = new THREE.Group();
                     
                     // Main barrier
@@ -4907,8 +5197,163 @@
                     glow.position.y = 0.3;
                     neonGroup.add(glow);
                     
+                    // Energy field strips
+                    for (let k = 0; k < 3; k++) {
+                        const stripGeom = new THREE.PlaneGeometry(2, 0.1);
+                        const stripMat = new THREE.MeshBasicMaterial({
+                            color: 0xff00ff,
+                            transparent: true,
+                            opacity: 0.7,
+                            emissive: 0xff00ff
+                        });
+                        const strip = new THREE.Mesh(stripGeom, stripMat);
+                        strip.position.y = 0.2 + k * 0.2;
+                        strip.position.z = 0.16;
+                        strip.userData.scrollSpeed = 1 + k * 0.5;
+                        neonGroup.add(strip);
+                    }
+                    
+                    // Corner lights
+                    for (let l = 0; l < 4; l++) {
+                        const lightGeom = new THREE.SphereGeometry(0.08);
+                        const lightMat = new THREE.MeshBasicMaterial({
+                            color: 0xff00ff,
+                            emissive: 0xff00ff
+                        });
+                        const light = new THREE.Mesh(lightGeom, lightMat);
+                        light.position.set(
+                            (l % 2 - 0.5) * 1.8,
+                            0.1 + Math.floor(l / 2) * 0.4,
+                            0.2
+                        );
+                        neonGroup.add(light);
+                    }
+                    
                     obstacleGroup.add(neonGroup);
+                    obstacleGroup.userData.isLevel2Obstacle = true;
+                    obstacleGroup.userData.energyFieldActive = true;
                     height = 0.6;
+                    break;
+                    
+                case 'hologram_barrier':
+                    // New Level 2 obstacle: Holographic barrier
+                    const holoGroup = new THREE.Group();
+                    
+                    // Holographic frame
+                    const holoFrameGeom = new THREE.BoxGeometry(0.1, 2, 0.1);
+                    const holoFrameMat = new THREE.MeshBasicMaterial({
+                        color: 0x00ff00,
+                        emissive: 0x00ff00,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    
+                    // Create frame pillars
+                    for (let i = 0; i < 2; i++) {
+                        const pillar = new THREE.Mesh(holoFrameGeom, holoFrameMat);
+                        pillar.position.set((i - 0.5) * 1.8, 1, 0);
+                        holoGroup.add(pillar);
+                    }
+                    
+                    // Holographic barrier (flickering)
+                    const holoBarrierGeom = new THREE.PlaneGeometry(1.8, 2);
+                    const holoBarrierMat = new THREE.MeshBasicMaterial({
+                        color: 0x00ff00,
+                        transparent: true,
+                        opacity: 0.4,
+                        side: THREE.DoubleSide,
+                        emissive: 0x00ff00
+                    });
+                    const holoBarrier = new THREE.Mesh(holoBarrierGeom, holoBarrierMat);
+                    holoBarrier.position.y = 1;
+                    holoBarrier.userData.flickerSpeed = 10;
+                    holoGroup.add(holoBarrier);
+                    
+                    // Scanlines effect
+                    for (let j = 0; j < 10; j++) {
+                        const scanlineGeom = new THREE.PlaneGeometry(1.8, 0.02);
+                        const scanlineMat = new THREE.MeshBasicMaterial({
+                            color: 0x00ff00,
+                            transparent: true,
+                            opacity: 0.6
+                        });
+                        const scanline = new THREE.Mesh(scanlineGeom, scanlineMat);
+                        scanline.position.y = j * 0.2;
+                        scanline.position.z = 0.01;
+                        scanline.userData.scanSpeed = 2 + Math.random();
+                        holoGroup.add(scanline);
+                    }
+                    
+                    obstacleGroup.add(holoGroup);
+                    obstacleGroup.userData.isLevel2Obstacle = true;
+                    obstacleGroup.userData.hologramType = true;
+                    height = 2;
+                    break;
+                    
+                case 'plasma_gate':
+                    // New Level 2 obstacle: Plasma gate
+                    const plasmaGroup = new THREE.Group();
+                    
+                    // Gate posts
+                    const postGeom = new THREE.CylinderGeometry(0.15, 0.15, 2.5);
+                    const postMat = new THREE.MeshLambertMaterial({
+                        color: 0x4400ff,
+                        emissive: 0x2200aa,
+                        emissiveIntensity: 0.5
+                    });
+                    
+                    for (let i = 0; i < 2; i++) {
+                        const post = new THREE.Mesh(postGeom, postMat);
+                        post.position.set((i - 0.5) * 2, 1.25, 0);
+                        plasmaGroup.add(post);
+                        
+                        // Energy orbs on posts
+                        const orbGeom = new THREE.SphereGeometry(0.2);
+                        const orbMat = new THREE.MeshBasicMaterial({
+                            color: 0xff00ff,
+                            emissive: 0xff00ff,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const orb = new THREE.Mesh(orbGeom, orbMat);
+                        orb.position.copy(post.position);
+                        orb.position.y = 2.3;
+                        plasmaGroup.add(orb);
+                    }
+                    
+                    // Plasma field
+                    const plasmaGeom = new THREE.PlaneGeometry(2, 2.2);
+                    const plasmaMat = new THREE.MeshBasicMaterial({
+                        color: 0xff00ff,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.DoubleSide
+                    });
+                    const plasmaField = new THREE.Mesh(plasmaGeom, plasmaMat);
+                    plasmaField.position.y = 1.1;
+                    plasmaField.userData.waveSpeed = 3;
+                    plasmaGroup.add(plasmaField);
+                    
+                    // Lightning effects
+                    for (let k = 0; k < 3; k++) {
+                        const lightningGeom = new THREE.CylinderGeometry(0.02, 0.02, 2);
+                        const lightningMat = new THREE.MeshBasicMaterial({
+                            color: 0xffffff,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const lightning = new THREE.Mesh(lightningGeom, lightningMat);
+                        lightning.rotation.z = (Math.random() - 0.5) * 0.5;
+                        lightning.position.y = 1.1;
+                        lightning.position.x = (Math.random() - 0.5) * 1.8;
+                        lightning.userData.lightningSpeed = 5 + Math.random() * 5;
+                        plasmaGroup.add(lightning);
+                    }
+                    
+                    obstacleGroup.add(plasmaGroup);
+                    obstacleGroup.userData.isLevel2Obstacle = true;
+                    obstacleGroup.userData.plasmaGate = true;
+                    height = 2.2;
                     break;
             }
             
@@ -6005,6 +6450,143 @@
             };
             animateParticles();
         }
+        
+        // Level 2 Digital Collection Effect
+        function createDigitalCollectEffect(position) {
+            const digitalParticles = [];
+            const particleCount = 20;
+            
+            // Create digital binary particles
+            for (let i = 0; i < particleCount; i++) {
+                const isOne = Math.random() > 0.5;
+                const textGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+                const textMaterial = new THREE.MeshBasicMaterial({
+                    color: isOne ? 0x00FF00 : 0x00AA00,
+                    transparent: true,
+                    opacity: 0.9,
+                    side: THREE.DoubleSide
+                });
+                
+                const particle = new THREE.Mesh(textGeometry, textMaterial);
+                particle.position.copy(position);
+                
+                // Random upward spiral motion
+                const angle = (i / particleCount) * Math.PI * 2;
+                const radius = 0.5 + Math.random() * 0.5;
+                particle.userData = {
+                    angle: angle,
+                    radius: radius,
+                    ySpeed: 2 + Math.random() * 2,
+                    rotSpeed: (Math.random() - 0.5) * 10,
+                    life: 1.0
+                };
+                
+                scene.add(particle);
+                digitalParticles.push(particle);
+            }
+            
+            // Create holographic ring effect
+            const ringGeometry = new THREE.RingGeometry(0.5, 1.0, 32);
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00FF00,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.position.copy(position);
+            scene.add(ring);
+            
+            // Animate digital effect
+            function animateDigital() {
+                digitalParticles.forEach((particle, index) => {
+                    if (particle.userData.life > 0) {
+                        // Spiral upward motion
+                        particle.userData.angle += 0.1;
+                        particle.position.x = position.x + Math.cos(particle.userData.angle) * particle.userData.radius;
+                        particle.position.z = position.z + Math.sin(particle.userData.angle) * particle.userData.radius;
+                        particle.position.y += particle.userData.ySpeed * 0.02;
+                        
+                        // Rotation
+                        particle.rotation.z += particle.userData.rotSpeed * 0.02;
+                        
+                        // Fade out
+                        particle.userData.life -= 0.02;
+                        particle.material.opacity = particle.userData.life * 0.9;
+                        
+                        if (particle.userData.life <= 0) {
+                            scene.remove(particle);
+                            digitalParticles.splice(index, 1);
+                        }
+                    }
+                });
+                
+                // Animate ring
+                if (ring) {
+                    ring.scale.x += 0.05;
+                    ring.scale.y += 0.05;
+                    ring.material.opacity -= 0.01;
+                    
+                    if (ring.material.opacity <= 0) {
+                        scene.remove(ring);
+                    }
+                }
+                
+                if (digitalParticles.length > 0 || (ring && ring.material.opacity > 0)) {
+                    requestAnimationFrame(animateDigital);
+                }
+            }
+            
+            animateDigital();
+        }
+        
+        // Level 2 Speed Boost Visual Effect
+        function createSpeedBoostEffect() {
+            // Speed lines on screen edges
+            const speedLineCount = 20;
+            for (let i = 0; i < speedLineCount; i++) {
+                const line = document.createElement('div');
+                line.className = 'speed-line';
+                line.style.position = 'absolute';
+                line.style.width = '2px';
+                line.style.height = Math.random() * 100 + 50 + 'px';
+                line.style.background = 'linear-gradient(to bottom, transparent, rgba(255,0,255,0.8), transparent)';
+                line.style.left = Math.random() * 100 + '%';
+                line.style.top = -line.style.height;
+                line.style.animation = 'speedLineMove 0.3s linear';
+                line.style.zIndex = '200';
+                document.getElementById('gameContainer').appendChild(line);
+                
+                setTimeout(() => line.remove(), 300);
+            }
+            
+            // Purple speed vignette
+            const vignette = document.createElement('div');
+            vignette.style.position = 'absolute';
+            vignette.style.top = '0';
+            vignette.style.left = '0';
+            vignette.style.width = '100%';
+            vignette.style.height = '100%';
+            vignette.style.background = 'radial-gradient(circle, transparent 30%, rgba(255,0,255,0.3) 100%)';
+            vignette.style.pointerEvents = 'none';
+            vignette.style.zIndex = '150';
+            vignette.style.opacity = '0';
+            vignette.style.transition = 'opacity 0.3s';
+            vignette.id = 'speedBoostVignette';
+            document.getElementById('gameContainer').appendChild(vignette);
+            
+            // Fade in vignette
+            setTimeout(() => vignette.style.opacity = '1', 10);
+            
+            // Remove vignette when boost ends
+            const checkBoostEnd = setInterval(() => {
+                if (!gameState.speedBoostActive) {
+                    vignette.style.opacity = '0';
+                    setTimeout(() => vignette.remove(), 300);
+                    clearInterval(checkBoostEnd);
+                }
+            }, 100);
+        }
 
         function startSlowMotion(duration = 800) {
             gameState.slowMotionActive = true;
@@ -6738,6 +7320,150 @@
                     }
                 });
             }
+            
+            // ==================== LEVEL 2 COLLECTIBLES COLLISION DETECTION ====================
+            
+            if (gameState.currentLevel === 2) {
+                // Energy Orbs
+                if (gameState.energyOrbs) {
+                    gameState.energyOrbs.forEach((orb, index) => {
+                        const orbBBox = {
+                            min: {
+                                x: orb.mesh.position.x - 0.4,
+                                y: orb.mesh.position.y - 0.4,
+                                z: orb.mesh.position.z - 0.4
+                            },
+                            max: {
+                                x: orb.mesh.position.x + 0.4,
+                                y: orb.mesh.position.y + 0.4,
+                                z: orb.mesh.position.z + 0.4
+                            }
+                        };
+                        
+                        // Magnet attraction for energy orbs
+                        if (gameState.magnetActive || gameState.adrenalineActive) {
+                            const magnetRange = gameState.adrenalineActive ? 10.0 : 3.0;
+                            const distance = Math.sqrt(
+                                Math.pow(orb.mesh.position.x - player.position.x, 2) +
+                                Math.pow(orb.mesh.position.y - player.position.y, 2) +
+                                Math.pow(orb.mesh.position.z - player.position.z, 2)
+                            );
+                            
+                            if (distance < magnetRange && !orb.collected) {
+                                const attractionSpeed = 0.2;
+                                const direction = new THREE.Vector3()
+                                    .subVectors(player.position, orb.mesh.position)
+                                    .normalize()
+                                    .multiplyScalar(attractionSpeed);
+                                
+                                orb.mesh.position.add(direction);
+                            }
+                        }
+                        
+                        const isCollecting = boundingBoxIntersection(playerBBox, orbBBox);
+                        
+                        if (isCollecting && !orb.collected) {
+                            orb.collected = true;
+                            scene.remove(orb.mesh);
+                            gameState.energyOrbs.splice(index, 1);
+                            
+                            // Collect energy orb
+                            addScore(50, 'energy_orb');
+                            showEventNotification('+50 ⚡', 1000, 'normal', '#00FFFF');
+                            
+                            // Cyan energy burst effect
+                            createParticleEffect(orb.mesh.position.clone(), 0x00FFFF, 'energy');
+                            
+                            // Audio feedback
+                            audioManager.createTone(800, 0.2, 'sine');
+                            audioManager.createTone(1200, 0.1, 'sine', 0.1);
+                        }
+                    });
+                }
+                
+                // Data Chips
+                if (gameState.dataChips) {
+                    gameState.dataChips.forEach((chip, index) => {
+                        const chipBBox = {
+                            min: {
+                                x: chip.mesh.position.x - 0.5,
+                                y: chip.mesh.position.y - 0.2,
+                                z: chip.mesh.position.z - 0.5
+                            },
+                            max: {
+                                x: chip.mesh.position.x + 0.5,
+                                y: chip.mesh.position.y + 0.2,
+                                z: chip.mesh.position.z + 0.5
+                            }
+                        };
+                        
+                        const isCollecting = boundingBoxIntersection(playerBBox, chipBBox);
+                        
+                        if (isCollecting && !chip.collected) {
+                            chip.collected = true;
+                            scene.remove(chip.mesh);
+                            gameState.dataChips.splice(index, 1);
+                            
+                            // Collect data chip
+                            addScore(75, 'data_chip');
+                            showEventNotification('+75 💾', 1000, 'normal', '#00FF00');
+                            
+                            // Digital collection effect
+                            createDigitalCollectEffect(chip.mesh.position.clone());
+                            
+                            // Digital sound
+                            audioManager.createTone(440, 0.05, 'square');
+                            audioManager.createTone(880, 0.05, 'square', 0.05);
+                            audioManager.createTone(1760, 0.05, 'square', 0.1);
+                        }
+                    });
+                }
+                
+                // Speed Boost Zones
+                if (gameState.speedBoostZones) {
+                    gameState.speedBoostZones.forEach((zone, index) => {
+                        const zoneBBox = {
+                            min: {
+                                x: zone.mesh.position.x - 1.5,
+                                y: zone.mesh.position.y - 0.1,
+                                z: zone.mesh.position.z - 2.0
+                            },
+                            max: {
+                                x: zone.mesh.position.x + 1.5,
+                                y: zone.mesh.position.y + 0.3,
+                                z: zone.mesh.position.z + 2.0
+                            }
+                        };
+                        
+                        const isInZone = boundingBoxIntersection(playerBBox, zoneBBox);
+                        
+                        if (isInZone && !zone.activated) {
+                            zone.activated = true;
+                            
+                            // Activate speed boost
+                            gameState.speedBoostActive = true;
+                            gameState.speedBoostTimer = 3.0; // 3 second boost
+                            gameState.originalSpeed = gameState.speed;
+                            gameState.speed *= 1.5; // 50% speed increase
+                            
+                            showEventNotification('SPEED BOOST! 🚀', 2000, 'large', '#FF00FF');
+                            
+                            // Visual speed effect
+                            createSpeedBoostEffect();
+                            
+                            // Audio boost
+                            audioManager.createTone(200, 0.3, 'sawtooth');
+                            audioManager.createTone(400, 0.2, 'sawtooth', 0.1);
+                            
+                            // Remove zone after activation
+                            setTimeout(() => {
+                                scene.remove(zone.mesh);
+                                gameState.speedBoostZones.splice(index, 1);
+                            }, 100);
+                        }
+                    });
+                }
+            }
         }
         
         // Calculate precise player bounding box based on current action
@@ -7242,6 +7968,288 @@
                     createKiwi(lane, baseZ, 'single');
                     break;
             }
+        }
+        
+        // ==================== LEVEL 2 COLLECTIBLES ====================
+        
+        function createEnergyOrb(lane, z) {
+            const orbGroup = new THREE.Group();
+            
+            // Core energy sphere
+            const coreGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            orbGroup.add(core);
+            
+            // Outer energy shell
+            const shellGeometry = new THREE.SphereGeometry(0.4, 12, 12);
+            const shellMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.2,
+                wireframe: true
+            });
+            const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+            orbGroup.add(shell);
+            
+            // Energy particles
+            for (let i = 0; i < 6; i++) {
+                const particleGeom = new THREE.SphereGeometry(0.05);
+                const particleMat = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    emissive: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const particle = new THREE.Mesh(particleGeom, particleMat);
+                const angle = (i / 6) * Math.PI * 2;
+                particle.userData.orbitRadius = 0.5;
+                particle.userData.orbitSpeed = 2 + Math.random();
+                particle.userData.angle = angle;
+                orbGroup.add(particle);
+            }
+            
+            // Position
+            const LANE_POSITIONS = [-2, 0, 2];
+            orbGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            
+            scene.add(orbGroup);
+            
+            if (!gameState.energyOrbs) gameState.energyOrbs = [];
+            
+            const orbData = {
+                mesh: orbGroup,
+                type: 'energyOrb',
+                lane: lane,
+                z: z,
+                collected: false,
+                animationTime: 0,
+                baseY: 1.5,
+                value: 50  // Energy orbs worth more points
+            };
+            
+            gameState.energyOrbs.push(orbData);
+            return orbData;
+        }
+        
+        function createDataChip(lane, z) {
+            const chipGroup = new THREE.Group();
+            
+            // Holographic chip
+            const chipGeometry = new THREE.BoxGeometry(0.4, 0.02, 0.4);
+            const chipMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff00ff,
+                emissive: 0xff00ff,
+                transparent: true,
+                opacity: 0.7
+            });
+            const chip = new THREE.Mesh(chipGeometry, chipMaterial);
+            chipGroup.add(chip);
+            
+            // Circuit pattern
+            const circuitGeom = new THREE.PlaneGeometry(0.35, 0.35);
+            const circuitMat = new THREE.MeshBasicMaterial({
+                color: 0x00ff00,
+                transparent: true,
+                opacity: 0.8,
+                emissive: 0x00ff00
+            });
+            const circuit = new THREE.Mesh(circuitGeom, circuitMat);
+            circuit.position.y = 0.02;
+            chipGroup.add(circuit);
+            
+            // Data stream effect
+            for (let i = 0; i < 4; i++) {
+                const streamGeom = new THREE.CylinderGeometry(0.01, 0.01, 0.5);
+                const streamMat = new THREE.MeshBasicMaterial({
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const stream = new THREE.Mesh(streamGeom, streamMat);
+                stream.position.set(
+                    (Math.random() - 0.5) * 0.3,
+                    0.25,
+                    (Math.random() - 0.5) * 0.3
+                );
+                stream.userData.floatSpeed = 1 + Math.random();
+                chipGroup.add(stream);
+            }
+            
+            // Holographic frame
+            const frameGeom = new THREE.BoxGeometry(0.5, 0.5, 0.01);
+            const frameMat = new THREE.MeshBasicMaterial({
+                color: 0xff00ff,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true
+            });
+            const frame = new THREE.Mesh(frameGeom, frameMat);
+            frame.rotation.x = Math.PI / 2;
+            chipGroup.add(frame);
+            
+            // Position
+            const LANE_POSITIONS = [-2, 0, 2];
+            chipGroup.position.set(LANE_POSITIONS[lane], 1.3, z);
+            chipGroup.rotation.y = Math.PI / 4;
+            
+            scene.add(chipGroup);
+            
+            if (!gameState.dataChips) gameState.dataChips = [];
+            
+            const chipData = {
+                mesh: chipGroup,
+                type: 'dataChip',
+                lane: lane,
+                z: z,
+                collected: false,
+                animationTime: 0,
+                baseY: 1.3,
+                value: 75  // Data chips worth even more
+            };
+            
+            gameState.dataChips.push(chipData);
+            return chipData;
+        }
+        
+        function createSpeedBoostZone(lane, z) {
+            const boostGroup = new THREE.Group();
+            
+            // Speed boost platform
+            const platformGeom = new THREE.BoxGeometry(1.8, 0.1, 3);
+            const platformMat = new THREE.MeshBasicMaterial({
+                color: 0x00ff00,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.6
+            });
+            const platform = new THREE.Mesh(platformGeom, platformMat);
+            platform.position.y = 0.05;
+            boostGroup.add(platform);
+            
+            // Speed arrows
+            for (let i = 0; i < 3; i++) {
+                const arrowGroup = new THREE.Group();
+                
+                // Arrow shaft
+                const shaftGeom = new THREE.BoxGeometry(0.2, 0.02, 0.8);
+                const shaftMat = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    emissive: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const shaft = new THREE.Mesh(shaftGeom, shaftMat);
+                arrowGroup.add(shaft);
+                
+                // Arrow head
+                const headGeom = new THREE.ConeGeometry(0.2, 0.4, 3);
+                const head = new THREE.Mesh(headGeom, shaftMat);
+                head.rotation.x = -Math.PI / 2;
+                head.position.z = -0.6;
+                arrowGroup.add(head);
+                
+                arrowGroup.position.set((i - 1) * 0.6, 0.1, -1 + i * 0.5);
+                arrowGroup.userData.scrollSpeed = 2 + i * 0.5;
+                boostGroup.add(arrowGroup);
+            }
+            
+            // Energy rings
+            for (let j = 0; j < 2; j++) {
+                const ringGeom = new THREE.TorusGeometry(0.8, 0.05, 8, 16);
+                const ringMat = new THREE.MeshBasicMaterial({
+                    color: 0x00ff00,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const ring = new THREE.Mesh(ringGeom, ringMat);
+                ring.position.z = -1 + j * 2;
+                ring.position.y = 0.1;
+                ring.rotation.x = Math.PI / 2;
+                ring.userData.expandSpeed = 1.5;
+                boostGroup.add(ring);
+            }
+            
+            // Position
+            const LANE_POSITIONS = [-2, 0, 2];
+            boostGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            
+            scene.add(boostGroup);
+            
+            // Store as special zone
+            if (!gameState.speedBoostZones) gameState.speedBoostZones = [];
+            
+            const zoneData = {
+                mesh: boostGroup,
+                type: 'speedBoost',
+                lane: lane,
+                z: z,
+                triggered: false,
+                length: 3  // Zone extends 3 units
+            };
+            
+            gameState.speedBoostZones.push(zoneData);
+            return zoneData;
+        }
+        
+        function activateSpeedBoost() {
+            // Temporary speed increase
+            const originalSpeed = gameState.speed;
+            gameState.speed *= 1.5;
+            
+            // Visual effect
+            showEventNotification('SPEED BOOST!', 1500, 'large', '#00FF00');
+            
+            // Speed trails effect
+            createSpeedTrails();
+            
+            // Sound effect
+            audioManager.play('powerup');
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                gameState.speed = originalSpeed;
+            }, 3000);
+        }
+        
+        function createSpeedTrails() {
+            const trailContainer = document.createElement('div');
+            trailContainer.className = 'speed-trails';
+            trailContainer.style.position = 'fixed';
+            trailContainer.style.top = '0';
+            trailContainer.style.left = '0';
+            trailContainer.style.width = '100%';
+            trailContainer.style.height = '100%';
+            trailContainer.style.pointerEvents = 'none';
+            trailContainer.style.zIndex = '999';
+            document.body.appendChild(trailContainer);
+            
+            // Create multiple speed lines
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.style.position = 'absolute';
+                    line.style.width = '2px';
+                    line.style.height = '100px';
+                    line.style.background = 'linear-gradient(transparent, #00ff00, transparent)';
+                    line.style.left = Math.random() * 100 + '%';
+                    line.style.top = '-100px';
+                    line.style.opacity = '0.8';
+                    line.style.animation = 'speedTrail 0.5s linear';
+                    trailContainer.appendChild(line);
+                    
+                    setTimeout(() => line.remove(), 500);
+                }, i * 100);
+            }
+            
+            // Remove container after effect
+            setTimeout(() => trailContainer.remove(), 3000);
         }
         
         function activatePowerUp(type) {
@@ -9640,6 +10648,81 @@
                         }
                         break;
                 }
+                
+                // Level 2 specific obstacle animations
+                if (obstacle.mesh.userData.isLevel2Obstacle) {
+                    switch (obstacle.type) {
+                        case 'laser_wall':
+                            // Pulse laser intensity
+                            obstacle.mesh.children.forEach(child => {
+                                if (child.material && child.userData.animOffset !== undefined) {
+                                    const pulse = Math.sin(obstacle.animationTime * 3 + child.userData.animOffset) * 0.3 + 0.7;
+                                    child.material.opacity = pulse;
+                                    if (child.material.emissive) {
+                                        child.material.emissiveIntensity = pulse;
+                                    }
+                                }
+                                if (child.userData.floatSpeed) {
+                                    // Float holographic particles
+                                    child.position.y += Math.sin(obstacle.animationTime * child.userData.floatSpeed) * 0.01;
+                                }
+                            });
+                            break;
+                            
+                        case 'neon_barrier':
+                            // Animate energy field strips
+                            obstacle.mesh.children[0].children.forEach(child => {
+                                if (child.userData.scrollSpeed) {
+                                    // Scroll energy strips
+                                    child.material.opacity = 0.5 + Math.sin(obstacle.animationTime * child.userData.scrollSpeed) * 0.3;
+                                }
+                            });
+                            break;
+                            
+                        case 'hologram_barrier':
+                            // Flicker effect
+                            if (obstacle.mesh.userData.hologramType) {
+                                const holoBarrier = obstacle.mesh.children[0].children.find(child => 
+                                    child.geometry && child.geometry.type === 'PlaneGeometry' && child.scale.x > 1
+                                );
+                                if (holoBarrier && holoBarrier.userData.flickerSpeed) {
+                                    const flicker = Math.random() > 0.05 ? 1 : 0;
+                                    holoBarrier.material.opacity = 0.4 * flicker;
+                                }
+                                // Scanline animation
+                                obstacle.mesh.children[0].children.forEach(child => {
+                                    if (child.userData.scanSpeed) {
+                                        child.position.y = (child.position.y + child.userData.scanSpeed * deltaTime * 0.001) % 2;
+                                    }
+                                });
+                            }
+                            break;
+                            
+                        case 'plasma_gate':
+                            // Wave plasma field
+                            if (obstacle.mesh.userData.plasmaGate) {
+                                const plasmaField = obstacle.mesh.children[0].children.find(child => 
+                                    child.userData.waveSpeed
+                                );
+                                if (plasmaField) {
+                                    const wave = Math.sin(obstacle.animationTime * plasmaField.userData.waveSpeed);
+                                    plasmaField.material.opacity = 0.3 + wave * 0.2;
+                                    plasmaField.scale.x = 1 + wave * 0.1;
+                                }
+                                // Lightning effect
+                                obstacle.mesh.children[0].children.forEach(child => {
+                                    if (child.userData.lightningSpeed) {
+                                        child.visible = Math.random() > 0.3;
+                                        if (child.visible) {
+                                            child.position.x = (Math.random() - 0.5) * 1.8;
+                                            child.rotation.z = (Math.random() - 0.5) * 0.5;
+                                        }
+                                    }
+                                });
+                            }
+                            break;
+                    }
+                }
             });
         }
 
@@ -9941,6 +11024,11 @@
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
                 
+                // Update Level 2 environment if active
+                if (gameState.currentLevel === 2) {
+                    updateLevel2Environment(deltaTime);
+                }
+                
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
@@ -10207,8 +11295,9 @@
                             // First 6 seconds: only easy obstacles
                             type = GhostSystem.getRandom() < 0.7 ? 'spikes' : 'lowbarrier';
                         } else if (gameState.currentLevel >= 2 && GhostSystem.getRandom() < 0.3) {
-                            // Level 2 specific obstacles
-                            type = level2Obstacles[Math.floor(GhostSystem.getRandom() * level2Obstacles.length)];
+                            // Level 2 specific obstacles - expanded list
+                            const level2ObstaclesExpanded = ['laser_wall', 'neon_barrier', 'hologram_barrier', 'plasma_gate'];
+                            type = level2ObstaclesExpanded[Math.floor(GhostSystem.getRandom() * level2ObstaclesExpanded.length)];
                         } else if (rand < movingChance) {
                             // Moving obstacles (progressive introduction)
                             type = movingObstacles[Math.floor(GhostSystem.getRandom() * movingObstacles.length)];
@@ -10571,6 +11660,108 @@
                     broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
                 });
                 
+                // Update Level 2 collectibles if in Level 2
+                if (gameState.currentLevel === 2) {
+                    // Update Energy Orbs
+                    if (gameState.energyOrbs) {
+                        gameState.energyOrbs.forEach((orb, index) => {
+                            orb.mesh.position.z += visualSpeed * gameState.timeScaleFactor;
+                            orb.z = orb.mesh.position.z;
+                            
+                            // Remove if passed player
+                            if (orb.z > 10) {
+                                scene.remove(orb.mesh);
+                                gameState.energyOrbs.splice(index, 1);
+                                return;
+                            }
+                            
+                            // Animate orb
+                            orb.animationTime += deltaTime * 0.001;
+                            orb.mesh.rotation.y += deltaTime * 0.003;
+                            orb.mesh.rotation.x += deltaTime * 0.002;
+                            
+                            // Animate particles
+                            orb.mesh.children.forEach((child, i) => {
+                                if (child.userData.orbitRadius) {
+                                    child.userData.angle += child.userData.orbitSpeed * deltaTime * 0.001;
+                                    child.position.x = Math.cos(child.userData.angle) * child.userData.orbitRadius;
+                                    child.position.z = Math.sin(child.userData.angle) * child.userData.orbitRadius;
+                                    child.position.y = Math.sin(orb.animationTime * 2 + i) * 0.2;
+                                }
+                            });
+                            
+                            // Pulsing effect
+                            const scale = 1 + Math.sin(orb.animationTime * 4) * 0.1;
+                            orb.mesh.scale.set(scale, scale, scale);
+                        });
+                    }
+                    
+                    // Update Data Chips
+                    if (gameState.dataChips) {
+                        gameState.dataChips.forEach((chip, index) => {
+                            chip.mesh.position.z += visualSpeed * gameState.timeScaleFactor;
+                            chip.z = chip.mesh.position.z;
+                            
+                            // Remove if passed player
+                            if (chip.z > 10) {
+                                scene.remove(chip.mesh);
+                                gameState.dataChips.splice(index, 1);
+                                return;
+                            }
+                            
+                            // Animate chip
+                            chip.animationTime += deltaTime * 0.001;
+                            chip.mesh.rotation.y += deltaTime * 0.004;
+                            chip.mesh.position.y = chip.baseY + Math.sin(chip.animationTime * 2) * 0.1;
+                            
+                            // Animate data streams
+                            chip.mesh.children.forEach((child) => {
+                                if (child.userData.floatSpeed) {
+                                    child.position.y = 0.25 + Math.sin(chip.animationTime * child.userData.floatSpeed) * 0.2;
+                                    child.material.opacity = 0.3 + Math.sin(chip.animationTime * 3) * 0.3;
+                                }
+                            });
+                        });
+                    }
+                    
+                    // Update Speed Boost Zones
+                    if (gameState.speedBoostZones) {
+                        gameState.speedBoostZones.forEach((zone, index) => {
+                            zone.mesh.position.z += visualSpeed * gameState.timeScaleFactor;
+                            zone.z = zone.mesh.position.z;
+                            
+                            // Remove if passed player
+                            if (zone.z > 10) {
+                                scene.remove(zone.mesh);
+                                gameState.speedBoostZones.splice(index, 1);
+                                return;
+                            }
+                            
+                            // Animate arrows
+                            zone.mesh.children.forEach((child) => {
+                                if (child.userData && child.userData.scrollSpeed) {
+                                    child.position.z += child.userData.scrollSpeed * deltaTime * 0.001;
+                                    if (child.position.z > 1.5) child.position.z = -1.5;
+                                    if (child.material) {
+                                        child.material.opacity = 0.4 + Math.sin(Date.now() * 0.003) * 0.4;
+                                    }
+                                }
+                                if (child.userData && child.userData.expandSpeed) {
+                                    const scale = 1 + Math.sin(Date.now() * 0.001 * child.userData.expandSpeed) * 0.3;
+                                    child.scale.set(scale, 1, scale);
+                                }
+                            });
+                            
+                            // Check if player is in zone
+                            if (!zone.triggered && zone.z > -1 && zone.z < zone.length &&
+                                Math.abs(LANE_POSITIONS[gameState.playerLane] - zone.mesh.position.x) < 1) {
+                                zone.triggered = true;
+                                activateSpeedBoost();
+                            }
+                        });
+                    }
+                }
+                
                 // Handle Power-Up Time Remaining
                 if (gameState.activePowerUp && gameState.powerUpTimeRemaining > 0) {
                     gameState.powerUpTimeRemaining -= deltaTime;
@@ -10812,6 +12003,11 @@
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
                 
+                // Update Level 2 environment if active
+                if (gameState.currentLevel === 2) {
+                    updateLevel2Environment(deltaTime);
+                }
+                
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
@@ -10834,6 +12030,21 @@
                 
                 // Check mystery box collection
                 checkMysteryBoxCollection();
+                
+                // Update Level 2 speed boost timer
+                if (gameState.speedBoostActive && gameState.speedBoostTimer !== undefined) {
+                    gameState.speedBoostTimer -= deltaTime;
+                    
+                    if (gameState.speedBoostTimer <= 0) {
+                        // End speed boost
+                        gameState.speedBoostActive = false;
+                        if (gameState.originalSpeed) {
+                            gameState.speed = gameState.originalSpeed;
+                            delete gameState.originalSpeed;
+                        }
+                        showEventNotification('Speed Boost Ended', 1000, 'normal', '#888888');
+                    }
+                }
                 
                 // Update mystery boxes
                 gameState.mysteryBoxes.forEach((box, index) => {
