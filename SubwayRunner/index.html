@@ -5914,16 +5914,21 @@
             const particleCount = 15;
             const particles = new THREE.Group();
             
+            // PERFORMANCE: Shared geometry to prevent memory leaks
+            const sharedParticleGeometry = new THREE.SphereGeometry(0.03, 6, 6);
+            const sharedParticleMaterial = new THREE.MeshBasicMaterial({ 
+                color: color,
+                emissive: color,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.6
+            });
+            
             for (let i = 0; i < particleCount; i++) {
-                const particleGeometry = new THREE.SphereGeometry(0.03, 6, 6);
-                const particleMaterial = new THREE.MeshBasicMaterial({ 
-                    color: color,
-                    emissive: color,
-                    emissiveIntensity: 0.8,
-                    transparent: true,
-                    opacity: 0.6
-                });
-                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                const particleMaterial = sharedParticleMaterial.clone();
+                particleMaterial.opacity = 0.6;
+                
+                const particle = new THREE.Mesh(sharedParticleGeometry, particleMaterial);
                 
                 particle.position.set(
                     x + (Math.random() - 0.5) * 0.3,
@@ -10691,7 +10696,7 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.5.0-CHARACTER-SYSTEM<br>
+                    Version: 4.5.1-SENIOR-OPTIMIZED<br>
                     🎮 10 Epic Levels<br>
                     🌟 Unique Mechanics Each Level
                 `;
@@ -16073,10 +16078,11 @@
         }
         
         function animate() {
-            requestAnimationFrame(animate);
-            
-            // Update performance monitor
-            if (window.performanceMonitor) {
+            try {
+                requestAnimationFrame(animate);
+                
+                // Update performance monitor
+                if (window.performanceMonitor) {
                 performanceMonitor.update();
             }
             
@@ -16299,8 +16305,8 @@
                                 const minDistance = this.getSpawnDistance(40, currentSpeed);
                                 return (zPosition - this.lastObstacleZ) >= minDistance;
                             } else {
-                                const minDistance = this.getSpawnDistance(30, currentSpeed);
-                                const obstacleBuffer = 50; // Extra distance from obstacles
+                                const minDistance = this.getSpawnDistance(25, currentSpeed);
+                                const obstacleBuffer = 35; // Reduced distance for better gameplay
                                 return (zPosition - this.lastCollectibleZ) >= minDistance && 
                                        (zPosition - this.lastObstacleZ) >= obstacleBuffer;
                             }
@@ -17067,11 +17073,7 @@
                     createRocketBoostPad(lane, -40);
                 }
                 
-                // FEATURE 10: Score tokens DISABLED - User wants NO coins, only kiwis/broccolis
-                // if (Math.random() < 0.03 && !gameState.rouletteActive) {
-                //     const lane = Math.floor(Math.random() * 3);
-                //     spawnScoreToken(lane, -35);
-                // }
+                // Score tokens removed - collectibles-only mode (v4.0.3+)
                 
                 // FEATURE 10: Update score tokens
                 gameState.scoreTokens.forEach((token, index) => {
@@ -17276,8 +17278,8 @@
                     gameState.lastDistanceScore = currentTime;
                 }
                 
-                // Throttle UI updates to 30fps for better performance
-                if (currentTime - lastUIUpdateTime > 33) { // 33ms = 30fps
+                // Throttle UI updates to 45fps for smoother experience
+                if (currentTime - lastUIUpdateTime > 22) { // 22ms = 45fps
                     updateUI();
                     lastUIUpdateTime = currentTime;
                 }
@@ -17319,6 +17321,16 @@
             }
             
             renderer.render(scene, camera);
+            
+            } catch (error) {
+                console.error('Animation loop error:', error);
+                window.DevOpsMonitor?.logError({
+                    type: 'animation_error',
+                    message: error.message,
+                    stack: error.stack,
+                    timestamp: Date.now()
+                });
+            }
         }
 
         // Handle near miss detection
