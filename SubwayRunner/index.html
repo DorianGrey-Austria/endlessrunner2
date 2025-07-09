@@ -6,7 +6,15 @@
     <title>Subway Runner 3D - Challenge</title>
     <!-- TEMPORARILY DISABLED CSP FOR DEBUGGING -->
     <!-- <meta http-equiv="Content-Security-Policy" content="..."> -->
-    <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+    <!-- Three.js with multiple CDN fallbacks -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r161/three.min.js"></script>
+    <script>
+        // Fallback if first CDN fails
+        if (typeof THREE === 'undefined') {
+            console.warn('Primary Three.js CDN failed, trying fallback...');
+            document.write('<script src="https://unpkg.com/three@0.161.0/build/three.min.js"><\/script>');
+        }
+    </script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN TEMPORARILY DISABLED for debugging -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script> -->
@@ -1556,7 +1564,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.5.6-THREEJS-FIX<br>
+            🚀 V4.5.7-CDN-FALLBACK<br>
             📅 09.07.2025
         </div>
         
@@ -17869,10 +17877,22 @@
         debugLog(`Document readyState: ${document.readyState}`, 'info');
         
         // Wait for Three.js to load before initializing
+        let threeLoadAttempts = 0;
+        const maxThreeLoadAttempts = 50; // 5 seconds max wait
+        
         function startGameWhenReady() {
+            threeLoadAttempts++;
+            
             if (typeof THREE === 'undefined') {
-                console.log('Waiting for Three.js to load...');
-                debugLog('Three.js not loaded yet, waiting...', 'warning');
+                if (threeLoadAttempts >= maxThreeLoadAttempts) {
+                    console.error('Three.js failed to load after 5 seconds!');
+                    debugLog('CRITICAL: Three.js loading timeout!', 'error');
+                    alert('Failed to load 3D engine. Please refresh the page.');
+                    return;
+                }
+                
+                console.log(`Waiting for Three.js to load... (attempt ${threeLoadAttempts}/${maxThreeLoadAttempts})`);
+                debugLog(`Three.js not loaded yet, waiting... (${threeLoadAttempts}/${maxThreeLoadAttempts})`, 'warning');
                 setTimeout(startGameWhenReady, 100);
                 return;
             }
