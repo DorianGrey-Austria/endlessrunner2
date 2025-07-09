@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Function Availability Test</title>
+    <style>
+        body { font-family: monospace; background: #222; color: #0f0; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #333; }
+        .pass { background: rgba(0,255,0,0.1); border-color: #0f0; }
+        .fail { background: rgba(255,0,0,0.1); border-color: #f00; }
+    </style>
+</head>
+<body>
+    <h1>🧪 SubwayRunner Function Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Include Three.js first
+        const threeScript = document.createElement('script');
+        threeScript.src = 'https://unpkg.com/three@0.161.0/build/three.min.js';
+        threeScript.onload = function() {
+            console.log('Three.js loaded');
+            
+            // Then include our game
+            const gameScript = document.createElement('script');
+            gameScript.src = 'index.html';
+            gameScript.onload = runTests;
+            gameScript.onerror = function() {
+                addResult('CRITICAL: index.html has syntax errors!', false);
+            };
+            document.head.appendChild(gameScript);
+        };
+        document.head.appendChild(threeScript);
+
+        const results = document.getElementById('results');
+        
+        function addResult(test, passed) {
+            const div = document.createElement('div');
+            div.className = 'test ' + (passed ? 'pass' : 'fail');
+            div.textContent = (passed ? '✓ ' : '✗ ') + test;
+            results.appendChild(div);
+        }
+
+        function runTests() {
+            console.log('Running tests...');
+            
+            // Test critical functions
+            const tests = [
+                { name: 'THREE.js library', check: () => typeof THREE !== 'undefined' },
+                { name: 'init() function', check: () => typeof init === 'function' },
+                { name: 'showCharacterSelection()', check: () => typeof showCharacterSelection === 'function' || typeof window.showCharacterSelection === 'function' },
+                { name: 'hideCharacterSelection()', check: () => typeof hideCharacterSelection === 'function' || typeof window.hideCharacterSelection === 'function' },
+                { name: 'selectCharacter()', check: () => typeof selectCharacter === 'function' || typeof window.selectCharacter === 'function' },
+                { name: 'startGame()', check: () => typeof startGame === 'function' },
+                { name: 'gameLoop()', check: () => typeof gameLoop === 'function' },
+                { name: 'handleKeyDown()', check: () => typeof handleKeyDown === 'function' },
+                { name: 'createObstacle()', check: () => typeof createObstacle === 'function' },
+                { name: 'checkCollisions()', check: () => typeof checkCollisions === 'function' }
+            ];
+
+            let passed = 0;
+            tests.forEach(test => {
+                try {
+                    const result = test.check();
+                    addResult(test.name, result);
+                    if (result) passed++;
+                } catch (e) {
+                    addResult(test.name + ' - Error: ' + e.message, false);
+                }
+            });
+
+            // Summary
+            const summary = document.createElement('h2');
+            summary.textContent = `Results: ${passed}/${tests.length} tests passed`;
+            summary.style.color = passed === tests.length ? '#0f0' : '#fa0';
+            results.appendChild(summary);
+
+            if (passed === tests.length) {
+                const success = document.createElement('p');
+                success.textContent = '🎉 All critical functions are available! The game should work.';
+                success.style.color = '#0f0';
+                results.appendChild(success);
+            }
+        }
+
+        // Error handler
+        window.onerror = function(msg, url, line) {
+            addResult(`JavaScript Error at line ${line}: ${msg}`, false);
+            return true;
+        };
+    </script>
+</body>
+</html>

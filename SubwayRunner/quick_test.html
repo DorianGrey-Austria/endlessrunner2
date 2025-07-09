@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Syntax Test</title>
+    <script>
+        console.log('=== QUICK TEST START ===');
+        
+        // Catch errors early
+        window.onerror = function(msg, url, line, col, error) {
+            document.body.innerHTML = '<h1 style="color:red">ERROR at line ' + line + '</h1><pre>' + msg + '</pre>';
+            console.error('ERROR:', msg, 'at line', line);
+            return true;
+        };
+        
+        // Test basic JavaScript
+        try {
+            console.log('1. Basic JS works');
+            
+            // Test function definition
+            function testFunc() { return true; }
+            console.log('2. Function definition works:', testFunc());
+            
+            // Test object creation
+            const testObj = { a: 1, b: 2 };
+            console.log('3. Object creation works:', testObj);
+            
+            // Test array
+            const testArr = [1, 2, 3];
+            console.log('4. Array creation works:', testArr);
+            
+            console.log('=== ALL BASIC TESTS PASSED ===');
+        } catch (e) {
+            console.error('BASIC TEST FAILED:', e);
+        }
+    </script>
+</head>
+<body>
+    <h1>Testing SubwayRunner Syntax...</h1>
+    <div id="status">Loading game script...</div>
+    
+    <script>
+        // Now try to load the actual game
+        fetch('index.html')
+            .then(response => response.text())
+            .then(html => {
+                // Extract just the JavaScript
+                const scriptMatch = html.match(/<script>[\s\S]*?<\/script>/g);
+                if (scriptMatch) {
+                    console.log('Found', scriptMatch.length, 'script tags');
+                    
+                    // Try to evaluate the main script
+                    try {
+                        // Get the last (main) script content
+                        const mainScript = scriptMatch[scriptMatch.length - 1];
+                        const scriptContent = mainScript.replace('<script>', '').replace('</script>', '');
+                        
+                        // Try to parse it
+                        new Function(scriptContent);
+                        
+                        document.getElementById('status').innerHTML = 
+                            '<h2 style="color:green">✅ NO SYNTAX ERRORS FOUND!</h2>' +
+                            '<p>The game script can be parsed successfully.</p>';
+                    } catch (e) {
+                        document.getElementById('status').innerHTML = 
+                            '<h2 style="color:red">❌ SYNTAX ERROR FOUND!</h2>' +
+                            '<pre>' + e.toString() + '</pre>';
+                    }
+                }
+            })
+            .catch(e => {
+                document.getElementById('status').innerHTML = 
+                    '<h2 style="color:red">Failed to load index.html</h2>' +
+                    '<pre>' + e.toString() + '</pre>';
+            });
+    </script>
+</body>
+</html>

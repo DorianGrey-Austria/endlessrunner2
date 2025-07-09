@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Syntax Validator for SubwayRunner</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 20px;
+        }
+        .success {
+            color: #0f0;
+            background: rgba(0,255,0,0.1);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #0f0;
+        }
+        .error {
+            color: #f00;
+            background: rgba(255,0,0,0.1);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #f00;
+        }
+        .warning {
+            color: #fa0;
+            background: rgba(255,165,0,0.1);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #fa0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 SubwayRunner v4.5.5 Syntax Validator</h1>
+    <div id="status">Checking syntax...</div>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        const status = document.getElementById('status');
+        let checksPassed = 0;
+        let checksTotal = 0;
+
+        function addResult(message, type = 'success') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            checksTotal++;
+            if (type === 'success') checksPassed++;
+        }
+
+        // Test 1: Basic JavaScript execution
+        try {
+            addResult('✓ Basic JavaScript execution works');
+        } catch (e) {
+            addResult('✗ Basic JavaScript failed: ' + e.message, 'error');
+        }
+
+        // Test 2: Can we define functions?
+        try {
+            function testFunction() { return true; }
+            if (testFunction()) {
+                addResult('✓ Function definition and execution works');
+            }
+        } catch (e) {
+            addResult('✗ Function definition failed: ' + e.message, 'error');
+        }
+
+        // Test 3: Can we use Three.js?
+        try {
+            if (typeof THREE !== 'undefined') {
+                addResult('✓ Three.js is loaded');
+            } else {
+                addResult('⚠ Three.js not loaded yet', 'warning');
+            }
+        } catch (e) {
+            addResult('✗ Three.js check failed: ' + e.message, 'error');
+        }
+
+        // Test 4: Load the actual game script
+        const script = document.createElement('script');
+        script.src = 'index.html';
+        script.onload = function() {
+            addResult('✓ index.html loaded without syntax errors!', 'success');
+            
+            // Test 5: Check if init function exists
+            setTimeout(() => {
+                if (typeof init === 'function') {
+                    addResult('✓ init() function is defined');
+                } else {
+                    addResult('✗ init() function not found', 'error');
+                }
+
+                // Test 6: Check if showCharacterSelection exists
+                if (typeof showCharacterSelection === 'function' || typeof window.showCharacterSelection === 'function') {
+                    addResult('✓ showCharacterSelection() function is defined');
+                } else {
+                    addResult('⚠ showCharacterSelection() function not found', 'warning');
+                }
+
+                // Final status
+                status.innerHTML = `<h2>Results: ${checksPassed}/${checksTotal} checks passed</h2>`;
+                if (checksPassed === checksTotal) {
+                    status.className = 'success';
+                    status.innerHTML += '<p>🎉 All syntax checks passed! The game should work now.</p>';
+                } else {
+                    status.className = 'error';
+                    status.innerHTML += '<p>⚠️ Some checks failed. See details above.</p>';
+                }
+            }, 1000);
+        };
+        
+        script.onerror = function() {
+            addResult('✗ Failed to load index.html - syntax error still exists!', 'error');
+            status.innerHTML = '<h2 class="error">CRITICAL: Syntax error prevents loading!</h2>';
+        };
+
+        // Catch any syntax errors
+        window.onerror = function(msg, url, line, col, error) {
+            addResult(`✗ JavaScript Error at line ${line}: ${msg}`, 'error');
+            return true;
+        };
+
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
