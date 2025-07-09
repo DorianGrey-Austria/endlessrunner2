@@ -16,7 +16,7 @@
     <script>
     // GameCore.js - Central game management system
     const GameCore = {
-        version: "4.0.0-modular",
+        version: "4.5.10-LEVEL-PROGRESSION",
         modules: {},
         initialized: false,
         
@@ -162,7 +162,20 @@
             const nextLevelScore = this.currentLevel * 1000;
             if (score >= nextLevelScore && this.levels[this.currentLevel + 1]) {
                 console.log(`🎉 Level transition triggered! Moving to level ${this.currentLevel + 1}`);
+                
+                // Add visual effect before transition
+                if (window.showNotification) {
+                    window.showNotification(`🎉 Level ${this.currentLevel + 1} unlocked!`, 3000);
+                }
+                
                 this.loadLevel(this.currentLevel + 1, this.scene, this.renderer);
+                
+                // Increase difficulty gradually
+                if (window.gameState) {
+                    window.gameState.speed *= 1.2;
+                    window.gameState.spawnRate *= 1.1;
+                }
+                
                 return true;
             }
             return false;
@@ -223,8 +236,34 @@
             console.log('✅ Level 2 loaded successfully!');
         },
         
-        update: function(deltaTime) {},
-        cleanup: function() {}
+        update: function(deltaTime) {
+            // Add neon pulsing effect for Level 2
+            if (gameState && gameState.isPlaying) {
+                const time = performance.now() * 0.001;
+                const pulseIntensity = 0.5 + Math.sin(time * 2) * 0.2;
+                
+                // Apply to ambient light if available
+                const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
+                if (ambientLight) {
+                    ambientLight.intensity = pulseIntensity;
+                }
+            }
+        },
+        
+        cleanup: function() {
+            // Reset to default environment when leaving Level 2
+            if (scene && renderer) {
+                scene.fog = new THREE.FogExp2(0x87CEEB, 0.03);
+                renderer.setClearColor(0x87CEEB);
+                
+                // Reset ambient light
+                const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
+                if (ambientLight) {
+                    ambientLight.color = new THREE.Color(0xFFFFFF);
+                    ambientLight.intensity = 0.8;
+                }
+            }
+        }
     };
     
     // Register Level 2

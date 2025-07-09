@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 CRITICAL DEPLOYMENT & WORKFLOW RULES (TOP PRIORITY!)
+
+### 🔴 AUTO-DEPLOYMENT IST PFLICHT!
+- **NACH JEDER SESSION**: `git add . && git commit -m "message" && git push`
+- **URL FORMAT**: Immer als **🌐 https://ki-revolution.at/** (klickbar!)
+- **BROWSER**: Chrome verwenden (NIEMALS Safari)
+- **NACH DEPLOYMENT SAGEN**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
+
+### 📋 WORKFLOW STANDARDS
+1. **Versionierung**: IMMER updaten (MAJOR.MINOR.PATCH)
+2. **Dokumentation**: Änderungen sofort in .md Dateien
+3. **Testing**: "Teste in Chrome: **🌐 https://ki-revolution.at/**"
+4. **UI/UX First**: User Experience > Technische Eleganz
+5. **Kurze Antworten**: Präzise, action-orientiert mit ✅
+
+**SIEHE AUCH**: [CLAUDE_CODE_RULES.md](./CLAUDE_CODE_RULES.md) für vollständige Regeln!
+
 ## Repository Overview
 
 This is a collection of endless runner game projects built with different technologies, following a UI/UX-first development philosophy where user experience drives all technical decisions.
@@ -42,11 +59,20 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
 - **Before**: 4.0.8-TURBO (Massive Performance Optimization + Better Graphics)
 
+### **CURRENT CODEBASE STATUS**
+The game exists in a transitional state from v4.x back to v3.6.2-MINIMAL-UI based on git history. The SubwayRunner/index.html contains embedded modules from the v4.x era but was rolled back to a stable v3.6.1 base.
+
 ### **VERSION UPDATE PROCESS**
-1. Update version in `SubwayRunner/index.html` (around line 440)
+1. Update version in `SubwayRunner/index.html` (search for "version:" string)
 2. Update this CLAUDE.md file with new version info
 3. Always mention new version when saying "test it online"
 4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
+
+### **DEBUGGING & TROUBLESHOOTING**
+- **Debug Files**: `SubwayRunner/DEBUG_GUIDE.md`, `SubwayRunner/TROUBLESHOOTING.md`
+- **Syntax Validation**: `SubwayRunner/syntax_validator.html`, `SubwayRunner/find_syntax_error.js`
+- **Function Testing**: `SubwayRunner/function_test.html`, `SubwayRunner/quick_test.html`
+- **Development Backups**: Multiple .backup files in SubwayRunner/ for version rollbacks
 
 ### **VERSION HISTORY LOG**
 - 4.5.0-CHARACTER-SYSTEM: 5 Unique Playable Characters with Multi-Agent Development
@@ -296,8 +322,10 @@ npm run inspector    # Run MCP inspector
 - **Development Port**: 8001 (python -m http.server)
 - **Production**: Single HTML file deployment (index.html)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 4.0.6-PURE (Pure Collectibles Only)
+- **Current Version**: 4.5.9-UNPKG-CSP-FIX (rolled back to stable v3.6.1 base)
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
+- **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
+- **Key Features**: 10 levels, 5 characters, gesture control, ghost racing, visual effects
 
 ### Endless3D
 - Fully modular world system - add new worlds via JSON config
@@ -326,6 +354,17 @@ npm run inspector    # Run MCP inspector
 - **DEPLOYMENT.md**: German-language deployment guide with head tracking setup
 - **ROADMAP.md**: Detailed development roadmap for GestureRunnerPro
 - **github.hostinger.connection.md**: Troubleshooting guide for GitHub Actions deployment
+- **CLAUDE_CODE_RULES.md**: Universal rules for all Claude Code projects
+- **MCP-TROUBLESHOOTING.md**: Model Context Protocol troubleshooting guide
+- **HEAD_TRACKING_README.md**: MediaPipe head tracking integration guide
+
+## File Structure Patterns
+- **index.html**: Main production files with embedded CSS/JS
+- **src/**: React/TypeScript development versions
+- **features/**: Extracted modular features from v4.x
+- **backup files**: Version rollback support (.backup extensions)
+- **sounds/**: Audio assets (background music, effects)
+- **web_export/**: Godot web export directories
 
 ## Development Philosophy
 
