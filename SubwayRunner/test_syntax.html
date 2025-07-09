@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Syntax Test</title>
+    <script>
+        // Early error catcher
+        window.onerror = function(msg, url, line, col, error) {
+            document.body.innerHTML = '<h1 style="color:red">ERROR at line ' + line + '</h1><pre>' + msg + '</pre>';
+            console.error('Full error:', error);
+            return true;
+        };
+    </script>
+</head>
+<body>
+    <h1>Testing Syntax...</h1>
+    <div id="result"></div>
+    
+    <!-- Include the problematic script -->
+    <script src="index.html"></script>
+</body>
+</html>
