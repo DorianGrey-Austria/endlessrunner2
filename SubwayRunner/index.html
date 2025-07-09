@@ -3433,6 +3433,198 @@
                         collectibleDensity: 0.8,
                         newObstacles: ['laser_wall', 'neon_barrier']
                     }
+                },
+                {
+                    id: 3,
+                    name: "Sky High",
+                    duration: 60000,
+                    theme: "sky",
+                    visuals: {
+                        fogColor: 0xCCEEFF,
+                        fogDensity: 0.01,
+                        skyColor: 0x87CEEB,
+                        ambientIntensity: 0.7,
+                        sunIntensity: 1.5,
+                        trackEmissive: 0xFFFFFF,
+                        trackEmissiveIntensity: 0.2,
+                        cloudEffect: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 1.5,
+                        spawnRateMultiplier: 1.3,
+                        movingObstacleChance: 0.5,
+                        collectibleDensity: 1.2,
+                        newObstacles: ['cloud_barrier', 'wind_turbine'],
+                        specialMechanics: ['low_gravity']
+                    }
+                },
+                {
+                    id: 4,
+                    name: "Underwater Tunnel",
+                    duration: 60000,
+                    theme: "underwater",
+                    visuals: {
+                        fogColor: 0x006994,
+                        fogDensity: 0.08,
+                        skyColor: 0x003366,
+                        ambientIntensity: 0.3,
+                        sunIntensity: 0.4,
+                        trackEmissive: 0x00CCFF,
+                        trackEmissiveIntensity: 0.3,
+                        underwaterEffect: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 0.8,
+                        spawnRateMultiplier: 1.2,
+                        movingObstacleChance: 0.3,
+                        collectibleDensity: 0.9,
+                        newObstacles: ['bubble_stream', 'coral_reef'],
+                        specialMechanics: ['water_physics']
+                    }
+                },
+                {
+                    id: 5,
+                    name: "Volcanic Rush",
+                    duration: 60000,
+                    theme: "volcano",
+                    visuals: {
+                        fogColor: 0xFF4500,
+                        fogDensity: 0.06,
+                        skyColor: 0x8B0000,
+                        ambientIntensity: 0.5,
+                        sunIntensity: 0.2,
+                        trackEmissive: 0xFF6600,
+                        trackEmissiveIntensity: 0.8,
+                        lavaGlow: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 2.0,
+                        spawnRateMultiplier: 2.0,
+                        movingObstacleChance: 0.7,
+                        collectibleDensity: 0.7,
+                        newObstacles: ['lava_burst', 'falling_rocks'],
+                        specialMechanics: ['heat_damage']
+                    }
+                },
+                {
+                    id: 6,
+                    name: "Ice Caverns",
+                    duration: 60000,
+                    theme: "ice",
+                    visuals: {
+                        fogColor: 0xE0FFFF,
+                        fogDensity: 0.03,
+                        skyColor: 0xB0E0E6,
+                        ambientIntensity: 0.6,
+                        sunIntensity: 0.8,
+                        trackEmissive: 0x00FFFF,
+                        trackEmissiveIntensity: 0.4,
+                        iceReflections: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 1.2,
+                        spawnRateMultiplier: 1.4,
+                        movingObstacleChance: 0.4,
+                        collectibleDensity: 1.0,
+                        newObstacles: ['ice_spikes', 'sliding_ice'],
+                        specialMechanics: ['slippery_surface']
+                    }
+                },
+                {
+                    id: 7,
+                    name: "Jungle Temple",
+                    duration: 60000,
+                    theme: "jungle",
+                    visuals: {
+                        fogColor: 0x228B22,
+                        fogDensity: 0.05,
+                        skyColor: 0x3CB371,
+                        ambientIntensity: 0.4,
+                        sunIntensity: 0.9,
+                        trackEmissive: 0x8B4513,
+                        trackEmissiveIntensity: 0.1,
+                        jungleAmbience: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 1.6,
+                        spawnRateMultiplier: 1.8,
+                        movingObstacleChance: 0.6,
+                        collectibleDensity: 1.1,
+                        newObstacles: ['swinging_vines', 'temple_traps'],
+                        specialMechanics: ['vine_swinging']
+                    }
+                },
+                {
+                    id: 8,
+                    name: "Space Station",
+                    duration: 60000,
+                    theme: "space",
+                    visuals: {
+                        fogColor: 0x000033,
+                        fogDensity: 0.02,
+                        skyColor: 0x000000,
+                        ambientIntensity: 0.2,
+                        sunIntensity: 0.1,
+                        trackEmissive: 0xFFFFFF,
+                        trackEmissiveIntensity: 0.6,
+                        starField: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 1.8,
+                        spawnRateMultiplier: 1.6,
+                        movingObstacleChance: 0.8,
+                        collectibleDensity: 0.8,
+                        newObstacles: ['asteroid_field', 'gravity_well'],
+                        specialMechanics: ['zero_gravity']
+                    }
+                },
+                {
+                    id: 9,
+                    name: "Crystal Mines",
+                    duration: 60000,
+                    theme: "crystal",
+                    visuals: {
+                        fogColor: 0x9400D3,
+                        fogDensity: 0.04,
+                        skyColor: 0x4B0082,
+                        ambientIntensity: 0.3,
+                        sunIntensity: 0.5,
+                        trackEmissive: 0xFF00FF,
+                        trackEmissiveIntensity: 0.7,
+                        crystalGlow: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 2.2,
+                        spawnRateMultiplier: 2.2,
+                        movingObstacleChance: 0.9,
+                        collectibleDensity: 1.3,
+                        newObstacles: ['crystal_shards', 'light_beams'],
+                        specialMechanics: ['light_refraction']
+                    }
+                },
+                {
+                    id: 10,
+                    name: "Final Dimension",
+                    duration: 120000, // 2 minutes final level
+                    theme: "dimension",
+                    visuals: {
+                        fogColor: 0xFF1493,
+                        fogDensity: 0.07,
+                        skyColor: 0x8B008B,
+                        ambientIntensity: 0.5,
+                        sunIntensity: 0.3,
+                        trackEmissive: 0xFFD700,
+                        trackEmissiveIntensity: 1.0,
+                        dimensionWarp: true
+                    },
+                    gameplay: {
+                        baseSpeedMultiplier: 2.5,
+                        spawnRateMultiplier: 3.0,
+                        movingObstacleChance: 1.0,
+                        collectibleDensity: 1.5,
+                        newObstacles: ['reality_tear', 'time_distortion'],
+                        specialMechanics: ['dimension_shift', 'time_slow']
+                    }
                 }
             ],
             
@@ -3504,9 +3696,35 @@
                         // Show level start message
                         showLevelStartMessage(nextLevel.name);
                         
-                        // Create Level 2 environment if transitioning to Level 2
-                        if (gameState.currentLevel === 2) {
-                            createLevel2Environment();
+                        // Create level-specific environment
+                        switch (gameState.currentLevel) {
+                            case 2:
+                                createLevel2Environment();
+                                break;
+                            case 3:
+                                createLevel3Environment();
+                                break;
+                            case 4:
+                                createLevel4Environment();
+                                break;
+                            case 5:
+                                createLevel5Environment();
+                                break;
+                            case 6:
+                                createLevel6Environment();
+                                break;
+                            case 7:
+                                createLevel7Environment();
+                                break;
+                            case 8:
+                                createLevel8Environment();
+                                break;
+                            case 9:
+                                createLevel9Environment();
+                                break;
+                            case 10:
+                                createLevel10Environment();
+                                break;
                         }
                     } else {
                         requestAnimationFrame(transition);
@@ -4716,6 +4934,988 @@
                 });
             }
         }
+        
+        // ========== LEVEL 3-10 ENVIRONMENT FUNCTIONS ==========
+        
+        // Level 3: Sky High Environment
+        function createLevel3Environment() {
+            // Change sky to bright blue
+            scene.fog = new THREE.Fog(0x87CEEB, 10, 200);
+            renderer.setClearColor(0x87CEEB);
+            
+            // Create floating clouds
+            for (let i = 0; i < 30; i++) {
+                createFloatingCloud(
+                    -30 + Math.random() * 60,
+                    5 + Math.random() * 20,
+                    -50 - Math.random() * 100
+                );
+            }
+            
+            // Create rainbow
+            createRainbow();
+        }
+        
+        function createFloatingCloud(x, y, z) {
+            const cloudGroup = new THREE.Group();
+            
+            for (let i = 0; i < 5; i++) {
+                const puffGeom = new THREE.SphereGeometry(2 + Math.random() * 2, 8, 6);
+                const puffMat = new THREE.MeshLambertMaterial({
+                    color: 0xFFFFFF,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const puff = new THREE.Mesh(puffGeom, puffMat);
+                puff.position.set(
+                    (Math.random() - 0.5) * 4,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 3
+                );
+                cloudGroup.add(puff);
+            }
+            
+            cloudGroup.position.set(x, y, z);
+            cloudGroup.userData = {
+                type: 'cloud',
+                floatSpeed: 0.5 + Math.random() * 0.5,
+                floatRange: 2,
+                baseY: y
+            };
+            scene.add(cloudGroup);
+            
+            if (!environmentObjects.clouds) environmentObjects.clouds = [];
+            environmentObjects.clouds.push(cloudGroup);
+        }
+        
+        function createRainbow() {
+            const colors = [0xFF0000, 0xFFA500, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
+            
+            for (let i = 0; i < colors.length; i++) {
+                const arcGeom = new THREE.TorusGeometry(30 + i * 2, 1, 4, 32, Math.PI);
+                const arcMat = new THREE.MeshBasicMaterial({
+                    color: colors[i],
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                const arc = new THREE.Mesh(arcGeom, arcMat);
+                arc.position.set(0, 20, -80);
+                arc.rotation.x = Math.PI;
+                scene.add(arc);
+            }
+        }
+        
+        // Level 4: Underwater Tunnel Environment
+        function createLevel4Environment() {
+            scene.fog = new THREE.FogExp2(0x006994, 0.08);
+            renderer.setClearColor(0x003366);
+            
+            // Water caustics effect
+            const causticsLight = new THREE.DirectionalLight(0x00CCFF, 0.3);
+            causticsLight.position.set(0, 10, 0);
+            scene.add(causticsLight);
+            
+            // Create underwater elements
+            for (let i = 0; i < 20; i++) {
+                createSeaweed(-10 + Math.random() * 20, -i * 10);
+            }
+            
+            // Create fish schools
+            for (let i = 0; i < 5; i++) {
+                createFishSchool();
+            }
+        }
+        
+        function createSeaweed(x, z) {
+            const seaweedGroup = new THREE.Group();
+            
+            for (let i = 0; i < 3; i++) {
+                const stemGeom = new THREE.CylinderGeometry(0.05, 0.1, 3 + Math.random() * 2);
+                const stemMat = new THREE.MeshLambertMaterial({ color: 0x2E8B57 });
+                const stem = new THREE.Mesh(stemGeom, stemMat);
+                stem.position.set((i - 1) * 0.3, 1.5, 0);
+                stem.userData.swaySpeed = 1 + Math.random();
+                stem.userData.swayAmount = 0.2;
+                seaweedGroup.add(stem);
+            }
+            
+            seaweedGroup.position.set(x, 0, z);
+            scene.add(seaweedGroup);
+            
+            if (!environmentObjects.seaweed) environmentObjects.seaweed = [];
+            environmentObjects.seaweed.push(seaweedGroup);
+        }
+        
+        function createFishSchool() {
+            const schoolGroup = new THREE.Group();
+            
+            for (let i = 0; i < 8; i++) {
+                const fishGeom = new THREE.ConeGeometry(0.1, 0.3, 4);
+                const fishMat = new THREE.MeshLambertMaterial({
+                    color: [0xFFD700, 0xFF6347, 0x00CED1][Math.floor(Math.random() * 3)]
+                });
+                const fish = new THREE.Mesh(fishGeom, fishMat);
+                fish.rotation.z = Math.PI / 2;
+                fish.position.set(
+                    (Math.random() - 0.5) * 3,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 3
+                );
+                schoolGroup.add(fish);
+            }
+            
+            schoolGroup.position.set(
+                -20 + Math.random() * 40,
+                2 + Math.random() * 5,
+                -30 - Math.random() * 50
+            );
+            schoolGroup.userData = {
+                type: 'fishSchool',
+                swimSpeed: 5 + Math.random() * 5,
+                swimDirection: new THREE.Vector3(
+                    Math.random() - 0.5,
+                    0,
+                    1
+                ).normalize()
+            };
+            scene.add(schoolGroup);
+            
+            if (!environmentObjects.fishSchools) environmentObjects.fishSchools = [];
+            environmentObjects.fishSchools.push(schoolGroup);
+        }
+        
+        // Level 5: Volcanic Rush Environment
+        function createLevel5Environment() {
+            scene.fog = new THREE.FogExp2(0xFF4500, 0.06);
+            renderer.setClearColor(0x8B0000);
+            
+            // Lava glow lighting
+            const lavaLight = new THREE.PointLight(0xFF6600, 2, 50);
+            lavaLight.position.set(0, -5, 0);
+            scene.add(lavaLight);
+            
+            // Create lava pools
+            for (let i = 0; i < 15; i++) {
+                createLavaPool(
+                    -15 + Math.random() * 30,
+                    -i * 15
+                );
+            }
+            
+            // Create volcanic smoke
+            for (let i = 0; i < 10; i++) {
+                createVolcanicSmoke();
+            }
+        }
+        
+        function createLavaPool(x, z) {
+            const poolGroup = new THREE.Group();
+            
+            const poolGeom = new THREE.CylinderGeometry(2 + Math.random() * 2, 2 + Math.random() * 2, 0.2, 8);
+            const poolMat = new THREE.MeshBasicMaterial({
+                color: 0xFF4500,
+                emissive: 0xFF0000,
+                emissiveIntensity: 0.8
+            });
+            const pool = new THREE.Mesh(poolGeom, poolMat);
+            pool.position.y = -0.9;
+            
+            // Bubbling effect
+            for (let i = 0; i < 3; i++) {
+                const bubbleGeom = new THREE.SphereGeometry(0.2 + Math.random() * 0.2);
+                const bubbleMat = new THREE.MeshBasicMaterial({
+                    color: 0xFF6347,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+                bubble.userData.bubbleSpeed = 1 + Math.random();
+                bubble.userData.bubblePhase = Math.random() * Math.PI * 2;
+                poolGroup.add(bubble);
+            }
+            
+            poolGroup.position.set(x, 0, z);
+            scene.add(poolGroup);
+            
+            if (!environmentObjects.lavaPools) environmentObjects.lavaPools = [];
+            environmentObjects.lavaPools.push(poolGroup);
+        }
+        
+        function createVolcanicSmoke() {
+            const smokeGroup = new THREE.Group();
+            
+            for (let i = 0; i < 5; i++) {
+                const smokeGeom = new THREE.SphereGeometry(1 + Math.random());
+                const smokeMat = new THREE.MeshBasicMaterial({
+                    color: 0x333333,
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const smoke = new THREE.Mesh(smokeGeom, smokeMat);
+                smoke.position.y = i * 2;
+                smokeGroup.add(smoke);
+            }
+            
+            smokeGroup.position.set(
+                -20 + Math.random() * 40,
+                0,
+                -30 - Math.random() * 50
+            );
+            smokeGroup.userData = {
+                type: 'volcanicSmoke',
+                riseSpeed: 2 + Math.random()
+            };
+            scene.add(smokeGroup);
+            
+            if (!environmentObjects.volcanicSmoke) environmentObjects.volcanicSmoke = [];
+            environmentObjects.volcanicSmoke.push(smokeGroup);
+        }
+        
+        // Level 6: Ice Caverns Environment
+        function createLevel6Environment() {
+            scene.fog = new THREE.Fog(0xE0FFFF, 10, 150);
+            renderer.setClearColor(0xB0E0E6);
+            
+            // Ice crystal lighting
+            const iceLight = new THREE.DirectionalLight(0x87CEEB, 0.5);
+            iceLight.position.set(0, 10, 10);
+            scene.add(iceLight);
+            
+            // Create icicles
+            for (let i = 0; i < 25; i++) {
+                createIcicle(
+                    -20 + Math.random() * 40,
+                    8 + Math.random() * 4,
+                    -i * 8
+                );
+            }
+            
+            // Create ice crystals
+            for (let i = 0; i < 20; i++) {
+                createIceCrystalFormation(
+                    -15 + Math.random() * 30,
+                    -i * 10
+                );
+            }
+        }
+        
+        function createIcicle(x, y, z) {
+            const icicleGeom = new THREE.ConeGeometry(0.2, 2 + Math.random() * 2, 8);
+            const icicleMat = new THREE.MeshPhongMaterial({
+                color: 0x87CEEB,
+                transparent: true,
+                opacity: 0.8,
+                shininess: 100
+            });
+            const icicle = new THREE.Mesh(icicleGeom, icicleMat);
+            icicle.position.set(x, y, z);
+            icicle.rotation.x = Math.PI;
+            scene.add(icicle);
+        }
+        
+        function createIceCrystalFormation(x, z) {
+            const formationGroup = new THREE.Group();
+            
+            for (let i = 0; i < 5; i++) {
+                const crystalGeom = new THREE.OctahedronGeometry(0.5 + Math.random() * 0.5);
+                const crystalMat = new THREE.MeshPhongMaterial({
+                    color: 0xADD8E6,
+                    emissive: 0x4682B4,
+                    emissiveIntensity: 0.2,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+                crystal.position.set(
+                    (Math.random() - 0.5) * 3,
+                    Math.random() * 2,
+                    (Math.random() - 0.5) * 2
+                );
+                crystal.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                formationGroup.add(crystal);
+            }
+            
+            formationGroup.position.set(x, 0, z);
+            scene.add(formationGroup);
+            
+            if (!environmentObjects.iceCrystals) environmentObjects.iceCrystals = [];
+            environmentObjects.iceCrystals.push(formationGroup);
+        }
+        
+        // Level 7: Jungle Temple Environment
+        function createLevel7Environment() {
+            scene.fog = new THREE.FogExp2(0x228B22, 0.05);
+            renderer.setClearColor(0x3CB371);
+            
+            // Jungle lighting
+            const sunLight = new THREE.DirectionalLight(0xFFD700, 0.6);
+            sunLight.position.set(5, 10, 5);
+            scene.add(sunLight);
+            
+            // Create temple ruins
+            for (let i = 0; i < 10; i++) {
+                createTempleRuin(
+                    -20 + Math.random() * 40,
+                    -i * 20
+                );
+            }
+            
+            // Create jungle trees
+            for (let i = 0; i < 20; i++) {
+                createJungleTree(
+                    -25 + Math.random() * 50,
+                    -i * 10
+                );
+            }
+        }
+        
+        function createTempleRuin(x, z) {
+            const ruinGroup = new THREE.Group();
+            
+            // Temple pillar
+            const pillarGeom = new THREE.CylinderGeometry(0.8, 1, 6 + Math.random() * 4);
+            const pillarMat = new THREE.MeshLambertMaterial({
+                color: 0x8B7355
+            });
+            const pillar = new THREE.Mesh(pillarGeom, pillarMat);
+            pillar.position.y = 3;
+            
+            // Moss overlay
+            const mossGeom = new THREE.CylinderGeometry(0.85, 1.05, 2);
+            const mossMat = new THREE.MeshLambertMaterial({
+                color: 0x228B22,
+                transparent: true,
+                opacity: 0.6
+            });
+            const moss = new THREE.Mesh(mossGeom, mossMat);
+            moss.position.y = Math.random() * 4;
+            
+            ruinGroup.add(pillar);
+            ruinGroup.add(moss);
+            ruinGroup.position.set(x, 0, z);
+            scene.add(ruinGroup);
+            
+            if (!environmentObjects.templeRuins) environmentObjects.templeRuins = [];
+            environmentObjects.templeRuins.push(ruinGroup);
+        }
+        
+        function createJungleTree(x, z) {
+            const treeGroup = new THREE.Group();
+            
+            // Tree trunk
+            const trunkGeom = new THREE.CylinderGeometry(0.5, 0.7, 8);
+            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+            trunk.position.y = 4;
+            
+            // Canopy
+            const canopyGeom = new THREE.SphereGeometry(3, 8, 6);
+            const canopyMat = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+            const canopy = new THREE.Mesh(canopyGeom, canopyMat);
+            canopy.position.y = 8;
+            canopy.scale.y = 0.8;
+            
+            treeGroup.add(trunk);
+            treeGroup.add(canopy);
+            treeGroup.position.set(x, 0, z);
+            scene.add(treeGroup);
+            
+            if (!environmentObjects.jungleTrees) environmentObjects.jungleTrees = [];
+            environmentObjects.jungleTrees.push(treeGroup);
+        }
+        
+        // Level 8: Space Station Environment
+        function createLevel8Environment() {
+            scene.fog = new THREE.FogExp2(0x000033, 0.02);
+            renderer.setClearColor(0x000000);
+            
+            // Create starfield
+            createStarField();
+            
+            // Create space station parts
+            for (let i = 0; i < 8; i++) {
+                createSpaceStationModule(
+                    -30 + Math.random() * 60,
+                    5 + Math.random() * 10,
+                    -i * 25
+                );
+            }
+            
+            // Create asteroids
+            for (let i = 0; i < 15; i++) {
+                createFloatingAsteroid();
+            }
+        }
+        
+        function createStarField() {
+            const starGeom = new THREE.BufferGeometry();
+            const starCount = 1000;
+            const positions = new Float32Array(starCount * 3);
+            
+            for (let i = 0; i < starCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 200;
+                positions[i + 1] = (Math.random() - 0.5) * 200;
+                positions[i + 2] = -50 - Math.random() * 150;
+            }
+            
+            starGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const starMat = new THREE.PointsMaterial({
+                color: 0xFFFFFF,
+                size: 0.5
+            });
+            const stars = new THREE.Points(starGeom, starMat);
+            scene.add(stars);
+        }
+        
+        function createSpaceStationModule(x, y, z) {
+            const moduleGroup = new THREE.Group();
+            
+            // Main module
+            const moduleGeom = new THREE.CylinderGeometry(2, 2, 8, 8);
+            const moduleMat = new THREE.MeshLambertMaterial({
+                color: 0x444466,
+                emissive: 0x222244,
+                emissiveIntensity: 0.2
+            });
+            const module = new THREE.Mesh(moduleGeom, moduleMat);
+            module.rotation.z = Math.PI / 2;
+            
+            // Solar panels
+            for (let i = 0; i < 2; i++) {
+                const panelGeom = new THREE.BoxGeometry(4, 0.1, 2);
+                const panelMat = new THREE.MeshLambertMaterial({
+                    color: 0x000088,
+                    emissive: 0x0000FF,
+                    emissiveIntensity: 0.1
+                });
+                const panel = new THREE.Mesh(panelGeom, panelMat);
+                panel.position.y = i === 0 ? 3 : -3;
+                moduleGroup.add(panel);
+            }
+            
+            moduleGroup.add(module);
+            moduleGroup.position.set(x, y, z);
+            moduleGroup.userData = {
+                type: 'spaceStation',
+                rotationSpeed: 0.1 + Math.random() * 0.2
+            };
+            scene.add(moduleGroup);
+            
+            if (!environmentObjects.spaceStations) environmentObjects.spaceStations = [];
+            environmentObjects.spaceStations.push(moduleGroup);
+        }
+        
+        function createFloatingAsteroid() {
+            const asteroidGeom = new THREE.IcosahedronGeometry(1 + Math.random() * 2);
+            const asteroidMat = new THREE.MeshLambertMaterial({ color: 0x696969 });
+            const asteroid = new THREE.Mesh(asteroidGeom, asteroidMat);
+            
+            asteroid.position.set(
+                -40 + Math.random() * 80,
+                -10 + Math.random() * 30,
+                -50 - Math.random() * 100
+            );
+            
+            asteroid.userData = {
+                type: 'floatingAsteroid',
+                rotationAxis: new THREE.Vector3(
+                    Math.random() - 0.5,
+                    Math.random() - 0.5,
+                    Math.random() - 0.5
+                ).normalize(),
+                rotationSpeed: 0.5 + Math.random(),
+                floatSpeed: new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 1,
+                    2 + Math.random() * 3
+                )
+            };
+            
+            scene.add(asteroid);
+            
+            if (!environmentObjects.floatingAsteroids) environmentObjects.floatingAsteroids = [];
+            environmentObjects.floatingAsteroids.push(asteroid);
+        }
+        
+        // Level 9: Crystal Mines Environment
+        function createLevel9Environment() {
+            scene.fog = new THREE.FogExp2(0x9400D3, 0.04);
+            renderer.setClearColor(0x4B0082);
+            
+            // Crystal glow lighting
+            const crystalLight1 = new THREE.PointLight(0xFF00FF, 1, 30);
+            crystalLight1.position.set(-10, 5, 0);
+            scene.add(crystalLight1);
+            
+            const crystalLight2 = new THREE.PointLight(0x00FFFF, 1, 30);
+            crystalLight2.position.set(10, 5, -20);
+            scene.add(crystalLight2);
+            
+            // Create crystal formations
+            for (let i = 0; i < 25; i++) {
+                createGiantCrystal(
+                    -20 + Math.random() * 40,
+                    -i * 10
+                );
+            }
+            
+            // Create mine cart tracks
+            createMineCartTracks();
+        }
+        
+        function createGiantCrystal(x, z) {
+            const crystalGroup = new THREE.Group();
+            
+            const size = 2 + Math.random() * 3;
+            const crystalGeom = new THREE.ConeGeometry(size * 0.5, size, 6);
+            const crystalMat = new THREE.MeshPhongMaterial({
+                color: [0xFF00FF, 0x00FFFF, 0xFFFF00][Math.floor(Math.random() * 3)],
+                emissive: [0xFF00FF, 0x00FFFF, 0xFFFF00][Math.floor(Math.random() * 3)],
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.8,
+                shininess: 100
+            });
+            const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+            crystal.position.y = size / 2;
+            
+            // Add smaller crystals around
+            for (let i = 0; i < 3; i++) {
+                const smallCrystal = crystal.clone();
+                smallCrystal.scale.setScalar(0.3 + Math.random() * 0.3);
+                smallCrystal.position.set(
+                    (Math.random() - 0.5) * 3,
+                    smallCrystal.scale.y * size / 4,
+                    (Math.random() - 0.5) * 3
+                );
+                smallCrystal.rotation.z = (Math.random() - 0.5) * 0.5;
+                crystalGroup.add(smallCrystal);
+            }
+            
+            crystalGroup.add(crystal);
+            crystalGroup.position.set(x, 0, z);
+            scene.add(crystalGroup);
+            
+            if (!environmentObjects.giantCrystals) environmentObjects.giantCrystals = [];
+            environmentObjects.giantCrystals.push(crystalGroup);
+        }
+        
+        function createMineCartTracks() {
+            const trackGeom = new THREE.BoxGeometry(0.1, 0.05, 100);
+            const trackMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            
+            for (let i = 0; i < 2; i++) {
+                const track = new THREE.Mesh(trackGeom, trackMat);
+                track.position.x = i === 0 ? -0.5 : 0.5;
+                track.position.y = -0.9;
+                scene.add(track);
+            }
+        }
+        
+        // Level 10: Final Dimension Environment
+        function createLevel10Environment() {
+            scene.fog = new THREE.FogExp2(0xFF1493, 0.07);
+            renderer.setClearColor(0x8B008B);
+            
+            // Dimensional rift lighting
+            const riftLight = new THREE.DirectionalLight(0xFFD700, 0.5);
+            riftLight.position.set(0, 10, 0);
+            scene.add(riftLight);
+            
+            // Create dimensional rifts
+            for (let i = 0; i < 15; i++) {
+                createDimensionalRift();
+            }
+            
+            // Create floating platforms
+            for (let i = 0; i < 20; i++) {
+                createFloatingPlatform(
+                    -30 + Math.random() * 60,
+                    -5 + Math.random() * 20,
+                    -i * 15
+                );
+            }
+            
+            // Create time distortions
+            for (let i = 0; i < 10; i++) {
+                createTimeDistortion();
+            }
+        }
+        
+        function createDimensionalRift() {
+            const riftGroup = new THREE.Group();
+            
+            for (let i = 0; i < 3; i++) {
+                const riftGeom = new THREE.PlaneGeometry(0.5, 10 + Math.random() * 10);
+                const riftMat = new THREE.MeshBasicMaterial({
+                    color: [0xFF1493, 0xFFD700, 0x00FFFF][i],
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                const rift = new THREE.Mesh(riftGeom, riftMat);
+                rift.rotation.y = Math.random() * Math.PI;
+                rift.position.x = (Math.random() - 0.5) * 2;
+                riftGroup.add(rift);
+            }
+            
+            riftGroup.position.set(
+                -40 + Math.random() * 80,
+                Math.random() * 20,
+                -30 - Math.random() * 100
+            );
+            riftGroup.userData = {
+                type: 'dimensionalRift',
+                warpSpeed: 2 + Math.random() * 3
+            };
+            scene.add(riftGroup);
+            
+            if (!environmentObjects.dimensionalRifts) environmentObjects.dimensionalRifts = [];
+            environmentObjects.dimensionalRifts.push(riftGroup);
+        }
+        
+        function createFloatingPlatform(x, y, z) {
+            const platformGeom = new THREE.BoxGeometry(5, 0.5, 5);
+            const platformMat = new THREE.MeshLambertMaterial({
+                color: 0x4B0082,
+                emissive: 0x9400D3,
+                emissiveIntensity: 0.2
+            });
+            const platform = new THREE.Mesh(platformGeom, platformMat);
+            
+            // Add glowing edges
+            const edgeGeom = new THREE.BoxGeometry(5.1, 0.6, 5.1);
+            const edgeMat = new THREE.MeshBasicMaterial({
+                color: 0xFFD700,
+                wireframe: true
+            });
+            const edges = new THREE.Mesh(edgeGeom, edgeMat);
+            platform.add(edges);
+            
+            platform.position.set(x, y, z);
+            platform.userData = {
+                type: 'floatingPlatform',
+                floatSpeed: 0.5 + Math.random(),
+                floatRange: 2,
+                baseY: y
+            };
+            scene.add(platform);
+            
+            if (!environmentObjects.floatingPlatforms) environmentObjects.floatingPlatforms = [];
+            environmentObjects.floatingPlatforms.push(platform);
+        }
+        
+        // ========== LEVEL-SPECIFIC MECHANICS ==========
+        function applyLevelMechanics() {
+            const level = gameState.currentLevel;
+            
+            // Reset mechanics
+            gameState.gravityMultiplier = 1.0;
+            gameState.jumpMultiplier = 1.0;
+            gameState.speedLimitMultiplier = 1.0;
+            gameState.frictionMultiplier = 1.0;
+            
+            switch (level) {
+                case 3: // Sky High - Low gravity
+                    gameState.gravityMultiplier = 0.6;
+                    gameState.jumpMultiplier = 1.3;
+                    break;
+                    
+                case 4: // Underwater - Water physics
+                    gameState.gravityMultiplier = 1.2;
+                    gameState.jumpMultiplier = 0.7;
+                    gameState.speedLimitMultiplier = 0.8;
+                    gameState.frictionMultiplier = 1.5;
+                    break;
+                    
+                case 5: // Volcanic Rush - Heat damage
+                    if (!gameState.heatProtection) {
+                        gameState.heatDamageTimer = (gameState.heatDamageTimer || 0) + 1;
+                        if (gameState.heatDamageTimer > 300) { // 5 seconds
+                            // Take damage from heat
+                            gameState.heatDamageTimer = 0;
+                            showEventNotification('HEAT DAMAGE! 🔥', 1000, 'normal', '#FF4500');
+                        }
+                    }
+                    break;
+                    
+                case 6: // Ice Caverns - Slippery surface
+                    gameState.frictionMultiplier = 0.3;
+                    // Slide effect
+                    if (gameState.lastLane !== gameState.playerLane) {
+                        gameState.slideVelocity = (gameState.playerLane - gameState.lastLane) * 0.5;
+                    }
+                    break;
+                    
+                case 7: // Jungle Temple - Vine swinging
+                    // Vine grab mechanic (activated by jump near vines)
+                    if (gameState.nearVine && gameState.playerAction === 'jumping') {
+                        gameState.swingingOnVine = true;
+                        gameState.jumpVelocity = 0;
+                        showEventNotification('VINE SWING! 🌿', 1000, 'normal', '#228B22');
+                    }
+                    break;
+                    
+                case 8: // Space Station - Zero gravity
+                    gameState.gravityMultiplier = 0.3;
+                    gameState.jumpMultiplier = 1.5;
+                    // Float effect
+                    if (gameState.playerY > 0) {
+                        gameState.jumpVelocity *= 0.98; // Slow decay in space
+                    }
+                    break;
+                    
+                case 9: // Crystal Mines - Light refraction
+                    // Random light beam redirects
+                    if (Math.random() < 0.001) {
+                        const newLane = Math.floor(Math.random() * 3);
+                        if (newLane !== gameState.playerLane) {
+                            gameState.playerLane = newLane;
+                            showEventNotification('LIGHT WARP! ✨', 800, 'normal', '#FF00FF');
+                            createParticleEffect(player.position, 0xFF00FF, 'warp');
+                        }
+                    }
+                    break;
+                    
+                case 10: // Final Dimension - Time distortion
+                    // Random time slow/fast
+                    if (!gameState.timeDistortionActive) {
+                        if (Math.random() < 0.002) {
+                            gameState.timeDistortionActive = true;
+                            gameState.timeScale = Math.random() > 0.5 ? 0.5 : 1.5;
+                            const effect = gameState.timeScale < 1 ? 'TIME SLOW' : 'TIME FAST';
+                            showEventNotification(`${effect}! ⏰`, 2000, 'large', '#FFD700');
+                            
+                            setTimeout(() => {
+                                gameState.timeDistortionActive = false;
+                                gameState.timeScale = 1.0;
+                            }, 3000);
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        // Level-specific collision modifications
+        function applyLevelCollisionMods(playerBBox, obstacleBBox, obstacle) {
+            const level = gameState.currentLevel;
+            
+            switch (level) {
+                case 4: // Underwater - Bubble streams push player up
+                    if (obstacle.type === 'bubble_stream') {
+                        const inStream = boundingBoxIntersection(playerBBox, obstacleBBox);
+                        if (inStream && gameState.playerY < 3) {
+                            gameState.jumpVelocity = Math.max(gameState.jumpVelocity, 5);
+                            showEventNotification('BUBBLE LIFT! 🫧', 500, 'small', '#87CEFA');
+                            return false; // No collision damage
+                        }
+                    }
+                    break;
+                    
+                case 7: // Jungle Temple - Swinging vines are safe
+                    if (obstacle.type === 'swinging_vines') {
+                        gameState.nearVine = true;
+                        return false; // Can grab vines, no collision
+                    }
+                    break;
+                    
+                case 8: // Space Station - Gravity wells pull player
+                    if (obstacle.type === 'gravity_well') {
+                        const distance = Math.abs(obstacle.mesh.position.x - player.position.x);
+                        if (distance < 3) {
+                            // Pull towards gravity well
+                            const pullStrength = (3 - distance) / 3;
+                            const targetLane = Math.round((obstacle.mesh.position.x + 2) / 2);
+                            if (targetLane !== gameState.playerLane) {
+                                gameState.gravityPull = (targetLane - gameState.playerLane) * pullStrength * 0.1;
+                            }
+                        }
+                    }
+                    break;
+            }
+            
+            return true; // Normal collision
+        }
+        
+        function createTimeDistortion() {
+            const distortionGroup = new THREE.Group();
+            
+            // Time bubble
+            const bubbleGeom = new THREE.SphereGeometry(3, 16, 16);
+            const bubbleMat = new THREE.MeshBasicMaterial({
+                color: 0xFFD700,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.BackSide
+            });
+            const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+            
+            // Clock particles inside
+            for (let i = 0; i < 8; i++) {
+                const particleGeom = new THREE.BoxGeometry(0.1, 0.5, 0.02);
+                const particleMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                const particle = new THREE.Mesh(particleGeom, particleMat);
+                particle.userData.angle = (i / 8) * Math.PI * 2;
+                particle.userData.radius = 1.5;
+                distortionGroup.add(particle);
+            }
+            
+            distortionGroup.add(bubble);
+            distortionGroup.position.set(
+                -30 + Math.random() * 60,
+                5 + Math.random() * 10,
+                -50 - Math.random() * 100
+            );
+            distortionGroup.userData = {
+                type: 'timeDistortion',
+                rotationSpeed: 1 + Math.random()
+            };
+            scene.add(distortionGroup);
+            
+            if (!environmentObjects.timeDistortions) environmentObjects.timeDistortions = [];
+            environmentObjects.timeDistortions.push(distortionGroup);
+        }
+        
+        // Update functions for level-specific environments
+        function updateLevelEnvironments(deltaTime) {
+            // Level 3: Sky High
+            if (gameState.currentLevel === 3 && environmentObjects.clouds) {
+                environmentObjects.clouds.forEach(cloud => {
+                    cloud.position.y = cloud.userData.baseY + 
+                        Math.sin(Date.now() * 0.001 * cloud.userData.floatSpeed) * cloud.userData.floatRange;
+                });
+            }
+            
+            // Level 4: Underwater
+            if (gameState.currentLevel === 4) {
+                if (environmentObjects.seaweed) {
+                    environmentObjects.seaweed.forEach(seaweed => {
+                        seaweed.children.forEach(stem => {
+                            if (stem.userData.swaySpeed) {
+                                stem.rotation.z = Math.sin(Date.now() * 0.001 * stem.userData.swaySpeed) * 
+                                    stem.userData.swayAmount;
+                            }
+                        });
+                    });
+                }
+                if (environmentObjects.fishSchools) {
+                    environmentObjects.fishSchools.forEach(school => {
+                        school.position.add(
+                            school.userData.swimDirection.clone().multiplyScalar(
+                                school.userData.swimSpeed * deltaTime * 0.001
+                            )
+                        );
+                        if (school.position.z > 50) {
+                            school.position.z = -100;
+                        }
+                    });
+                }
+            }
+            
+            // Level 5: Volcanic
+            if (gameState.currentLevel === 5) {
+                if (environmentObjects.lavaPools) {
+                    environmentObjects.lavaPools.forEach(pool => {
+                        pool.children.forEach(bubble => {
+                            if (bubble.userData.bubbleSpeed) {
+                                const bubbleY = Math.sin(Date.now() * 0.001 * bubble.userData.bubbleSpeed + 
+                                    bubble.userData.bubblePhase) * 0.5;
+                                bubble.position.y = -0.8 + bubbleY;
+                            }
+                        });
+                    });
+                }
+                if (environmentObjects.volcanicSmoke) {
+                    environmentObjects.volcanicSmoke.forEach(smoke => {
+                        smoke.position.y += smoke.userData.riseSpeed * deltaTime * 0.001;
+                        if (smoke.position.y > 30) {
+                            smoke.position.y = 0;
+                        }
+                    });
+                }
+            }
+            
+            // Level 6: Ice Caverns
+            if (gameState.currentLevel === 6 && environmentObjects.iceCrystals) {
+                environmentObjects.iceCrystals.forEach(formation => {
+                    formation.children.forEach((crystal, i) => {
+                        crystal.rotation.y += (0.5 + i * 0.1) * deltaTime * 0.001;
+                    });
+                });
+            }
+            
+            // Level 8: Space Station
+            if (gameState.currentLevel === 8) {
+                if (environmentObjects.spaceStations) {
+                    environmentObjects.spaceStations.forEach(station => {
+                        station.rotation.y += station.userData.rotationSpeed * deltaTime * 0.001;
+                    });
+                }
+                if (environmentObjects.floatingAsteroids) {
+                    environmentObjects.floatingAsteroids.forEach(asteroid => {
+                        asteroid.rotateOnAxis(asteroid.userData.rotationAxis, 
+                            asteroid.userData.rotationSpeed * deltaTime * 0.001);
+                        asteroid.position.add(
+                            asteroid.userData.floatSpeed.clone().multiplyScalar(deltaTime * 0.001)
+                        );
+                        if (asteroid.position.z > 50) {
+                            asteroid.position.z = -150;
+                            asteroid.position.x = -40 + Math.random() * 80;
+                            asteroid.position.y = -10 + Math.random() * 30;
+                        }
+                    });
+                }
+            }
+            
+            // Level 9: Crystal Mines
+            if (gameState.currentLevel === 9 && environmentObjects.giantCrystals) {
+                environmentObjects.giantCrystals.forEach(crystal => {
+                    crystal.children.forEach((child, i) => {
+                        const hue = (Date.now() * 0.0001 + i * 0.3) % 1;
+                        child.material.color.setHSL(hue, 1, 0.5);
+                        child.material.emissive.setHSL(hue, 1, 0.3);
+                    });
+                });
+            }
+            
+            // Level 10: Final Dimension
+            if (gameState.currentLevel === 10) {
+                if (environmentObjects.dimensionalRifts) {
+                    environmentObjects.dimensionalRifts.forEach(rift => {
+                        rift.children.forEach((plane, i) => {
+                            plane.rotation.y += rift.userData.warpSpeed * deltaTime * 0.001 * (i + 1);
+                            plane.scale.y = 1 + Math.sin(Date.now() * 0.001 * rift.userData.warpSpeed) * 0.3;
+                        });
+                    });
+                }
+                if (environmentObjects.floatingPlatforms) {
+                    environmentObjects.floatingPlatforms.forEach(platform => {
+                        platform.position.y = platform.userData.baseY + 
+                            Math.sin(Date.now() * 0.001 * platform.userData.floatSpeed) * 
+                            platform.userData.floatRange;
+                        platform.rotation.y += 0.1 * deltaTime * 0.001;
+                    });
+                }
+                if (environmentObjects.timeDistortions) {
+                    environmentObjects.timeDistortions.forEach(distortion => {
+                        distortion.rotation.y += distortion.userData.rotationSpeed * deltaTime * 0.001;
+                        distortion.children.forEach(child => {
+                            if (child.userData.angle !== undefined) {
+                                child.userData.angle += distortion.userData.rotationSpeed * deltaTime * 0.001;
+                                child.position.x = Math.cos(child.userData.angle) * child.userData.radius;
+                                child.position.z = Math.sin(child.userData.angle) * child.userData.radius;
+                                child.rotation.z = child.userData.angle + Math.PI / 2;
+                            }
+                        });
+                    });
+                }
+            }
+        }
 
         function createTrafficSign(x, z) {
             const signGroup = new THREE.Group();
@@ -5354,6 +6554,460 @@
                     obstacleGroup.userData.isLevel2Obstacle = true;
                     obstacleGroup.userData.plasmaGate = true;
                     height = 2.2;
+                    break;
+                    
+                // ========== LEVEL 3: SKY HIGH OBSTACLES ==========
+                case 'cloud_barrier':
+                    const cloudGroup = new THREE.Group();
+                    
+                    // Fluffy cloud shapes
+                    for (let i = 0; i < 5; i++) {
+                        const cloudSize = 0.5 + Math.random() * 0.3;
+                        const cloudGeom = new THREE.SphereGeometry(cloudSize, 8, 6);
+                        const cloudMat = new THREE.MeshLambertMaterial({
+                            color: 0xFFFFFF,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const cloud = new THREE.Mesh(cloudGeom, cloudMat);
+                        cloud.position.set(
+                            (Math.random() - 0.5) * 2,
+                            1 + Math.random() * 0.5,
+                            (Math.random() - 0.5) * 0.5
+                        );
+                        cloud.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+                        cloudGroup.add(cloud);
+                    }
+                    
+                    obstacleGroup.add(cloudGroup);
+                    obstacleGroup.userData.isLevel3Obstacle = true;
+                    height = 2;
+                    break;
+                    
+                case 'wind_turbine':
+                    const turbineGroup = new THREE.Group();
+                    
+                    // Turbine pole
+                    const poleGeom = new THREE.CylinderGeometry(0.1, 0.2, 3);
+                    const poleMat = new THREE.MeshLambertMaterial({ color: 0xCCCCCC });
+                    const pole = new THREE.Mesh(poleGeom, poleMat);
+                    pole.position.y = 1.5;
+                    turbineGroup.add(pole);
+                    
+                    // Rotating blades
+                    const bladeHub = new THREE.Group();
+                    for (let i = 0; i < 3; i++) {
+                        const bladeGeom = new THREE.BoxGeometry(2.5, 0.3, 0.05);
+                        const bladeMat = new THREE.MeshLambertMaterial({ color: 0xEEEEEE });
+                        const blade = new THREE.Mesh(bladeGeom, bladeMat);
+                        blade.rotation.z = (i * Math.PI * 2) / 3;
+                        bladeHub.add(blade);
+                    }
+                    bladeHub.position.y = 3;
+                    bladeHub.userData.rotationSpeed = 3;
+                    turbineGroup.add(bladeHub);
+                    
+                    obstacleGroup.add(turbineGroup);
+                    obstacleGroup.userData.isLevel3Obstacle = true;
+                    height = 3;
+                    break;
+                    
+                // ========== LEVEL 4: UNDERWATER TUNNEL OBSTACLES ==========
+                case 'bubble_stream':
+                    const bubbleGroup = new THREE.Group();
+                    
+                    // Bubble particles
+                    for (let i = 0; i < 8; i++) {
+                        const bubbleGeom = new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 8, 8);
+                        const bubbleMat = new THREE.MeshBasicMaterial({
+                            color: 0xADD8E6,
+                            transparent: true,
+                            opacity: 0.6
+                        });
+                        const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+                        bubble.position.set(
+                            (Math.random() - 0.5) * 1.5,
+                            Math.random() * 2,
+                            (Math.random() - 0.5) * 0.5
+                        );
+                        bubble.userData.riseSpeed = 1 + Math.random();
+                        bubbleGroup.add(bubble);
+                    }
+                    
+                    obstacleGroup.add(bubbleGroup);
+                    obstacleGroup.userData.isLevel4Obstacle = true;
+                    height = 2.5;
+                    break;
+                    
+                case 'coral_reef':
+                    const coralGroup = new THREE.Group();
+                    
+                    // Main coral structure
+                    const coralGeom = new THREE.ConeGeometry(0.8, 1.5, 6);
+                    const coralMat = new THREE.MeshLambertMaterial({ 
+                        color: 0xFF6B9D,
+                        emissive: 0xFF1744,
+                        emissiveIntensity: 0.2
+                    });
+                    const coral = new THREE.Mesh(coralGeom, coralMat);
+                    coral.position.y = 0.75;
+                    coralGroup.add(coral);
+                    
+                    // Fish swimming around
+                    for (let i = 0; i < 3; i++) {
+                        const fishGeom = new THREE.ConeGeometry(0.1, 0.3, 4);
+                        const fishMat = new THREE.MeshLambertMaterial({ 
+                            color: [0xFFD700, 0xFF6347, 0x00CED1][i]
+                        });
+                        const fish = new THREE.Mesh(fishGeom, fishMat);
+                        fish.rotation.z = Math.PI / 2;
+                        fish.userData.swimAngle = Math.random() * Math.PI * 2;
+                        fish.userData.swimRadius = 0.8 + Math.random() * 0.4;
+                        fish.userData.swimSpeed = 2 + Math.random();
+                        coralGroup.add(fish);
+                    }
+                    
+                    obstacleGroup.add(coralGroup);
+                    obstacleGroup.userData.isLevel4Obstacle = true;
+                    height = 1.5;
+                    break;
+                    
+                // ========== LEVEL 5: VOLCANIC RUSH OBSTACLES ==========
+                case 'lava_burst':
+                    const lavaGroup = new THREE.Group();
+                    
+                    // Lava geyser base
+                    const geyserGeom = new THREE.CylinderGeometry(0.4, 0.6, 0.5);
+                    const geyserMat = new THREE.MeshLambertMaterial({ 
+                        color: 0x8B0000,
+                        emissive: 0xFF0000,
+                        emissiveIntensity: 0.8
+                    });
+                    const geyser = new THREE.Mesh(geyserGeom, geyserMat);
+                    geyser.position.y = 0.25;
+                    lavaGroup.add(geyser);
+                    
+                    // Lava burst column
+                    const burstGeom = new THREE.CylinderGeometry(0.3, 0.4, 2.5);
+                    const burstMat = new THREE.MeshBasicMaterial({ 
+                        color: 0xFF4500,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const burst = new THREE.Mesh(burstGeom, burstMat);
+                    burst.position.y = -2; // Start below ground
+                    burst.userData.burstSpeed = 5;
+                    burst.userData.burstHeight = 2;
+                    lavaGroup.add(burst);
+                    
+                    obstacleGroup.add(lavaGroup);
+                    obstacleGroup.userData.isLevel5Obstacle = true;
+                    height = 0.5; // Low initially
+                    break;
+                    
+                case 'falling_rocks':
+                    const rockGroup = new THREE.Group();
+                    
+                    // Multiple falling rocks
+                    for (let i = 0; i < 3; i++) {
+                        const rockGeom = new THREE.DodecahedronGeometry(0.3 + Math.random() * 0.2);
+                        const rockMat = new THREE.MeshLambertMaterial({ 
+                            color: 0x8B4513
+                        });
+                        const rock = new THREE.Mesh(rockGeom, rockMat);
+                        rock.position.set(
+                            (i - 1) * 0.8,
+                            4 + Math.random() * 2,
+                            0
+                        );
+                        rock.rotation.set(
+                            Math.random() * Math.PI,
+                            Math.random() * Math.PI,
+                            Math.random() * Math.PI
+                        );
+                        rock.userData.fallSpeed = 3 + Math.random();
+                        rockGroup.add(rock);
+                    }
+                    
+                    obstacleGroup.add(rockGroup);
+                    obstacleGroup.userData.isLevel5Obstacle = true;
+                    height = 2;
+                    break;
+                    
+                // ========== LEVEL 6: ICE CAVERNS OBSTACLES ==========
+                case 'ice_spikes':
+                    const spikeGroup = new THREE.Group();
+                    
+                    // Ice spikes from floor and ceiling
+                    for (let i = 0; i < 5; i++) {
+                        const spikeGeom = new THREE.ConeGeometry(0.2, 1 + Math.random() * 0.5, 4);
+                        const spikeMat = new THREE.MeshLambertMaterial({ 
+                            color: 0x87CEEB,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const spike = new THREE.Mesh(spikeGeom, spikeMat);
+                        
+                        if (i % 2 === 0) {
+                            // Floor spike
+                            spike.position.set((i - 2) * 0.4, 0.5, 0);
+                        } else {
+                            // Ceiling spike
+                            spike.position.set((i - 2) * 0.4, 2.5, 0);
+                            spike.rotation.z = Math.PI;
+                        }
+                        spikeGroup.add(spike);
+                    }
+                    
+                    obstacleGroup.add(spikeGroup);
+                    obstacleGroup.userData.isLevel6Obstacle = true;
+                    height = 2.5;
+                    break;
+                    
+                case 'sliding_ice':
+                    const iceGroup = new THREE.Group();
+                    
+                    // Sliding ice platform
+                    const iceGeom = new THREE.BoxGeometry(1.5, 0.2, 1);
+                    const iceMat = new THREE.MeshLambertMaterial({ 
+                        color: 0xE0FFFF,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const ice = new THREE.Mesh(iceGeom, iceMat);
+                    ice.position.y = 0.1;
+                    ice.userData.slideSpeed = 2;
+                    ice.userData.slideRange = 4;
+                    iceGroup.add(ice);
+                    
+                    obstacleGroup.add(iceGroup);
+                    obstacleGroup.userData.isLevel6Obstacle = true;
+                    height = 0.2;
+                    break;
+                    
+                // ========== LEVEL 7: JUNGLE TEMPLE OBSTACLES ==========
+                case 'swinging_vines':
+                    const vineGroup = new THREE.Group();
+                    
+                    // Vine rope
+                    const vineGeom = new THREE.CylinderGeometry(0.05, 0.05, 3);
+                    const vineMat = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+                    const vine = new THREE.Mesh(vineGeom, vineMat);
+                    vine.position.y = 1.5;
+                    
+                    // Vine pivot group for swinging
+                    const vinePivot = new THREE.Group();
+                    vinePivot.add(vine);
+                    vinePivot.position.y = 3;
+                    vinePivot.userData.swingSpeed = 2;
+                    vinePivot.userData.swingAngle = Math.PI / 4;
+                    
+                    vineGroup.add(vinePivot);
+                    obstacleGroup.add(vineGroup);
+                    obstacleGroup.userData.isLevel7Obstacle = true;
+                    height = 3;
+                    break;
+                    
+                case 'temple_traps':
+                    const trapGroup = new THREE.Group();
+                    
+                    // Stone block trap
+                    const blockGeom = new THREE.BoxGeometry(1, 1, 1);
+                    const blockMat = new THREE.MeshLambertMaterial({ 
+                        color: 0x8B7355
+                    });
+                    const block = new THREE.Mesh(blockGeom, blockMat);
+                    block.position.y = 3;
+                    block.userData.dropTrigger = false;
+                    block.userData.dropSpeed = 8;
+                    
+                    // Trigger plate
+                    const plateGeom = new THREE.BoxGeometry(1.5, 0.1, 1.5);
+                    const plateMat = new THREE.MeshLambertMaterial({ 
+                        color: 0x8B4513,
+                        emissive: 0x8B0000,
+                        emissiveIntensity: 0.3
+                    });
+                    const plate = new THREE.Mesh(plateGeom, plateMat);
+                    plate.position.y = 0.05;
+                    
+                    trapGroup.add(block);
+                    trapGroup.add(plate);
+                    obstacleGroup.add(trapGroup);
+                    obstacleGroup.userData.isLevel7Obstacle = true;
+                    height = 1;
+                    break;
+                    
+                // ========== LEVEL 8: SPACE STATION OBSTACLES ==========
+                case 'asteroid_field':
+                    const asteroidGroup = new THREE.Group();
+                    
+                    // Multiple asteroids
+                    for (let i = 0; i < 4; i++) {
+                        const asteroidGeom = new THREE.IcosahedronGeometry(0.3 + Math.random() * 0.2);
+                        const asteroidMat = new THREE.MeshLambertMaterial({ 
+                            color: 0x696969
+                        });
+                        const asteroid = new THREE.Mesh(asteroidGeom, asteroidMat);
+                        asteroid.position.set(
+                            (Math.random() - 0.5) * 3,
+                            1 + Math.random() * 2,
+                            (Math.random() - 0.5) * 2
+                        );
+                        asteroid.userData.rotationAxis = new THREE.Vector3(
+                            Math.random() - 0.5,
+                            Math.random() - 0.5,
+                            Math.random() - 0.5
+                        ).normalize();
+                        asteroid.userData.rotationSpeed = 1 + Math.random() * 2;
+                        asteroidGroup.add(asteroid);
+                    }
+                    
+                    obstacleGroup.add(asteroidGroup);
+                    obstacleGroup.userData.isLevel8Obstacle = true;
+                    height = 3;
+                    break;
+                    
+                case 'gravity_well':
+                    const gravityGroup = new THREE.Group();
+                    
+                    // Gravity well core
+                    const coreGeom = new THREE.SphereGeometry(0.3, 16, 16);
+                    const coreMat = new THREE.MeshBasicMaterial({ 
+                        color: 0x9400D3,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    const core = new THREE.Mesh(coreGeom, coreMat);
+                    core.position.y = 1.5;
+                    
+                    // Gravity field rings
+                    for (let i = 0; i < 3; i++) {
+                        const ringGeom = new THREE.TorusGeometry(0.8 + i * 0.3, 0.02, 8, 32);
+                        const ringMat = new THREE.MeshBasicMaterial({ 
+                            color: 0x9400D3,
+                            transparent: true,
+                            opacity: 0.6 - i * 0.15
+                        });
+                        const ring = new THREE.Mesh(ringGeom, ringMat);
+                        ring.position.y = 1.5;
+                        ring.userData.rotationSpeed = 2 - i * 0.5;
+                        gravityGroup.add(ring);
+                    }
+                    
+                    gravityGroup.add(core);
+                    obstacleGroup.add(gravityGroup);
+                    obstacleGroup.userData.isLevel8Obstacle = true;
+                    height = 2;
+                    break;
+                    
+                // ========== LEVEL 9: CRYSTAL MINES OBSTACLES ==========
+                case 'crystal_shards':
+                    const crystalGroup = new THREE.Group();
+                    
+                    // Sharp crystal formations
+                    for (let i = 0; i < 6; i++) {
+                        const crystalGeom = new THREE.ConeGeometry(0.15, 0.8 + Math.random() * 0.4, 4);
+                        const crystalMat = new THREE.MeshLambertMaterial({ 
+                            color: [0xFF00FF, 0x00FFFF, 0xFFFF00][i % 3],
+                            emissive: [0xFF00FF, 0x00FFFF, 0xFFFF00][i % 3],
+                            emissiveIntensity: 0.5
+                        });
+                        const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+                        crystal.position.set(
+                            (Math.random() - 0.5) * 2,
+                            0.4,
+                            (Math.random() - 0.5) * 0.5
+                        );
+                        crystal.rotation.z = (Math.random() - 0.5) * 0.3;
+                        crystalGroup.add(crystal);
+                    }
+                    
+                    obstacleGroup.add(crystalGroup);
+                    obstacleGroup.userData.isLevel9Obstacle = true;
+                    height = 1;
+                    break;
+                    
+                case 'light_beams':
+                    const beamGroup = new THREE.Group();
+                    
+                    // Crossing laser beams
+                    for (let i = 0; i < 2; i++) {
+                        const beamGeom = new THREE.CylinderGeometry(0.05, 0.05, 4);
+                        const beamMat = new THREE.MeshBasicMaterial({ 
+                            color: 0xFFFFFF,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const beam = new THREE.Mesh(beamGeom, beamMat);
+                        beam.position.y = 1;
+                        beam.rotation.z = i === 0 ? Math.PI / 4 : -Math.PI / 4;
+                        beam.userData.pulseSpeed = 3;
+                        beamGroup.add(beam);
+                    }
+                    
+                    obstacleGroup.add(beamGroup);
+                    obstacleGroup.userData.isLevel9Obstacle = true;
+                    height = 2;
+                    break;
+                    
+                // ========== LEVEL 10: FINAL DIMENSION OBSTACLES ==========
+                case 'reality_tear':
+                    const tearGroup = new THREE.Group();
+                    
+                    // Dimensional rift
+                    const riftGeom = new THREE.PlaneGeometry(0.1, 3);
+                    const riftMat = new THREE.MeshBasicMaterial({ 
+                        color: 0xFF1493,
+                        transparent: true,
+                        opacity: 0.9,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    for (let i = 0; i < 3; i++) {
+                        const rift = new THREE.Mesh(riftGeom, riftMat);
+                        rift.position.y = 1.5;
+                        rift.position.x = (i - 1) * 0.5;
+                        rift.rotation.y = Math.random() * Math.PI;
+                        rift.userData.warpSpeed = 5 + Math.random() * 5;
+                        tearGroup.add(rift);
+                    }
+                    
+                    obstacleGroup.add(tearGroup);
+                    obstacleGroup.userData.isLevel10Obstacle = true;
+                    height = 3;
+                    break;
+                    
+                case 'time_distortion':
+                    const distortionGroup = new THREE.Group();
+                    
+                    // Time bubble
+                    const bubbleGeom = new THREE.SphereGeometry(1.5, 16, 16);
+                    const bubbleMat = new THREE.MeshBasicMaterial({ 
+                        color: 0xFFD700,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.BackSide
+                    });
+                    const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+                    bubble.position.y = 1.5;
+                    
+                    // Clock hands inside
+                    const handGeom = new THREE.BoxGeometry(0.05, 1, 0.05);
+                    const handMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+                    const hourHand = new THREE.Mesh(handGeom, handMat);
+                    const minuteHand = new THREE.Mesh(handGeom, handMat);
+                    hourHand.position.y = 1.5;
+                    minuteHand.position.y = 1.5;
+                    hourHand.userData.rotationSpeed = 1;
+                    minuteHand.userData.rotationSpeed = 12;
+                    
+                    distortionGroup.add(bubble);
+                    distortionGroup.add(hourHand);
+                    distortionGroup.add(minuteHand);
+                    obstacleGroup.add(distortionGroup);
+                    obstacleGroup.userData.isLevel10Obstacle = true;
+                    height = 3;
                     break;
             }
             
@@ -6102,9 +7756,9 @@
             const versionInfo = document.getElementById('versionInfo');
             if (versionInfo) {
                 versionInfo.innerHTML = `
-                    Version: 4.1.3-UI-PURE<br>
-                    🎯 NO Permanent Text<br>
-                    ✨ Temporary Notifications Only
+                    Version: 4.3.0-MEGA-LEVELS<br>
+                    🎮 10 Epic Levels<br>
+                    🌟 Unique Mechanics Each Level
                 `;
             }
         });
@@ -8196,6 +9850,407 @@
             
             gameState.speedBoostZones.push(zoneData);
             return zoneData;
+        }
+        
+        // ========== LEVEL 3: SKY HIGH COLLECTIBLES ==========
+        function createCloudCoin(lane, z) {
+            const coinGroup = new THREE.Group();
+            
+            // Cloud-shaped coin
+            const cloudGeom = new THREE.SphereGeometry(0.4, 8, 6);
+            const cloudMat = new THREE.MeshLambertMaterial({
+                color: 0xFFFFFF,
+                emissive: 0xCCEEFF,
+                emissiveIntensity: 0.3
+            });
+            const cloud = new THREE.Mesh(cloudGeom, cloudMat);
+            
+            // Golden center
+            const centerGeom = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 16);
+            const centerMat = new THREE.MeshBasicMaterial({
+                color: 0xFFD700,
+                emissive: 0xFFD700
+            });
+            const center = new THREE.Mesh(centerGeom, centerMat);
+            center.rotation.x = Math.PI / 2;
+            
+            coinGroup.add(cloud);
+            coinGroup.add(center);
+            coinGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(coinGroup);
+            
+            if (!gameState.cloudCoins) gameState.cloudCoins = [];
+            gameState.cloudCoins.push({ mesh: coinGroup, collected: false, lane, z, value: 40 });
+        }
+        
+        function createWindBoost(lane, z) {
+            const windGroup = new THREE.Group();
+            
+            // Wind visual effect
+            for (let i = 0; i < 5; i++) {
+                const windGeom = new THREE.CylinderGeometry(0.05, 0.05, 1 + Math.random());
+                const windMat = new THREE.MeshBasicMaterial({
+                    color: 0x87CEEB,
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const wind = new THREE.Mesh(windGeom, windMat);
+                wind.position.set(
+                    (Math.random() - 0.5) * 1,
+                    Math.random() * 2,
+                    (Math.random() - 0.5) * 0.5
+                );
+                wind.rotation.z = (Math.random() - 0.5) * 0.5;
+                windGroup.add(wind);
+            }
+            
+            windGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            scene.add(windGroup);
+            
+            if (!gameState.windBoosts) gameState.windBoosts = [];
+            gameState.windBoosts.push({ mesh: windGroup, collected: false, lane, z });
+        }
+        
+        // ========== LEVEL 4: UNDERWATER TUNNEL COLLECTIBLES ==========
+        function createPearl(lane, z) {
+            const pearlGroup = new THREE.Group();
+            
+            // Pearl sphere
+            const pearlGeom = new THREE.SphereGeometry(0.3, 16, 16);
+            const pearlMat = new THREE.MeshPhongMaterial({
+                color: 0xFFF8DC,
+                emissive: 0xF0E68C,
+                emissiveIntensity: 0.2,
+                shininess: 100
+            });
+            const pearl = new THREE.Mesh(pearlGeom, pearlMat);
+            
+            // Clam shell
+            const shellGeom = new THREE.SphereGeometry(0.5, 8, 4, 0, Math.PI);
+            const shellMat = new THREE.MeshLambertMaterial({ color: 0xFFB6C1 });
+            const shell = new THREE.Mesh(shellGeom, shellMat);
+            shell.rotation.x = -Math.PI / 4;
+            
+            pearlGroup.add(pearl);
+            pearlGroup.add(shell);
+            pearlGroup.position.set(LANE_POSITIONS[lane], 1, z);
+            scene.add(pearlGroup);
+            
+            if (!gameState.pearls) gameState.pearls = [];
+            gameState.pearls.push({ mesh: pearlGroup, collected: false, lane, z, value: 60 });
+        }
+        
+        function createOxygenBubble(lane, z) {
+            const bubbleGeom = new THREE.SphereGeometry(0.4, 16, 16);
+            const bubbleMat = new THREE.MeshBasicMaterial({
+                color: 0x87CEFA,
+                transparent: true,
+                opacity: 0.4
+            });
+            const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+            bubble.position.set(LANE_POSITIONS[lane], 1.2, z);
+            scene.add(bubble);
+            
+            if (!gameState.oxygenBubbles) gameState.oxygenBubbles = [];
+            gameState.oxygenBubbles.push({ mesh: bubble, collected: false, lane, z });
+        }
+        
+        // ========== LEVEL 5: VOLCANIC RUSH COLLECTIBLES ==========
+        function createLavaGem(lane, z) {
+            const gemGroup = new THREE.Group();
+            
+            // Lava gem
+            const gemGeom = new THREE.OctahedronGeometry(0.3);
+            const gemMat = new THREE.MeshLambertMaterial({
+                color: 0xFF4500,
+                emissive: 0xFF0000,
+                emissiveIntensity: 0.5
+            });
+            const gem = new THREE.Mesh(gemGeom, gemMat);
+            
+            // Glow effect
+            const glowGeom = new THREE.SphereGeometry(0.4, 8, 8);
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: 0xFF6347,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeom, glowMat);
+            
+            gemGroup.add(gem);
+            gemGroup.add(glow);
+            gemGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(gemGroup);
+            
+            if (!gameState.lavaGems) gameState.lavaGems = [];
+            gameState.lavaGems.push({ mesh: gemGroup, collected: false, lane, z, value: 80 });
+        }
+        
+        function createHeatShield(lane, z) {
+            const shieldGroup = new THREE.Group();
+            
+            // Heat shield icon
+            const shieldGeom = new THREE.TorusGeometry(0.4, 0.1, 8, 6);
+            const shieldMat = new THREE.MeshBasicMaterial({
+                color: 0xFFA500,
+                emissive: 0xFF8C00,
+                emissiveIntensity: 0.4
+            });
+            const shield = new THREE.Mesh(shieldGeom, shieldMat);
+            shield.rotation.x = Math.PI / 2;
+            
+            shieldGroup.add(shield);
+            shieldGroup.position.set(LANE_POSITIONS[lane], 1.2, z);
+            scene.add(shieldGroup);
+            
+            if (!gameState.heatShields) gameState.heatShields = [];
+            gameState.heatShields.push({ mesh: shieldGroup, collected: false, lane, z });
+        }
+        
+        // ========== LEVEL 6: ICE CAVERNS COLLECTIBLES ==========
+        function createIceCrystal(lane, z) {
+            const crystalGroup = new THREE.Group();
+            
+            // Ice crystal
+            const crystalGeom = new THREE.ConeGeometry(0.2, 0.8, 6);
+            const crystalMat = new THREE.MeshLambertMaterial({
+                color: 0x87CEEB,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            // Multiple crystals
+            for (let i = 0; i < 3; i++) {
+                const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+                crystal.position.set(
+                    (i - 1) * 0.3,
+                    0.4,
+                    0
+                );
+                crystal.rotation.z = (Math.random() - 0.5) * 0.3;
+                crystalGroup.add(crystal);
+            }
+            
+            crystalGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            scene.add(crystalGroup);
+            
+            if (!gameState.iceCrystals) gameState.iceCrystals = [];
+            gameState.iceCrystals.push({ mesh: crystalGroup, collected: false, lane, z, value: 50 });
+        }
+        
+        function createWarmthOrb(lane, z) {
+            const orbGeom = new THREE.SphereGeometry(0.35, 16, 16);
+            const orbMat = new THREE.MeshBasicMaterial({
+                color: 0xFF6347,
+                emissive: 0xFF4500,
+                emissiveIntensity: 0.5
+            });
+            const orb = new THREE.Mesh(orbGeom, orbMat);
+            orb.position.set(LANE_POSITIONS[lane], 1.2, z);
+            scene.add(orb);
+            
+            if (!gameState.warmthOrbs) gameState.warmthOrbs = [];
+            gameState.warmthOrbs.push({ mesh: orb, collected: false, lane, z });
+        }
+        
+        // ========== LEVEL 7: JUNGLE TEMPLE COLLECTIBLES ==========
+        function createGoldenIdol(lane, z) {
+            const idolGroup = new THREE.Group();
+            
+            // Idol statue
+            const bodyGeom = new THREE.CylinderGeometry(0.15, 0.2, 0.6);
+            const bodyMat = new THREE.MeshLambertMaterial({
+                color: 0xFFD700,
+                emissive: 0xFFA500,
+                emissiveIntensity: 0.3
+            });
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            
+            // Head
+            const headGeom = new THREE.SphereGeometry(0.2);
+            const head = new THREE.Mesh(headGeom, bodyMat);
+            head.position.y = 0.4;
+            
+            idolGroup.add(body);
+            idolGroup.add(head);
+            idolGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(idolGroup);
+            
+            if (!gameState.goldenIdols) gameState.goldenIdols = [];
+            gameState.goldenIdols.push({ mesh: idolGroup, collected: false, lane, z, value: 100 });
+        }
+        
+        function createJungleFruit(lane, z) {
+            const fruitGeom = new THREE.SphereGeometry(0.3, 8, 8);
+            const fruitMat = new THREE.MeshLambertMaterial({
+                color: 0xFF69B4,
+                emissive: 0xFF1493,
+                emissiveIntensity: 0.2
+            });
+            const fruit = new THREE.Mesh(fruitGeom, fruitMat);
+            fruit.position.set(LANE_POSITIONS[lane], 1.2, z);
+            scene.add(fruit);
+            
+            if (!gameState.jungleFruits) gameState.jungleFruits = [];
+            gameState.jungleFruits.push({ mesh: fruit, collected: false, lane, z, value: 30 });
+        }
+        
+        // ========== LEVEL 8: SPACE STATION COLLECTIBLES ==========
+        function createSpaceGem(lane, z) {
+            const gemGroup = new THREE.Group();
+            
+            // Space gem core
+            const coreGeom = new THREE.IcosahedronGeometry(0.25);
+            const coreMat = new THREE.MeshBasicMaterial({
+                color: 0x9400D3,
+                emissive: 0x4B0082,
+                emissiveIntensity: 0.5
+            });
+            const core = new THREE.Mesh(coreGeom, coreMat);
+            
+            // Orbit rings
+            const ringGeom = new THREE.TorusGeometry(0.4, 0.02, 8, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x9400D3 });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            
+            gemGroup.add(core);
+            gemGroup.add(ring);
+            gemGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(gemGroup);
+            
+            if (!gameState.spaceGems) gameState.spaceGems = [];
+            gameState.spaceGems.push({ mesh: gemGroup, collected: false, lane, z, value: 90 });
+        }
+        
+        function createAntigravityField(lane, z) {
+            const fieldGroup = new THREE.Group();
+            
+            // Antigravity particles
+            for (let i = 0; i < 8; i++) {
+                const particleGeom = new THREE.SphereGeometry(0.05);
+                const particleMat = new THREE.MeshBasicMaterial({
+                    color: 0x00CED1,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const particle = new THREE.Mesh(particleGeom, particleMat);
+                particle.userData.floatAngle = (i / 8) * Math.PI * 2;
+                particle.userData.floatRadius = 0.4;
+                fieldGroup.add(particle);
+            }
+            
+            fieldGroup.position.set(LANE_POSITIONS[lane], 1.2, z);
+            scene.add(fieldGroup);
+            
+            if (!gameState.antigravityFields) gameState.antigravityFields = [];
+            gameState.antigravityFields.push({ mesh: fieldGroup, collected: false, lane, z });
+        }
+        
+        // ========== LEVEL 9: CRYSTAL MINES COLLECTIBLES ==========
+        function createRainbowCrystal(lane, z) {
+            const crystalGroup = new THREE.Group();
+            
+            // Rainbow crystal with changing colors
+            const crystalGeom = new THREE.OctahedronGeometry(0.35);
+            const crystalMat = new THREE.MeshLambertMaterial({
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.4
+            });
+            const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+            crystal.userData.hueShift = Math.random() * Math.PI * 2;
+            
+            crystalGroup.add(crystal);
+            crystalGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(crystalGroup);
+            
+            if (!gameState.rainbowCrystals) gameState.rainbowCrystals = [];
+            gameState.rainbowCrystals.push({ mesh: crystalGroup, collected: false, lane, z, value: 120 });
+        }
+        
+        function createMiningPick(lane, z) {
+            const pickGroup = new THREE.Group();
+            
+            // Pick handle
+            const handleGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.8);
+            const handleMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const handle = new THREE.Mesh(handleGeom, handleMat);
+            handle.rotation.z = Math.PI / 4;
+            
+            // Pick head
+            const headGeom = new THREE.BoxGeometry(0.3, 0.1, 0.1);
+            const headMat = new THREE.MeshLambertMaterial({ color: 0x696969 });
+            const head = new THREE.Mesh(headGeom, headMat);
+            head.position.set(0.3, 0.3, 0);
+            
+            pickGroup.add(handle);
+            pickGroup.add(head);
+            pickGroup.position.set(LANE_POSITIONS[lane], 1.2, z);
+            scene.add(pickGroup);
+            
+            if (!gameState.miningPicks) gameState.miningPicks = [];
+            gameState.miningPicks.push({ mesh: pickGroup, collected: false, lane, z });
+        }
+        
+        // ========== LEVEL 10: FINAL DIMENSION COLLECTIBLES ==========
+        function createDimensionShard(lane, z) {
+            const shardGroup = new THREE.Group();
+            
+            // Dimension shard
+            const shardGeom = new THREE.TetrahedronGeometry(0.4);
+            const shardMat = new THREE.MeshBasicMaterial({
+                color: 0xFF1493,
+                emissive: 0xFF69B4,
+                emissiveIntensity: 0.6,
+                wireframe: true
+            });
+            const shard = new THREE.Mesh(shardGeom, shardMat);
+            
+            // Inner core
+            const coreGeom = new THREE.TetrahedronGeometry(0.2);
+            const coreMat = new THREE.MeshBasicMaterial({
+                color: 0xFFD700,
+                emissive: 0xFFD700
+            });
+            const core = new THREE.Mesh(coreGeom, coreMat);
+            
+            shardGroup.add(shard);
+            shardGroup.add(core);
+            shardGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(shardGroup);
+            
+            if (!gameState.dimensionShards) gameState.dimensionShards = [];
+            gameState.dimensionShards.push({ mesh: shardGroup, collected: false, lane, z, value: 150 });
+        }
+        
+        function createTimeOrb(lane, z) {
+            const orbGroup = new THREE.Group();
+            
+            // Time orb with clock hands
+            const orbGeom = new THREE.SphereGeometry(0.35, 16, 16);
+            const orbMat = new THREE.MeshBasicMaterial({
+                color: 0xFFD700,
+                transparent: true,
+                opacity: 0.4
+            });
+            const orb = new THREE.Mesh(orbGeom, orbMat);
+            
+            // Clock hands
+            const handGeom = new THREE.BoxGeometry(0.02, 0.3, 0.02);
+            const handMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const hourHand = new THREE.Mesh(handGeom, handMat);
+            const minuteHand = new THREE.Mesh(handGeom, handMat.clone());
+            minuteHand.scale.y = 1.3;
+            
+            orbGroup.add(orb);
+            orbGroup.add(hourHand);
+            orbGroup.add(minuteHand);
+            orbGroup.position.set(LANE_POSITIONS[lane], 1.5, z);
+            scene.add(orbGroup);
+            
+            if (!gameState.timeOrbs) gameState.timeOrbs = [];
+            gameState.timeOrbs.push({ mesh: orbGroup, collected: false, lane, z });
         }
         
         function activateSpeedBoost() {
@@ -10723,6 +12778,195 @@
                             break;
                     }
                 }
+                
+                // Level 3-10 specific obstacle animations
+                if (obstacle.mesh.userData.isLevel3Obstacle) {
+                    switch (obstacle.type) {
+                        case 'cloud_barrier':
+                            obstacle.mesh.children[0].children.forEach(cloud => {
+                                if (cloud.userData.floatSpeed) {
+                                    cloud.position.y += Math.sin(obstacle.animationTime * cloud.userData.floatSpeed) * 0.02;
+                                    cloud.material.opacity = 0.6 + Math.sin(obstacle.animationTime * 2) * 0.2;
+                                }
+                            });
+                            break;
+                        case 'wind_turbine':
+                            const bladeHub = obstacle.mesh.children[0].children.find(child => 
+                                child.userData.rotationSpeed
+                            );
+                            if (bladeHub) {
+                                bladeHub.rotation.y += bladeHub.userData.rotationSpeed * deltaTime * 0.001;
+                            }
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel4Obstacle) {
+                    switch (obstacle.type) {
+                        case 'bubble_stream':
+                            obstacle.mesh.children[0].children.forEach(bubble => {
+                                if (bubble.userData.riseSpeed) {
+                                    bubble.position.y += bubble.userData.riseSpeed * deltaTime * 0.001;
+                                    if (bubble.position.y > 3) bubble.position.y = 0;
+                                    bubble.scale.setScalar(1 + Math.sin(obstacle.animationTime * 3) * 0.1);
+                                }
+                            });
+                            break;
+                        case 'coral_reef':
+                            obstacle.mesh.children[0].children.forEach(fish => {
+                                if (fish.userData.swimAngle !== undefined) {
+                                    fish.userData.swimAngle += fish.userData.swimSpeed * deltaTime * 0.001;
+                                    fish.position.x = Math.cos(fish.userData.swimAngle) * fish.userData.swimRadius;
+                                    fish.position.z = Math.sin(fish.userData.swimAngle) * fish.userData.swimRadius * 0.5;
+                                    fish.position.y = 1 + Math.sin(fish.userData.swimAngle * 2) * 0.2;
+                                    fish.rotation.y = Math.atan2(fish.position.z, fish.position.x) + Math.PI / 2;
+                                }
+                            });
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel5Obstacle) {
+                    switch (obstacle.type) {
+                        case 'lava_burst':
+                            const burst = obstacle.mesh.children[0].children.find(child => 
+                                child.userData.burstSpeed
+                            );
+                            if (burst) {
+                                const burstCycle = Math.sin(obstacle.animationTime * burst.userData.burstSpeed);
+                                burst.position.y = -2 + (burstCycle + 1) * burst.userData.burstHeight;
+                                burst.material.opacity = 0.7 + burstCycle * 0.3;
+                            }
+                            break;
+                        case 'falling_rocks':
+                            obstacle.mesh.children[0].children.forEach(rock => {
+                                if (rock.userData.fallSpeed) {
+                                    rock.position.y -= rock.userData.fallSpeed * deltaTime * 0.001;
+                                    rock.rotation.x += deltaTime * 0.002;
+                                    rock.rotation.y += deltaTime * 0.003;
+                                    if (rock.position.y < -1) {
+                                        rock.position.y = 4 + Math.random() * 2;
+                                    }
+                                }
+                            });
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel6Obstacle) {
+                    switch (obstacle.type) {
+                        case 'ice_spikes':
+                            obstacle.mesh.children[0].children.forEach((spike, i) => {
+                                spike.material.opacity = 0.7 + Math.sin(obstacle.animationTime * 2 + i) * 0.1;
+                            });
+                            break;
+                        case 'sliding_ice':
+                            const ice = obstacle.mesh.children[0].children.find(child => 
+                                child.userData.slideSpeed
+                            );
+                            if (ice) {
+                                const slidePos = Math.sin(obstacle.animationTime * ice.userData.slideSpeed) * ice.userData.slideRange;
+                                ice.position.x = obstacle.initialX + slidePos;
+                            }
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel7Obstacle) {
+                    switch (obstacle.type) {
+                        case 'swinging_vines':
+                            const vinePivot = obstacle.mesh.children[0].children.find(child => 
+                                child.userData.swingSpeed
+                            );
+                            if (vinePivot) {
+                                vinePivot.rotation.z = Math.sin(obstacle.animationTime * vinePivot.userData.swingSpeed) * 
+                                    vinePivot.userData.swingAngle;
+                            }
+                            break;
+                        case 'temple_traps':
+                            const trap = obstacle.mesh.children[0];
+                            const block = trap.children.find(child => child.userData.dropSpeed);
+                            if (block) {
+                                // Check if player is near
+                                const playerDist = Math.abs(player.position.z - obstacle.z);
+                                if (playerDist < 5 && !block.userData.dropTrigger) {
+                                    block.userData.dropTrigger = true;
+                                }
+                                if (block.userData.dropTrigger) {
+                                    block.position.y -= block.userData.dropSpeed * deltaTime * 0.001;
+                                    if (block.position.y < 0.5) {
+                                        block.position.y = 0.5;
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel8Obstacle) {
+                    switch (obstacle.type) {
+                        case 'asteroid_field':
+                            obstacle.mesh.children[0].children.forEach(asteroid => {
+                                if (asteroid.userData.rotationAxis) {
+                                    asteroid.rotateOnAxis(asteroid.userData.rotationAxis, 
+                                        asteroid.userData.rotationSpeed * deltaTime * 0.001);
+                                }
+                            });
+                            break;
+                        case 'gravity_well':
+                            obstacle.mesh.children[0].children.forEach(ring => {
+                                if (ring.userData.rotationSpeed) {
+                                    ring.rotation.y += ring.userData.rotationSpeed * deltaTime * 0.001;
+                                    ring.rotation.x = Math.sin(obstacle.animationTime * 0.5) * 0.2;
+                                }
+                            });
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel9Obstacle) {
+                    switch (obstacle.type) {
+                        case 'crystal_shards':
+                            obstacle.mesh.children[0].children.forEach((crystal, i) => {
+                                crystal.material.emissiveIntensity = 0.3 + 
+                                    Math.sin(obstacle.animationTime * 3 + i) * 0.3;
+                                crystal.rotation.y += deltaTime * 0.001;
+                            });
+                            break;
+                        case 'light_beams':
+                            obstacle.mesh.children[0].children.forEach(beam => {
+                                if (beam.userData.pulseSpeed) {
+                                    beam.material.opacity = 0.5 + 
+                                        Math.sin(obstacle.animationTime * beam.userData.pulseSpeed) * 0.3;
+                                }
+                            });
+                            break;
+                    }
+                }
+                
+                if (obstacle.mesh.userData.isLevel10Obstacle) {
+                    switch (obstacle.type) {
+                        case 'reality_tear':
+                            obstacle.mesh.children[0].children.forEach(rift => {
+                                if (rift.userData.warpSpeed) {
+                                    rift.rotation.y += rift.userData.warpSpeed * deltaTime * 0.001;
+                                    rift.scale.y = 1 + Math.sin(obstacle.animationTime * rift.userData.warpSpeed) * 0.2;
+                                    rift.material.opacity = 0.7 + Math.random() * 0.2;
+                                }
+                            });
+                            break;
+                        case 'time_distortion':
+                            obstacle.mesh.children[0].children.forEach(child => {
+                                if (child.userData.rotationSpeed) {
+                                    child.rotation.z += child.userData.rotationSpeed * deltaTime * 0.001;
+                                }
+                                if (child.type === 'Mesh' && child.geometry.type === 'SphereGeometry') {
+                                    child.material.opacity = 0.2 + Math.sin(obstacle.animationTime * 2) * 0.1;
+                                }
+                            });
+                            break;
+                    }
+                }
             });
         }
 
@@ -11024,9 +13268,14 @@
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
                 
-                // Update Level 2 environment if active
+                // Apply level-specific mechanics
+                applyLevelMechanics();
+                
+                // Update level-specific environments
                 if (gameState.currentLevel === 2) {
                     updateLevel2Environment(deltaTime);
+                } else if (gameState.currentLevel >= 3) {
+                    updateLevelEnvironments(deltaTime);
                 }
                 
                 // Update visual effects based on speed
@@ -12003,9 +14252,14 @@
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
                 
-                // Update Level 2 environment if active
+                // Apply level-specific mechanics
+                applyLevelMechanics();
+                
+                // Update level-specific environments
                 if (gameState.currentLevel === 2) {
                     updateLevel2Environment(deltaTime);
+                } else if (gameState.currentLevel >= 3) {
+                    updateLevelEnvironments(deltaTime);
                 }
                 
                 // Update visual effects based on speed
