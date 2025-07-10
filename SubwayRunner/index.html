@@ -3703,11 +3703,14 @@
                     <button onclick="startGame()">🎮 Nochmal versuchen</button>
                 `;
             } else {
+                const nextLevel = Math.min(gameState.currentLevel + 1, 10);
                 menu.innerHTML = `
                     <h1>Game Over!</h1>
                     <p>Final Score: ${currentScore}</p>
                     <p>Zeit überlebt: ${currentSurvivalTime}s</p>
+                    <p>Level ${gameState.currentLevel} nicht geschafft!</p>
                     <button onclick="startGame()">🎮 Nochmal spielen</button>
+                    <button onclick="testLevel(${nextLevel}); startGame();" style="margin-left: 10px; background: #ff6600;">🚀 Nächstes Level (${nextLevel})</button>
                 `;
             }
             
