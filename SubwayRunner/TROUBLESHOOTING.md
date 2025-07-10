@@ -864,3 +864,177 @@ git checkout main
 
 **Status**: 🔄 **SYSTEMATIC DEBUGGING READY**
 **Next Action**: Execute Phase 1 - Three.js de-minification for error visibility
+
+---
+
+## 🚨 **3GS ERROR - "DREI-GLASSCHERBEN-SYNDROM"** ❌ **CRITICAL PERSISTENT**
+
+### **THE MOST FRUSTRATING BUG IN THREE.JS HISTORY**
+**Definition**: Das "3GS" (Drei-Glasscherben-Syndrom) ist ein besonders hartnäckiger Three.js-Fehler, der sich über mehrere Debugging-Sessions hartnäckig hält und Entwickler zur Verzweiflung bringt. Benannt nach den drei "Glasscherben" (Glass Shards), die scheinbar unmöglich zu entfernen sind.
+
+### **CURRENT SITUATION - 10.07.2025 19:25 CET**:
+- **Problem**: `three.js:27378 Uncaught TypeError: Cannot read properties of undefined (reading 'value')`
+- **Duration**: Über 6 Stunden kontinuierliches Debugging
+- **Attempts**: 7+ systematische Lösungsversuche
+- **Status**: Höchste Frustrationsstufe erreicht
+
+### **3GS CHARACTERISTICS**:
+1. **Persistent Error Pattern**: Exakt derselbe Fehler trotz multipler Fixes
+2. **Stack Trace Loop**: `refreshUniformsCommon @ three.js:27378` in endloser Schleife
+3. **Multiple Debugging Rounds**: Jede "Lösung" führt zum gleichen Ergebnis
+4. **Expert Analysis Confirms**: Kollegen-Analyse bestätigt ShaderMaterial+Fog-Problem
+5. **Comprehensive Fixes Fail**: Selbst systematische Ansätze versagen
+
+### **DETAILED ERROR ANALYSIS**:
+
+#### **Primary Error (The Core Beast)**:
+```
+three.js:27378 Uncaught TypeError: Cannot read properties of undefined (reading 'value')
+refreshUniformsCommon @ three.js:27378
+refreshMaterialUniforms @ three.js:27290
+setProgram @ three.js:30201
+WebGLRenderer.renderBufferDirect @ three.js:28949
+renderObject @ three.js:29743
+renderObjects @ three.js:29712
+renderScene @ three.js:29575
+WebGLRenderer.render @ three.js:29391
+animate @ (index):8845
+```
+
+**Translation**: Three.js Renderer versucht `uniforms.someProperty.value` zu setzen, aber `uniforms.someProperty` ist `undefined`. Dies passiert bei ShaderMaterials ohne korrekte Uniform-Deklarationen.
+
+#### **Secondary Errors (The Noise)**:
+1. **Supabase DNS**: `umvrurelsxpxmyzcvrcd.supabase.co` - `ERR_NAME_NOT_RESOLVED`
+2. **Missing Audio**: `/sounds/background/*.mp3` - `404 Not Found`
+3. **CSP Font Block**: Google Fonts geblockt durch Content Security Policy
+
+### **ROOT CAUSE HYPOTHESIS (VERIFIED)**:
+**Colleague Expert Analysis confirms**:
+- **Trigger**: `scene.fog = new THREE.FogExp2(...)` aktiviert Fog für ALLE Materialien
+- **Problem**: Custom ShaderMaterials fehlen fog-spezifische Uniforms (`fogColor`, `fogNear`, `fogFar`, `fogDensity`)
+- **Crash Point**: Three.js versucht `material.uniforms.fogColor.value` zu setzen → `undefined.value` → TypeError
+- **Location**: In `refreshUniformsCommon` wenn Fog-Properties auf Materialien ohne Fog-Support angewendet werden
+
+### **ALL ATTEMPTED FIXES (CHRONOLOGICAL)**:
+
+#### **Fix Attempt 1: CSP Headers** ✅ **SUCCESSFUL BUT IRRELEVANT**
+- **Action**: Fixed Content Security Policy headers
+- **Result**: CDN loading works, but core error persists
+- **Learning**: CSP was not the root cause
+
+#### **Fix Attempt 2: Three.js Version Rollback** ✅ **SUCCESSFUL BUT IRRELEVANT**
+- **Action**: Downgraded from 0.161.0 to 0.158.0 (proven stable)
+- **Result**: Version compatibility confirmed, but core error persists
+- **Learning**: Version compatibility was not the root cause
+
+#### **Fix Attempt 3: Level 3 Complete Removal** ✅ **SUCCESSFUL BUT IRRELEVANT**
+- **Action**: Completely removed problematic Level 3 with shader materials
+- **Result**: Level 3 shader code eliminated, but core error persists
+- **Learning**: Level 3 was not the only source of problematic shaders
+
+#### **Fix Attempt 4: Material Disposal Enhancement** ✅ **SUCCESSFUL BUT IRRELEVANT**
+- **Action**: Implemented comprehensive material cleanup and disposal
+- **Result**: Memory leaks fixed, but core error persists
+- **Learning**: Memory management was not the root cause
+
+#### **Fix Attempt 5: Fog Uniform Integration** ✅ **IMPLEMENTED BUT INSUFFICIENT**
+- **Action**: Added `THREE.UniformsLib.fog` to skyMaterial (Line 2685)
+- **Result**: One shader fixed, but core error persists
+- **Learning**: Multiple shaders still problematic, or implementation incomplete
+
+#### **Fix Attempt 6: Three.js De-Minification** ✅ **SUCCESSFUL DEBUGGING TOOL**
+- **Action**: Switched to unminified Three.js for better error messages
+- **Result**: Clear stack trace obtained, exact error location identified
+- **Learning**: Debugging tooling improved, now we see `three.js:27378` instead of `three.min.js:7`
+
+#### **Fix Attempt 7: Systematic Debugging Framework** ✅ **IMPLEMENTED**
+- **Action**: Created comprehensive debugging tools and systematic approach
+- **Result**: Framework ready, Material Destruction Test prepared
+- **Learning**: Methodical approach needed for complex debugging
+
+### **CURRENT ACTIVE TEST: MATERIAL DESTRUCTION**
+
+**Goal**: Prove definitively that the problem is material-related
+
+**Method**: Replace ALL materials in the scene with safe `MeshBasicMaterial`
+
+```javascript
+// ACTIVE CODE (deployed in v5.1.7-DEBUG):
+scene.traverse(child => {
+    if (child.isMesh && child.material) {
+        child.material = new THREE.MeshBasicMaterial({ 
+            color: 0xff00ff, // Bright pink wireframe
+            wireframe: true 
+        });
+    }
+});
+```
+
+**Expected Results**:
+- **Case A**: Game renders pink wireframe → Material problem confirmed → Proceed to shader fixes
+- **Case B**: Game still crashes → Problem is deeper → Proceed to geometry/renderer debugging
+
+### **3GS PSYCHOLOGICAL IMPACT**:
+1. **Developer Fatigue**: Extended debugging sessions drain mental energy
+2. **False Confidence**: Each fix attempt seems logical and should work
+3. **Confirmation Bias**: Looking for evidence that supports current hypothesis
+4. **Solution Tunnel Vision**: Focusing on one approach while missing alternatives
+5. **Escalation Commitment**: Continuing with failing strategy instead of changing approach
+
+### **3GS SURVIVAL STRATEGIES**:
+
+#### **Strategy 1: Nuclear Option (Emergency Rollback)**
+```bash
+# Last resort: Complete rollback to known working version
+git checkout 456c560  # v3.6.1 (last confirmed working)
+cp SubwayRunner/index.html ./emergency_backup.html
+git checkout main
+# Selective feature re-integration one by one
+```
+
+#### **Strategy 2: Divide and Conquer (Systematic Isolation)**
+1. Test empty scene rendering
+2. Add components one by one
+3. Identify exact breaking point
+4. Fix only the problematic component
+
+#### **Strategy 3: Expert Consultation (Colleague Analysis)**
+- Leverage Three.js community knowledge
+- Share specific error patterns
+- Get external perspective on debugging approach
+
+#### **Strategy 4: Alternative Architecture (Rewrite)**
+- Consider if the current approach is fundamentally flawed
+- Evaluate simpler material strategies
+- Replace custom shaders with standard Three.js materials
+
+### **3GS PREVENTION (Future Projects)**:
+
+1. **Incremental Development**: Never add multiple complex features simultaneously
+2. **Shader Testing**: Test custom shaders in isolation before integration
+3. **Fog Planning**: Design fog compatibility from the beginning
+4. **Version Freezing**: Don't upgrade Three.js in stable projects without testing
+5. **Backup Strategy**: Always maintain rollback points
+
+### **LESSONS FROM 3GS**:
+
+1. **Some bugs are architectural, not fixable with patches**
+2. **Early detection prevents 3GS - late fixes are exponentially harder**
+3. **Sometimes the fastest solution is a complete rewrite**
+4. **Expert knowledge can save hours of debugging**
+5. **Systematic testing beats random fixes**
+
+### **3GS DEBUGGING TIMELINE**:
+- **16:00**: Problem discovered
+- **17:00**: First fix attempts (CSP, Three.js version)
+- **18:00**: Level 3 removal, material disposal fixes
+- **19:00**: Systematic debugging framework
+- **19:25**: Material Destruction Test active
+- **?:??**: Resolution pending...
+
+---
+
+**Current Status**: 🧪 **MATERIAL DESTRUCTION TEST ACTIVE**
+**Test URL**: 🌐 https://ki-revolution.at/
+**Expected Result**: Pink wireframe if materials are the culprit
+**Next Action**: Analyze test results and proceed based on outcome

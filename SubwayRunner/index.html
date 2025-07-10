@@ -8826,13 +8826,12 @@
                 updateUI();
             }
             
-            // 🚨 DEBUG: Material Destruction Test (Phase 2)
-            // Uncomment this block to test if materials are causing the crash
-            /*
-            console.log('🔍 [DEBUG] Testing material safety...');
+            // 🚨 DEBUG: Material Destruction Test (Phase 2) - ACTIVATED
+            // Testing if materials are causing the refreshUniformsCommon crash
+            console.log('🔍 [DEBUG] MATERIAL DESTRUCTION TEST ACTIVE - Replacing all materials...');
             scene.traverse(child => {
                 if (child.isMesh && child.material) {
-                    console.log('🔍 [DEBUG] Replacing material on:', child.name, 'Type:', child.material.type);
+                    console.log('🔍 [DEBUG] Replacing material on:', child.name || 'unnamed', 'Type:', child.material.type);
                     child.material = new THREE.MeshBasicMaterial({ 
                         color: 0xff00ff, // Bright pink for visibility
                         wireframe: true 
@@ -8840,7 +8839,7 @@
                 }
             });
             console.log('🔍 [DEBUG] All materials replaced with safe pink wireframe');
-            */
+            console.log('🔍 [DEBUG] If game renders now, the problem was material-related!');
             
             renderer.render(scene, camera);
         }
