@@ -181,6 +181,27 @@ Line 5329: gameState.score += scoreIncrease;       // Main score (FIXED)
 - **Impact**: Gesture controls non-functional
 - **Cause**: Initialization timing or object reference issue
 
+### **5. MISSING 'SKIP TO NEXT LEVEL' BUTTON** 🚨 **HIGH** ✅ **SOLVED**
+- **Severity**: Critical UX Problem
+- **Issue**: No direct way to advance to next level after achieving highscore
+- **User Experience**: Extremely frustrating - user must enter name first, then see level button
+- **Root Cause**: Button exists in `showGameOverMenu` but not in `showNameInputDialog`
+- **Solution**: ✅ Added "🚀 Skip to Next Level" button directly in Highscore Dialog
+- **Status**: ✅ **FIXED in V7.8.0** - Button now immediately visible upon highscore
+
+### **6. POOR COLLECTIBLE DISTRIBUTION** 🚨 **CRITICAL** ✅ **SOLVED**
+- **Severity**: Game-breaking progression issue  
+- **Issue**: 10 Broccolis spawning in first 10-20 seconds despite limits
+- **Root Cause**: Random-based spawning without time-phase control
+- **Analysis**: Limits worked for TOTAL count but not TIME DISTRIBUTION
+- **Solution**: ✅ **ULTIMATE TIME-PHASE DISTRIBUTION SYSTEM**
+  - **Phase 1 (0-20s)**: Max 7 collectibles
+  - **Phase 2 (20-40s)**: Max 7 collectibles (total 14)
+  - **Phase 3 (40-60s)**: Max 6 collectibles (total 20)
+  - **Obstacle-First Coordination**: Collectibles only spawn in safe windows after obstacles
+  - **Smart Spawn Rates**: Phase-based rates (0.003, 0.004, 0.005) with adaptive reduction
+- **Status**: ✅ **FIXED in V7.8.0** - Perfect distribution over 60 seconds
+
 ---
 
 ## 🎯 **NEXT TROUBLESHOOTING STEPS**

@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.7.0-SPAM-FIX-ULTIMATE<br>
+            🚀 V7.8.0-ULTIMATE-DISTRIBUTION<br>
             📅 10.07.2025
         </div>
         
@@ -710,6 +710,8 @@
             <br>
             <button onclick="submitHighscore()">💾 Speichern</button>
             <button onclick="skipHighscore()">⏭️ Überspringen</button>
+            <br><br>
+            <button id="skipToNextLevelBtn" onclick="skipToNextLevel()" style="background: #ff6600; margin-top: 10px; width: 100%; font-size: 16px; padding: 12px;">🚀 Skip to Next Level</button>
         </div>
     </div>
 
@@ -3786,6 +3788,26 @@
             document.getElementById('playerNameInput').value = '';
         }
 
+        // NEW: Skip to Next Level function for Highscore Dialog
+        window.skipToNextLevel = function() {
+            console.log('🚀 skipToNextLevel called');
+            
+            // Hide the dialog
+            document.getElementById('nameInputDialog').style.display = 'none';
+            document.getElementById('playerNameInput').value = '';
+            
+            // Calculate next level (max 10)
+            const nextLevel = Math.min(gameState.currentLevel + 1, 10);
+            
+            console.log(`🎯 Advancing from Level ${gameState.currentLevel} to Level ${nextLevel}`);
+            
+            // Load next level and start game
+            testLevel(nextLevel);
+            setTimeout(() => {
+                startGame();
+            }, 100); // Small delay to ensure level is loaded
+        };
+
         // Handle Enter key in name input
         document.addEventListener('DOMContentLoaded', () => {
             const nameInput = document.getElementById('playerNameInput');
@@ -6796,8 +6818,8 @@
                     return true;
                 };
                 
-                // 🚨 SENIOR DEVELOPER RULE: UNBREACHABLE COLLECTIBLE LIMITS
-                // CRITICAL FIX: Check limits BEFORE random spawn to prevent spam
+                // 🎯 ULTIMATE COLLECTIBLE DISTRIBUTION SYSTEM (SENIOR DEVELOPER PLAN)
+                // TIME-PHASE Based Distribution: Perfect spread over 60 seconds
                 
                 // Count ACTIVE collectibles in world (spawned but not collected)
                 const activeKiwis = gameState.kiwis.length;
@@ -6818,39 +6840,81 @@
                     // console.log(`🛑 LIMIT REACHED: Total=${totalCollectibles}, K=${totalKiwis}, B=${totalBroccolis}`);
                     // TODO: Only spawn stars after this point
                 } else {
-                    // Only now check spawn rate (limits passed, safe to spawn)
-                    const baseCoinRate = 0.008; // REDUCED: Less spam potential
-                    const maxCoinRate = 0.025; // REDUCED: Better control
-                    const speedFactor = Math.max(0.3, 1 - (gameState.speed - 100) / 400); // Even more reduction at high speeds
-                    const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.2)) * speedFactor;
+                    // 🕒 TIME-PHASE DISTRIBUTION SYSTEM
+                    // Phase 1 (0-20s): Max 6-7 collectibles, Phase 2 (20-40s): 6-7, Phase 3 (40-60s): 6-7
                     
-                    if (Math.random() < progressiveCoinRate) {
-                        // Progressive kiwi pattern complexity
+                    const elapsedTime = 60 - gameState.timeRemaining; // 0-60 seconds
+                    let currentPhase, phaseProgress, phaseMaxCollectibles;
+                    
+                    if (elapsedTime < 20) {
+                        currentPhase = 1;
+                        phaseProgress = elapsedTime / 20; // 0-1 within phase
+                        phaseMaxCollectibles = 7; // Phase 1: Max 7
+                    } else if (elapsedTime < 40) {
+                        currentPhase = 2;
+                        phaseProgress = (elapsedTime - 20) / 20; // 0-1 within phase
+                        phaseMaxCollectibles = 7; // Phase 2: Max 7 (total 14)
+                    } else {
+                        currentPhase = 3;
+                        phaseProgress = (elapsedTime - 40) / 20; // 0-1 within phase
+                        phaseMaxCollectibles = 6; // Phase 3: Max 6 (total 20)
+                    }
+                    
+                    // Calculate expected collectibles for current time
+                    const expectedCollectibles = Math.floor(phaseProgress * phaseMaxCollectibles) + 
+                                               (currentPhase - 1) * 7; // Previous phases
+                    
+                    // PHASE-BASED SPAWN CONTROL: Only spawn if we're behind schedule
+                    if (totalCollectibles >= expectedCollectibles + 2) {
+                        // We're ahead of schedule, skip spawning to maintain distribution
+                        // console.log(`⏸️ PHASE ${currentPhase}: Ahead of schedule (${totalCollectibles}/${expectedCollectibles})`);
+                        return;
+                    }
+                    
+                    // OBSTACLE-FIRST APPROACH: Only spawn after obstacles (Smart Spacing)
+                    // Check if enough distance from last obstacle spawn
+                    const lastObstacleZ = obstacles.length > 0 ? obstacles[obstacles.length - 1].z : -999;
+                    const safeSpawnDistance = 25; // Minimum distance after obstacle
+                    
+                    if (Math.abs(lastObstacleZ - (-35)) < safeSpawnDistance) {
+                        // Too close to last obstacle, wait for safe window
+                        return;
+                    }
+                    
+                    // SMART SPAWN RATE: Lower rate, better timing
+                    const phaseSpawnRate = currentPhase === 1 ? 0.003 : 
+                                         currentPhase === 2 ? 0.004 : 0.005; // Slightly higher in later phases
+                    const adaptiveSpawnRate = phaseSpawnRate * Math.max(0.5, 1 - phaseProgress * 0.3); // Reduce near phase end
+                    
+                    if (Math.random() < adaptiveSpawnRate) {
+                        // PHASE-BASED PATTERN COMPLEXITY
                         let pattern;
                         const patternRand = Math.random();
                         
-                        if (gameProgress < 0.3) {
-                            // Early game: mostly single kiwis
-                            pattern = patternRand < 0.8 ? 'single' : 'line';
-                        } else if (gameProgress < 0.6) {
-                            // Mid game: introduce more patterns
-                            if (patternRand < 0.5) {
+                        if (currentPhase === 1) {
+                            // Phase 1 (0-20s): Simple patterns only
+                            pattern = patternRand < 0.9 ? 'single' : 'line';
+                        } else if (currentPhase === 2) {
+                            // Phase 2 (20-40s): Introduce more patterns gradually
+                            if (patternRand < 0.6) {
                                 pattern = 'single';
-                            } else if (patternRand < 0.8) {
+                            } else if (patternRand < 0.9) {
                                 pattern = 'line';
                             } else {
                                 pattern = 'arc';
                             }
                         } else {
-                            // Late game: more complex patterns, more rewards
-                            if (patternRand < 0.3) {
+                            // Phase 3 (40-60s): More complex patterns for final challenge
+                            if (patternRand < 0.4) {
                                 pattern = 'single';
-                            } else if (patternRand < 0.6) {
+                            } else if (patternRand < 0.7) {
                                 pattern = 'line';
                             } else {
                                 pattern = 'arc';
                             }
                         }
+                        
+                        console.log(`🕒 PHASE ${currentPhase} (${elapsedTime.toFixed(1)}s): Spawning ${pattern} pattern. Progress: ${totalCollectibles}/${expectedCollectibles} expected`);
                         
                         // DOUBLE-CHECK: Ensure we can still spawn (safety net)
                         const safetyCheckTotal = (activeKiwis + collectedKiwis) + (activeBroccolis + collectedBroccolis);
