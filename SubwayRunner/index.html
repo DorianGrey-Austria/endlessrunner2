@@ -527,13 +527,62 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.3.0-SMART-DEBUG<br>
+            🚀 V7.3.1-MEGA-FIX<br>
             📅 10.07.2025
         </div>
         
         <!-- Debug Console Toggle -->
         <div id="debugToggle" onclick="window.errorTracker?.toggle()" title="Live Error Console (Ctrl+E)">
             🚨 DEBUG
+        </div>
+        
+        <!-- Level Test Toggle -->
+        <div id="levelTestToggle" onclick="document.getElementById('levelTestPanel').style.display='block'" title="Level Testing Panel" style="
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            background: rgba(0, 255, 0, 0.9);
+            color: black;
+            border: 2px solid #00ff00;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+        ">
+            🎮 LEVELS
+        </div>
+        
+        <!-- 🎮 LEVEL TESTING PANEL -->
+        <div id="levelTestPanel" style="
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff00;
+            z-index: 10000;
+            display: none;
+        ">
+            <div style="font-weight: bold; margin-bottom: 8px;">🎮 LEVEL TESTING</div>
+            <button onclick="testLevel(1)" style="margin: 2px; padding: 4px 8px; background: #006600; color: white; border: none; border-radius: 3px; cursor: pointer;">L1 Subway</button><br>
+            <button onclick="testLevel(2)" style="margin: 2px; padding: 4px 8px; background: #0066cc; color: white; border: none; border-radius: 3px; cursor: pointer;">L2 Cyberpunk</button><br>
+            <button onclick="testLevel(3)" style="margin: 2px; padding: 4px 8px; background: #cc0066; color: white; border: none; border-radius: 3px; cursor: pointer;">L3 Space</button><br>
+            <button onclick="testLevel(4)" style="margin: 2px; padding: 4px 8px; background: #cc6600; color: white; border: none; border-radius: 3px; cursor: pointer;">L4 Jungle</button><br>
+            <button onclick="testLevel(5)" style="margin: 2px; padding: 4px 8px; background: #0099cc; color: white; border: none; border-radius: 3px; cursor: pointer;">L5 Ice</button><br>
+            <button onclick="testLevel(6)" style="margin: 2px; padding: 4px 8px; background: #0066aa; color: white; border: none; border-radius: 3px; cursor: pointer;">L6 Ocean</button><br>
+            <button onclick="testLevel(7)" style="margin: 2px; padding: 4px 8px; background: #cc9900; color: white; border: none; border-radius: 3px; cursor: pointer;">L7 Desert</button><br>
+            <button onclick="testLevel(8)" style="margin: 2px; padding: 4px 8px; background: #009900; color: white; border: none; border-radius: 3px; cursor: pointer;">L8 Forest</button><br>
+            <button onclick="testLevel(9)" style="margin: 2px; padding: 4px 8px; background: #cc3300; color: white; border: none; border-radius: 3px; cursor: pointer;">L9 Volcano</button><br>
+            <button onclick="testLevel(10)" style="margin: 2px; padding: 4px 8px; background: #9900cc; color: white; border: none; border-radius: 3px; cursor: pointer;">L10 Crystal</button><br>
+            <hr style="margin: 8px 0; border: 1px solid #00ff00;">
+            <button onclick="document.getElementById('levelTestPanel').style.display='none'" style="margin: 2px; padding: 4px 8px; background: #cc0000; color: white; border: none; border-radius: 3px; cursor: pointer;">Close</button>
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -2430,6 +2479,57 @@
         let visualSpeed = 0.08;
         let lastFrameTime = 0;
         const SPEED_LERP_FACTOR = 0.05;
+
+        // 🎮 LEVEL TESTING FUNCTION
+        function testLevel(levelNumber) {
+            console.log(`🎮 [Testing] Switching to Level ${levelNumber}`);
+            
+            // Force set current level
+            gameState.currentLevel = levelNumber;
+            gameState.score = (levelNumber - 1) * 1000; // Set score to trigger level
+            
+            // Update UI
+            const levelDisplay = document.getElementById('levelDisplay');
+            if (levelDisplay) {
+                levelDisplay.textContent = `Level ${levelNumber}`;
+            }
+            
+            // Force level change through score
+            if (levelNumber === 1) {
+                // Reset to basic level 1
+                scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
+                document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
+                console.log('✅ Level 1 (Subway) activated');
+            } else {
+                // Simulate other levels with visual changes
+                const levelThemes = {
+                    2: { name: 'Cyberpunk', fog: 0x4B0082, bg: 'linear-gradient(to bottom, #4B0082 0%, #9400D3 100%)' },
+                    3: { name: 'Space', fog: 0x000033, bg: 'linear-gradient(to bottom, #000033 0%, #000066 100%)' },
+                    4: { name: 'Jungle', fog: 0x228B22, bg: 'linear-gradient(to bottom, #228B22 0%, #006400 100%)' },
+                    5: { name: 'Ice', fog: 0xB0E0E6, bg: 'linear-gradient(to bottom, #B0E0E6 0%, #87CEEB 100%)' },
+                    6: { name: 'Ocean', fog: 0x006994, bg: 'linear-gradient(to bottom, #006994 0%, #4682B4 100%)' },
+                    7: { name: 'Desert', fog: 0xDAA520, bg: 'linear-gradient(to bottom, #DAA520 0%, #F4A460 100%)' },
+                    8: { name: 'Forest', fog: 0x2F4F2F, bg: 'linear-gradient(to bottom, #2F4F2F 0%, #228B22 100%)' },
+                    9: { name: 'Volcano', fog: 0x8B0000, bg: 'linear-gradient(to bottom, #8B0000 0%, #FF4500 100%)' },
+                    10: { name: 'Crystal', fog: 0x9400D3, bg: 'linear-gradient(to bottom, #9400D3 0%, #8A2BE2 100%)' }
+                };
+                
+                const theme = levelThemes[levelNumber];
+                if (theme) {
+                    scene.fog = new THREE.FogExp2(theme.fog, 0.002);
+                    document.body.style.background = theme.bg;
+                    console.log(`✅ Level ${levelNumber} (${theme.name}) theme applied`);
+                }
+            }
+            
+            // Hide panel
+            document.getElementById('levelTestPanel').style.display = 'none';
+            
+            // Start/restart game if not running
+            if (!gameState.isPlaying) {
+                startGame();
+            }
+        }
 
         async function init() {
             console.log('Initializing Three.js scene...');
@@ -6399,8 +6499,8 @@
                         gameState.playerAction = 'running';
                         
                         // Additional validation: Ensure mesh position matches gameState
-                        if (playerGroup && playerGroup.position.y !== 0) {
-                            playerGroup.position.y = 0;
+                        if (player && player.position.y !== 0) {
+                            player.position.y = 0;
                             console.log('🔧 [JumpFix] Player mesh position corrected to 0');
                         }
                     }
@@ -6644,6 +6744,7 @@
                 // Helper function to check if lane is safe for collectible spawning
                 const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
                     return !obstacles.some(obs => 
+                        obs && obs.position && // 🔧 NULL CHECK: Ensure obs and position exist
                         Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
                         Math.abs(obs.position.z - zPosition) < safeDistance
                     );
