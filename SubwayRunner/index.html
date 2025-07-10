@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.2.0-STABLE<br>
+            🚀 V7.2.1-HOTFIX<br>
             📅 10.07.2025
         </div>
         
@@ -914,11 +914,12 @@
                 errorConsole.id = 'liveErrorConsole';
                 errorConsole.innerHTML = `
                     <div id="errorHeader">
-                        🚨 Live Error Console 
+                        🚨 Live Debug Console 
                         <button id="toggleErrors" onclick="window.errorTracker.toggle()">Hide</button>
                         <button id="clearErrors" onclick="window.errorTracker.clear()">Clear</button>
                         <button id="copyErrors" onclick="window.errorTracker.copyErrors()">Copy</button>
                     </div>
+                    <div id="metricsContent"></div>
                     <div id="errorContent"></div>
                 `;
                 
@@ -953,10 +954,22 @@
                     align-items: center;
                 `;
                 
+                // Style the metrics area
+                const metricsContent = document.getElementById('metricsContent');
+                metricsContent.style.cssText = `
+                    background: rgba(0, 100, 0, 0.2);
+                    border: 1px solid #00ff00;
+                    margin: 4px;
+                    padding: 6px;
+                    font-size: 10px;
+                    color: #00ff00;
+                    border-radius: 3px;
+                `;
+                
                 // Style the content area
                 const content = document.getElementById('errorContent');
                 content.style.cssText = `
-                    max-height: 250px;
+                    max-height: 200px;
                     overflow-y: auto;
                     padding: 8px;
                     color: #fff;
@@ -986,6 +999,60 @@
                 });
                 
                 this.errorDisplay = errorConsole;
+                
+                // Start live metrics monitoring
+                this.startMetricsMonitoring();
+            }
+            
+            startMetricsMonitoring() {
+                // Update metrics every 500ms
+                setInterval(() => {
+                    this.updateMetrics();
+                }, 500);
+            }
+            
+            updateMetrics() {
+                const metricsDiv = document.getElementById('metricsContent');
+                if (!metricsDiv || !this.isVisible) return;
+                
+                // Collect performance metrics
+                const memInfo = performance.memory || {};
+                const fps = this.calculateFPS();
+                const threejsInfo = window.renderer ? window.renderer.info : null;
+                
+                metricsDiv.innerHTML = `
+                    📊 LIVE METRICS:<br>
+                    🖥️ FPS: ${fps} | Memory: ${this.formatBytes(memInfo.usedJSHeapSize || 0)}<br>
+                    🎮 Player: Y=${window.gameState?.playerY?.toFixed(2) || 'N/A'} | Speed: ${window.gameState?.speed?.toFixed(2) || 'N/A'}<br>
+                    🎯 Score: ${window.gameState?.score || 0} | Level: ${window.gameState?.currentLevel || 1}<br>
+                    ${threejsInfo ? `🔺 Three.js: ${threejsInfo.render.triangles} triangles | ${threejsInfo.memory.geometries} geo` : ''}
+                `;
+            }
+            
+            calculateFPS() {
+                if (!this.fpsCounter) {
+                    this.fpsCounter = { frames: 0, lastTime: performance.now() };
+                }
+                
+                this.fpsCounter.frames++;
+                const now = performance.now();
+                
+                if (now - this.fpsCounter.lastTime >= 1000) {
+                    const fps = Math.round(this.fpsCounter.frames * 1000 / (now - this.fpsCounter.lastTime));
+                    this.fpsCounter.frames = 0;
+                    this.fpsCounter.lastTime = now;
+                    this.currentFPS = fps;
+                }
+                
+                return this.currentFPS || 60;
+            }
+            
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
             }
             
             updateDisplay() {
@@ -5960,9 +6027,7 @@
                     if (player) {
                         player.position.y = 0;
                     }
-                    if (playerGroup) {
-                        playerGroup.position.y = 0;
-                    }
+                    // playerGroup is local variable, using global player instead
                 }
                 
                 // Double-check mesh positions match gameState
@@ -5971,10 +6036,7 @@
                     player.position.y = gameState.playerY;
                 }
                 
-                if (playerGroup && Math.abs(playerGroup.position.y) > tolerance) {
-                    console.warn(`🔧 [JumpFix] PlayerGroup floating: Y=${playerGroup.position.y}, correcting to 0`);
-                    playerGroup.position.y = 0;
-                }
+                // playerGroup check removed - using global player variable instead
             }
         }
 
@@ -6027,8 +6089,8 @@
                         gameState.playerAction = 'running';
                         
                         // Force mesh position to ground
-                        if (playerGroup) {
-                            playerGroup.position.y = 0;
+                        if (player) {
+                            player.position.y = 0;
                             console.log('🚨 [JumpFix] Emergency landing - Player forced to ground');
                         }
                         
