@@ -10,6 +10,22 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    
+    <!-- ==================== LEVEL SYSTEM SCRIPTS ==================== -->
+    <!-- Load level system components in order -->
+    <script src="LevelBase.js"></script>
+    <script src="LevelManagerPro.js"></script>
+    <script src="Level1_Subway.js"></script>
+    <script src="Level2_Cyberpunk.js"></script>
+    <script src="Level3_Space.js"></script>
+    <script src="Level4_Jungle.js"></script>
+    <script src="Level5_Ice.js"></script>
+    <script src="Level6_Underwater.js"></script>
+    <script src="Level7_Desert.js"></script>
+    <script src="Level8_Forest.js"></script>
+    <script src="Level9_Volcano.js"></script>
+    <script src="Level10_Crystal.js"></script>
+    <!-- ==================== END LEVEL SYSTEM SCRIPTS ==================== -->
     <style>
         * {
             margin: 0;
@@ -468,7 +484,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V6.0.0-3GS-ELIMINATION<br>
+            🚀 V7.0.0-10LEVELS<br>
             📅 10.07.2025
         </div>
         
@@ -765,6 +781,74 @@
         };
 
         console.log('✅ [MaterialFactory] Bulletproof material system ready!');
+        
+        // ==================== LEVEL SYSTEM INCLUDES ====================
+        
+        // Load all level classes before initializing the game
+        // Level Base Class and Manager must be loaded first
+        console.log('📋 [LevelSystem] Loading level base classes...');
+        
+        // Level Base Class
+        if (!window.LevelBase) {
+            console.error('❌ LevelBase not found! Loading LevelBase.js...');
+        }
+        
+        // Level Manager Pro
+        if (!window.LevelManagerPro) {
+            console.error('❌ LevelManagerPro not found! Loading LevelManagerPro.js...');
+        }
+        
+        console.log('🎮 [LevelSystem] Loading all 10 levels...');
+        
+        // Level 1: Already included (Subway Daylight)
+        // Level 2: Cyberpunk Night
+        if (!window.Level2_Cyberpunk) {
+            console.error('❌ Level2_Cyberpunk not found! Loading Level2_Cyberpunk.js...');
+        }
+        
+        // Level 3: Space Station
+        if (!window.Level3_Space) {
+            console.error('❌ Level3_Space not found! Loading Level3_Space.js...');
+        }
+        
+        // Level 4: Jungle Adventure
+        if (!window.Level4_Jungle) {
+            console.error('❌ Level4_Jungle not found! Loading Level4_Jungle.js...');
+        }
+        
+        // Level 5: Ice Crystal
+        if (!window.Level5_Ice) {
+            console.error('❌ Level5_Ice not found! Loading Level5_Ice.js...');
+        }
+        
+        // Level 6: Underwater
+        if (!window.Level6_Underwater) {
+            console.error('❌ Level6_Underwater not found! Loading Level6_Underwater.js...');
+        }
+        
+        // Level 7: Desert Storm
+        if (!window.Level7_Desert) {
+            console.error('❌ Level7_Desert not found! Loading Level7_Desert.js...');
+        }
+        
+        // Level 8: Forest Twilight
+        if (!window.Level8_Forest) {
+            console.error('❌ Level8_Forest not found! Loading Level8_Forest.js...');
+        }
+        
+        // Level 9: Volcano
+        if (!window.Level9_Volcano) {
+            console.error('❌ Level9_Volcano not found! Loading Level9_Volcano.js...');
+        }
+        
+        // Level 10: Crystal Dimension
+        if (!window.Level10_Crystal) {
+            console.error('❌ Level10_Crystal not found! Loading Level10_Crystal.js...');
+        }
+        
+        console.log('✅ [LevelSystem] All level checks complete! Ready for dynamic loading.');
+        
+        // ==================== END LEVEL SYSTEM INCLUDES ====================
         
         // Audio System
         class AudioManager {
@@ -1478,6 +1562,10 @@
             perfectRun: true,          // No hits taken
             totalDistance: 0,          // Total distance travelled
             
+            // 10-Level System
+            currentLevel: 1,           // Current level (1-10)
+            levelManager: null,        // LevelManagerPro instance
+            
             // Touch Controls
             touchStartX: 0,
             touchStartY: 0,
@@ -1571,7 +1659,7 @@
         let lastFrameTime = 0;
         const SPEED_LERP_FACTOR = 0.05;
 
-        function init() {
+        async function init() {
             console.log('Initializing Three.js scene...');
             try {
                 // Scene setup with conditional fog (3GS-Prevention)
@@ -1585,6 +1673,35 @@
                     console.log('✅ [3GS-Prevention] Fog ENABLED with bulletproof materials');
                     scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
                 }
+                
+                // ==================== INITIALIZE 10-LEVEL SYSTEM ====================
+                console.log('🎮 [LevelSystem] Initializing Level Manager Pro...');
+                
+                if (window.LevelManagerPro) {
+                    try {
+                        // Initialize Level Manager with scene and resource manager
+                        await LevelManagerPro.initialize(scene, window.ResourceManager);
+                        gameState.levelManager = LevelManagerPro;
+                        
+                        // Start with Level 1
+                        const level1Success = await LevelManagerPro.loadLevel(1, true); // Skip transition for initial load
+                        if (level1Success) {
+                            console.log('✅ [LevelSystem] Level 1 (Subway Daylight) loaded successfully');
+                            updateLevelDisplay(1);
+                        } else {
+                            console.error('❌ [LevelSystem] Failed to load Level 1');
+                        }
+                        
+                        console.log('✅ [LevelSystem] Level Manager Pro initialized successfully');
+                    } catch (error) {
+                        console.error('❌ [LevelSystem] Failed to initialize Level Manager Pro:', error);
+                        console.warn('⚠️ [LevelSystem] Continuing without level system...');
+                    }
+                } else {
+                    console.error('❌ [LevelSystem] LevelManagerPro not found! Check script loading order');
+                }
+                
+                // ==================== END LEVEL SYSTEM INITIALIZATION ====================
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -2464,7 +2581,7 @@
             obstacles.push(obstacleData);
         }
 
-        function startGameInternal() {
+        async function startGameInternal() {
             // Resume audio context
             audioManager.resume();
             
@@ -6172,6 +6289,52 @@
         // Check and award milestone rewards (FIXED: Based on time, not exploitable score)
         function checkMilestones() {
             const gameTimeElapsed = (performance.now() - gameState.gameStartTime) / 1000;
+            // ==================== 10-LEVEL PROGRESSION SYSTEM ====================
+            
+            // Level progression based on score milestones (every 1000 points)
+            const levelThreshold = 1000; // Points needed per level
+            const targetLevel = Math.min(10, Math.floor(gameState.score / levelThreshold) + 1);
+            
+            // Check for level progression
+            if (targetLevel > gameState.currentLevel && targetLevel <= 10) {
+                const previousLevel = gameState.currentLevel;
+                gameState.currentLevel = targetLevel;
+                
+                console.log(`🎮 [LevelProgression] Advancing from Level ${previousLevel} to Level ${targetLevel}!`);
+                
+                // Load new level using LevelManagerPro
+                if (window.LevelManagerPro) {
+                    LevelManagerPro.loadLevel(targetLevel).then(success => {
+                        if (success) {
+                            console.log(`✅ [LevelProgression] Successfully loaded Level ${targetLevel}`);
+                            
+                            // Show level progression UI
+                            showLevelProgressionUI(targetLevel, previousLevel);
+                            
+                            // Award level completion bonus
+                            const levelBonus = targetLevel * 200; // Increasing bonus per level
+                            addScore(levelBonus, `level_${targetLevel}_bonus`);
+                            
+                            // Update UI
+                            updateLevelDisplay(targetLevel);
+                            
+                        } else {
+                            console.error(`❌ [LevelProgression] Failed to load Level ${targetLevel}`);
+                            // Fallback to previous level
+                            gameState.currentLevel = previousLevel;
+                        }
+                    }).catch(error => {
+                        console.error(`❌ [LevelProgression] Error loading Level ${targetLevel}:`, error);
+                        gameState.currentLevel = previousLevel;
+                    });
+                } else {
+                    console.warn('⚠️ [LevelProgression] LevelManagerPro not available, using fallback');
+                    showLevelProgressionUI(targetLevel, previousLevel);
+                    updateLevelDisplay(targetLevel);
+                }
+            }
+            
+            // Original milestone system (now secondary to level progression)
             const milestoneInterval = 10; // Every 10 seconds of actual gameplay
             const currentMilestone = Math.floor(gameTimeElapsed / milestoneInterval) * milestoneInterval;
             
@@ -6179,12 +6342,14 @@
             if (currentMilestone > gameState.lastMilestone && currentMilestone > 0 && gameTimeElapsed >= milestoneInterval) {
                 gameState.lastMilestone = currentMilestone;
                 
-                // Calculate milestone bonus (reasonable amounts)
-                const milestoneBonus = Math.min(100, currentMilestone * 2); // Max 100 points per milestone
+                // Calculate milestone bonus (reduced since levels provide main progression)
+                const milestoneBonus = Math.min(50, currentMilestone); // Reduced bonus
                 addScore(milestoneBonus, 'milestone_bonus');
                 
-                // Show milestone UI
-                showMilestoneUI(currentMilestone, milestoneBonus);
+                // Show milestone UI (only if not in level transition)
+                if (gameState.currentLevel === Math.floor(gameState.score / levelThreshold) + 1) {
+                    showMilestoneUI(currentMilestone, milestoneBonus);
+                }
                 
                 // Audio celebration
                 audioManager.play('powerup');
@@ -6247,6 +6412,105 @@
                     milestoneDisplay.style.display = 'none';
                 }, 3000);
             }
+        }
+        
+        // ==================== LEVEL PROGRESSION UI FUNCTIONS ====================
+        
+        function showLevelProgressionUI(newLevel, previousLevel) {
+            console.log(`🎮 [UI] Showing level progression: ${previousLevel} → ${newLevel}`);
+            
+            // Use milestone display for level progression (better user experience)
+            const milestoneDisplay = document.getElementById('milestoneDisplay');
+            const milestoneText = document.getElementById('milestoneText');
+            const milestoneBonus = document.getElementById('milestoneBonus');
+            const milestoneIcon = document.getElementById('milestoneIcon');
+            
+            if (milestoneDisplay) {
+                milestoneDisplay.style.display = 'block';
+                milestoneDisplay.style.color = '#FFD700'; // Gold color for level progression
+                milestoneDisplay.style.fontSize = '28px'; // Larger for level progression
+                milestoneDisplay.style.background = 'rgba(255, 215, 0, 0.2)'; // Gold background
+                milestoneDisplay.style.border = '2px solid #FFD700'; // Gold border
+                milestoneDisplay.style.borderRadius = '12px';
+                milestoneDisplay.style.padding = '20px';
+                milestoneDisplay.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.5)';
+                
+                milestoneText.textContent = `LEVEL ${newLevel}!`;
+                milestoneBonus.textContent = `+${newLevel * 200} Punkte!`;
+                
+                // Level-specific icons
+                const levelIcons = ['🚇', '🌃', '🚀', '🌴', '❄️', '🌊', '🏜️', '🌲', '🌋', '💎'];
+                milestoneIcon.textContent = levelIcons[newLevel - 1] || '🎮';
+                
+                // Special level names
+                const levelNames = [
+                    'Subway Daylight',
+                    'Cyberpunk Night', 
+                    'Space Station',
+                    'Jungle Adventure',
+                    'Ice Crystal',
+                    'Underwater',
+                    'Desert Storm',
+                    'Forest Twilight',
+                    'Volcano',
+                    'Crystal Dimension'
+                ];
+                
+                // Add level name subtitle
+                const subtitle = document.createElement('div');
+                subtitle.style.fontSize = '16px';
+                subtitle.style.marginTop = '10px';
+                subtitle.style.color = '#FFF';
+                subtitle.textContent = levelNames[newLevel - 1] || `Level ${newLevel}`;
+                milestoneDisplay.appendChild(subtitle);
+                
+                // Level progression sound effect
+                if (window.audioManager) {
+                    audioManager.play('powerup');
+                    // Level progression chord
+                    audioManager.createTone(523, 0.3, 'sine'); // C5
+                    setTimeout(() => audioManager.createTone(659, 0.3, 'sine'), 150); // E5
+                    setTimeout(() => audioManager.createTone(784, 0.3, 'sine'), 300); // G5
+                    setTimeout(() => audioManager.createTone(1047, 0.5, 'sine'), 450); // C6
+                }
+                
+                // Auto-hide after 4 seconds (longer for level progression)
+                setTimeout(() => {
+                    milestoneDisplay.style.display = 'none';
+                    // Reset styles
+                    milestoneDisplay.style.color = '#00FF00';
+                    milestoneDisplay.style.fontSize = '24px';
+                    milestoneDisplay.style.background = '';
+                    milestoneDisplay.style.border = '';
+                    milestoneDisplay.style.borderRadius = '';
+                    milestoneDisplay.style.padding = '';
+                    milestoneDisplay.style.boxShadow = '';
+                    // Remove subtitle
+                    if (subtitle.parentNode) {
+                        subtitle.parentNode.removeChild(subtitle);
+                    }
+                }, 4000);
+            }
+        }
+        
+        function updateLevelDisplay(currentLevel) {
+            // Update UI to show current level
+            const ui = document.getElementById('ui');
+            if (ui) {
+                const levelDisplay = document.getElementById('levelDisplay') || (() => {
+                    const div = document.createElement('div');
+                    div.id = 'levelDisplay';
+                    div.style.fontSize = '18px';
+                    div.style.marginTop = '5px';
+                    div.style.color = '#FFD700';
+                    ui.appendChild(div);
+                    return div;
+                })();
+                
+                levelDisplay.textContent = `Level ${currentLevel}/10`;
+            }
+            
+            console.log(`🎮 [UI] Updated level display to Level ${currentLevel}/10`);
         }
         
         // Update visual effects based on speed and game state
@@ -6477,7 +6741,9 @@
 
         // Initialize game
         console.log('Starting game initialization...');
-        init();
+        init().catch(error => {
+            console.error('❌ Failed to initialize game:', error);
+        });
         
         // ==================== GESTURE CONTROL SYSTEM ====================
         
