@@ -219,29 +219,77 @@ npm run inspector    # Run MCP inspector
 - After level completion: "Level Complete!" + "Next Level" button appears
 - Score is for ranking/achievements, NOT for level unlocking
 
-### **Collectible System Rules**
-**RULE 1**: ONLY these collectibles allowed:
-- ✅ **Kiwis** (large, realistic brown fruit) 
-- ✅ **Broccolis** (green vegetables)
-- ✅ **Mystery Boxes** (max 2 per game) - golden sparkly fountains
+### **🍎 COLLECTIBLE SYSTEM RULES - ABSOLUTE DEFINITIONEN**
 
-**RULE 2**: NO rectangular/box collectibles:
-- ❌ **NO** Power-ups (magnets, shields, speed boosts)  
-- ❌ **NO** Score tokens or coins
-- ❌ **NO** Geometric shapes as collectibles
-- ❌ **NO** Rectangle/cube collectibles
+**RULE 1**: EXAKT DIESE COLLECTIBLES PRO SPIEL:
+- ✅ **10 Kiwis** (große, realistische braune Früchte) 
+- ✅ **10 Broccolis** (grüne Gemüse)
+- ✅ **Stars** (für temporäre Unbesiegbarkeit) - unbegrenzt spawnable
 
-**RULE 3**: Collectible spawning must be:
-- ✅ **30+ units behind obstacles** (never next to or inside obstacles)
-- ✅ **Speed-dependent spacing** that increases with game speed
-- ✅ **Sequential spawning** - collectibles come AFTER obstacles, never parallel
-- ✅ **Safe lane checking** with 25+ unit clearance
+**RULE 2**: ABSOLUT VERBOTEN:
+- ❌ **KEINE** leuchtenden Vierecke/Boxen
+- ❌ **KEINE** Power-ups (Magnete, Schilde, Speed-Boosts)  
+- ❌ **KEINE** Score-Token oder Münzen
+- ❌ **KEINE** geometrischen Formen als Collectibles
+- ❌ **KEINE** Mystery Boxes oder goldene Fountains
 
-### **Collectible Balance Rules**
-- **Target**: 30 Kiwis + 7 Broccolis (minimum 20 kiwis guaranteed)
-- **Total limit**: 40 collectibles max for good gameplay
-- **Bias**: 85% kiwi spawning, 15% broccoli spawning
-- **Pattern limits**: Max 2 collectibles per pattern (never all 3 lanes)
+**RULE 3**: PLATZIERUNGS-REGELN (UNVERHANDELBAR):
+- ✅ **MINIMUM 40+ Einheiten Abstand zu Hindernissen** (nie daneben oder darin)
+- ✅ **NIEMALS parallel zu Hindernissen spawnen**
+- ✅ **SEQUENZIELLE Spawning** - Collectibles kommen NACH Hindernissen
+- ✅ **Safe-Zone-Checking** mit 30+ Einheiten Clearance in alle Richtungen
+- ✅ **Hindernisse-Prüfung** vor JEDEM Collectible-Spawn
+
+### **🎯 COLLECTIBLE BALANCE RULES - FESTE ZAHLEN**
+- **EXAKT**: 10 Kiwis + 10 Broccolis + unbegrenzt Stars
+- **Kiwi-Broccoli-Verhältnis**: 50:50 (nicht mehr 85:15)
+- **Stars**: Spawnen nur nach erfolgreicher Hindernissvermeidung
+- **Spawn-Reihenfolge**: Kiwi → Broccoli → Star (rotierend)
+- **NIEMALS**: Mehr als 1 Collectible pro Spawn-Zyklus
+- **NIEMALS**: Collectibles in allen 3 Lanes gleichzeitig
+
+### **🛡️ ANTI-HINDERNISSE-NÄHE-SYSTEM**
+```javascript
+// SENIOR DEVELOPER RULE: Diese Funktion MUSS vor jedem Collectible-Spawn aufgerufen werden
+function isCollectibleSpawnSafe(lane, zPosition) {
+    const MINIMUM_DISTANCE = 40; // Erhöht von 30 auf 40
+    const PARALLEL_CHECK_RANGE = 20; // Prüfe 20 Einheiten vor/zurück
+    
+    // Prüfe ALLE Hindernisse in der Nähe
+    for (let obstacle of obstacles) {
+        if (!obstacle || !obstacle.position) continue;
+        
+        const distance = Math.abs(obstacle.position.z - zPosition);
+        const laneDistance = Math.abs(obstacle.position.x - LANE_POSITIONS[lane]);
+        
+        // REGEL: Mindestabstand einhalten
+        if (distance < MINIMUM_DISTANCE && laneDistance < 2) {
+            return false;
+        }
+        
+        // REGEL: Keine parallelen Spawns
+        if (distance < PARALLEL_CHECK_RANGE && laneDistance < 2) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+```
+
+### **🌟 STAR SYSTEM RULES**
+- **Stars** spawnen nur nach erfolgreicher Hindernissvermeidung
+- **Effect**: 5 Sekunden Unbesiegbarkeit
+- **Visual**: Goldener Stern mit Glitzer-Effekt
+- **Sound**: Besonderer Star-Collection-Sound
+- **Spawn-Rate**: 1 Star pro 5 vermiedene Hindernisse
+
+### **🤝 PARTNER-BUTTON SYSTEM**
+- **Zweck**: Ermöglicht Level-Progression nach Game Over
+- **Erscheint**: Nur nach fehlgeschlagenem Level-Versuch
+- **Funktion**: Startet nächstes Level direkt (Development-Feature)
+- **Temporär**: Wird später entfernt, wenn Level-Completion-System fertig ist
+- **Button-Text**: "🚀 Nächstes Level (X)" - mit Level-Nummer
 
 ## Development Guidelines
 

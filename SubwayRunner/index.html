@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.5.0-ULTRA-ROBUST-SYSTEM<br>
+            🚀 V7.6.0-GAME-RULES-SYSTEM<br>
             📅 10.07.2025
         </div>
         
@@ -2482,8 +2482,18 @@
         const SPEED_LERP_FACTOR = 0.05;
 
         // 🎮 LEVEL TESTING FUNCTION
+        /**
+         * SENIOR DEVELOPER ULTRA-ROBUST: Level Testing System mit Level-Manager Integration
+         * @param {number} levelNumber - Level number to activate (1-10)
+         */
         function testLevel(levelNumber) {
-            console.log(`🎮 [Testing] Switching to Level ${levelNumber}`);
+            console.log(`🎮 [Testing] ULTRA-ROBUST Level Switch to Level ${levelNumber}`);
+            
+            // PROTECTION: Validate level number
+            if (levelNumber < 1 || levelNumber > 10) {
+                console.error('❌ [Testing] Invalid level number:', levelNumber);
+                return;
+            }
             
             // Force set current level
             gameState.currentLevel = levelNumber;
@@ -2495,14 +2505,26 @@
                 levelDisplay.textContent = `Level ${levelNumber}`;
             }
             
-            // Force level change through score
+            // SENIOR DEVELOPER RULE: Verwende Level-Manager-Pro System
+            if (window.LevelManagerPro && window.LevelManagerPro.switchToLevel) {
+                try {
+                    console.log(`🔄 [Testing] Using LevelManagerPro to switch to Level ${levelNumber}`);
+                    window.LevelManagerPro.switchToLevel(levelNumber);
+                    console.log(`✅ [Testing] Level ${levelNumber} activated via LevelManagerPro`);
+                    return;
+                } catch (error) {
+                    console.warn('⚠️ [Testing] LevelManagerPro failed, falling back to manual method:', error);
+                }
+            }
+            
+            // FALLBACK: Manual level switching for visual changes
             if (levelNumber === 1) {
                 // Reset to basic level 1
                 scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
                 document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
                 console.log('✅ Level 1 (Subway) activated');
             } else {
-                // Simulate other levels with visual changes
+                // Apply level themes manually
                 const levelThemes = {
                     2: { name: 'Cyberpunk', fog: 0x4B0082, bg: 'linear-gradient(to bottom, #4B0082 0%, #9400D3 100%)' },
                     3: { name: 'Space', fog: 0x000033, bg: 'linear-gradient(to bottom, #000033 0%, #000066 100%)' },
@@ -6747,18 +6769,37 @@
                 }
                 
                 // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
+                // SENIOR DEVELOPER RULE: ANTI-HINDERNISSE-NÄHE-SYSTEM
                 // Helper function to check if lane is safe for collectible spawning
-                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
-                    return !obstacles.some(obs => 
-                        obs && obs.position && // 🔧 NULL CHECK: Ensure obs and position exist
-                        Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
-                        Math.abs(obs.position.z - zPosition) < safeDistance
-                    );
+                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 40) => {
+                    const MINIMUM_DISTANCE = 40; // Erhöht von 12 auf 40
+                    const PARALLEL_CHECK_RANGE = 20; // Prüfe 20 Einheiten vor/zurück
+                    
+                    // Prüfe ALLE Hindernisse in der Nähe
+                    for (let obstacle of obstacles) {
+                        if (!obstacle || !obstacle.position) continue;
+                        
+                        const distance = Math.abs(obstacle.position.z - zPosition);
+                        const laneDistance = Math.abs(obstacle.position.x - LANE_POSITIONS[lane]);
+                        
+                        // REGEL: Mindestabstand einhalten
+                        if (distance < MINIMUM_DISTANCE && laneDistance < 2) {
+                            return false;
+                        }
+                        
+                        // REGEL: Keine parallelen Spawns
+                        if (distance < PARALLEL_CHECK_RANGE && laneDistance < 2) {
+                            return false;
+                        }
+                    }
+                    
+                    return true;
                 };
                 
+                // COLLECTIBLE SYSTEM RULES: 10 Kiwis + 10 Broccolis + unbegrenzt Stars
                 // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.02; // Increased starting rate for more collectibles
-                const maxCoinRate = 0.08; // Increased max rate for better visibility
+                const baseCoinRate = 0.015; // Reduziert für exakte Anzahl-Kontrolle
+                const maxCoinRate = 0.04; // Reduziert für bessere Kontrolle
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
@@ -6790,35 +6831,35 @@
                         }
                     }
                     
-                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
-                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
+                    // SENIOR DEVELOPER RULE: EXAKT 10 Kiwis + 10 Broccolis + unbegrenzt Stars
+                    // Check collected items: 10 Kiwis + 10 Broccolis = 20 total
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 37) {
-                        // Max collectibles collected, no more spawning
+                    if (collectedTotal >= 20) {
+                        // Max collectibles collected, only spawn stars now
+                        // TODO: Implement star spawning after obstacle avoidance
                         return;
                     }
                     
-                    // CORRECTED: Use collected counts for spawn logic, not active counts
+                    // Use collected counts for spawn logic, not active counts
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 30:7 target ratio
+                    // Determine what to spawn based on 10:10 target ratio (50:50)
                     let isKiwi;
-                    if (kiwiCount >= 30) {
-                        isKiwi = false; // Force broccoli if we have 30 kiwis
-                    } else if (broccoliCount >= 7) {
-                        isKiwi = true; // Force kiwi if we have 7 broccolis
+                    if (kiwiCount >= 10) {
+                        isKiwi = false; // Force broccoli if we have 10 kiwis
+                    } else if (broccoliCount >= 10) {
+                        isKiwi = true; // Force kiwi if we have 10 broccolis
                     } else {
-                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
-                        const totalTarget = 37;
+                        // Balanced spawning for 10:10 ratio (50% kiwi, 50% broccoli)
+                        const targetRatio = 0.5; // 50:50 ratio
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 30 / totalTarget; // ~0.81
                         
-                        // Bias towards kiwis if we're below target ratio
+                        // Balance towards maintaining 50:50 ratio
                         if (currentRatio < targetRatio) {
-                            isKiwi = Math.random() < 0.85; // Strong bias toward kiwis
+                            isKiwi = Math.random() < 0.7; // Slight bias toward kiwis
                         } else {
-                            isKiwi = Math.random() < 0.25; // Strong bias toward broccolis
+                            isKiwi = Math.random() < 0.3; // Slight bias toward broccolis
                         }
                     }
                     
@@ -6827,7 +6868,7 @@
                     if (pattern === 'single') {
                         // ENHANCED: Find safe lanes for spawning
                         const safeLanes = [];
-                        const baseSpawnZ = -25 - (gameState.speed - 100) * 0.02; // Closer spawn for better visibility
+                        const baseSpawnZ = -50 - (gameState.speed - 100) * 0.02; // Weiter weg für bessere Sicherheit
                         
                         for (let lane = 0; lane < 3; lane++) {
                             if (isLaneClearForCollectible(lane, baseSpawnZ)) {
@@ -6847,7 +6888,7 @@
                         }
                     } else if (pattern === 'line') {
                         // ENHANCED: Smart line spawning with obstacle avoidance
-                        const baseSpawnZ = -25 - (gameState.speed - 100) * 0.02;
+                        const baseSpawnZ = -50 - (gameState.speed - 100) * 0.02;
                         const safeLanes = [];
                         
                         for (let lane = 0; lane < 3; lane++) {
@@ -6903,7 +6944,7 @@
                         }
                     } else if (pattern === 'arc') {
                         // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
-                        const baseSpawnZ = -25 - (gameState.speed - 100) * 0.02;
+                        const baseSpawnZ = -50 - (gameState.speed - 100) * 0.02;
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
                         
