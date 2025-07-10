@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.6.0-GAME-RULES-SYSTEM<br>
+            🚀 V7.7.0-SPAM-FIX-ULTIMATE<br>
             📅 10.07.2025
         </div>
         
@@ -615,7 +615,7 @@
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
+                🥝 <span id="kiwiCount">0</span>/10 | 🥦 <span id="broccoliCount">0</span>/10
                 <div style="font-size: 12px; margin-top: 2px;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
@@ -6796,74 +6796,92 @@
                     return true;
                 };
                 
-                // COLLECTIBLE SYSTEM RULES: 10 Kiwis + 10 Broccolis + unbegrenzt Stars
-                // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.015; // Reduziert für exakte Anzahl-Kontrolle
-                const maxCoinRate = 0.04; // Reduziert für bessere Kontrolle
-                const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
-                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
+                // 🚨 SENIOR DEVELOPER RULE: UNBREACHABLE COLLECTIBLE LIMITS
+                // CRITICAL FIX: Check limits BEFORE random spawn to prevent spam
                 
-                if (Math.random() < progressiveCoinRate) {
-                    // Progressive kiwi pattern complexity
-                    let pattern;
-                    const patternRand = Math.random();
+                // Count ACTIVE collectibles in world (spawned but not collected)
+                const activeKiwis = gameState.kiwis.length;
+                const activeBroccolis = gameState.broccolis.length;
+                
+                // Count COLLECTED collectibles (lifetime total)
+                const collectedKiwis = gameState.collectedKiwis;
+                const collectedBroccolis = gameState.collectedBroccolis;
+                
+                // ABSOLUTE LIMIT: Maximum 10 Kiwis + 10 Broccolis TOTAL
+                const totalKiwis = activeKiwis + collectedKiwis;
+                const totalBroccolis = activeBroccolis + collectedBroccolis;
+                const totalCollectibles = totalKiwis + totalBroccolis;
+                
+                // 🛡️ UNBREACHABLE BARRIER: Stop ALL spawning at exactly 20 collectibles
+                if (totalCollectibles >= 20 || totalKiwis >= 10 || totalBroccolis >= 10) {
+                    // ABSOLUTE STOP: No more collectibles allowed
+                    // console.log(`🛑 LIMIT REACHED: Total=${totalCollectibles}, K=${totalKiwis}, B=${totalBroccolis}`);
+                    // TODO: Only spawn stars after this point
+                } else {
+                    // Only now check spawn rate (limits passed, safe to spawn)
+                    const baseCoinRate = 0.008; // REDUCED: Less spam potential
+                    const maxCoinRate = 0.025; // REDUCED: Better control
+                    const speedFactor = Math.max(0.3, 1 - (gameState.speed - 100) / 400); // Even more reduction at high speeds
+                    const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.2)) * speedFactor;
                     
-                    if (gameProgress < 0.3) {
-                        // Early game: mostly single kiwis
-                        pattern = patternRand < 0.8 ? 'single' : 'line';
-                    } else if (gameProgress < 0.6) {
-                        // Mid game: introduce more patterns
-                        if (patternRand < 0.5) {
-                            pattern = 'single';
-                        } else if (patternRand < 0.8) {
-                            pattern = 'line';
-                        } else {
-                            pattern = 'arc';
-                        }
-                    } else {
-                        // Late game: more complex patterns, more rewards
-                        if (patternRand < 0.3) {
-                            pattern = 'single';
-                        } else if (patternRand < 0.6) {
-                            pattern = 'line';
-                        } else {
-                            pattern = 'arc';
-                        }
-                    }
-                    
-                    // SENIOR DEVELOPER RULE: EXAKT 10 Kiwis + 10 Broccolis + unbegrenzt Stars
-                    // Check collected items: 10 Kiwis + 10 Broccolis = 20 total
-                    const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 20) {
-                        // Max collectibles collected, only spawn stars now
-                        // TODO: Implement star spawning after obstacle avoidance
-                        return;
-                    }
-                    
-                    // Use collected counts for spawn logic, not active counts
-                    const kiwiCount = gameState.collectedKiwis;
-                    const broccoliCount = gameState.collectedBroccolis;
-                    
-                    // Determine what to spawn based on 10:10 target ratio (50:50)
-                    let isKiwi;
-                    if (kiwiCount >= 10) {
-                        isKiwi = false; // Force broccoli if we have 10 kiwis
-                    } else if (broccoliCount >= 10) {
-                        isKiwi = true; // Force kiwi if we have 10 broccolis
-                    } else {
-                        // Balanced spawning for 10:10 ratio (50% kiwi, 50% broccoli)
-                        const targetRatio = 0.5; // 50:50 ratio
-                        const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
+                    if (Math.random() < progressiveCoinRate) {
+                        // Progressive kiwi pattern complexity
+                        let pattern;
+                        const patternRand = Math.random();
                         
-                        // Balance towards maintaining 50:50 ratio
-                        if (currentRatio < targetRatio) {
-                            isKiwi = Math.random() < 0.7; // Slight bias toward kiwis
+                        if (gameProgress < 0.3) {
+                            // Early game: mostly single kiwis
+                            pattern = patternRand < 0.8 ? 'single' : 'line';
+                        } else if (gameProgress < 0.6) {
+                            // Mid game: introduce more patterns
+                            if (patternRand < 0.5) {
+                                pattern = 'single';
+                            } else if (patternRand < 0.8) {
+                                pattern = 'line';
+                            } else {
+                                pattern = 'arc';
+                            }
                         } else {
-                            isKiwi = Math.random() < 0.3; // Slight bias toward broccolis
+                            // Late game: more complex patterns, more rewards
+                            if (patternRand < 0.3) {
+                                pattern = 'single';
+                            } else if (patternRand < 0.6) {
+                                pattern = 'line';
+                            } else {
+                                pattern = 'arc';
+                            }
                         }
-                    }
+                        
+                        // DOUBLE-CHECK: Ensure we can still spawn (safety net)
+                        const safetyCheckTotal = (activeKiwis + collectedKiwis) + (activeBroccolis + collectedBroccolis);
+                        if (safetyCheckTotal >= 20) {
+                            console.warn('🚨 SAFETY NET: Spawn blocked at limits');
+                            return; // Absolute safety stop
+                        }
                     
-                    console.log(`🎯 Spawning ${isKiwi ? 'Kiwi' : 'Broccoli'} - Pattern: ${pattern} (K:${kiwiCount}, B:${broccoliCount})`);
+                        // ENHANCED LOGIC: Use TOTAL counts (active + collected) for smarter decisions
+                        // This prevents over-spawning of one type while the other is being collected
+                        
+                        // Determine what to spawn based on TOTAL limits and current balance
+                        let isKiwi;
+                        if (totalKiwis >= 10) {
+                            isKiwi = false; // Force broccoli if we've reached 10 total kiwis
+                        } else if (totalBroccolis >= 10) {
+                            isKiwi = true; // Force kiwi if we've reached 10 total broccolis
+                        } else {
+                            // Balanced spawning for 10:10 ratio based on total counts
+                            const targetRatio = 0.5; // 50:50 ratio
+                            const currentRatio = totalKiwis / (totalKiwis + totalBroccolis + 1);
+                            
+                            // Balance towards maintaining 50:50 ratio
+                            if (currentRatio < targetRatio) {
+                                isKiwi = Math.random() < 0.65; // Bias toward kiwis
+                            } else {
+                                isKiwi = Math.random() < 0.35; // Bias toward broccolis
+                            }
+                        }
+                        
+                        console.log(`🎯 Spawning ${isKiwi ? 'Kiwi' : 'Broccoli'} - Pattern: ${pattern} (Total K:${totalKiwis}/10, B:${totalBroccolis}/10)`);
                     
                     if (pattern === 'single') {
                         // ENHANCED: Find safe lanes for spawning
@@ -6912,24 +6930,28 @@
                             console.log(`🎯 LINE PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
                             for (const lane of selectedLanes) {
-                                // BUGFIX: Check collected counts, not spawned total
-                                const currentCollectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                                if (currentCollectedTotal >= 37) break; // Safety check
+                                // UPDATED: Use NEW 10+10=20 limits, not old 30+7=37
+                                const lineActiveKiwis = gameState.kiwis.length;
+                                const lineActiveBroccolis = gameState.broccolis.length;
+                                const lineCollectedKiwis = gameState.collectedKiwis;
+                                const lineCollectedBroccolis = gameState.collectedBroccolis;
                                 
-                                // FIXED: Use collected counts for proper balance
-                                const currentKiwiCount = gameState.collectedKiwis;
-                                const currentBroccoliCount = gameState.collectedBroccolis;
+                                const lineTotalKiwis = lineActiveKiwis + lineCollectedKiwis;
+                                const lineTotalBroccolis = lineActiveBroccolis + lineCollectedBroccolis;
+                                const lineTotalCollectibles = lineTotalKiwis + lineTotalBroccolis;
+                                
+                                if (lineTotalCollectibles >= 20) break; // NEW LIMIT: Stop at 20 total
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 30) {
-                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
-                                } else if (currentBroccoliCount >= 7) {
-                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
+                                if (lineTotalKiwis >= 10) {
+                                    spawnKiwi = false; // Force broccoli if we have 10 total kiwis
+                                } else if (lineTotalBroccolis >= 10) {
+                                    spawnKiwi = true; // Force kiwi if we have 10 total broccolis
                                 } else {
                                     spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
                                 }
                                 
-                                console.log(`🎯 LINE BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
+                                console.log(`🎯 LINE BALANCE: Total K:${lineTotalKiwis}/10, B:${lineTotalBroccolis}/10, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
                                 
                                 if (spawnKiwi) {
                                     const spacing = gameState.speed > 150 ? 4 : 3; // Increased spacing for better collection
@@ -6956,24 +6978,28 @@
                             console.log(`🌀 ARC PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
                             selectedLanes.forEach((lane, index) => {
-                                // BUGFIX: Check collected counts, not spawned total
-                                const currentCollectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                                if (currentCollectedTotal >= 37) return; // Safety check
+                                // UPDATED: Use NEW 10+10=20 limits, not old 30+7=37
+                                const arcActiveKiwis = gameState.kiwis.length;
+                                const arcActiveBroccolis = gameState.broccolis.length;
+                                const arcCollectedKiwis = gameState.collectedKiwis;
+                                const arcCollectedBroccolis = gameState.collectedBroccolis;
                                 
-                                // FIXED: Use collected counts for proper balance
-                                const currentKiwiCount = gameState.collectedKiwis;
-                                const currentBroccoliCount = gameState.collectedBroccolis;
+                                const arcTotalKiwis = arcActiveKiwis + arcCollectedKiwis;
+                                const arcTotalBroccolis = arcActiveBroccolis + arcCollectedBroccolis;
+                                const arcTotalCollectibles = arcTotalKiwis + arcTotalBroccolis;
+                                
+                                if (arcTotalCollectibles >= 20) return; // NEW LIMIT: Stop at 20 total
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 30) {
-                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
-                                } else if (currentBroccoliCount >= 7) {
-                                    spawnKiwi = true; // Force kiwi if we have 7 broccolis
+                                if (arcTotalKiwis >= 10) {
+                                    spawnKiwi = false; // Force broccoli if we have 10 total kiwis
+                                } else if (arcTotalBroccolis >= 10) {
+                                    spawnKiwi = true; // Force kiwi if we have 10 total broccolis
                                 } else {
                                     spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
                                 }
                                 
-                                console.log(`🌀 ARC BALANCE: K:${currentKiwiCount}, B:${currentBroccoliCount}, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
+                                console.log(`🌀 ARC BALANCE: Total K:${arcTotalKiwis}/10, B:${arcTotalBroccolis}/10, spawning ${spawnKiwi ? 'Kiwi' : 'Broccoli'}`);
                                 
                                 const spacing = gameState.speed > 150 ? 3 : 2; // Increased spacing for better collection
                                 if (spawnKiwi) {
@@ -6986,6 +7012,7 @@
                             });
                         }
                     }
+                    } // Close the collectible limit check block
                 }
                 
                 // Update Power-Ups
