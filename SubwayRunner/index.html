@@ -1472,6 +1472,12 @@
             }
             
             async loadLevel(levelId, skipTransition = false) {
+                // TEMPORARY: Skip Level 3 due to shader errors
+                if (levelId === 3) {
+                    console.warn('[LevelManagerPro] Level 3 is temporarily disabled due to shader errors');
+                    return false;
+                }
+                
                 if (this.isTransitioning) {
                     console.warn('[LevelManagerPro] Already transitioning, request ignored');
                     return false;
@@ -3564,6 +3570,7 @@
                 const targetLevel = Math.floor(gameState.score / 1000) + 1;
                 // TEMPORARY: Skip Level 3 due to shader errors
                 const actualLevel = targetLevel === 3 ? 2 : targetLevel;
+                console.log(`🎯 Level check: targetLevel=${targetLevel}, actualLevel=${actualLevel}, currentLevel=${gameState.currentLevel}`);
                 if (actualLevel > gameState.currentLevel && actualLevel <= 10 && actualLevel !== 3) {
                     console.log(`🎯 Level progression triggered! Score: ${gameState.score}, Next level: ${actualLevel}`);
                     // Load next level
