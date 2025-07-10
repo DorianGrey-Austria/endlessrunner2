@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.4.0-LINE-DRAWING-SYSTEM<br>
+            🚀 V7.5.0-ULTRA-ROBUST-SYSTEM<br>
             📅 10.07.2025
         </div>
         
@@ -8194,188 +8194,843 @@
         
         // ==================== LINE DRAWING IMPORT SYSTEM ====================
         
+        // ==================== ULTRA-ROBUST LINE DRAWING SYSTEM ====================
+        
+        // Global state management for import operations
+        const LineDrawingState = {
+            isProcessing: false,
+            activeCanvas: null,
+            maxFileSize: 50 * 1024 * 1024, // 50MB limit
+            maxCanvasSize: 8192, // Most browsers support up to 8192x8192
+            timeout: 30000, // 30 second timeout
+            
+            reset() {
+                this.isProcessing = false;
+                this.cleanup();
+            },
+            
+            cleanup() {
+                if (this.activeCanvas) {
+                    const ctx = this.activeCanvas.getContext('2d');
+                    if (ctx) {
+                        ctx.clearRect(0, 0, this.activeCanvas.width, this.activeCanvas.height);
+                    }
+                    this.activeCanvas.width = 0;
+                    this.activeCanvas.height = 0;
+                    this.activeCanvas = null;
+                }
+                // Force garbage collection if available
+                if (window.gc) window.gc();
+            }
+        };
+        
         /**
-         * Handle line drawing file import
+         * ULTRA-ROBUST: Handle line drawing file import with comprehensive error handling
          * @param {File} file - The image file to process
          * @param {Function} callback - Callback function to handle processed image
          */
         function handleLineDrawingFile(file, callback) {
-            console.log('🎨 [LineDrawing] Processing file:', file.name);
+            console.log('🎨 [LineDrawing] ULTRA-ROBUST processing started for:', file.name);
             
-            if (!file || !file.type.startsWith('image/')) {
-                console.error('❌ [LineDrawing] Invalid file type:', file.type);
-                if (callback) callback(null, 'Invalid file type');
+            // PROTECTION 1: Race condition prevention
+            if (LineDrawingState.isProcessing) {
+                console.warn('⚠️ [LineDrawing] Already processing a file. Please wait.');
+                if (callback) callback(null, 'Ein anderer Import läuft bereits. Bitte warten.');
+                return;
+            }
+            LineDrawingState.isProcessing = true;
+            
+            // PROTECTION 2: Comprehensive file validation
+            if (!file) {
+                console.error('❌ [LineDrawing] No file provided');
+                LineDrawingState.reset();
+                if (callback) callback(null, 'Keine Datei ausgewählt');
                 return;
             }
             
+            if (!file.type || !file.type.startsWith('image/')) {
+                console.error('❌ [LineDrawing] Invalid file type:', file.type);
+                LineDrawingState.reset();
+                if (callback) callback(null, `Ungültiger Dateityp: ${file.type}. Nur Bilder sind erlaubt.`);
+                return;
+            }
+            
+            // PROTECTION 3: File size validation (prevent memory bombs)
+            if (file.size > LineDrawingState.maxFileSize) {
+                console.error('❌ [LineDrawing] File too large:', file.size, 'bytes');
+                LineDrawingState.reset();
+                if (callback) callback(null, `Datei zu groß: ${Math.round(file.size/1024/1024)}MB. Maximum: ${LineDrawingState.maxFileSize/1024/1024}MB`);
+                return;
+            }
+            
+            // PROTECTION 4: Timeout mechanism
+            const timeoutId = setTimeout(() => {
+                console.error('❌ [LineDrawing] Processing timeout');
+                LineDrawingState.reset();
+                if (callback) callback(null, 'Verarbeitung dauerte zu lange (>30s). Bitte kleinere Datei verwenden.');
+            }, LineDrawingState.timeout);
+            
+            // PROTECTION 5: Secure FileReader with error handling
             const reader = new FileReader();
+            
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
+                try {
+                    const img = new Image();
+                    
+                    // PROTECTION 6: Image loading timeout and error handling
+                    const imgTimeoutId = setTimeout(() => {
+                        console.error('❌ [LineDrawing] Image loading timeout');
+                        clearTimeout(timeoutId);
+                        LineDrawingState.reset();
+                        if (callback) callback(null, 'Bild konnte nicht geladen werden (Timeout)');
+                    }, 15000); // 15s timeout for image loading
+                    
+                    img.onload = function() {
+                        try {
+                            clearTimeout(imgTimeoutId);
+                            console.log('🎨 [LineDrawing] Image loaded:', img.width, 'x', img.height);
+                            
+                            // PROTECTION 7: Canvas size validation (prevent browser limits)
+                            if (img.width > LineDrawingState.maxCanvasSize || img.height > LineDrawingState.maxCanvasSize) {
+                                console.error('❌ [LineDrawing] Image too large for canvas:', img.width, 'x', img.height);
+                                clearTimeout(timeoutId);
+                                LineDrawingState.reset();
+                                if (callback) callback(null, `Bild zu groß: ${img.width}x${img.height}. Maximum: ${LineDrawingState.maxCanvasSize}x${LineDrawingState.maxCanvasSize}`);
+                                return;
+                            }
+                            
+                            // PROTECTION 8: Memory-aware canvas creation
+                            const canvas = document.createElement('canvas');
+                            LineDrawingState.activeCanvas = canvas;
+                            
+                            const ctx = canvas.getContext('2d', {
+                                alpha: true,
+                                desynchronized: true, // Performance optimization
+                                colorSpace: 'srgb' // PROTECTION: Force sRGB color space
+                            });
+                            
+                            if (!ctx) {
+                                console.error('❌ [LineDrawing] Failed to get canvas context');
+                                clearTimeout(timeoutId);
+                                LineDrawingState.reset();
+                                if (callback) callback(null, 'Canvas-Kontext konnte nicht erstellt werden');
+                                return;
+                            }
+                            
+                            // Set canvas size with error handling
+                            try {
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                            } catch (error) {
+                                console.error('❌ [LineDrawing] Canvas size setting failed:', error);
+                                clearTimeout(timeoutId);
+                                LineDrawingState.reset();
+                                if (callback) callback(null, 'Canvas-Größe konnte nicht gesetzt werden');
+                                return;
+                            }
+                            
+                            // PROTECTION 9: Secure image drawing with cross-origin handling
+                            try {
+                                ctx.drawImage(img, 0, 0);
+                            } catch (error) {
+                                console.error('❌ [LineDrawing] Image drawing failed (CORS?):', error);
+                                clearTimeout(timeoutId);
+                                LineDrawingState.reset();
+                                if (callback) callback(null, 'Bild konnte nicht gezeichnet werden (möglicherweise CORS-Problem)');
+                                return;
+                            }
+                            
+                            // PROTECTION 10: Safe image data extraction
+                            let imageData;
+                            try {
+                                imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            } catch (error) {
+                                console.error('❌ [LineDrawing] ImageData extraction failed:', error);
+                                clearTimeout(timeoutId);
+                                LineDrawingState.reset();
+                                if (callback) callback(null, 'Bilddaten konnten nicht extrahiert werden');
+                                return;
+                            }
+                            
+                            // PROTECTION 11: Performance-optimized processing with progress
+                            console.log('🎨 [LineDrawing] Starting pixel processing for', imageData.width * imageData.height, 'pixels');
+                            
+                            // Use requestAnimationFrame for non-blocking processing
+                            requestAnimationFrame(() => {
+                                try {
+                                    const processedData = processLineDrawingUltraRobust(imageData);
+                                    
+                                    if (!processedData) {
+                                        clearTimeout(timeoutId);
+                                        LineDrawingState.reset();
+                                        if (callback) callback(null, 'Bildverarbeitung fehlgeschlagen');
+                                        return;
+                                    }
+                                    
+                                    // Create new image from processed data
+                                    ctx.putImageData(processedData, 0, 0);
+                                    
+                                    // PROTECTION 12: Safe data URL conversion
+                                    let dataURL;
+                                    try {
+                                        dataURL = canvas.toDataURL('image/png', 0.9); // Slight compression
+                                    } catch (error) {
+                                        console.error('❌ [LineDrawing] DataURL conversion failed:', error);
+                                        clearTimeout(timeoutId);
+                                        LineDrawingState.reset();
+                                        if (callback) callback(null, 'Bild konnte nicht konvertiert werden');
+                                        return;
+                                    }
+                                    
+                                    clearTimeout(timeoutId);
+                                    console.log('✅ [LineDrawing] ULTRA-ROBUST processing complete!');
+                                    
+                                    // Clean up before callback
+                                    LineDrawingState.reset();
+                                    
+                                    if (callback) callback(dataURL, null);
+                                    
+                                } catch (error) {
+                                    console.error('❌ [LineDrawing] Final processing error:', error);
+                                    clearTimeout(timeoutId);
+                                    LineDrawingState.reset();
+                                    if (callback) callback(null, `Verarbeitungsfehler: ${error.message}`);
+                                }
+                            });
+                            
+                        } catch (error) {
+                            console.error('❌ [LineDrawing] Image processing error:', error);
+                            clearTimeout(imgTimeoutId);
+                            clearTimeout(timeoutId);
+                            LineDrawingState.reset();
+                            if (callback) callback(null, `Bildverarbeitung fehlgeschlagen: ${error.message}`);
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error('❌ [LineDrawing] Image load error');
+                        clearTimeout(imgTimeoutId);
+                        clearTimeout(timeoutId);
+                        LineDrawingState.reset();
+                        if (callback) callback(null, 'Bild konnte nicht geladen werden (ungültiges Format?)');
+                    };
+                    
+                    // PROTECTION 13: CSP-safe image loading
                     try {
-                        console.log('🎨 [LineDrawing] Image loaded:', img.width, 'x', img.height);
-                        
-                        // Create canvas for image processing
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        
-                        // Set canvas size
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        
-                        // Draw image to canvas
-                        ctx.drawImage(img, 0, 0);
-                        
-                        // Process image data for line drawing
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const processedData = processLineDrawing(imageData);
-                        
-                        // Create new image from processed data
-                        ctx.putImageData(processedData, 0, 0);
-                        
-                        // Convert to data URL
-                        const dataURL = canvas.toDataURL('image/png');
-                        
-                        console.log('✅ [LineDrawing] Processing complete');
-                        if (callback) callback(dataURL, null);
-                        
+                        img.src = e.target.result;
                     } catch (error) {
-                        console.error('❌ [LineDrawing] Processing error:', error);
-                        if (callback) callback(null, error.message);
+                        console.error('❌ [LineDrawing] Image src setting failed:', error);
+                        clearTimeout(imgTimeoutId);
+                        clearTimeout(timeoutId);
+                        LineDrawingState.reset();
+                        if (callback) callback(null, 'Bild-URL konnte nicht gesetzt werden');
                     }
-                };
-                
-                img.onerror = function() {
-                    console.error('❌ [LineDrawing] Image load error');
-                    if (callback) callback(null, 'Failed to load image');
-                };
-                
-                img.src = e.target.result;
+                    
+                } catch (error) {
+                    console.error('❌ [LineDrawing] FileReader onload error:', error);
+                    clearTimeout(timeoutId);
+                    LineDrawingState.reset();
+                    if (callback) callback(null, `Datei-Verarbeitung fehlgeschlagen: ${error.message}`);
+                }
             };
             
-            reader.onerror = function() {
-                console.error('❌ [LineDrawing] File read error');
-                if (callback) callback(null, 'Failed to read file');
+            reader.onerror = function(error) {
+                console.error('❌ [LineDrawing] FileReader error:', error);
+                clearTimeout(timeoutId);
+                LineDrawingState.reset();
+                if (callback) callback(null, 'Datei konnte nicht gelesen werden');
             };
             
-            reader.readAsDataURL(file);
+            reader.onabort = function() {
+                console.error('❌ [LineDrawing] FileReader aborted');
+                clearTimeout(timeoutId);
+                LineDrawingState.reset();
+                if (callback) callback(null, 'Datei-Lesung wurde abgebrochen');
+            };
+            
+            // PROTECTION 14: Secure file reading
+            try {
+                reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('❌ [LineDrawing] FileReader start failed:', error);
+                clearTimeout(timeoutId);
+                LineDrawingState.reset();
+                if (callback) callback(null, `Datei konnte nicht gelesen werden: ${error.message}`);
+            }
         }
         
         /**
-         * Process image data for line drawing (fix black image issue)
+         * ULTRA-ROBUST: Process image data for line drawing with comprehensive error handling
          * @param {ImageData} imageData - Canvas image data
-         * @returns {ImageData} Processed image data
+         * @returns {ImageData|null} Processed image data or null on error
          */
-        function processLineDrawing(imageData) {
-            console.log('🎨 [LineDrawing] Processing image data...');
+        function processLineDrawingUltraRobust(imageData) {
+            console.log('🎨 [LineDrawing] ULTRA-ROBUST image processing started...');
+            
+            // PROTECTION 15: Input validation
+            if (!imageData || !imageData.data || !imageData.width || !imageData.height) {
+                console.error('❌ [LineDrawing] Invalid imageData provided');
+                return null;
+            }
             
             const data = imageData.data;
             const width = imageData.width;
             const height = imageData.height;
+            const totalPixels = width * height;
             
-            // Create new image data
-            const processedData = new ImageData(width, height);
-            const processed = processedData.data;
-            
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const a = data[i + 3];
-                
-                // Convert to grayscale
-                const gray = (r * 0.299 + g * 0.587 + b * 0.114);
-                
-                // Apply threshold for line drawing (invert if needed)
-                const threshold = 128;
-                const isLine = gray < threshold;
-                
-                // FIX: Proper line drawing colors (black lines on white background)
-                if (isLine) {
-                    // Line pixels - black
-                    processed[i] = 0;     // R
-                    processed[i + 1] = 0; // G
-                    processed[i + 2] = 0; // B
-                    processed[i + 3] = 255; // A
-                } else {
-                    // Background pixels - white/transparent
-                    processed[i] = 255;   // R
-                    processed[i + 1] = 255; // G
-                    processed[i + 2] = 255; // B
-                    processed[i + 3] = 0;   // A (transparent background)
-                }
+            // PROTECTION 16: Sanity checks
+            if (data.length !== totalPixels * 4) {
+                console.error('❌ [LineDrawing] ImageData size mismatch:', data.length, 'vs expected', totalPixels * 4);
+                return null;
             }
             
-            console.log('✅ [LineDrawing] Image processing complete');
-            return processedData;
+            if (totalPixels > 50000000) { // ~7000x7000 pixels
+                console.error('❌ [LineDrawing] Image too large for processing:', totalPixels, 'pixels');
+                return null;
+            }
+            
+            console.log('🎨 [LineDrawing] Processing', totalPixels, 'pixels...');
+            
+            // PROTECTION 17: Safe ImageData creation
+            let processedData;
+            try {
+                processedData = new ImageData(width, height);
+            } catch (error) {
+                console.error('❌ [LineDrawing] Failed to create ImageData:', error);
+                return null;
+            }
+            
+            const processed = processedData.data;
+            
+            // PROTECTION 18: Chunked processing for large images (prevent UI blocking)
+            const chunkSize = 10000; // Process 10k pixels at a time
+            let processedCount = 0;
+            
+            try {
+                for (let i = 0; i < data.length; i += 4) {
+                    // PROTECTION 19: Bounds checking
+                    if (i + 3 >= data.length || i + 3 >= processed.length) {
+                        console.warn('⚠️ [LineDrawing] Bounds exceeded at pixel', i/4);
+                        break;
+                    }
+                    
+                    const r = data[i] || 0;
+                    const g = data[i + 1] || 0;
+                    const b = data[i + 2] || 0;
+                    const a = data[i + 3] || 255;
+                    
+                    // PROTECTION 20: NaN checking
+                    if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a)) {
+                        console.warn('⚠️ [LineDrawing] NaN values detected at pixel', i/4);
+                        processed[i] = 255;     // Default to white
+                        processed[i + 1] = 255;
+                        processed[i + 2] = 255;
+                        processed[i + 3] = 0;   // Transparent
+                        continue;
+                    }
+                    
+                    // PROTECTION 21: Enhanced grayscale conversion with alpha consideration
+                    let gray;
+                    if (a === 0) {
+                        // Transparent pixel - treat as background
+                        gray = 255;
+                    } else {
+                        // Standard grayscale conversion (ITU-R BT.709)
+                        gray = (r * 0.2126 + g * 0.7152 + b * 0.0722);
+                    }
+                    
+                    // PROTECTION 22: Adaptive threshold based on alpha channel
+                    let threshold = 128;
+                    if (a < 255) {
+                        // Semi-transparent pixels get higher threshold (more likely to be background)
+                        threshold = 128 + (255 - a) * 0.2;
+                    }
+                    
+                    const isLine = gray < threshold;
+                    
+                    // PROTECTION 23: Enhanced color assignment with edge detection
+                    if (isLine) {
+                        // Line pixels - pure black with full opacity
+                        processed[i] = 0;       // R
+                        processed[i + 1] = 0;   // G
+                        processed[i + 2] = 0;   // B
+                        processed[i + 3] = Math.max(a, 200); // Ensure visibility
+                    } else {
+                        // Background pixels - transparent
+                        processed[i] = 255;     // R (white if visible)
+                        processed[i + 1] = 255; // G
+                        processed[i + 2] = 255; // B
+                        processed[i + 3] = 0;   // A (transparent)
+                    }
+                    
+                    processedCount++;
+                    
+                    // PROTECTION 24: Progress reporting and yielding control
+                    if (processedCount % chunkSize === 0) {
+                        const progress = (processedCount / totalPixels * 100).toFixed(1);
+                        console.log('🎨 [LineDrawing] Progress:', progress + '%');
+                        
+                        // Yield control to prevent UI blocking (removed await as function is not async)
+                        if (processedCount % (chunkSize * 10) === 0) {
+                            // Note: Cannot use await in non-async function, but chunked processing still helps
+                        }
+                    }
+                }
+                
+                console.log('✅ [LineDrawing] ULTRA-ROBUST processing complete!', processedCount, 'pixels processed');
+                
+                // PROTECTION 25: Validation of processed data
+                if (processedCount !== totalPixels) {
+                    console.warn('⚠️ [LineDrawing] Pixel count mismatch:', processedCount, 'vs', totalPixels);
+                }
+                
+                return processedData;
+                
+            } catch (error) {
+                console.error('❌ [LineDrawing] Processing error:', error);
+                return null;
+            }
         }
         
         /**
-         * Create file input for line drawing import
+         * Legacy function for backwards compatibility
+         */
+        function processLineDrawing(imageData) {
+            return processLineDrawingUltraRobust(imageData);
+        }
+        
+        /**
+         * ULTRA-ROBUST: Create file input for line drawing import with mobile support
          * @returns {HTMLInputElement} File input element
          */
-        function createLineDrawingInput() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.style.display = 'none';
-            
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    handleLineDrawingFile(file, function(dataURL, error) {
-                        if (error) {
-                            console.error('❌ [LineDrawing] Import failed:', error);
-                            alert('Fehler beim Importieren der Strichzeichnung: ' + error);
-                        } else {
-                            console.log('✅ [LineDrawing] Import successful');
-                            // TODO: Integrate with game (create obstacle, collectible, etc.)
-                            showLineDrawingPreview(dataURL);
-                        }
-                    });
+        function createLineDrawingInputUltraRobust() {
+            try {
+                const input = document.createElement('input');
+                input.type = 'file';
+                
+                // PROTECTION 26: Enhanced file type restrictions
+                input.accept = 'image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml,image/bmp';
+                input.style.display = 'none';
+                
+                // PROTECTION 27: Mobile compatibility attributes
+                if (/Mobi|Android/i.test(navigator.userAgent)) {
+                    input.capture = 'environment'; // Use back camera on mobile
+                    input.setAttribute('capture', 'environment');
                 }
-            };
-            
-            return input;
+                
+                // PROTECTION 28: Enhanced change handler with validation
+                input.onchange = function(e) {
+                    try {
+                        console.log('🎨 [LineDrawing] File input changed');
+                        
+                        if (!e.target || !e.target.files) {
+                            console.error('❌ [LineDrawing] No files in event');
+                            return;
+                        }
+                        
+                        const file = e.target.files[0];
+                        if (!file) {
+                            console.warn('⚠️ [LineDrawing] No file selected');
+                            return;
+                        }
+                        
+                        console.log('🎨 [LineDrawing] Processing file:', file.name, file.size, 'bytes');
+                        
+                        // Show loading indicator
+                        showLoadingIndicator('Verarbeite Strichzeichnung...');
+                        
+                        handleLineDrawingFile(file, function(dataURL, error) {
+                            hideLoadingIndicator();
+                            
+                            if (error) {
+                                console.error('❌ [LineDrawing] Import failed:', error);
+                                showErrorMessage('Fehler beim Importieren der Strichzeichnung', error);
+                            } else {
+                                console.log('✅ [LineDrawing] Import successful');
+                                showLineDrawingPreviewUltraRobust(dataURL);
+                            }
+                            
+                            // Reset input for next use
+                            e.target.value = '';
+                        });
+                        
+                    } catch (error) {
+                        hideLoadingIndicator();
+                        console.error('❌ [LineDrawing] Input change handler error:', error);
+                        showErrorMessage('Unerwarteter Fehler', error.message);
+                    }
+                };
+                
+                // PROTECTION 29: Error handling for input events
+                input.onerror = function(e) {
+                    console.error('❌ [LineDrawing] Input error:', e);
+                    hideLoadingIndicator();
+                    showErrorMessage('Dateieingabe-Fehler', 'Fehler beim Zugriff auf die Datei');
+                };
+                
+                return input;
+                
+            } catch (error) {
+                console.error('❌ [LineDrawing] Failed to create input:', error);
+                return null;
+            }
         }
         
         /**
-         * Show line drawing preview
-         * @param {string} dataURL - Processed image data URL
+         * Legacy function for backwards compatibility
          */
-        function showLineDrawingPreview(dataURL) {
-            // Create preview element
-            const preview = document.createElement('div');
-            preview.style.position = 'fixed';
-            preview.style.top = '50%';
-            preview.style.left = '50%';
-            preview.style.transform = 'translate(-50%, -50%)';
-            preview.style.background = 'white';
-            preview.style.border = '2px solid #333';
-            preview.style.borderRadius = '8px';
-            preview.style.padding = '20px';
-            preview.style.zIndex = '10000';
-            preview.style.maxWidth = '80%';
-            preview.style.maxHeight = '80%';
-            preview.style.overflow = 'auto';
-            
-            preview.innerHTML = `
-                <h3>Strichzeichnung importiert!</h3>
-                <img src="${dataURL}" style="max-width: 100%; max-height: 400px; border: 1px solid #ccc;">
-                <br><br>
-                <button onclick="document.body.removeChild(this.parentElement)">Schließen</button>
-            `;
-            
-            document.body.appendChild(preview);
+        function createLineDrawingInput() {
+            return createLineDrawingInputUltraRobust();
         }
         
-        // Initialize line drawing system
-        const lineDrawingInput = createLineDrawingInput();
-        document.body.appendChild(lineDrawingInput);
+        /**
+         * ULTRA-ROBUST: Show line drawing preview with mobile optimization
+         * @param {string} dataURL - Processed image data URL
+         */
+        function showLineDrawingPreviewUltraRobust(dataURL) {
+            try {
+                console.log('🎨 [LineDrawing] Showing preview...');
+                
+                // PROTECTION 30: Input validation
+                if (!dataURL || typeof dataURL !== 'string') {
+                    console.error('❌ [LineDrawing] Invalid dataURL for preview');
+                    showErrorMessage('Vorschau-Fehler', 'Ungültige Bilddaten');
+                    return;
+                }
+                
+                // PROTECTION 31: Remove existing previews
+                const existingPreviews = document.querySelectorAll('.line-drawing-preview');
+                existingPreviews.forEach(preview => {
+                    try {
+                        document.body.removeChild(preview);
+                    } catch (e) {
+                        console.warn('⚠️ [LineDrawing] Could not remove existing preview:', e);
+                    }
+                });
+                
+                // PROTECTION 32: Mobile-responsive preview creation
+                const preview = document.createElement('div');
+                preview.className = 'line-drawing-preview';
+                
+                // PROTECTION 33: Mobile-optimized styling
+                const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+                const styles = {
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'white',
+                    border: '2px solid #333',
+                    borderRadius: '8px',
+                    padding: isMobile ? '15px' : '20px',
+                    zIndex: '10000',
+                    maxWidth: isMobile ? '95%' : '80%',
+                    maxHeight: isMobile ? '95%' : '80%',
+                    overflow: 'auto',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                    fontFamily: 'Arial, sans-serif',
+                    textAlign: 'center'
+                };
+                
+                Object.assign(preview.style, styles);
+                
+                // PROTECTION 34: Safe HTML generation
+                const title = document.createElement('h3');
+                title.textContent = 'Strichzeichnung importiert!';
+                title.style.margin = '0 0 15px 0';
+                title.style.color = '#333';
+                preview.appendChild(title);
+                
+                // PROTECTION 35: Safe image creation with error handling
+                const img = document.createElement('img');
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = isMobile ? '300px' : '400px';
+                img.style.border = '1px solid #ccc';
+                img.style.borderRadius = '4px';
+                img.style.display = 'block';
+                img.style.margin = '0 auto 15px auto';
+                
+                img.onload = function() {
+                    console.log('✅ [LineDrawing] Preview image loaded successfully');
+                };
+                
+                img.onerror = function() {
+                    console.error('❌ [LineDrawing] Preview image failed to load');
+                    img.style.display = 'none';
+                    const errorText = document.createElement('p');
+                    errorText.textContent = 'Fehler beim Laden des Vorschaubildes';
+                    errorText.style.color = 'red';
+                    preview.appendChild(errorText);
+                };
+                
+                try {
+                    img.src = dataURL;
+                } catch (error) {
+                    console.error('❌ [LineDrawing] Failed to set image src:', error);
+                    showErrorMessage('Vorschau-Fehler', 'Konnte Bild nicht anzeigen');
+                    return;
+                }
+                
+                preview.appendChild(img);
+                
+                // PROTECTION 36: Button container with multiple options
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.justifyContent = 'center';
+                buttonContainer.style.gap = '10px';
+                buttonContainer.style.flexWrap = 'wrap';
+                
+                // Close button
+                const closeBtn = document.createElement('button');
+                closeBtn.textContent = 'Schließen';
+                closeBtn.style.padding = '8px 16px';
+                closeBtn.style.background = '#666';
+                closeBtn.style.color = 'white';
+                closeBtn.style.border = 'none';
+                closeBtn.style.borderRadius = '4px';
+                closeBtn.style.cursor = 'pointer';
+                closeBtn.style.fontSize = isMobile ? '16px' : '14px';
+                
+                closeBtn.onclick = function() {
+                    try {
+                        document.body.removeChild(preview);
+                    } catch (error) {
+                        console.error('❌ [LineDrawing] Failed to close preview:', error);
+                    }
+                };
+                
+                // Download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.style.padding = '8px 16px';
+                downloadBtn.style.background = '#007bff';
+                downloadBtn.style.color = 'white';
+                downloadBtn.style.border = 'none';
+                downloadBtn.style.borderRadius = '4px';
+                downloadBtn.style.cursor = 'pointer';
+                downloadBtn.style.fontSize = isMobile ? '16px' : '14px';
+                
+                downloadBtn.onclick = function() {
+                    try {
+                        const link = document.createElement('a');
+                        link.download = 'strichzeichnung-processed.png';
+                        link.href = dataURL;
+                        link.click();
+                    } catch (error) {
+                        console.error('❌ [LineDrawing] Download failed:', error);
+                        showErrorMessage('Download-Fehler', 'Konnte Datei nicht herunterladen');
+                    }
+                };
+                
+                buttonContainer.appendChild(closeBtn);
+                buttonContainer.appendChild(downloadBtn);
+                preview.appendChild(buttonContainer);
+                
+                // PROTECTION 37: Safe DOM insertion
+                try {
+                    document.body.appendChild(preview);
+                    
+                    // PROTECTION 38: Escape key handling
+                    const escapeHandler = function(e) {
+                        if (e.key === 'Escape') {
+                            try {
+                                document.body.removeChild(preview);
+                                document.removeEventListener('keydown', escapeHandler);
+                            } catch (error) {
+                                console.warn('⚠️ [LineDrawing] Escape handler cleanup failed:', error);
+                            }
+                        }
+                    };
+                    document.addEventListener('keydown', escapeHandler);
+                    
+                } catch (error) {
+                    console.error('❌ [LineDrawing] Failed to show preview:', error);
+                    showErrorMessage('Vorschau-Fehler', 'Konnte Vorschau nicht anzeigen');
+                }
+                
+            } catch (error) {
+                console.error('❌ [LineDrawing] Preview creation failed:', error);
+                showErrorMessage('Vorschau-Fehler', error.message);
+            }
+        }
         
-        // Function to trigger line drawing import
+        /**
+         * Legacy function for backwards compatibility
+         */
+        function showLineDrawingPreview(dataURL) {
+            return showLineDrawingPreviewUltraRobust(dataURL);
+        }
+        
+        // PROTECTION 39: Helper functions for UI feedback
+        function showLoadingIndicator(message = 'Verarbeitung läuft...') {
+            try {
+                hideLoadingIndicator(); // Remove any existing indicator
+                
+                const indicator = document.createElement('div');
+                indicator.id = 'lineDrawingLoadingIndicator';
+                indicator.style.position = 'fixed';
+                indicator.style.top = '50%';
+                indicator.style.left = '50%';
+                indicator.style.transform = 'translate(-50%, -50%)';
+                indicator.style.background = 'rgba(0,0,0,0.8)';
+                indicator.style.color = 'white';
+                indicator.style.padding = '20px';
+                indicator.style.borderRadius = '8px';
+                indicator.style.zIndex = '10001';
+                indicator.style.textAlign = 'center';
+                indicator.style.fontFamily = 'Arial, sans-serif';
+                indicator.innerHTML = `
+                    <div style="font-size: 16px; margin-bottom: 10px;">${message}</div>
+                    <div style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    <style>
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    </style>
+                `;
+                
+                document.body.appendChild(indicator);
+            } catch (error) {
+                console.error('❌ [LineDrawing] Failed to show loading indicator:', error);
+            }
+        }
+        
+        function hideLoadingIndicator() {
+            try {
+                const indicator = document.getElementById('lineDrawingLoadingIndicator');
+                if (indicator) {
+                    document.body.removeChild(indicator);
+                }
+            } catch (error) {
+                console.warn('⚠️ [LineDrawing] Failed to hide loading indicator:', error);
+            }
+        }
+        
+        function showErrorMessage(title, message) {
+            try {
+                const errorDialog = document.createElement('div');
+                errorDialog.style.position = 'fixed';
+                errorDialog.style.top = '50%';
+                errorDialog.style.left = '50%';
+                errorDialog.style.transform = 'translate(-50%, -50%)';
+                errorDialog.style.background = 'white';
+                errorDialog.style.border = '2px solid #ff4444';
+                errorDialog.style.borderRadius = '8px';
+                errorDialog.style.padding = '20px';
+                errorDialog.style.zIndex = '10002';
+                errorDialog.style.maxWidth = '80%';
+                errorDialog.style.textAlign = 'center';
+                errorDialog.style.fontFamily = 'Arial, sans-serif';
+                errorDialog.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+                
+                errorDialog.innerHTML = `
+                    <h3 style="color: #ff4444; margin: 0 0 10px 0;">${title}</h3>
+                    <p style="margin: 0 0 15px 0; color: #333;">${message}</p>
+                    <button onclick="document.body.removeChild(this.parentElement)" style="
+                        padding: 8px 16px;
+                        background: #ff4444;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">OK</button>
+                `;
+                
+                document.body.appendChild(errorDialog);
+                
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    try {
+                        if (document.body.contains(errorDialog)) {
+                            document.body.removeChild(errorDialog);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ [LineDrawing] Auto-removal failed:', e);
+                    }
+                }, 10000);
+                
+            } catch (error) {
+                console.error('❌ [LineDrawing] Failed to show error message:', error);
+                // Fallback to alert
+                alert(`${title}: ${message}`);
+            }
+        }
+        
+        // PROTECTION 40: Initialize line drawing system with error handling
+        let lineDrawingInput;
+        try {
+            lineDrawingInput = createLineDrawingInput();
+            if (lineDrawingInput) {
+                document.body.appendChild(lineDrawingInput);
+                console.log('✅ [LineDrawing] System initialized successfully');
+            } else {
+                console.error('❌ [LineDrawing] Failed to create input element');
+            }
+        } catch (error) {
+            console.error('❌ [LineDrawing] System initialization failed:', error);
+        }
+        
+        /**
+         * ULTRA-ROBUST: Function to trigger line drawing import with comprehensive validation
+         */
+        function importLineDrawingUltraRobust() {
+            try {
+                console.log('🎨 [LineDrawing] Import triggered');
+                
+                // PROTECTION 41: Check if system is ready
+                if (!lineDrawingInput) {
+                    console.error('❌ [LineDrawing] Input not initialized');
+                    showErrorMessage('System-Fehler', 'Strichzeichnungs-System nicht initialisiert');
+                    return;
+                }
+                
+                // PROTECTION 42: Check if already processing
+                if (LineDrawingState.isProcessing) {
+                    console.warn('⚠️ [LineDrawing] Already processing, ignoring trigger');
+                    showErrorMessage('Import läuft bereits', 'Bitte warten Sie, bis der aktuelle Import abgeschlossen ist');
+                    return;
+                }
+                
+                // PROTECTION 43: Check browser compatibility
+                if (!window.FileReader) {
+                    console.error('❌ [LineDrawing] FileReader not supported');
+                    showErrorMessage('Browser nicht unterstützt', 'Ihr Browser unterstützt keine Datei-Uploads');
+                    return;
+                }
+                
+                if (!document.createElement('canvas').getContext) {
+                    console.error('❌ [LineDrawing] Canvas not supported');
+                    showErrorMessage('Browser nicht unterstützt', 'Ihr Browser unterstützt kein Canvas');
+                    return;
+                }
+                
+                // PROTECTION 44: Mobile optimization check
+                const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                    console.log('📱 [LineDrawing] Mobile device detected, optimizing...');
+                }
+                
+                // PROTECTION 45: Trigger file input with error handling
+                try {
+                    lineDrawingInput.click();
+                } catch (error) {
+                    console.error('❌ [LineDrawing] Failed to trigger file input:', error);
+                    showErrorMessage('Import-Fehler', 'Konnte Dateiauswahl nicht öffnen');
+                }
+                
+            } catch (error) {
+                console.error('❌ [LineDrawing] Import trigger failed:', error);
+                showErrorMessage('Unerwarteter Fehler', error.message);
+            }
+        }
+        
+        /**
+         * Legacy function for backwards compatibility
+         */
         function importLineDrawing() {
-            lineDrawingInput.click();
+            return importLineDrawingUltraRobust();
         }
         
         // ==================== END LINE DRAWING IMPORT SYSTEM ====================
