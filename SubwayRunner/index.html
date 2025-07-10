@@ -468,8 +468,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.6.1-COLLECTIBLE-BUGFIX<br>
-            📅 07.07.2025
+            🚀 V5.0.0-ULTIMATE<br>
+            📅 10.07.2025
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -487,6 +487,18 @@
         <!-- Gesture Feedback -->
         <div class="gesture-feedback" id="gestureFeedback"></div>
         
+        <!-- Mobile Duck Toggle Indicator -->
+        <div id="duckToggleIndicator" style="
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            font-size: 48px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 200;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        ">🦆</div>
+        
         <!-- Hidden video element for camera -->
         <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
         
@@ -501,7 +513,7 @@
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
+                🥝 <span id="kiwiCount">0</span>/7 | 🥦 <span id="broccoliCount">0</span>/7
                 <div style="font-size: 12px; margin-top: 2px;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
@@ -1906,9 +1918,9 @@
             createSubwayTracks() {
                 const trackGeometry = new THREE.BoxGeometry(0.2, 0.1, 2);
                 const trackMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x666666,
-                    emissive: 0x222222,
-                    emissiveIntensity: 0.1
+                    color: 0x999999,  // Brighter for better visibility
+                    emissive: 0x444444,
+                    emissiveIntensity: 0.15
                 });
                 
                 for (let i = 0; i < 50; i++) {
@@ -3727,6 +3739,7 @@
             jumpVelocity: 0,
             jumpStartTime: 0,  // BUGFIX: Track jump start time for safety
             maxJumpDuration: 2000, // Maximum 2 seconds jump duration
+            isDuckingToggled: false, // MOBILE: Track if ducking is toggled on mobile
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -3960,7 +3973,9 @@
             // Player body (torso)
             const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
             const bodyMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x4A90E2
+                color: 0x66B2FF,  // Brighter blue for better visibility
+                emissive: 0x1A4A70,
+                emissiveIntensity: 0.2
             });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             body.position.y = 0.7;
@@ -3970,7 +3985,9 @@
             // Player head
             const headGeometry = new THREE.SphereGeometry(0.25);
             const headMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xF5B041
+                color: 0xFFCC66,  // Brighter yellow for better visibility
+                emissive: 0xCC9933,
+                emissiveIntensity: 0.1
             });
             const head = new THREE.Mesh(headGeometry, headMaterial);
             head.position.y = 1.35;
@@ -3991,7 +4008,11 @@
 
             // Arms
             const armGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6);
-            const armMaterial = new THREE.MeshLambertMaterial({ color: 0xF5B041 });
+            const armMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFCC66,  // Brighter arms to match head
+                emissive: 0xCC9933,
+                emissiveIntensity: 0.1
+            });
             
             const leftArm = new THREE.Mesh(armGeometry, armMaterial);
             leftArm.position.set(-0.4, 0.8, 0);
@@ -4129,7 +4150,9 @@
             // Urban ground with asphalt texture
             const groundGeometry = new THREE.PlaneGeometry(80, 120);
             const groundMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x333333
+                color: 0x555555,  // Brighter ground for better contrast
+                emissive: 0x222222,
+                emissiveIntensity: 0.1
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
@@ -4324,7 +4347,7 @@
             
             // Sign post
             const postGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2.5);
-            const postMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+            const postMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
             const post = new THREE.Mesh(postGeometry, postMaterial);
             post.position.y = 0.25;
             signGroup.add(post);
@@ -4360,7 +4383,9 @@
                     // Niedrige Barriere - muss übersprungen werden
                     obstacleGeometry = new THREE.BoxGeometry(1.5, 0.8, 0.3);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0xFF6B35
+                        color: 0xFF8555,  // Brighter orange for better visibility
+                        emissive: 0x441122,
+                        emissiveIntensity: 0.1
                     });
                     height = 0.8;
                     break;
@@ -4368,7 +4393,9 @@
                     // Hohe Barriere - muss unterduckt werden
                     obstacleGeometry = new THREE.BoxGeometry(1.8, 0.4, 0.3);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x8B0000
+                        color: 0xCC3333,  // Brighter red for better visibility
+                        emissive: 0x330000,
+                        emissiveIntensity: 0.15
                     });
                     height = 0.4;
                     break;
@@ -4385,7 +4412,9 @@
                     // Block zum Überspringen - Concrete texture
                     obstacleGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x8B8B8B
+                        color: 0xBBBBBB,  // Brighter gray for better visibility
+                        emissive: 0x333333,
+                        emissiveIntensity: 0.1
                     });
                     height = 1.2;
                     // Add concrete details
@@ -4406,7 +4435,9 @@
                     // Balken zum Unterducken - Metal beam
                     obstacleGeometry = new THREE.BoxGeometry(2.2, 0.3, 0.8);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x4682B4
+                        color: 0x66AADD,  // Brighter blue for better visibility
+                        emissive: 0x223344,
+                        emissiveIntensity: 0.1
                     });
                     height = 0.3;
                     // Add support struts
@@ -4539,7 +4570,7 @@
                     
                     // Support structure
                     const supportGeometry = new THREE.BoxGeometry(0.2, 3, 0.2);
-                    const supportMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+                    const supportMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
                     const support = new THREE.Mesh(supportGeometry, supportMaterial);
                     support.position.y = 1.5;
                     support.castShadow = true;
@@ -4645,7 +4676,7 @@
                     // Central hub
                     const laserHubGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.6);
                     const laserHubMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x333333,
+                        color: 0x666666,
                         emissive: 0x110011
                     });
                     const laserHub = new THREE.Mesh(laserHubGeometry, laserHubMaterial);
@@ -4794,6 +4825,11 @@
             gameState.playerAction = 'running';
             gameState.playerY = 0;
             gameState.jumpVelocity = 0;
+            gameState.isDuckingToggled = false; // Reset mobile ducking toggle
+            
+            // Hide duck indicator
+            const duckIndicator = document.getElementById('duckToggleIndicator');
+            if (duckIndicator) duckIndicator.style.opacity = '0';
             gameState.invulnerable = false;
             gameState.invulnerabilityTime = 0;
             gameState.timeScale = 1.0;
@@ -6651,9 +6687,9 @@
                 console.error('❌ broccoliCount element not found!');
             }
             
-            // Update progress bars for 30:7 goals
+            // Update progress bars for 7:7 goals (perfect balance!)
             if (kiwiProgress) {
-                const kiwiPercent = Math.min((gameState.collectedKiwis / 30) * 100, 100);
+                const kiwiPercent = Math.min((gameState.collectedKiwis / 7) * 100, 100);
                 kiwiProgress.style.width = kiwiPercent + '%';
             }
             
@@ -6805,7 +6841,7 @@
             
             // Bridge deck (road above)
             const bridgeGeometry = new THREE.BoxGeometry(12, 0.5, 10);
-            const bridgeMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+            const bridgeMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
             
             const bridge = new THREE.Mesh(bridgeGeometry, bridgeMaterial);
             bridge.position.set(0, 6.5, z);
@@ -6948,7 +6984,7 @@
                 // Curved top connection (simplified with box)
                 const topGeometry = new THREE.BoxGeometry(0.8 * scale, 0.3 * scale, 0.3 * scale);
                 const topMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x666666,
+                    color: 0x999999,
                     metalness: 0.8,
                     roughness: 0.2
                 });
@@ -7052,7 +7088,7 @@
             // Tunnel ceiling
             const ceilingGeometry = new THREE.BoxGeometry(8, 0.3, 8);
             const ceilingMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x333333,
+                color: 0x666666,
                 transparent: true,
                 opacity: 0.8
             });
@@ -7073,7 +7109,7 @@
             
             // Tunnel support beams
             const beamGeometry = new THREE.BoxGeometry(0.1, 5.5, 0.2);
-            const beamMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+            const beamMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
             
             for (let side of [-3.8, 3.8]) {
                 const beam = new THREE.Mesh(beamGeometry, beamMaterial);
@@ -7853,9 +7889,9 @@
                                 child.material.transparent = false;
                             }
                         });
-                        // Restore original colors
-                        if (player.children[0]) player.children[0].material.color.setHex(0x4A90E2); // Body
-                        if (player.children[1]) player.children[1].material.color.setHex(0xF5B041); // Head
+                        // Restore original brighter colors
+                        if (player.children[0]) player.children[0].material.color.setHex(0x66B2FF); // Brighter body
+                        if (player.children[1]) player.children[1].material.color.setHex(0xFFCC66); // Brighter head
                     }
                 }
                 
@@ -8026,9 +8062,9 @@
                     );
                 };
                 
-                // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.003; // Low starting rate
-                const maxCoinRate = 0.012; // Reduced max rate for better spacing
+                // ENHANCED: Dynamic spawn rate based on speed (guaranteed collectibles!)
+                const baseCoinRate = 0.015; // INCREASED starting rate (5x higher!)
+                const maxCoinRate = 0.035; // INCREASED max rate for guaranteed spawns
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
@@ -8060,10 +8096,10 @@
                         }
                     }
                     
-                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
-                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
+                    // BALANCED: Check COLLECTED collectibles, not spawned ones!
+                    // NEW BALANCE: 7 Kiwis + 7 Broccolis = 14 total (much more achievable!)
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 37) {
+                    if (collectedTotal >= 14) {
                         // Max collectibles collected, no more spawning
                         return;
                     }
@@ -8072,23 +8108,23 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 30:7 target ratio
+                    // Determine what to spawn based on 7:7 target ratio (perfect balance!)
                     let isKiwi;
-                    if (kiwiCount >= 30) {
-                        isKiwi = false; // Force broccoli if we have 30 kiwis
+                    if (kiwiCount >= 7) {
+                        isKiwi = false; // Force broccoli if we have 7 kiwis
                     } else if (broccoliCount >= 7) {
                         isKiwi = true; // Force kiwi if we have 7 broccolis
                     } else {
-                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
-                        const totalTarget = 37;
+                        // Balanced spawning for 7:7 ratio (50% kiwi, 50% broccoli)
+                        const totalTarget = 14;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 30 / totalTarget; // ~0.81
+                        const targetRatio = 7 / totalTarget; // 0.5 (perfect balance)
                         
-                        // Bias towards kiwis if we're below target ratio
+                        // Perfect balance: spawn what we need more of
                         if (currentRatio < targetRatio) {
-                            isKiwi = Math.random() < 0.85; // Strong bias toward kiwis
+                            isKiwi = Math.random() < 0.7; // Slightly favor kiwis if behind
                         } else {
-                            isKiwi = Math.random() < 0.25; // Strong bias toward broccolis
+                            isKiwi = Math.random() < 0.3; // Slightly favor broccolis if behind
                         }
                     }
                     
@@ -8150,8 +8186,8 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 30) {
-                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
+                                if (currentKiwiCount >= 7) {
+                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
@@ -8194,8 +8230,8 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 30) {
-                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
+                                if (currentKiwiCount >= 7) {
+                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
@@ -8728,11 +8764,32 @@
                         // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
                         // Removed automatic jump particles - only success particles when avoiding obstacles
                         trackPlayerMove('jumping');
-                    } else if (deltaY > 0 && gameState.playerAction === 'running') {
-                        // Swipe down - duck
-                        gameState.playerAction = 'ducking';
-                        audioManager.play('duck');
-                        trackPlayerMove('ducking');
+                    } else if (deltaY > 0) {
+                        // MOBILE TOGGLE DUCKING: Swipe down toggles duck state
+                        if (gameState.playerAction === 'running') {
+                            // Start ducking
+                            gameState.playerAction = 'ducking';
+                            gameState.isDuckingToggled = true;
+                            audioManager.play('duck');
+                            trackPlayerMove('ducking');
+                            
+                            // Show duck indicator
+                            const indicator = document.getElementById('duckToggleIndicator');
+                            if (indicator) indicator.style.opacity = '1';
+                            
+                            console.log('📱 MOBILE: Started ducking (toggle mode)');
+                        } else if (gameState.playerAction === 'ducking' && gameState.isDuckingToggled) {
+                            // Stop ducking (toggle off)
+                            gameState.playerAction = 'running';
+                            gameState.isDuckingToggled = false;
+                            audioManager.play('stand');
+                            
+                            // Hide duck indicator
+                            const indicator = document.getElementById('duckToggleIndicator');
+                            if (indicator) indicator.style.opacity = '0';
+                            
+                            console.log('📱 MOBILE: Stopped ducking (toggle mode)');
+                        }
                     }
                 }
             }
@@ -8763,16 +8820,8 @@
             document.addEventListener('touchend', handleTouchEnd, { passive: false });
             document.addEventListener('touchmove', handleTouchMove, { passive: false });
             
-            // Auto-release duck after swipe down
-            document.addEventListener('touchend', (event) => {
-                if (gameState.playerAction === 'ducking') {
-                    setTimeout(() => {
-                        if (gameState.playerAction === 'ducking') {
-                            gameState.playerAction = 'running';
-                        }
-                    }, 500); // Auto-release after 500ms
-                }
-            });
+            // REMOVED: Auto-release duck system (now using toggle system)
+            // Mobile ducking is now toggle-based for better control
         }
 
         // Debug function for testing
