@@ -205,6 +205,20 @@ npm run inspector    # Run MCP inspector
 
 ## 🚨 **CRITICAL GAME DESIGN RULES** (Never delete!)
 
+### **🎮 LEVEL PROGRESSION SYSTEM (FUNDAMENTAL RULE)**
+**CRITICAL RULE**: Level progression happens ONLY by completing levels, NOT by score!
+
+- ✅ **Level Completion**: Player must finish entire level to unlock next level
+- ✅ **Sequential Unlocking**: Level 2 unlocks only after Level 1 completion
+- ✅ **No Score-Based Progression**: Points do NOT trigger level changes
+- ✅ **Developer Testing Button**: Temporary skip button for development/testing ONLY
+
+**Implementation**: 
+- Level progression triggered by reaching level end, not score milestones
+- Each level has defined length/completion criteria
+- After level completion: "Level Complete!" + "Next Level" button appears
+- Score is for ranking/achievements, NOT for level unlocking
+
 ### **Collectible System Rules**
 **RULE 1**: ONLY these collectibles allowed:
 - ✅ **Kiwis** (large, realistic brown fruit) 

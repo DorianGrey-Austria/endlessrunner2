@@ -5407,20 +5407,22 @@
             
             if (skillComboDisplay) {
                 skillComboDisplay.style.display = 'block';
-                skillComboCount.textContent = gameState.consecutiveAvoidances;
-                skillComboBonus.textContent = `+${bonusPoints}`;
+                if (skillComboCount) skillComboCount.textContent = gameState.consecutiveAvoidances;
+                if (skillComboBonus) skillComboBonus.textContent = `+${bonusPoints}`;
                 
                 // Dynamic icon based on combo type
-                if (comboMessage.includes('ZIGZAG')) {
-                    skillComboIcon.textContent = '⚡';
-                } else if (comboMessage.includes('LIGHTNING')) {
-                    skillComboIcon.textContent = '⚡';
-                } else if (comboMessage.includes('PERFECT')) {
-                    skillComboIcon.textContent = '💎';
-                } else if (comboMessage.includes('RAPID')) {
-                    skillComboIcon.textContent = '🔥';
-                } else {
-                    skillComboIcon.textContent = '⭐';
+                if (skillComboIcon) {
+                    if (comboMessage.includes('ZIGZAG')) {
+                        skillComboIcon.textContent = '⚡';
+                    } else if (comboMessage.includes('LIGHTNING')) {
+                        skillComboIcon.textContent = '⚡';
+                    } else if (comboMessage.includes('PERFECT')) {
+                        skillComboIcon.textContent = '💎';
+                    } else if (comboMessage.includes('RAPID')) {
+                        skillComboIcon.textContent = '🔥';
+                    } else {
+                        skillComboIcon.textContent = '⭐';
+                    }
                 }
                 
                 // Update combo message in UI
@@ -5569,7 +5571,7 @@
             kiwiGroup.add(flesh);
             
             // Simple white core
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.3, 6);
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 6);
             const coreMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xF5F5DC
             });
