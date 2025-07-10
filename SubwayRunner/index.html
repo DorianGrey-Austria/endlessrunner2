@@ -6,7 +6,7 @@
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com;">
-    <script src="https://unpkg.com/three@0.155.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
@@ -2681,12 +2681,15 @@
                 // Sky dome with gradient shader
                 const skyGeometry = new THREE.SphereGeometry(300, 32, 32);
                 const skyMaterial = new THREE.ShaderMaterial({
-                    uniforms: {
-                        topColor: { value: new THREE.Color(0x0077be) },
-                        bottomColor: { value: new THREE.Color(0x87CEEB) },
-                        offset: { value: 0.3 },
-                        exponent: { value: 0.6 }
-                    },
+                    uniforms: THREE.UniformsUtils.merge([
+                        THREE.UniformsLib.fog,  // ✅ FOG-UNIFORMS: fogColor, fogNear, fogFar, fogDensity
+                        {
+                            topColor: { value: new THREE.Color(0x0077be) },
+                            bottomColor: { value: new THREE.Color(0x87CEEB) },
+                            offset: { value: 0.3 },
+                            exponent: { value: 0.6 }
+                        }
+                    ]),
                     vertexShader: `
                         varying vec3 vWorldPosition;
                         void main() {
@@ -2706,6 +2709,7 @@
                             gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
                         }
                     `,
+                    fog: true,  // ✅ ENABLE FOG INTEGRATION
                     side: THREE.BackSide
                 });
                 
