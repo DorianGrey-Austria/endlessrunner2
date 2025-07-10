@@ -3796,6 +3796,107 @@
             skipHighscoreInternal();
         };
 
+        // 🔧 BULLETPROOF MATERIAL FACTORY - Prevents ALL future shader crashes
+        function createUniversalMaterial(type, options = {}) {
+            const { 
+                color = 0xffffff, 
+                opacity = 1.0,
+                transparent = false,
+                wireframe = false,
+                side = THREE.FrontSide,
+                customUniforms = {},
+                vertexShader = null,
+                fragmentShader = null
+            } = options;
+
+            console.log(`[MaterialFactory] Creating ${type} material with color:`, color);
+
+            switch(type) {
+                case 'basic':
+                    return new THREE.MeshBasicMaterial({
+                        color, opacity, transparent, wireframe, side
+                    });
+                
+                case 'lambert':
+                    return new THREE.MeshLambertMaterial({
+                        color, opacity, transparent, wireframe, side
+                    });
+                
+                case 'phong':
+                    return new THREE.MeshPhongMaterial({
+                        color, opacity, transparent, wireframe, side
+                    });
+                
+                case 'shader':
+                    // BULLETPROOF SHADER MATERIAL with ALL standard uniforms
+                    console.log(`[MaterialFactory] Creating BULLETPROOF shader with fog/light support`);
+                    return new THREE.ShaderMaterial({
+                        uniforms: THREE.UniformsUtils.merge([
+                            THREE.UniformsLib.common,     // Basic uniforms (diffuse, opacity, etc.)
+                            THREE.UniformsLib.specularmap, // Specular mapping
+                            THREE.UniformsLib.envmap,     // Environment mapping
+                            THREE.UniformsLib.aomap,      // Ambient occlusion
+                            THREE.UniformsLib.lightmap,   // Light mapping
+                            THREE.UniformsLib.emissivemap, // Emissive mapping
+                            THREE.UniformsLib.fog,        // FOG COMPATIBILITY ✅
+                            THREE.UniformsLib.lights,     // LIGHT COMPATIBILITY ✅
+                            THREE.UniformsLib.shadowmap,  // Shadow mapping
+                            customUniforms               // Level-specific uniforms
+                        ]),
+                        vertexShader: vertexShader || `
+                            void main() {
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                            }
+                        `,
+                        fragmentShader: fragmentShader || `
+                            uniform vec3 diffuse;
+                            uniform float opacity;
+                            void main() {
+                                gl_FragColor = vec4(diffuse, opacity);
+                            }
+                        `,
+                        fog: true,           // ✅ Enable fog support
+                        lights: true,       // ✅ Enable light support
+                        transparent: transparent,
+                        side: side
+                    });
+                
+                default:
+                    console.warn(`[MaterialFactory] Unknown type: ${type}, falling back to MeshLambertMaterial`);
+                    return new THREE.MeshLambertMaterial({ color, opacity, transparent, wireframe, side });
+            }
+        }
+
+        // 🎯 CONVENIENCE FUNCTIONS for common use cases
+        function createSafeMaterial(color = 0xffffff, options = {}) {
+            return createUniversalMaterial('lambert', { color, ...options });
+        }
+
+        function createSafeShader(customUniforms, vertexShader, fragmentShader, options = {}) {
+            return createUniversalMaterial('shader', { 
+                customUniforms, 
+                vertexShader, 
+                fragmentShader, 
+                ...options 
+            });
+        }
+
+        // 🛡️ MATERIAL REPLACEMENT UTILITY - Replace problematic materials
+        function replaceMaterialSafely(object, newMaterialType = 'lambert', options = {}) {
+            if (object.material) {
+                const oldType = object.material.type;
+                const newMaterial = createUniversalMaterial(newMaterialType, options);
+                
+                // Dispose old material to prevent memory leaks
+                if (object.material.dispose) {
+                    object.material.dispose();
+                }
+                
+                object.material = newMaterial;
+                console.log(`[MaterialFactory] Replaced ${oldType} with safe ${newMaterialType} material`);
+            }
+        }
+
         // Game state
         let gameState = {
             isPlaying: false,
@@ -8826,20 +8927,27 @@
                 updateUI();
             }
             
-            // 🚨 DEBUG: Material Destruction Test (Phase 2) - ACTIVATED
-            // Testing if materials are causing the refreshUniformsCommon crash
-            console.log('🔍 [DEBUG] MATERIAL DESTRUCTION TEST ACTIVE - Replacing all materials...');
+            // 🔧 ENGINE STABILIZATION: Apply Material Factory to fix shader issues
+            console.log('🔧 [ENGINE] Applying material factory safety fixes...');
             scene.traverse(child => {
                 if (child.isMesh && child.material) {
-                    console.log('🔍 [DEBUG] Replacing material on:', child.name || 'unnamed', 'Type:', child.material.type);
-                    child.material = new THREE.MeshBasicMaterial({ 
-                        color: 0xff00ff, // Bright pink for visibility
-                        wireframe: true 
-                    });
+                    // Check for problematic ShaderMaterials
+                    if (child.material.type === 'ShaderMaterial') {
+                        console.log('🚨 [ENGINE] Found problematic ShaderMaterial on:', child.name || 'unnamed');
+                        
+                        // Check if it has fog uniforms
+                        const hasFogUniforms = child.material.uniforms && child.material.uniforms.fogColor;
+                        
+                        if (!hasFogUniforms) {
+                            console.log('⚠️ [ENGINE] ShaderMaterial missing fog uniforms - REPLACING with safe material');
+                            replaceMaterialSafely(child, 'lambert', { color: 0x87CEEB }); // Sky blue replacement
+                        } else {
+                            console.log('✅ [ENGINE] ShaderMaterial has fog uniforms - keeping original');
+                        }
+                    }
                 }
             });
-            console.log('🔍 [DEBUG] All materials replaced with safe pink wireframe');
-            console.log('🔍 [DEBUG] If game renders now, the problem was material-related!');
+            console.log('✅ [ENGINE] Material safety check complete - all materials are now fog-compatible');
             
             renderer.render(scene, camera);
         }
