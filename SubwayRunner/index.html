@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com;">
-    <script src="https://unpkg.com/three@0.158.0/build/three.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V5.1.5-STABILITY-FIX<br>
+            🚀 V6.0.0-3GS-ELIMINATION<br>
             📅 10.07.2025
         </div>
         
@@ -487,63 +487,21 @@
         <!-- Gesture Feedback -->
         <div class="gesture-feedback" id="gestureFeedback"></div>
         
-        <!-- Mobile Duck Toggle Indicator -->
-        <div id="duckToggleIndicator" style="
-            position: fixed;
-            top: 120px;
-            right: 20px;
-            font-size: 48px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 200;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        ">🦆</div>
-        
         <!-- Hidden video element for camera -->
         <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
         
         <!-- Canvas for gesture preview -->
         <canvas id="gestureCanvas"></canvas>
         
-        <!-- Countdown display -->
-        <div id="countdownDisplay" style="
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 120px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
-            z-index: 1000;
-            display: none;
-        "></div>
-        
         <div id="ui">
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <span style="font-size: 20px;">🏆</span>
-                <span id="score" style="min-width: 60px;">0</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <span style="font-size: 20px;">🚀</span>
-                <span id="speed" style="min-width: 40px;">100</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <span style="font-size: 20px;">❤️</span>
-                <span id="lives" style="min-width: 20px;">3</span>
-            </div>
-            <div id="timer" style="display: flex; align-items: center; gap: 5px;">
-                <span style="font-size: 20px;">⏱️</span>
-                <span id="timeRemaining" style="min-width: 30px;">60</span>
-            </div>
-            <div id="levelDisplay" style="color: #FFD700; font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                <span style="font-size: 20px;">🎮</span>
-                <span id="currentLevelNum">1</span>
-            </div>
+            <div>Score: <span id="score">0</span></div>
+            <div>Speed: <span id="speed">100</span></div>
+            <div>❤️ Leben: <span id="lives">3</span></div>
+            <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/7 | 🥦 <span id="broccoliCount">0</span>/7
+                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
                 <div style="font-size: 12px; margin-top: 2px;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
@@ -555,33 +513,45 @@
                     </div>
                 </div>
             </div>
-            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 24px; animation: pulse 0.5s infinite;">
-                🔥x<span id="comboMultiplier">1</span>
+            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
+                COMBO x<span id="comboMultiplier">1</span>!
             </div>
             
             <!-- NEW: Near Miss Display -->
-            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 20px; font-weight: bold;">
-                ⚡x<span id="nearMissCount">1</span> +<span id="nearMissBonus">50</span>
+            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 18px; font-weight: bold;">
+                NEAR MISS! x<span id="nearMissCount">1</span>
+                <div style="font-size: 14px;">+<span id="nearMissBonus">50</span> Bonus!</div>
             </div>
             
             <!-- NEW: Milestone Display -->
             <div id="milestoneDisplay" style="color: #00FF00; display: none; font-size: 24px; font-weight: bold; animation: bounce 1s;">
-                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m</span> +<span id="milestoneBonus">500</span>
+                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m!</span>
+                <div style="font-size: 16px;">+<span id="milestoneBonus">500</span> Punkte!</div>
             </div>
             
             <!-- NEW: Score Multiplier Display -->
-            <div id="multiplierDisplay" style="color: #FF1493; font-size: 18px; font-weight: bold; margin-top: 5px;">
-                ✨x<span id="currentMultiplier">1.0</span>
+            <div id="multiplierDisplay" style="color: #FF1493; font-size: 16px; font-weight: bold; margin-top: 5px;">
+                Multiplikator: x<span id="currentMultiplier">1.0</span>
             </div>
-            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold; font-size: 18px;">
-                <span id="powerUpIcon">⚡</span> <span id="powerUpTime">8</span>s
+            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
+                <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
             </div>
             
             <!-- NEW: Skill Combo UI -->
-            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <span id="skillComboIcon">🔥</span>x<span id="skillComboCount">1</span> +<span id="skillComboBonus">100</span>
+            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                <span id="skillComboIcon">🔥</span> SKILL COMBO x<span id="skillComboCount">1</span>! 
+                <div style="font-size: 14px; color: #FFD700;"><span id="skillComboBonus">+100</span> Punkte!</div>
             </div>
             
+            <!-- NEW: Environment Display -->
+            <div id="environmentDisplay" style="color: #87CEEB; font-weight: bold; margin-top: 10px;">
+                🏙️ <span id="currentEnvironment">Straße</span>
+            </div>
+            
+            <!-- NEW: Difficulty Progress Display -->
+            <div id="difficultyDisplay" style="color: #FFB347; font-weight: bold; margin-top: 5px; font-size: 14px;">
+                📈 Schwierigkeit: <span id="difficultyLevel">Leicht</span>
+            </div>
         </div>
         
         <div id="instructions">
@@ -630,2503 +600,171 @@
     </div>
 
     <script>
-        // ========================================
-        // RESOURCE MANAGER - Memory Leak Prevention
-        // ========================================
-        class ResourceManager {
-            constructor() {
-                this.resources = {
-                    geometries: new Set(),
-                    materials: new Set(),
-                    textures: new Set(),
-                    meshes: new Set(),
-                    groups: new Set(),
-                    lights: new Set(),
-                    helpers: new Set(),
-                    animations: new Set(),
-                    customObjects: new Set()
-                };
-                
-                this.levelResources = new Map();
-                this.memoryUsage = 0;
-                this.disposalLog = [];
-                this.debugMode = false;
-            }
-            
-            enableDebug() {
-                this.debugMode = true;
-                console.log('[ResourceManager] Debug mode enabled');
-            }
-            
-            trackGeometry(geometry, levelId = null) {
-                if (!geometry) return;
-                
-                this.resources.geometries.add(geometry);
-                if (levelId) {
-                    this._addToLevel(levelId, 'geometry', geometry);
-                }
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Tracked geometry: ${geometry.type || 'Unknown'}`);
-                }
-            }
-            
-            trackMaterial(material, levelId = null) {
-                if (!material) return;
-                
-                this.resources.materials.add(material);
-                if (levelId) {
-                    this._addToLevel(levelId, 'material', material);
-                }
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Tracked material: ${material.type || 'Unknown'}`);
-                }
-            }
-            
-            trackTexture(texture, levelId = null) {
-                if (!texture) return;
-                
-                this.resources.textures.add(texture);
-                if (levelId) {
-                    this._addToLevel(levelId, 'texture', texture);
-                }
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Tracked texture: ${texture.name || 'Unknown'}`);
-                }
-            }
-            
-            trackMesh(mesh, levelId = null) {
-                if (!mesh) return;
-                
-                this.resources.meshes.add(mesh);
-                
-                if (mesh.geometry) {
-                    this.trackGeometry(mesh.geometry, levelId);
-                }
-                
-                if (mesh.material) {
-                    if (Array.isArray(mesh.material)) {
-                        mesh.material.forEach(mat => this.trackMaterial(mat, levelId));
-                    } else {
-                        this.trackMaterial(mesh.material, levelId);
-                    }
-                }
-                
-                if (levelId) {
-                    this._addToLevel(levelId, 'mesh', mesh);
-                }
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Tracked mesh: ${mesh.name || 'Unknown'}`);
-                }
-            }
-            
-            trackGroup(group, levelId = null) {
-                if (!group) return;
-                
-                this.resources.groups.add(group);
-                
-                group.traverse((child) => {
-                    if (child !== group) {
-                        if (child.isMesh) {
-                            this.trackMesh(child, levelId);
-                        } else if (child.isLight) {
-                            this.trackLight(child, levelId);
-                        } else if (child.isGroup || child.isObject3D) {
-                            this.resources.customObjects.add(child);
-                            if (levelId) {
-                                this._addToLevel(levelId, 'object', child);
-                            }
-                        }
-                    }
-                });
-                
-                if (levelId) {
-                    this._addToLevel(levelId, 'group', group);
-                }
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Tracked group: ${group.name || 'Unknown'} with ${group.children.length} children`);
-                }
-            }
-            
-            trackLight(light, levelId = null) {
-                if (!light) return;
-                
-                this.resources.lights.add(light);
-                if (levelId) {
-                    this._addToLevel(levelId, 'light', light);
-                }
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Tracked light: ${light.type || 'Unknown'}`);
-                }
-            }
-            
-            _addToLevel(levelId, type, resource) {
-                if (!this.levelResources.has(levelId)) {
-                    this.levelResources.set(levelId, {
-                        geometries: new Set(),
-                        materials: new Set(),
-                        textures: new Set(),
-                        meshes: new Set(),
-                        groups: new Set(),
-                        lights: new Set(),
-                        objects: new Set()
+        // 🔧 BULLETPROOF MATERIAL FACTORY - Future-Proof 3D Engine Protection
+        console.log('🛡️ [MaterialFactory] Initializing bulletproof material system...');
+        
+        /**
+         * Universal Material Factory - Prevents ALL future shader crashes
+         * Automatically includes fog, light, shadow, and common uniforms
+         */
+        function createUniversalMaterial(type, options = {}) {
+            const { 
+                color = 0xffffff, 
+                opacity = 1.0,
+                transparent = false,
+                wireframe = false,
+                side = THREE.FrontSide,
+                customUniforms = {},
+                vertexShader = null,
+                fragmentShader = null
+            } = options;
+
+            console.log(`[MaterialFactory] Creating ${type} material with color:`, color);
+
+            switch(type) {
+                case 'basic':
+                    return new THREE.MeshBasicMaterial({
+                        color, opacity, transparent, wireframe, side
                     });
-                }
                 
-                const levelRes = this.levelResources.get(levelId);
-                switch (type) {
-                    case 'geometry':
-                        levelRes.geometries.add(resource);
-                        break;
-                    case 'material':
-                        levelRes.materials.add(resource);
-                        break;
-                    case 'texture':
-                        levelRes.textures.add(resource);
-                        break;
-                    case 'mesh':
-                        levelRes.meshes.add(resource);
-                        break;
-                    case 'group':
-                        levelRes.groups.add(resource);
-                        break;
-                    case 'light':
-                        levelRes.lights.add(resource);
-                        break;
-                    case 'object':
-                        levelRes.objects.add(resource);
-                        break;
-                }
-            }
-            
-            disposeGeometry(geometry) {
-                if (!geometry || !this.resources.geometries.has(geometry)) return;
+                case 'lambert':
+                    return new THREE.MeshLambertMaterial({
+                        color, opacity, transparent, wireframe, side
+                    });
                 
-                geometry.dispose();
-                this.resources.geometries.delete(geometry);
+                case 'phong':
+                    return new THREE.MeshPhongMaterial({
+                        color, opacity, transparent, wireframe, side
+                    });
                 
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Disposed geometry: ${geometry.type || 'Unknown'}`);
-                }
-            }
-            
-            disposeMaterial(material) {
-                if (!material || !this.resources.materials.has(material)) return;
+                case 'shader':
+                    // BULLETPROOF SHADER MATERIAL with ALL standard uniforms
+                    console.log(`[MaterialFactory] Creating BULLETPROOF shader with fog/light support`);
+                    return new THREE.ShaderMaterial({
+                        uniforms: THREE.UniformsUtils.merge([
+                            THREE.UniformsLib.common,     // Basic uniforms (diffuse, opacity, etc.)
+                            THREE.UniformsLib.specularmap, // Specular mapping
+                            THREE.UniformsLib.envmap,     // Environment mapping
+                            THREE.UniformsLib.aomap,      // Ambient occlusion
+                            THREE.UniformsLib.lightmap,   // Light mapping
+                            THREE.UniformsLib.emissivemap, // Emissive mapping
+                            THREE.UniformsLib.fog,        // FOG COMPATIBILITY ✅
+                            THREE.UniformsLib.lights,     // LIGHT COMPATIBILITY ✅
+                            THREE.UniformsLib.shadowmap,  // Shadow mapping
+                            THREE.UniformsLib.clipping,   // Clipping planes
+                            customUniforms               // Level-specific uniforms
+                        ]),
+                        vertexShader: vertexShader || `
+                            void main() {
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                            }
+                        `,
+                        fragmentShader: fragmentShader || `
+                            uniform vec3 diffuse;
+                            uniform float opacity;
+                            void main() {
+                                gl_FragColor = vec4(diffuse, opacity);
+                            }
+                        `,
+                        fog: true,           // ✅ Enable fog support
+                        lights: true,       // ✅ Enable light support
+                        transparent: transparent,
+                        side: side
+                    });
                 
-                const maps = ['map', 'alphaMap', 'aoMap', 'bumpMap', 'displacementMap', 
-                             'emissiveMap', 'envMap', 'lightMap', 'metalnessMap', 
-                             'normalMap', 'roughnessMap'];
-                
-                maps.forEach(mapName => {
-                    if (material[mapName]) {
-                        this.disposeTexture(material[mapName]);
-                    }
-                });
-                
-                material.dispose();
-                this.resources.materials.delete(material);
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Disposed material: ${material.type || 'Unknown'}`);
-                }
-            }
-            
-            disposeTexture(texture) {
-                if (!texture || !this.resources.textures.has(texture)) return;
-                
-                texture.dispose();
-                this.resources.textures.delete(texture);
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Disposed texture: ${texture.name || 'Unknown'}`);
-                }
-            }
-            
-            disposeMesh(mesh) {
-                if (!mesh || !this.resources.meshes.has(mesh)) return;
-                
-                if (mesh.parent) {
-                    mesh.parent.remove(mesh);
-                }
-                
-                if (mesh.geometry) {
-                    this.disposeGeometry(mesh.geometry);
-                }
-                
-                if (mesh.material) {
-                    if (Array.isArray(mesh.material)) {
-                        mesh.material.forEach(mat => this.disposeMaterial(mat));
-                    } else {
-                        this.disposeMaterial(mesh.material);
-                    }
-                }
-                
-                this.resources.meshes.delete(mesh);
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Disposed mesh: ${mesh.name || 'Unknown'}`);
-                }
-            }
-            
-            disposeGroup(group) {
-                if (!group || !this.resources.groups.has(group)) return;
-                
-                if (group.parent) {
-                    group.parent.remove(group);
-                }
-                
-                while (group.children.length > 0) {
-                    const child = group.children[0];
-                    group.remove(child);
-                    
-                    if (child.isMesh) {
-                        this.disposeMesh(child);
-                    } else if (child.isLight) {
-                        this.disposeLight(child);
-                    } else if (child.isGroup) {
-                        this.disposeGroup(child);
-                    }
-                }
-                
-                this.resources.groups.delete(group);
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Disposed group: ${group.name || 'Unknown'}`);
-                }
-            }
-            
-            disposeLight(light) {
-                if (!light || !this.resources.lights.has(light)) return;
-                
-                if (light.parent) {
-                    light.parent.remove(light);
-                }
-                
-                if (light.shadow && light.shadow.map) {
-                    light.shadow.map.dispose();
-                }
-                
-                this.resources.lights.delete(light);
-                
-                if (this.debugMode) {
-                    console.log(`[ResourceManager] Disposed light: ${light.type || 'Unknown'}`);
-                }
-            }
-            
-            disposeLevelResources(levelId) {
-                if (!this.levelResources.has(levelId)) return;
-                
-                console.log(`[ResourceManager] Disposing resources for level ${levelId}`);
-                const startCount = this.getResourceCount();
-                
-                const levelRes = this.levelResources.get(levelId);
-                
-                levelRes.groups.forEach(group => this.disposeGroup(group));
-                levelRes.meshes.forEach(mesh => this.disposeMesh(mesh));
-                levelRes.lights.forEach(light => this.disposeLight(light));
-                levelRes.objects.forEach(obj => {
-                    if (obj.parent) obj.parent.remove(obj);
-                    this.resources.customObjects.delete(obj);
-                });
-                levelRes.materials.forEach(mat => this.disposeMaterial(mat));
-                levelRes.geometries.forEach(geo => this.disposeGeometry(geo));
-                levelRes.textures.forEach(tex => this.disposeTexture(tex));
-                
-                this.levelResources.delete(levelId);
-                
-                const endCount = this.getResourceCount();
-                console.log(`[ResourceManager] Disposed ${startCount - endCount} resources for level ${levelId}`);
-                
-                if (window.gc) {
-                    window.gc();
-                }
-            }
-            
-            disposeAll() {
-                console.log('[ResourceManager] Disposing all resources...');
-                const startCount = this.getResourceCount();
-                
-                this.resources.groups.forEach(group => this.disposeGroup(group));
-                this.resources.meshes.forEach(mesh => this.disposeMesh(mesh));
-                this.resources.lights.forEach(light => this.disposeLight(light));
-                this.resources.customObjects.forEach(obj => {
-                    if (obj.parent) obj.parent.remove(obj);
-                });
-                this.resources.materials.forEach(mat => this.disposeMaterial(mat));
-                this.resources.geometries.forEach(geo => this.disposeGeometry(geo));
-                this.resources.textures.forEach(tex => this.disposeTexture(tex));
-                
-                Object.values(this.resources).forEach(set => set.clear());
-                this.levelResources.clear();
-                
-                console.log(`[ResourceManager] Disposed ${startCount} total resources`);
-            }
-            
-            getResourceCount() {
-                let count = 0;
-                Object.values(this.resources).forEach(set => {
-                    count += set.size;
-                });
-                return count;
-            }
-            
-            getResourceReport() {
-                const report = {
-                    total: this.getResourceCount(),
-                    geometries: this.resources.geometries.size,
-                    materials: this.resources.materials.size,
-                    textures: this.resources.textures.size,
-                    meshes: this.resources.meshes.size,
-                    groups: this.resources.groups.size,
-                    lights: this.resources.lights.size,
-                    customObjects: this.resources.customObjects.size,
-                    levels: {}
-                };
-                
-                this.levelResources.forEach((resources, levelId) => {
-                    report.levels[levelId] = {
-                        geometries: resources.geometries.size,
-                        materials: resources.materials.size,
-                        textures: resources.textures.size,
-                        meshes: resources.meshes.size,
-                        groups: resources.groups.size,
-                        lights: resources.lights.size,
-                        objects: resources.objects.size
-                    };
-                });
-                
-                return report;
-            }
-            
-            estimateMemoryUsage() {
-                let bytes = 0;
-                
-                this.resources.geometries.forEach(geo => {
-                    if (geo.attributes && geo.attributes.position) {
-                        bytes += geo.attributes.position.count * 12;
-                    }
-                });
-                
-                this.resources.textures.forEach(tex => {
-                    if (tex.image) {
-                        bytes += (tex.image.width || 0) * (tex.image.height || 0) * 4;
-                    }
-                });
-                
-                bytes += this.resources.materials.size * 1024;
-                bytes += this.resources.meshes.size * 512;
-                
-                return {
-                    bytes: bytes,
-                    megabytes: (bytes / 1024 / 1024).toFixed(2),
-                    formatted: this._formatBytes(bytes)
-                };
-            }
-            
-            _formatBytes(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                default:
+                    console.warn(`[MaterialFactory] Unknown type: ${type}, falling back to MeshLambertMaterial`);
+                    return new THREE.MeshLambertMaterial({ color, opacity, transparent, wireframe, side });
             }
         }
-        
-        // Initialize ResourceManager
-        window.ResourceManager = new ResourceManager();
-        console.log('[ResourceManager] Initialized and ready');
-        
-        // ========================================
-        // LEVEL BASE CLASS - Lifecycle Management
-        // ========================================
-        class LevelBase {
-            constructor(id, name, config) {
-                this.id = id;
-                this.name = name;
-                this.config = {
-                    // Visual settings
-                    fogColor: '#87CEEB',
-                    fogDensity: 0.02,
-                    skyColor: '#87CEEB',
-                    ambientIntensity: 0.6,
-                    sunIntensity: 0.8,
-                    
-                    // Gameplay settings
-                    baseSpeedMultiplier: 1.0,
-                    obstacleSpawnMultiplier: 1.0,
-                    collectibleSpawnMultiplier: 1.0,
-                    
-                    // Level-specific features
-                    hasSpecialMechanics: false,
-                    specialMechanics: [],
-                    
-                    // Override with level-specific config
-                    ...config
-                };
+
+        /**
+         * Quick material creation functions
+         */
+        function createSafeMaterial(color = 0xffffff, options = {}) {
+            return createUniversalMaterial('lambert', { color, ...options });
+        }
+
+        function createSafeShader(customUniforms, vertexShader, fragmentShader, options = {}) {
+            return createUniversalMaterial('shader', { 
+                customUniforms, 
+                vertexShader, 
+                fragmentShader, 
+                ...options 
+            });
+        }
+
+        /**
+         * Safe material replacement utility
+         */
+        function replaceMaterialSafely(object, newMaterialType = 'lambert', options = {}) {
+            if (object.material) {
+                const oldType = object.material.type;
+                const newMaterial = createUniversalMaterial(newMaterialType, options);
                 
-                // Level state
-                this.isInitialized = false;
-                this.isActive = false;
-                this.resources = new Set();
-                this.updateCallbacks = [];
-                this.animationFrames = new Set();
-                
-                // Environment objects
-                this.environmentGroup = null;
-                this.dynamicObjects = [];
-                this.particles = [];
-                this.lights = [];
-                
-                // Performance
-                this.lastUpdateTime = 0;
-                this.frameCount = 0;
-            }
-            
-            async init(scene, resourceManager) {
-                console.log(`[Level ${this.id}] Initializing ${this.name}...`);
-                
-                try {
-                    // Create environment group
-                    this.environmentGroup = new THREE.Group();
-                    this.environmentGroup.name = `Level${this.id}_Environment`;
-                    
-                    // Track with resource manager
-                    resourceManager.trackGroup(this.environmentGroup, `level_${this.id}`);
-                    
-                    // Apply visual settings
-                    this.applyVisualSettings(scene);
-                    
-                    // Create level-specific environment
-                    await this.createEnvironment(scene, resourceManager);
-                    
-                    // Initialize special mechanics if any
-                    if (this.config.hasSpecialMechanics) {
-                        this.initializeSpecialMechanics(scene, resourceManager);
-                    }
-                    
-                    // Add to scene
-                    scene.add(this.environmentGroup);
-                    
-                    this.isInitialized = true;
-                    this.isActive = true;
-                    
-                    console.log(`[Level ${this.id}] Initialization complete`);
-                    
-                } catch (error) {
-                    console.error(`[Level ${this.id}] Initialization failed:`, error);
-                    throw error;
-                }
-            }
-            
-            applyVisualSettings(scene) {
-                const config = this.config;
-                
-                // Update fog
-                if (scene.fog) {
-                    scene.fog.color.set(config.fogColor);
-                    scene.fog.density = config.fogDensity;
+                // Dispose old material to prevent memory leaks
+                if (object.material.dispose) {
+                    object.material.dispose();
                 }
                 
-                // Update ambient light
-                const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
-                if (ambientLight) {
-                    ambientLight.intensity = config.ambientIntensity;
-                }
-                
-                // Update directional light
-                const directionalLight = scene.children.find(child => child.type === 'DirectionalLight');
-                if (directionalLight) {
-                    directionalLight.intensity = config.sunIntensity;
-                }
-                
-                // Store original renderer clear color for restoration
-                if (window.renderer) {
-                    this._originalClearColor = window.renderer.getClearColor(new THREE.Color());
-                    window.renderer.setClearColor(config.skyColor);
-                }
-            }
-            
-            async createEnvironment(scene, resourceManager) {
-                // This method should be overridden by child classes
-                console.warn(`[Level ${this.id}] createEnvironment not implemented`);
-            }
-            
-            initializeSpecialMechanics(scene, resourceManager) {
-                // Override in child classes that have special mechanics
-            }
-            
-            update(deltaTime, gameState) {
-                if (!this.isActive) return;
-                
-                this.frameCount++;
-                
-                // Update dynamic objects
-                this.updateDynamicObjects(deltaTime, gameState);
-                
-                // Update particles
-                this.updateParticles(deltaTime);
-                
-                // Update special mechanics
-                if (this.config.hasSpecialMechanics) {
-                    this.updateSpecialMechanics(deltaTime, gameState);
-                }
-                
-                // Call registered update callbacks
-                this.updateCallbacks.forEach(callback => callback(deltaTime, gameState));
-            }
-            
-            updateDynamicObjects(deltaTime, gameState) {
-                // Default rotation for floating objects
-                this.dynamicObjects.forEach(obj => {
-                    if (obj.userData.rotationSpeed) {
-                        obj.rotation.y += obj.userData.rotationSpeed * deltaTime;
-                    }
-                    if (obj.userData.floatSpeed) {
-                        obj.position.y = obj.userData.baseY + 
-                            Math.sin(Date.now() * 0.001 * obj.userData.floatSpeed) * obj.userData.floatAmplitude;
-                    }
-                });
-            }
-            
-            updateParticles(deltaTime) {
-                this.particles = this.particles.filter(particle => {
-                    if (!particle.userData.update) return false;
-                    
-                    const alive = particle.userData.update(particle, deltaTime);
-                    if (!alive && particle.parent) {
-                        particle.parent.remove(particle);
-                        if (particle.geometry) particle.geometry.dispose();
-                        if (particle.material) particle.material.dispose();
-                    }
-                    return alive;
-                });
-            }
-            
-            updateSpecialMechanics(deltaTime, gameState) {
-                // Override in child classes
-            }
-            
-            addDynamicObject(object, config = {}) {
-                object.userData = {
-                    ...object.userData,
-                    ...config
-                };
-                this.dynamicObjects.push(object);
-                this.environmentGroup.add(object);
-            }
-            
-            createParticle(position, config = {}) {
-                const defaultConfig = {
-                    size: 0.1,
-                    color: 0xFFFFFF,
-                    lifetime: 1.0,
-                    velocity: new THREE.Vector3(0, 1, 0),
-                    gravity: 0,
-                    fadeOut: true
-                };
-                
-                const particleConfig = { ...defaultConfig, ...config };
-                
-                const geometry = new THREE.SphereGeometry(particleConfig.size);
-                const material = new THREE.MeshBasicMaterial({ 
-                    color: particleConfig.color,
-                    transparent: particleConfig.fadeOut,
-                    opacity: 1.0
-                });
-                
-                const particle = new THREE.Mesh(geometry, material);
-                particle.position.copy(position);
-                
-                particle.userData = {
-                    velocity: particleConfig.velocity.clone(),
-                    lifetime: particleConfig.lifetime,
-                    maxLifetime: particleConfig.lifetime,
-                    gravity: particleConfig.gravity,
-                    fadeOut: particleConfig.fadeOut,
-                    update: (p, dt) => {
-                        // Update position
-                        p.position.add(p.userData.velocity.clone().multiplyScalar(dt));
-                        
-                        // Apply gravity
-                        if (p.userData.gravity) {
-                            p.userData.velocity.y -= p.userData.gravity * dt;
-                        }
-                        
-                        // Update lifetime
-                        p.userData.lifetime -= dt;
-                        
-                        // Fade out
-                        if (p.userData.fadeOut && p.material.opacity !== undefined) {
-                            p.material.opacity = Math.max(0, p.userData.lifetime / p.userData.maxLifetime);
-                        }
-                        
-                        return p.userData.lifetime > 0;
-                    }
-                };
-                
-                this.particles.push(particle);
-                this.environmentGroup.add(particle);
-                
-                return particle;
-            }
-            
-            registerUpdateCallback(callback) {
-                this.updateCallbacks.push(callback);
-            }
-            
-            pause() {
-                this.isActive = false;
-                console.log(`[Level ${this.id}] Paused`);
-            }
-            
-            resume() {
-                this.isActive = true;
-                console.log(`[Level ${this.id}] Resumed`);
-            }
-            
-            getStats() {
-                return {
-                    id: this.id,
-                    name: this.name,
-                    isActive: this.isActive,
-                    dynamicObjectCount: this.dynamicObjects.length,
-                    particleCount: this.particles.length,
-                    frameCount: this.frameCount,
-                    memoryEstimate: this.environmentGroup ? this.environmentGroup.children.length * 1024 : 0
-                };
-            }
-            
-            dispose(scene, resourceManager) {
-                console.log(`[Level ${this.id}] Starting disposal...`);
-                
-                this.isActive = false;
-                
-                // Clear update callbacks
-                this.updateCallbacks = [];
-                
-                // Clear animation frames
-                this.animationFrames.forEach(id => cancelAnimationFrame(id));
-                this.animationFrames.clear();
-                
-                // Remove particles
-                this.particles.forEach(particle => {
-                    if (particle.parent) particle.parent.remove(particle);
-                    if (particle.geometry) particle.geometry.dispose();
-                    if (particle.material) particle.material.dispose();
-                });
-                this.particles = [];
-                
-                // Clear dynamic objects
-                this.dynamicObjects = [];
-                
-                // Dispose all materials in environment group (including shader materials)
-                if (this.environmentGroup) {
-                    this.environmentGroup.traverse((child) => {
-                        if (child.isMesh) {
-                            if (child.geometry) child.geometry.dispose();
-                            if (child.material) {
-                                // Handle array of materials
-                                if (Array.isArray(child.material)) {
-                                    child.material.forEach(mat => mat.dispose());
-                                } else {
-                                    child.material.dispose();
-                                }
-                            }
-                        }
-                    });
-                }
-                
-                // Remove environment group from scene
-                if (this.environmentGroup && scene) {
-                    scene.remove(this.environmentGroup);
-                }
-                
-                // Dispose level-specific resources through ResourceManager
-                if (resourceManager) {
-                    resourceManager.disposeLevelResources(`level_${this.id}`);
-                }
-                
-                // Restore original clear color
-                if (window.renderer && this._originalClearColor) {
-                    window.renderer.setClearColor(this._originalClearColor);
-                }
-                
-                // Call level-specific cleanup
-                this.onDispose();
-                
-                this.environmentGroup = null;
-                this.isInitialized = false;
-                
-                console.log(`[Level ${this.id}] Disposal complete`);
-            }
-            
-            onDispose() {
-                // Override in child classes for level-specific cleanup
-            }
-            
-            createBuilding(width, height, depth, color, position) {
-                const geometry = new THREE.BoxGeometry(width, height, depth);
-                const material = new THREE.MeshLambertMaterial({ color });
-                const building = new THREE.Mesh(geometry, material);
-                
-                building.position.copy(position);
-                building.position.y = height / 2;
-                building.castShadow = true;
-                building.receiveShadow = true;
-                
-                return building;
-            }
-            
-            createNeonLight(geometry, color, intensity = 1) {
-                const material = new THREE.MeshBasicMaterial({
-                    color,
-                    emissive: color,
-                    emissiveIntensity: intensity,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                
-                const mesh = new THREE.Mesh(geometry, material);
-                
-                // Add glow animation
-                this.registerUpdateCallback((dt) => {
-                    if (material.opacity) {
-                        material.opacity = 0.6 + Math.sin(Date.now() * 0.003) * 0.2;
-                        material.emissiveIntensity = intensity + Math.sin(Date.now() * 0.002) * 0.3;
-                    }
-                });
-                
-                return mesh;
+                object.material = newMaterial;
+                console.log(`[MaterialFactory] Replaced ${oldType} with safe ${newMaterialType} material`);
             }
         }
-        
-        // Export for use
-        window.LevelBase = LevelBase;
-        console.log('[LevelBase] Base level class loaded');
-        
-        // ========================================
-        // LEVEL MANAGER PRO - Advanced Level Management
-        // ========================================
-        class LevelManagerPro {
-            constructor() {
-                this.levels = new Map();
-                this.currentLevel = null;
-                this.previousLevel = null;
-                this.isTransitioning = false;
-                this.transitionCallbacks = [];
-                
-                // Loading state
-                this.loadingState = {
-                    isLoading: false,
-                    progress: 0,
-                    currentAsset: '',
-                    errors: []
-                };
-                
-                // Performance monitoring
-                this.performance = {
-                    levelLoadTimes: new Map(),
-                    transitionTimes: new Map(),
-                    lastTransitionStart: 0
-                };
-                
-                // Configuration
-                this.config = {
-                    transitionDuration: 2000,
-                    preloadNextLevel: true,
-                    maxRetries: 3,
-                    memoryWarningThreshold: 500 * 1024 * 1024,
-                    fallbackLevel: 1
-                };
-                
-                // Debug mode
-                this.debugMode = false;
-            }
+
+        /**
+         * Material audit tool - checks scene for problematic materials
+         */
+        function auditSceneMaterials(scene) {
+            console.log('🔍 [MaterialAudit] Starting comprehensive material audit...');
+            let totalMaterials = 0;
+            let problematicMaterials = 0;
+            let shaderMaterials = 0;
             
-            enableDebug() {
-                this.debugMode = true;
-                if (window.ResourceManager) {
-                    window.ResourceManager.enableDebug();
-                }
-                console.log('[LevelManagerPro] Debug mode enabled');
-            }
-            
-            registerLevel(level) {
-                if (!(level instanceof LevelBase)) {
-                    console.error('[LevelManagerPro] Level must extend LevelBase');
-                    return false;
-                }
-                
-                this.levels.set(level.id, level);
-                console.log(`[LevelManagerPro] Registered level ${level.id}: ${level.name}`);
-                return true;
-            }
-            
-            async initialize(scene, resourceManager) {
-                console.log('[LevelManagerPro] Initializing...');
-                
-                this.scene = scene;
-                this.resourceManager = resourceManager || window.ResourceManager;
-                
-                if (!this.resourceManager) {
-                    console.error('[LevelManagerPro] ResourceManager not found!');
-                    throw new Error('ResourceManager is required');
-                }
-                
-                if (this.levels.size === 0) {
-                    console.error('[LevelManagerPro] No levels registered!');
-                    throw new Error('No levels registered');
-                }
-                
-                console.log(`[LevelManagerPro] Initialized with ${this.levels.size} levels`);
-            }
-            
-            async loadLevel(levelId, skipTransition = false) {
-                // TEMPORARY: Skip Level 3 due to shader errors
-                if (levelId === 3) {
-                    console.warn('[LevelManagerPro] Level 3 is temporarily disabled due to shader errors');
-                    return false;
-                }
-                
-                if (this.isTransitioning) {
-                    console.warn('[LevelManagerPro] Already transitioning, request ignored');
-                    return false;
-                }
-                
-                const level = this.levels.get(levelId);
-                if (!level) {
-                    console.error(`[LevelManagerPro] Level ${levelId} not found`);
-                    return false;
-                }
-                
-                console.log(`[LevelManagerPro] Loading level ${levelId}: ${level.name}`);
-                
-                const startTime = performance.now();
-                this.performance.lastTransitionStart = startTime;
-                
-                try {
-                    this.isTransitioning = true;
-                    this.loadingState.isLoading = true;
-                    this.loadingState.errors = [];
+            scene.traverse(child => {
+                if (child.material) {
+                    totalMaterials++;
                     
-                    // Transition effect if not skipping
-                    if (!skipTransition && this.currentLevel) {
-                        await this.playTransition('out');
-                    }
-                    
-                    // Pause current level
-                    if (this.currentLevel) {
-                        this.currentLevel.pause();
-                        this.previousLevel = this.currentLevel;
-                    }
-                    
-                    // Initialize new level
-                    this.loadingState.currentAsset = 'Initializing level...';
-                    await this.initializeLevelWithRetry(level);
-                    
-                    // Dispose previous level after new one is ready
-                    if (this.previousLevel && this.previousLevel !== level) {
-                        this.loadingState.currentAsset = 'Cleaning up previous level...';
-                        await this.disposeLevelSafely(this.previousLevel);
-                    }
-                    
-                    // Set as current level
-                    this.currentLevel = level;
-                    
-                    // Transition effect
-                    if (!skipTransition) {
-                        await this.playTransition('in');
-                    }
-                    
-                    // Record performance
-                    const loadTime = performance.now() - startTime;
-                    this.performance.levelLoadTimes.set(levelId, loadTime);
-                    console.log(`[LevelManagerPro] Level ${levelId} loaded in ${loadTime.toFixed(0)}ms`);
-                    
-                    // Notify callbacks
-                    this.transitionCallbacks.forEach(cb => cb(levelId, level));
-                    
-                    // Check memory usage
-                    this.checkMemoryUsage();
-                    
-                    // Preload next level if configured
-                    if (this.config.preloadNextLevel) {
-                        this.preloadNextLevel(levelId);
-                    }
-                    
-                    return true;
-                    
-                } catch (error) {
-                    console.error(`[LevelManagerPro] Failed to load level ${levelId}:`, error);
-                    this.loadingState.errors.push(error.message);
-                    
-                    // Try fallback level
-                    if (levelId !== this.config.fallbackLevel) {
-                        console.log(`[LevelManagerPro] Attempting fallback to level ${this.config.fallbackLevel}`);
-                        return await this.loadLevel(this.config.fallbackLevel, true);
-                    }
-                    
-                    return false;
-                    
-                } finally {
-                    this.isTransitioning = false;
-                    this.loadingState.isLoading = false;
-                    this.loadingState.progress = 0;
-                }
-            }
-            
-            async initializeLevelWithRetry(level, retries = 0) {
-                try {
-                    await level.init(this.scene, this.resourceManager);
-                    return true;
-                } catch (error) {
-                    if (retries < this.config.maxRetries) {
-                        console.warn(`[LevelManagerPro] Retry ${retries + 1}/${this.config.maxRetries} for level ${level.id}`);
-                        await this.delay(1000);
-                        return await this.initializeLevelWithRetry(level, retries + 1);
-                    }
-                    throw error;
-                }
-            }
-            
-            async disposeLevelSafely(level) {
-                try {
-                    level.dispose(this.scene, this.resourceManager);
-                } catch (error) {
-                    console.error(`[LevelManagerPro] Error disposing level ${level.id}:`, error);
-                }
-            }
-            
-            async playTransition(direction) {
-                return new Promise(resolve => {
-                    const duration = this.config.transitionDuration;
-                    const startTime = Date.now();
-                    
-                    const fadeOverlay = this.getFadeOverlay();
-                    fadeOverlay.style.display = 'block';
-                    
-                    const animate = () => {
-                        const elapsed = Date.now() - startTime;
-                        const progress = Math.min(elapsed / duration, 1);
+                    if (child.material.type === 'ShaderMaterial') {
+                        shaderMaterials++;
+                        const hasFogUniforms = child.material.uniforms && child.material.uniforms.fogColor;
+                        const hasLightUniforms = child.material.uniforms && child.material.uniforms.directionalLights;
                         
-                        if (direction === 'out') {
-                            fadeOverlay.style.opacity = progress;
+                        if (!hasFogUniforms || !hasLightUniforms) {
+                            problematicMaterials++;
+                            console.warn(`🚨 [MaterialAudit] Problematic ShaderMaterial found:`, {
+                                name: child.name || 'unnamed',
+                                type: child.material.type,
+                                hasFogUniforms,
+                                hasLightUniforms,
+                                object: child
+                            });
                         } else {
-                            fadeOverlay.style.opacity = 1 - progress;
+                            console.log(`✅ [MaterialAudit] Safe ShaderMaterial:`, child.name || 'unnamed');
                         }
-                        
-                        this.loadingState.progress = progress * 100;
-                        
-                        if (progress < 1) {
-                            requestAnimationFrame(animate);
-                        } else {
-                            if (direction === 'in') {
-                                fadeOverlay.style.display = 'none';
-                            }
-                            resolve();
-                        }
-                    };
-                    
-                    animate();
-                });
-            }
-            
-            getFadeOverlay() {
-                let overlay = document.getElementById('levelTransitionOverlay');
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'levelTransitionOverlay';
-                    overlay.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: #000;
-                        opacity: 0;
-                        z-index: 1000;
-                        pointer-events: none;
-                        display: none;
-                    `;
-                    document.body.appendChild(overlay);
-                }
-                return overlay;
-            }
-            
-            update(deltaTime, gameState) {
-                if (this.currentLevel && this.currentLevel.isActive) {
-                    this.currentLevel.update(deltaTime, gameState);
-                }
-            }
-            
-            getCurrentLevelInfo() {
-                if (!this.currentLevel) return null;
-                
-                return {
-                    id: this.currentLevel.id,
-                    name: this.currentLevel.name,
-                    config: this.currentLevel.config,
-                    stats: this.currentLevel.getStats()
-                };
-            }
-            
-            getCurrentLevel() {
-                return this.currentLevel;
-            }
-            
-            getAllLevels() {
-                return Array.from(this.levels.values()).map(level => ({
-                    id: level.id,
-                    name: level.name,
-                    isLoaded: level === this.currentLevel
-                }));
-            }
-            
-            onLevelTransition(callback) {
-                this.transitionCallbacks.push(callback);
-            }
-            
-            checkMemoryUsage() {
-                if (!this.resourceManager) return;
-                
-                const usage = this.resourceManager.estimateMemoryUsage();
-                const report = this.resourceManager.getResourceReport();
-                
-                if (this.debugMode) {
-                    console.log('[LevelManagerPro] Memory usage:', usage.formatted);
-                    console.log('[LevelManagerPro] Resource report:', report);
-                }
-                
-                if (usage.bytes > this.config.memoryWarningThreshold) {
-                    console.warn(`[LevelManagerPro] High memory usage: ${usage.formatted}`);
-                    
-                    if (window.gc) {
-                        console.log('[LevelManagerPro] Forcing garbage collection...');
-                        window.gc();
                     }
                 }
-            }
+            });
             
-            async preloadNextLevel(currentLevelId) {
-                const nextLevelId = currentLevelId + 1;
-                const nextLevel = this.levels.get(nextLevelId);
-                
-                if (!nextLevel || nextLevel.isInitialized) return;
-                
-                if (this.debugMode) {
-                    console.log(`[LevelManagerPro] Preloading level ${nextLevelId} in background`);
-                }
-            }
+            console.log(`📊 [MaterialAudit] Results:`, {
+                totalMaterials,
+                shaderMaterials,
+                problematicMaterials,
+                safePercentage: Math.round(((totalMaterials - problematicMaterials) / totalMaterials) * 100) + '%'
+            });
             
-            getLoadingProgress() {
-                return {
-                    isLoading: this.loadingState.isLoading,
-                    progress: this.loadingState.progress,
-                    currentAsset: this.loadingState.currentAsset,
-                    errors: [...this.loadingState.errors]
-                };
-            }
-            
-            getPerformanceStats() {
-                const stats = {
-                    averageLoadTime: 0,
-                    slowestLevel: null,
-                    fastestLevel: null,
-                    totalTransitions: this.performance.levelLoadTimes.size
-                };
-                
-                if (stats.totalTransitions > 0) {
-                    let total = 0;
-                    let slowest = 0;
-                    let fastest = Infinity;
-                    
-                    this.performance.levelLoadTimes.forEach((time, levelId) => {
-                        total += time;
-                        if (time > slowest) {
-                            slowest = time;
-                            stats.slowestLevel = { id: levelId, time };
-                        }
-                        if (time < fastest) {
-                            fastest = time;
-                            stats.fastestLevel = { id: levelId, time };
-                        }
-                    });
-                    
-                    stats.averageLoadTime = total / stats.totalTransitions;
-                }
-                
-                return stats;
-            }
-            
-            reset() {
-                if (this.currentLevel) {
-                    this.disposeLevelSafely(this.currentLevel);
-                }
-                
-                this.currentLevel = null;
-                this.previousLevel = null;
-                this.isTransitioning = false;
-                this.loadingState.errors = [];
-                
-                this.performance.levelLoadTimes.clear();
-                this.performance.transitionTimes.clear();
-                
-                console.log('[LevelManagerPro] Manager reset');
-            }
-            
-            delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
+            return { totalMaterials, shaderMaterials, problematicMaterials };
         }
-        
-        // Export as singleton
-        window.LevelManagerPro = new LevelManagerPro();
-        console.log('[LevelManagerPro] Professional level manager loaded');
-        
-        // ========================================
-        // LEVEL 1: SUBWAY DAYLIGHT
-        // ========================================
-        class Level1_Subway extends LevelBase {
-            constructor() {
-                super(1, 'Subway Daylight', {
-                    // Visual settings
-                    fogColor: '#444444',
-                    fogDensity: 0.01,
-                    skyColor: '#87CEEB',
-                    ambientIntensity: 0.6,
-                    sunIntensity: 0.8,
-                    
-                    // Gameplay settings
-                    baseSpeedMultiplier: 1.0,
-                    obstacleSpawnMultiplier: 1.0,
-                    collectibleSpawnMultiplier: 1.0,
-                    
-                    // Level-specific features
-                    hasSpecialMechanics: false
-                });
-                
-                // Level-specific objects
-                this.streetElements = [];
-                this.trafficCones = [];
-                this.buildings = [];
-                this.steamParticles = [];
-                this.sparkEffects = [];
-            }
-            
-            async createEnvironment(scene, resourceManager) {
-                // Enhanced subway tunnel atmosphere
-                const tunnelGeometry = new THREE.CylinderGeometry(15, 15, 200, 32);
-                const tunnelMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x2C2C2C,
-                    emissive: 0x111111,
-                    emissiveIntensity: 0.1
-                });
-                const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
-                tunnel.rotation.z = Math.PI / 2;
-                tunnel.position.y = 5;
-                tunnel.position.z = -50;
-                tunnel.userData = { type: 'subwayTunnel' };
-                this.environmentGroup.add(tunnel);
-                
-                // Create street lines
-                this.createStreetLines();
-                
-                // Create sidewalks
-                this.createSidewalks();
-                
-                // Create subway platform lights
-                this.createSubwayLights();
-                
-                // Create buildings
-                this.createBuildings();
-                
-                // Create subway tracks with sparks
-                this.createSubwayTracks();
-                
-                // Create steam vents
-                this.createSteamVents();
-                
-                console.log('[Level 1] Subway environment created');
-            }
-            
-            createStreetLines() {
-                const lineGeometry = new THREE.BoxGeometry(0.2, 0.02, 5);
-                const lineMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0xFFFFFF,
-                    emissive: 0xFFFFFF,
-                    emissiveIntensity: 0.1
-                });
-                
-                for (let i = 0; i < 50; i++) {
-                    const line = new THREE.Mesh(lineGeometry, lineMaterial);
-                    line.position.set(0, 0.01, -i * 10);
-                    line.userData = { type: 'streetLine' };
-                    this.streetElements.push(line);
-                    this.environmentGroup.add(line);
-                }
-            }
-            
-            createSidewalks() {
-                const sidewalkGeometry = new THREE.BoxGeometry(4, 0.2, 200);
-                const sidewalkMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x808080 
-                });
-                
-                // Left sidewalk
-                const leftSidewalk = new THREE.Mesh(sidewalkGeometry, sidewalkMaterial);
-                leftSidewalk.position.set(-7, 0.1, -100);
-                leftSidewalk.receiveShadow = true;
-                leftSidewalk.userData = { type: 'sidewalk' };
-                this.environmentGroup.add(leftSidewalk);
-                
-                // Right sidewalk
-                const rightSidewalk = new THREE.Mesh(sidewalkGeometry, sidewalkMaterial);
-                rightSidewalk.position.set(7, 0.1, -100);
-                rightSidewalk.receiveShadow = true;
-                rightSidewalk.userData = { type: 'sidewalk' };
-                this.environmentGroup.add(rightSidewalk);
-                
-                // Subway tiles on walls
-                for (let i = 0; i < 20; i++) {
-                    for (let j = 0; j < 10; j++) {
-                        const tileGeometry = new THREE.PlaneGeometry(1, 1);
-                        const tileMaterial = new THREE.MeshLambertMaterial({ 
-                            color: 0xF0F0F0,
-                            emissive: 0x222222,
-                            emissiveIntensity: 0.05
-                        });
-                        const tile = new THREE.Mesh(tileGeometry, tileMaterial);
-                        tile.position.set(-8 + Math.random() * 16, 1 + j * 1.1, -i * 10);
-                        tile.userData = { type: 'subwayTile' };
-                        this.environmentGroup.add(tile);
-                    }
-                }
-            }
-            
-            createSubwayLights() {
-                const lightGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8);
-                const lightMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0xFFFFAA,
-                    emissive: 0xFFFFAA,
-                    emissiveIntensity: 0.8
-                });
-                
-                for (let i = 0; i < 15; i++) {
-                    const light = new THREE.Mesh(lightGeometry, lightMaterial);
-                    light.position.set(Math.random() > 0.5 ? -7 : 7, 8, -i * 8);
-                    light.userData = { type: 'subwayLight' };
-                    this.environmentGroup.add(light);
-                    
-                    // Light glow effect
-                    const glowLight = new THREE.PointLight(0xFFFFAA, 0.5, 10);
-                    glowLight.position.copy(light.position);
-                    this.environmentGroup.add(glowLight);
-                    this.lights.push(glowLight);
-                }
-            }
-            
-            createBuildings() {
-                const buildingColors = [0x8B7355, 0xA0522D, 0xCD853F, 0xDEB887, 0xF4A460];
-                
-                for (let i = 0; i < 30; i++) {
-                    // Left side buildings
-                    const leftBuilding = this.createBuilding(
-                        4 + Math.random() * 6,
-                        10 + Math.random() * 20,
-                        4 + Math.random() * 6,
-                        buildingColors[Math.floor(Math.random() * buildingColors.length)],
-                        new THREE.Vector3(-20 - Math.random() * 10, 0, -i * 12)
-                    );
-                    this.buildings.push(leftBuilding);
-                    this.environmentGroup.add(leftBuilding);
-                    
-                    // Right side buildings
-                    const rightBuilding = this.createBuilding(
-                        4 + Math.random() * 6,
-                        10 + Math.random() * 20,
-                        4 + Math.random() * 6,
-                        buildingColors[Math.floor(Math.random() * buildingColors.length)],
-                        new THREE.Vector3(20 + Math.random() * 10, 0, -i * 12)
-                    );
-                    this.buildings.push(rightBuilding);
-                    this.environmentGroup.add(rightBuilding);
-                }
-            }
-            
-            createSubwayTracks() {
-                const trackGeometry = new THREE.BoxGeometry(0.2, 0.1, 2);
-                const trackMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x999999,  // Brighter for better visibility
-                    emissive: 0x444444,
-                    emissiveIntensity: 0.15
-                });
-                
-                for (let i = 0; i < 50; i++) {
-                    const track = new THREE.Mesh(trackGeometry, trackMaterial);
-                    track.position.set(-3 + Math.random() * 6, 0.05, -i * 2);
-                    track.userData = { type: 'subwayTrack' };
-                    this.environmentGroup.add(track);
-                    
-                    // Occasional sparks
-                    if (Math.random() < 0.1) {
-                        this.createSparkEffect(track.position.x, track.position.z);
-                    }
-                }
-            }
-            
-            createSteamVents() {
-                const ventGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.5, 8);
-                const ventMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
-                
-                for (let i = 0; i < 8; i++) {
-                    const vent = new THREE.Mesh(ventGeometry, ventMaterial);
-                    vent.position.set(-6 + Math.random() * 12, 0.25, -i * 12 - 5);
-                    vent.userData = { type: 'steamVent' };
-                    this.environmentGroup.add(vent);
-                    
-                    // Steam particle system
-                    this.createSteamParticles(vent.position.x, vent.position.z);
-                }
-            }
-            
-            createSteamParticles(x, z) {
-                // Create continuous steam using particle system
-                this.registerUpdateCallback((dt) => {
-                    if (Math.random() < 0.3) {
-                        const particle = this.createParticle(
-                            new THREE.Vector3(
-                                x + (Math.random() - 0.5) * 0.5,
-                                0.5,
-                                z + (Math.random() - 0.5) * 0.5
-                            ),
-                            {
-                                size: 0.05 + Math.random() * 0.05,
-                                color: 0xFFFFFF,
-                                lifetime: 2.0,
-                                velocity: new THREE.Vector3(
-                                    (Math.random() - 0.5) * 0.02,
-                                    0.02 + Math.random() * 0.01,
-                                    (Math.random() - 0.5) * 0.02
-                                ),
-                                gravity: -0.001,
-                                fadeOut: true
-                            }
-                        );
-                        particle.material.opacity = 0.3;
-                    }
-                });
-            }
-            
-            createSparkEffect(x, z) {
-                // Create spark burst
-                for (let i = 0; i < 10; i++) {
-                    const spark = this.createParticle(
-                        new THREE.Vector3(x, 0.1, z),
-                        {
-                            size: 0.02,
-                            color: 0xFFAA00,
-                            lifetime: 0.5,
-                            velocity: new THREE.Vector3(
-                                (Math.random() - 0.5) * 0.1,
-                                Math.random() * 0.1,
-                                (Math.random() - 0.5) * 0.1
-                            ),
-                            gravity: 0.02,
-                            fadeOut: true
-                        }
-                    );
-                    spark.material.emissive = new THREE.Color(0xFFAA00);
-                    spark.material.emissiveIntensity = 1.0;
-                }
-            }
-            
-            updateDynamicObjects(deltaTime, gameState) {
-                super.updateDynamicObjects(deltaTime, gameState);
-                
-                // Animate subway lights flicker
-                const time = Date.now() * 0.001;
-                this.environmentGroup.children.forEach(child => {
-                    if (child.userData.type === 'subwayLight') {
-                        if (child.material && child.material.emissiveIntensity !== undefined) {
-                            child.material.emissiveIntensity = 0.7 + Math.sin(time * 2 + child.position.z) * 0.1;
-                        }
-                    }
-                });
-            }
-            
-            onDispose() {
-                // Clear arrays
-                this.streetElements = [];
-                this.trafficCones = [];
-                this.buildings = [];
-                this.steamParticles = [];
-                this.sparkEffects = [];
-                
-                console.log('[Level 1] Subway level disposed');
-            }
-        }
-        
-        // Register Level 1
-        if (window.LevelManagerPro) {
-            const level1 = new Level1_Subway();
-            window.LevelManagerPro.registerLevel(level1);
-            console.log('[Level 1] Subway level registered');
-        }
-        
-        // ========================================
-        // LEVEL 2: NEON NIGHT RUN
-        // ========================================
-        class Level2_Neon extends LevelBase {
-            constructor() {
-                super(2, 'Neon Night Run', {
-                    // Visual settings
-                    fogColor: '#001133',
-                    fogDensity: 0.025,
-                    skyColor: '#000033',
-                    ambientIntensity: 0.3,
-                    sunIntensity: 0.2,
-                    
-                    // Gameplay settings
-                    baseSpeedMultiplier: 1.2,
-                    obstacleSpawnMultiplier: 1.1,
-                    collectibleSpawnMultiplier: 1.0,
-                    
-                    // Level-specific features
-                    hasSpecialMechanics: true,
-                    specialMechanics: ['neonGlow', 'digitalRain', 'flyingVehicles']
-                });
-                
-                // Level-specific objects
-                this.cyberpunkBuildings = [];
-                this.billboards = [];
-                this.flyingVehicles = [];
-                this.digitalRainDrops = [];
-                this.groundProjections = [];
-                this.neonLights = [];
-            }
-            
-            async createEnvironment(scene, resourceManager) {
-                // Remove regular street elements
-                scene.children.forEach(child => {
-                    if (child.userData && (child.userData.type === 'streetLine' || 
-                        child.userData.type === 'sidewalk')) {
-                        child.visible = false;
-                    }
-                });
-                
-                // Enhanced neon grid floor
-                this.createNeonGrid();
-                
-                // Create cyberpunk buildings
-                this.createCyberpunkCity();
-                
-                // Create neon street lights
-                this.createNeonStreetLights();
-                
-                // Create holographic billboards
-                this.createHolographicBillboards();
-                
-                // Create flying vehicles
-                this.createFlyingVehicles();
-                
-                // Create digital rain effect
-                this.createDigitalRain();
-                
-                // Create holographic ground projections
-                this.createGroundProjections();
-                
-                // Update ambient light to cyberpunk colors
-                const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
-                if (ambientLight) {
-                    ambientLight.color = new THREE.Color(0x221155);
-                }
-                
-                console.log('[Level 2] Neon Night Run environment created');
-            }
-            
-            createNeonGrid() {
-                const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
-                gridHelper.position.y = -0.95;
-                gridHelper.userData = { 
-                    type: 'level2Grid',
-                    pulseSpeed: 2.0,
-                    baseIntensity: 0.5
-                };
-                this.environmentGroup.add(gridHelper);
-                
-                // Add pulsing animation
-                this.registerUpdateCallback((dt) => {
-                    const time = Date.now() * 0.001;
-                    gridHelper.material.opacity = 0.5 + Math.sin(time * 2) * 0.2;
-                });
-            }
-            
-            createNeonStreetLights() {
-                for (let i = 0; i < 30; i++) {
-                    const lightPost = new THREE.Group();
-                    
-                    // Light post structure
-                    const postGeometry = new THREE.CylinderGeometry(0.1, 0.1, 8, 8);
-                    const postMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x333355,
-                        emissive: 0x111133
-                    });
-                    const post = new THREE.Mesh(postGeometry, postMaterial);
-                    post.position.y = 4;
-                    lightPost.add(post);
-                    
-                    // Neon light head
-                    const lightGeometry = new THREE.SphereGeometry(0.3, 12, 8);
-                    const lightColor = Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF;
-                    const lightMaterial = new THREE.MeshBasicMaterial({ 
-                        color: lightColor,
-                        emissive: lightColor,
-                        emissiveIntensity: 1.0
-                    });
-                    const light = new THREE.Mesh(lightGeometry, lightMaterial);
-                    light.position.y = 8;
-                    lightPost.add(light);
-                    
-                    // Add point light
-                    const pointLight = new THREE.PointLight(lightColor, 0.8, 15);
-                    pointLight.position.y = 8;
-                    lightPost.add(pointLight);
-                    this.lights.push(pointLight);
-                    
-                    // Create continuous particle stream
-                    this.createNeonParticleStream(0, 8, lightColor, lightPost);
-                    
-                    lightPost.position.set(
-                        Math.random() > 0.5 ? -8 : 8,
-                        0,
-                        -i * 6 - 5
-                    );
-                    lightPost.userData = { type: 'neonStreetLight' };
-                    this.environmentGroup.add(lightPost);
-                    this.neonLights.push(lightPost);
-                }
-            }
-            
-            createNeonParticleStream(x, y, color, parent) {
-                // Create continuous neon particles
-                this.registerUpdateCallback((dt) => {
-                    if (Math.random() < 0.5) {
-                        const particle = this.createParticle(
-                            new THREE.Vector3(
-                                parent.position.x + x + (Math.random() - 0.5) * 0.3,
-                                y,
-                                parent.position.z + (Math.random() - 0.5) * 0.3
-                            ),
-                            {
-                                size: 0.03,
-                                color: color,
-                                lifetime: 3.0,
-                                velocity: new THREE.Vector3(
-                                    (Math.random() - 0.5) * 0.01,
-                                    -0.02 - Math.random() * 0.01,
-                                    (Math.random() - 0.5) * 0.01
-                                ),
-                                gravity: 0,
-                                fadeOut: true
-                            }
-                        );
-                        particle.material.opacity = 0.6;
-                        particle.material.emissive = new THREE.Color(color);
-                        particle.material.emissiveIntensity = 0.8;
-                    }
-                });
-            }
-            
-            createCyberpunkCity() {
-                for (let i = 0; i < 25; i++) {
-                    this.createCyberpunkBuilding(-20 - Math.random() * 15, -i * 8, 'left');
-                    this.createCyberpunkBuilding(20 + Math.random() * 15, -i * 8, 'right');
-                }
-            }
-            
-            createCyberpunkBuilding(x, z, side) {
-                const buildingGroup = new THREE.Group();
-                
-                const width = 6 + Math.random() * 4;
-                const depth = 6 + Math.random() * 4;
-                const height = 20 + Math.random() * 30;
-                
-                // Dark metallic building
-                const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
-                const buildingMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x111122,
-                    emissive: 0x000011,
-                    emissiveIntensity: 0.2
-                });
-                
-                const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-                building.position.y = height / 2;
-                buildingGroup.add(building);
-                
-                // Neon edge lighting
-                const edgeGeometry = new THREE.BoxGeometry(width + 0.1, height + 0.1, depth + 0.1);
-                const edgeMaterial = new THREE.MeshBasicMaterial({ 
-                    color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
-                    wireframe: true
-                });
-                const edges = new THREE.Mesh(edgeGeometry, edgeMaterial);
-                edges.position.y = height / 2;
-                buildingGroup.add(edges);
-                
-                // Glowing windows
-                const windowsPerFloor = Math.floor(width / 1.2);
-                const floors = Math.floor(height / 2.5);
-                
-                for (let floor = 0; floor < floors; floor++) {
-                    for (let w = 0; w < windowsPerFloor; w++) {
-                        const windowGeometry = new THREE.PlaneGeometry(0.8, 1.5);
-                        const windowColor = Math.random() > 0.7 ? 0x00FFFF : 
-                                          (Math.random() > 0.5 ? 0xFF00FF : 0x0088FF);
-                        const windowMaterial = new THREE.MeshBasicMaterial({ 
-                            color: windowColor,
-                            emissive: windowColor,
-                            emissiveIntensity: 0.5
-                        });
-                        
-                        const window = new THREE.Mesh(windowGeometry, windowMaterial);
-                        const windowX = -width/2 + 1 + w * 1.2;
-                        const windowY = floor * 2.5 + 2;
-                        const windowZ = side === 'left' ? depth/2 + 0.01 : -depth/2 - 0.01;
-                        
-                        window.position.set(windowX, windowY, windowZ);
-                        if (side === 'right') window.rotation.y = Math.PI;
-                        
-                        // Animate window
-                        window.userData = {
-                            pulseSpeed: 1 + Math.random() * 2,
-                            baseIntensity: 0.5 + Math.random() * 0.3
-                        };
-                        
-                        buildingGroup.add(window);
-                    }
-                }
-                
-                buildingGroup.position.set(x, 0, z);
-                buildingGroup.userData = { 
-                    type: 'cyberpunkBuilding', 
-                    initialZ: z,
-                    parallaxSpeed: 0.6 + Math.random() * 0.2
-                };
-                this.environmentGroup.add(buildingGroup);
-                this.cyberpunkBuildings.push(buildingGroup);
-            }
-            
-            createHolographicBillboards() {
-                for (let i = 0; i < 15; i++) {
-                    this.createHolographicBillboard(-15, -i * 15 - 10);
-                    this.createHolographicBillboard(15, -i * 15 - 10);
-                }
-            }
-            
-            createHolographicBillboard(x, z) {
-                const billboardGroup = new THREE.Group();
-                
-                // Billboard frame
-                const frameGeometry = new THREE.BoxGeometry(4, 3, 0.1);
-                const frameMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x222222,
-                    emissive: 0x111111
-                });
-                const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-                frame.position.y = 5;
-                billboardGroup.add(frame);
-                
-                // Holographic display
-                const displayGeometry = new THREE.PlaneGeometry(3.8, 2.8);
-                const displayMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x00FFFF,
-                    transparent: true,
-                    opacity: 0.7,
-                    side: THREE.DoubleSide
-                });
-                const display = new THREE.Mesh(displayGeometry, displayMaterial);
-                display.position.y = 5;
-                display.position.z = 0.1;
-                
-                // Animated scanlines
-                display.userData = {
-                    scanlineOffset: 0,
-                    flickerTime: 0
-                };
-                
-                billboardGroup.add(display);
-                
-                billboardGroup.position.set(x, 0, z);
-                billboardGroup.userData = { 
-                    type: 'holographicBillboard', 
-                    initialZ: z,
-                    parallaxSpeed: 0.7
-                };
-                this.environmentGroup.add(billboardGroup);
-                this.billboards.push(billboardGroup);
-            }
-            
-            createFlyingVehicles() {
-                for (let i = 0; i < 8; i++) {
-                    this.createFlyingVehicle();
-                }
-            }
-            
-            createFlyingVehicle() {
-                const vehicleGroup = new THREE.Group();
-                
-                // Futuristic vehicle body
-                const bodyGeometry = new THREE.ConeGeometry(0.5, 2, 6);
-                const bodyMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x444466,
-                    emissive: 0x222244
-                });
-                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                body.rotation.z = Math.PI / 2;
-                vehicleGroup.add(body);
-                
-                // Engine glow
-                const glowGeometry = new THREE.SphereGeometry(0.3);
-                const glowMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x00FFFF,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-                glow.position.x = -1;
-                vehicleGroup.add(glow);
-                
-                // Random flight path
-                const side = Math.random() > 0.5 ? 1 : -1;
-                vehicleGroup.position.set(
-                    side * (20 + Math.random() * 10),
-                    10 + Math.random() * 10,
-                    -50 - Math.random() * 50
-                );
-                
-                vehicleGroup.userData = {
-                    type: 'flyingVehicle',
-                    speed: 20 + Math.random() * 10,
-                    direction: side,
-                    wobbleSpeed: 1 + Math.random() * 2,
-                    baseY: vehicleGroup.position.y
-                };
-                
-                this.environmentGroup.add(vehicleGroup);
-                this.flyingVehicles.push(vehicleGroup);
-            }
-            
-            createDigitalRain() {
-                const rainCount = 100;
-                
-                for (let i = 0; i < rainCount; i++) {
-                    const dropGeometry = new THREE.PlaneGeometry(0.1, 0.5);
-                    const dropMaterial = new THREE.MeshBasicMaterial({ 
-                        color: 0x00FF00,
-                        emissive: 0x00FF00,
-                        emissiveIntensity: 0.5,
-                        transparent: true,
-                        opacity: 0.7
-                    });
-                    const drop = new THREE.Mesh(dropGeometry, dropMaterial);
-                    
-                    drop.position.set(
-                        (Math.random() - 0.5) * 100,
-                        10 + Math.random() * 20,
-                        -Math.random() * 200
-                    );
-                    
-                    drop.userData = {
-                        speed: 5 + Math.random() * 10,
-                        resetHeight: 30,
-                        opacity: 0.3 + Math.random() * 0.4
-                    };
-                    
-                    this.environmentGroup.add(drop);
-                    this.digitalRainDrops.push(drop);
-                }
-            }
-            
-            createGroundProjections() {
-                for (let i = 0; i < 20; i++) {
-                    this.createHolographicGroundProjection(-i * 5);
-                }
-            }
-            
-            createHolographicGroundProjection(z) {
-                const projectionGeometry = new THREE.CircleGeometry(2, 16);
-                const projectionMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x00FFFF,
-                    transparent: true,
-                    opacity: 0.3,
-                    side: THREE.DoubleSide
-                });
-                const projection = new THREE.Mesh(projectionGeometry, projectionMaterial);
-                
-                projection.position.set(
-                    (Math.random() - 0.5) * 10,
-                    0.01,
-                    z
-                );
-                projection.rotation.x = -Math.PI / 2;
-                
-                projection.userData = {
-                    type: 'holographicProjection',
-                    pulseSpeed: 1 + Math.random() * 2,
-                    baseOpacity: 0.2 + Math.random() * 0.3
-                };
-                
-                this.environmentGroup.add(projection);
-                this.groundProjections.push(projection);
-            }
-            
-            updateDynamicObjects(deltaTime, gameState) {
-                super.updateDynamicObjects(deltaTime, gameState);
-                
-                const time = Date.now() * 0.001;
-                
-                // Animate cyberpunk buildings
-                this.cyberpunkBuildings.forEach(building => {
-                    building.children.forEach(child => {
-                        if (child.userData && child.userData.pulseSpeed) {
-                            const pulse = Math.sin(time * child.userData.pulseSpeed);
-                            child.material.emissiveIntensity = child.userData.baseIntensity + pulse * 0.2;
-                        }
-                    });
-                });
-                
-                // Animate holographic billboards
-                this.billboards.forEach(billboard => {
-                    billboard.children.forEach(child => {
-                        if (child.userData && child.userData.scanlineOffset !== undefined) {
-                            // Flicker effect
-                            if (Math.random() > 0.98) {
-                                child.material.opacity = Math.random() > 0.5 ? 0.7 : 0.3;
-                            }
-                            
-                            // Color shift
-                            const hue = (time * 0.1) % 1;
-                            child.material.color.setHSL(hue, 1, 0.5);
-                        }
-                    });
-                });
-                
-                // Animate flying vehicles
-                this.flyingVehicles.forEach(vehicle => {
-                    // Move forward
-                    vehicle.position.z += vehicle.userData.speed * deltaTime * 0.001;
-                    
-                    // Wobble effect
-                    vehicle.position.y = vehicle.userData.baseY + 
-                        Math.sin(time * vehicle.userData.wobbleSpeed) * 0.5;
-                    
-                    // Reset when out of view
-                    if (vehicle.position.z > 20) {
-                        vehicle.position.z = -100 - Math.random() * 50;
-                        vehicle.userData.side = Math.random() > 0.5 ? 1 : -1;
-                        vehicle.position.x = vehicle.userData.side * (20 + Math.random() * 10);
-                    }
-                });
-                
-                // Animate digital rain
-                this.digitalRainDrops.forEach(drop => {
-                    drop.position.y -= drop.userData.speed * deltaTime * 0.001;
-                    
-                    if (drop.position.y < -10) {
-                        drop.position.y = drop.userData.resetHeight;
-                        drop.position.x = (Math.random() - 0.5) * 100;
-                        drop.material.opacity = drop.userData.opacity;
-                    }
-                });
-                
-                // Animate ground projections
-                this.groundProjections.forEach(projection => {
-                    const pulse = Math.sin(time * projection.userData.pulseSpeed);
-                    projection.material.opacity = projection.userData.baseOpacity + pulse * 0.1;
-                    projection.scale.setScalar(1 + pulse * 0.1);
-                });
-            }
-            
-            onDispose() {
-                // Clear arrays
-                this.cyberpunkBuildings = [];
-                this.billboards = [];
-                this.flyingVehicles = [];
-                this.digitalRainDrops = [];
-                this.groundProjections = [];
-                this.neonLights = [];
-                
-                console.log('[Level 2] Neon Night Run disposed');
-            }
-        }
-        
-        // Register Level 2
-        if (window.LevelManagerPro) {
-            const level2 = new Level2_Neon();
-            window.LevelManagerPro.registerLevel(level2);
-            console.log('[Level 2] Neon Night Run registered');
-        }
-        
-        // ========== LEVEL 3: SKY HIGH ==========
-        // REMOVED: Level 3 causing shader errors - removed as per v3.6.2-working
-        /*
-        class Level3_Sky extends LevelBase {
-            constructor() {
-                super(3, 'Sky High', {
-                    // Visual settings
-                    fogColor: '#87CEEB',
-                    fogDensity: 0.01,
-                    skyColor: '#87CEEB',
-                    ambientIntensity: 0.8,
-                    sunIntensity: 1.0,
-                    
-                    // Gameplay settings
-                    baseSpeedMultiplier: 1.3,
-                    obstacleSpawnMultiplier: 1.15,
-                    collectibleSpawnMultiplier: 1.1,
-                    
-                    // Level-specific features
-                    hasSpecialMechanics: true,
-                    specialMechanics: ['floatingClouds', 'windStreams', 'birdFlocks']
-                });
-                
-                // Level-specific objects
-                this.clouds = [];
-                this.windStreamers = [];
-                this.floatingIslands = [];
-                this.birds = [];
-                this.cloudParticles = [];
-                this.sunRays = null;
-                this.rainbow = null;
-                this.skyDome = null;
-            }
-            
-            async createEnvironment(scene, resourceManager) {
-                // Remove ground elements
-                scene.children.forEach(child => {
-                    if (child.userData && (child.userData.type === 'streetLine' || 
-                        child.userData.type === 'sidewalk' || child.userData.type === 'ground')) {
-                        child.visible = false;
-                    }
-                });
-                
-                // Create sky gradient background
-                this.createSkyGradient();
-                
-                // Create floating clouds
-                for (let i = 0; i < 40; i++) {
-                    this.createFloatingCloud(
-                        -40 + Math.random() * 80,
-                        3 + Math.random() * 25,
-                        -60 - Math.random() * 120
-                    );
-                }
-                
-                // Create cloud particle systems
-                for (let i = 0; i < 20; i++) {
-                    this.createCloudParticleSystem(
-                        -20 + Math.random() * 40,
-                        8 + Math.random() * 15,
-                        -30 - Math.random() * 100
-                    );
-                }
-                
-                // Create wind streamers
-                for (let i = 0; i < 15; i++) {
-                    this.createWindStreamer(
-                        -15 + Math.random() * 30,
-                        5 + Math.random() * 10,
-                        -20 - Math.random() * 80
-                    );
-                }
-                
-                // Create floating islands
-                for (let i = 0; i < 8; i++) {
-                    this.createFloatingIsland(
-                        -25 + Math.random() * 50,
-                        15 + Math.random() * 10,
-                        -30 - Math.random() * 60
-                    );
-                }
-                
-                // Create flying birds
-                for (let i = 0; i < 12; i++) {
-                    this.createFlyingBird();
-                }
-                
-                // Create rainbow
-                this.createRainbow();
-                
-                // Create sun rays
-                this.createSunRays();
-                
-                // Update directional light for bright sky
-                const directionalLight = scene.children.find(child => child.type === 'DirectionalLight');
-                if (directionalLight) {
-                    directionalLight.color = new THREE.Color(0xFFFFAA);
-                    directionalLight.intensity = 1.2;
-                }
-                
-                console.log('[Level 3] Sky High environment created');
-            }
-            
-            createSkyGradient() {
-                // Sky dome with gradient shader
-                const skyGeometry = new THREE.SphereGeometry(300, 32, 32);
-                const skyMaterial = new THREE.ShaderMaterial({
-                    uniforms: THREE.UniformsUtils.merge([
-                        THREE.UniformsLib.fog,  // ✅ FOG-UNIFORMS: fogColor, fogNear, fogFar, fogDensity
-                        {
-                            topColor: { value: new THREE.Color(0x0077be) },
-                            bottomColor: { value: new THREE.Color(0x87CEEB) },
-                            offset: { value: 0.3 },
-                            exponent: { value: 0.6 }
-                        }
-                    ]),
-                    vertexShader: `
-                        varying vec3 vWorldPosition;
-                        void main() {
-                            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-                            vWorldPosition = worldPosition.xyz;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform vec3 topColor;
-                        uniform vec3 bottomColor;
-                        uniform float offset;
-                        uniform float exponent;
-                        varying vec3 vWorldPosition;
-                        void main() {
-                            float h = normalize(vWorldPosition + offset).y;
-                            gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
-                        }
-                    `,
-                    fog: true,  // ✅ ENABLE FOG INTEGRATION
-                    side: THREE.BackSide
-                });
-                
-                this.skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
-                this.skyDome.userData = { type: 'skyDome' };
-                this.environmentGroup.add(this.skyDome);
-            }
-            
-            createFloatingCloud(x, y, z) {
-                const cloudGroup = new THREE.Group();
-                
-                // Create fluffy cloud from multiple spheres
-                for (let i = 0; i < 5; i++) {
-                    const puffGeometry = new THREE.SphereGeometry(2 + Math.random() * 2, 8, 6);
-                    const puffMaterial = new THREE.MeshLambertMaterial({
-                        color: 0xFFFFFF,
-                        transparent: true,
-                        opacity: 0.8,
-                        emissive: 0xFFFFFF,
-                        emissiveIntensity: 0.1
-                    });
-                    const puff = new THREE.Mesh(puffGeometry, puffMaterial);
-                    puff.position.set(
-                        (Math.random() - 0.5) * 4,
-                        (Math.random() - 0.5) * 2,
-                        (Math.random() - 0.5) * 3
-                    );
-                    cloudGroup.add(puff);
-                }
-                
-                cloudGroup.position.set(x, y, z);
-                cloudGroup.userData = {
-                    type: 'cloud',
-                    floatSpeed: 0.5 + Math.random() * 0.5,
-                    floatRange: 2,
-                    baseY: y,
-                    driftSpeed: (Math.random() - 0.5) * 0.01
-                };
-                
-                this.environmentGroup.add(cloudGroup);
-                this.clouds.push(cloudGroup);
-            }
-            
-            createCloudParticleSystem(x, y, z) {
-                const particleCount = 30;
-                const particles = new THREE.Group();
-                
-                for (let i = 0; i < particleCount; i++) {
-                    const particleGeometry = new THREE.SphereGeometry(0.1, 6, 6);
-                    const particleMaterial = new THREE.MeshBasicMaterial({ 
-                        color: 0xFFFFFF,
-                        transparent: true,
-                        opacity: 0.4
-                    });
-                    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-                    
-                    particle.position.set(
-                        x + (Math.random() - 0.5) * 6,
-                        y + (Math.random() - 0.5) * 4,
-                        z + (Math.random() - 0.5) * 6
-                    );
-                    
-                    particle.userData = {
-                        velocity: new THREE.Vector3(
-                            (Math.random() - 0.5) * 0.02,
-                            (Math.random() - 0.5) * 0.01,
-                            (Math.random() - 0.5) * 0.02
-                        ),
-                        life: 1.0,
-                        decay: 0.001 + Math.random() * 0.002,
-                        float: Math.random() * Math.PI * 2
-                    };
-                    
-                    particles.add(particle);
-                }
-                
-                particles.userData = { type: 'cloudParticles' };
-                this.environmentGroup.add(particles);
-                this.cloudParticles.push(particles);
-            }
-            
-            createWindStreamer(x, y, z) {
-                const streamerGeometry = new THREE.PlaneGeometry(8, 0.3);
-                const streamerMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0xCCEEFF,
-                    transparent: true,
-                    opacity: 0.6,
-                    side: THREE.DoubleSide
-                });
-                const streamer = new THREE.Mesh(streamerGeometry, streamerMaterial);
-                
-                streamer.position.set(x, y, z);
-                streamer.userData = {
-                    type: 'windStreamer',
-                    waveSpeed: 2 + Math.random() * 3,
-                    waveAmplitude: 0.5 + Math.random() * 0.5,
-                    baseRotation: Math.random() * Math.PI * 2,
-                    flowSpeed: 10 + Math.random() * 5
-                };
-                
-                this.environmentGroup.add(streamer);
-                this.windStreamers.push(streamer);
-            }
-            
-            createFloatingIsland(x, y, z) {
-                const islandGroup = new THREE.Group();
-                
-                // Island base (floating rock)
-                const islandGeometry = new THREE.CylinderGeometry(3, 4, 2, 12);
-                const islandMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x8B7355,
-                    emissive: 0x332211,
-                    emissiveIntensity: 0.1
-                });
-                const island = new THREE.Mesh(islandGeometry, islandMaterial);
-                islandGroup.add(island);
-                
-                // Grass top
-                const grassGeometry = new THREE.CylinderGeometry(3.2, 3.2, 0.3, 12);
-                const grassMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x32CD32,
-                    emissive: 0x0A4A0A,
-                    emissiveIntensity: 0.2
-                });
-                const grass = new THREE.Mesh(grassGeometry, grassMaterial);
-                grass.position.y = 1.1;
-                islandGroup.add(grass);
-                
-                // Small trees
-                for (let i = 0; i < 3; i++) {
-                    const treeGeometry = new THREE.ConeGeometry(0.5, 2, 8);
-                    const treeMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x228B22,
-                        emissive: 0x112211,
-                        emissiveIntensity: 0.1
-                    });
-                    const tree = new THREE.Mesh(treeGeometry, treeMaterial);
-                    tree.position.set(
-                        (Math.random() - 0.5) * 4,
-                        1.3,
-                        (Math.random() - 0.5) * 4
-                    );
-                    islandGroup.add(tree);
-                }
-                
-                // Floating particles below island
-                for (let i = 0; i < 10; i++) {
-                    this.createParticle(
-                        new THREE.Vector3(
-                            x + (Math.random() - 0.5) * 4,
-                            y - 2 - Math.random() * 3,
-                            z + (Math.random() - 0.5) * 4
-                        ),
-                        {
-                            size: 0.05,
-                            color: 0x8B7355,
-                            lifetime: 2.0 + Math.random() * 2,
-                            velocity: new THREE.Vector3(0, -0.01, 0),
-                            gravity: 0,
-                            fadeOut: true
-                        }
-                    );
-                }
-                
-                islandGroup.position.set(x, y, z);
-                islandGroup.userData = {
-                    type: 'floatingIsland',
-                    floatSpeed: 0.3 + Math.random() * 0.3,
-                    floatRange: 1,
-                    baseY: y,
-                    rotationSpeed: 0.0001 + Math.random() * 0.0002
-                };
-                
-                this.environmentGroup.add(islandGroup);
-                this.floatingIslands.push(islandGroup);
-            }
-            
-            createFlyingBird() {
-                const birdGroup = new THREE.Group();
-                
-                // Bird body
-                const bodyGeometry = new THREE.SphereGeometry(0.2, 8, 6);
-                const bodyMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x4169E1,
-                    emissive: 0x213451,
-                    emissiveIntensity: 0.2
-                });
-                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                birdGroup.add(body);
-                
-                // Wings
-                const wingGeometry = new THREE.PlaneGeometry(0.8, 0.3);
-                const wingMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x4169E1,
-                    side: THREE.DoubleSide
-                });
-                
-                const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
-                leftWing.position.set(-0.4, 0, 0);
-                leftWing.rotation.y = Math.PI / 6;
-                leftWing.userData = { isLeft: true };
-                birdGroup.add(leftWing);
-                
-                const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-                rightWing.position.set(0.4, 0, 0);
-                rightWing.rotation.y = -Math.PI / 6;
-                rightWing.userData = { isLeft: false };
-                birdGroup.add(rightWing);
-                
-                // Random flight path
-                birdGroup.position.set(
-                    -30 + Math.random() * 60,
-                    8 + Math.random() * 15,
-                    -50 - Math.random() * 100
-                );
-                
-                birdGroup.userData = {
-                    type: 'bird',
-                    flightSpeed: 8 + Math.random() * 4,
-                    flightPath: Math.random() * Math.PI * 2,
-                    wingFlap: 0,
-                    flapSpeed: 5 + Math.random() * 3,
-                    circleRadius: 20 + Math.random() * 10,
-                    circleCenter: new THREE.Vector3(
-                        birdGroup.position.x,
-                        birdGroup.position.y,
-                        birdGroup.position.z
-                    )
-                };
-                
-                this.environmentGroup.add(birdGroup);
-                this.birds.push(birdGroup);
-            }
-            
-            createRainbow() {
-                const colors = [0xFF0000, 0xFFA500, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
-                const rainbowGroup = new THREE.Group();
-                
-                for (let i = 0; i < colors.length; i++) {
-                    const arcGeometry = new THREE.TorusGeometry(30 + i * 2, 1, 4, 32, Math.PI);
-                    const arcMaterial = new THREE.MeshBasicMaterial({
-                        color: colors[i],
-                        transparent: true,
-                        opacity: 0.6,
-                        side: THREE.DoubleSide
-                    });
-                    const arc = new THREE.Mesh(arcGeometry, arcMaterial);
-                    arc.rotation.x = Math.PI;
-                    rainbowGroup.add(arc);
-                }
-                
-                rainbowGroup.position.set(0, 20, -80);
-                rainbowGroup.userData = {
-                    type: 'rainbow',
-                    fadeSpeed: 0.5
-                };
-                
-                this.rainbow = rainbowGroup;
-                this.environmentGroup.add(rainbowGroup);
-            }
-            
-            createSunRays() {
-                const rayCount = 12;
-                const rayGroup = new THREE.Group();
-                
-                for (let i = 0; i < rayCount; i++) {
-                    const rayGeometry = new THREE.PlaneGeometry(100, 2);
-                    const rayMaterial = new THREE.MeshBasicMaterial({ 
-                        color: 0xFFFFAA,
-                        transparent: true,
-                        opacity: 0.1,
-                        side: THREE.DoubleSide
-                    });
-                    const ray = new THREE.Mesh(rayGeometry, rayMaterial);
-                    
-                    ray.rotation.z = (i / rayCount) * Math.PI * 2;
-                    rayGroup.add(ray);
-                }
-                
-                rayGroup.position.set(0, 20, -50);
-                rayGroup.userData = {
-                    type: 'sunRays',
-                    rotationSpeed: 0.2
-                };
-                
-                this.sunRays = rayGroup;
-                this.environmentGroup.add(rayGroup);
-            }
-            
-            updateDynamicObjects(deltaTime, gameState) {
-                super.updateDynamicObjects(deltaTime, gameState);
-                
-                const time = Date.now() * 0.001;
-                
-                // Animate floating clouds
-                this.clouds.forEach(cloud => {
-                    cloud.position.y = cloud.userData.baseY + 
-                        Math.sin(time * cloud.userData.floatSpeed) * cloud.userData.floatRange;
-                    cloud.position.x += cloud.userData.driftSpeed * deltaTime;
-                    
-                    // Reset clouds that drift too far
-                    if (Math.abs(cloud.position.x) > 60) {
-                        cloud.position.x = -Math.sign(cloud.position.x) * 60;
-                    }
-                });
-                
-                // Animate cloud particles
-                this.cloudParticles.forEach(particleSystem => {
-                    particleSystem.children.forEach(particle => {
-                        if (particle.userData) {
-                            // Update position
-                            particle.position.add(particle.userData.velocity.clone().multiplyScalar(deltaTime));
-                            
-                            // Float effect
-                            particle.position.y += Math.sin(time + particle.userData.float) * 0.001 * deltaTime;
-                            
-                            // Update life
-                            particle.userData.life -= particle.userData.decay * deltaTime * 0.001;
-                            particle.material.opacity = particle.userData.life * 0.4;
-                            
-                            // Reset if dead
-                            if (particle.userData.life <= 0) {
-                                particle.userData.life = 1.0;
-                                particle.position.set(
-                                    particleSystem.position.x + (Math.random() - 0.5) * 6,
-                                    particleSystem.position.y + (Math.random() - 0.5) * 4,
-                                    particleSystem.position.z + (Math.random() - 0.5) * 6
-                                );
-                            }
-                        }
-                    });
-                });
-                
-                // Animate wind streamers
-                this.windStreamers.forEach(streamer => {
-                    const wave = Math.sin(time * streamer.userData.waveSpeed + streamer.userData.baseRotation);
-                    streamer.rotation.z = wave * streamer.userData.waveAmplitude;
-                    streamer.position.z += streamer.userData.flowSpeed * deltaTime * 0.001;
-                    
-                    // Reset position
-                    if (streamer.position.z > 20) {
-                        streamer.position.z = -100;
-                    }
-                });
-                
-                // Animate floating islands
-                this.floatingIslands.forEach(island => {
-                    island.position.y = island.userData.baseY + 
-                        Math.sin(time * island.userData.floatSpeed) * island.userData.floatRange;
-                    island.rotation.y += island.userData.rotationSpeed * deltaTime;
-                });
-                
-                // Animate flying birds
-                this.birds.forEach(bird => {
-                    // Update wing flap
-                    bird.userData.wingFlap += bird.userData.flapSpeed * deltaTime * 0.001;
-                    const flapAngle = Math.sin(bird.userData.wingFlap) * 0.5;
-                    
-                    bird.children.forEach(child => {
-                        if (child.userData && child.userData.isLeft !== undefined) {
-                            child.rotation.z = child.userData.isLeft ? flapAngle : -flapAngle;
-                        }
-                    });
-                    
-                    // Circular flight path
-                    bird.userData.flightPath += bird.userData.flightSpeed * deltaTime * 0.0001;
-                    bird.position.x = bird.userData.circleCenter.x + 
-                        Math.cos(bird.userData.flightPath) * bird.userData.circleRadius;
-                    bird.position.z = bird.userData.circleCenter.z + 
-                        Math.sin(bird.userData.flightPath) * bird.userData.circleRadius;
-                    
-                    // Face flight direction
-                    bird.rotation.y = -bird.userData.flightPath + Math.PI / 2;
-                });
-                
-                // Animate sun rays
-                if (this.sunRays) {
-                    this.sunRays.rotation.z += this.sunRays.userData.rotationSpeed * deltaTime * 0.001;
-                }
-                
-                // Animate rainbow fade
-                if (this.rainbow) {
-                    this.rainbow.children.forEach((arc, i) => {
-                        arc.material.opacity = 0.4 + Math.sin(time * this.rainbow.userData.fadeSpeed + i * 0.5) * 0.2;
-                    });
-                }
-            }
-            
-            onDispose() {
-                // Properly dispose of sky dome and its shader material
-                if (this.skyDome) {
-                    if (this.skyDome.material) {
-                        this.skyDome.material.dispose();
-                    }
-                    if (this.skyDome.geometry) {
-                        this.skyDome.geometry.dispose();
-                    }
-                    if (this.skyDome.parent) {
-                        this.skyDome.parent.remove(this.skyDome);
-                    }
-                }
-                
-                // Clear arrays
-                this.clouds = [];
-                this.windStreamers = [];
-                this.floatingIslands = [];
-                this.birds = [];
-                this.cloudParticles = [];
-                this.sunRays = null;
-                this.rainbow = null;
-                this.skyDome = null;
-                
-                console.log('[Level 3] Sky High disposed');
-            }
-        }
-        */
-        // Level 3 completely removed - was causing persistent shader errors
+
+        // Global debug flags
+        const DEBUG = {
+            DISABLE_FOG: false,           // Emergency fog disable switch
+            MATERIAL_AUDIT: true,         // Enable material auditing
+            SHADER_LOGGING: true,         // Log shader material creation
+            PERFORMANCE_MONITOR: true     // Enable FPS monitoring
+        };
+
+        console.log('✅ [MaterialFactory] Bulletproof material system ready!');
         
         // Audio System
         class AudioManager {
@@ -3597,27 +1235,6 @@
                 gameState.lastScoreUpdate = currentTime;
                 
                 console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
-                
-                // Check for level progression (every 1000 points)
-                const targetLevel = Math.floor(gameState.score / 1000) + 1;
-                // Level 3 completely removed - jump from 2 to 4
-                let actualLevel = targetLevel;
-                if (targetLevel === 3) {
-                    actualLevel = 4; // Skip to Level 4
-                    console.log('📌 Skipping removed Level 3, jumping to Level 4');
-                }
-                if (actualLevel > gameState.currentLevel && actualLevel <= 10) {
-                    console.log(`🎯 Level progression triggered! Score: ${gameState.score}, Next level: ${actualLevel}`);
-                    // Load next level
-                    if (window.LevelManagerPro) {
-                        window.LevelManagerPro.loadLevel(actualLevel).then(success => {
-                            if (success) {
-                                console.log(`✅ Successfully loaded level ${actualLevel}`);
-                                gameState.currentLevel = actualLevel;
-                            }
-                        });
-                    }
-                }
             }
         }
         
@@ -3634,24 +1251,13 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // Initialize Supabase connection with better error handling
+        // Initialize Supabase connection
         try {
             if (window.supabase) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase client created');
-                
-                // Test connection with a simple query
-                setTimeout(async () => {
-                    try {
-                        const { data, error } = await supabase.from('subway_runner_scores').select('id').limit(1);
-                        if (error) throw error;
-                        console.log('✅ Supabase connection verified');
-                    } catch (testError) {
-                        console.log('⚠️ Supabase connection test failed, disabling online features:', testError.message);
-                        supabase = null;
-                    }
-                }, 1000);
-                
+                console.log('✅ Supabase initialized successfully');
+                console.log('🔗 Database URL:', SUPABASE_URL);
+                console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
             } else {
                 throw new Error('Supabase library not loaded');
             }
@@ -3796,116 +1402,15 @@
             skipHighscoreInternal();
         };
 
-        // 🔧 BULLETPROOF MATERIAL FACTORY - Prevents ALL future shader crashes
-        function createUniversalMaterial(type, options = {}) {
-            const { 
-                color = 0xffffff, 
-                opacity = 1.0,
-                transparent = false,
-                wireframe = false,
-                side = THREE.FrontSide,
-                customUniforms = {},
-                vertexShader = null,
-                fragmentShader = null
-            } = options;
-
-            console.log(`[MaterialFactory] Creating ${type} material with color:`, color);
-
-            switch(type) {
-                case 'basic':
-                    return new THREE.MeshBasicMaterial({
-                        color, opacity, transparent, wireframe, side
-                    });
-                
-                case 'lambert':
-                    return new THREE.MeshLambertMaterial({
-                        color, opacity, transparent, wireframe, side
-                    });
-                
-                case 'phong':
-                    return new THREE.MeshPhongMaterial({
-                        color, opacity, transparent, wireframe, side
-                    });
-                
-                case 'shader':
-                    // BULLETPROOF SHADER MATERIAL with ALL standard uniforms
-                    console.log(`[MaterialFactory] Creating BULLETPROOF shader with fog/light support`);
-                    return new THREE.ShaderMaterial({
-                        uniforms: THREE.UniformsUtils.merge([
-                            THREE.UniformsLib.common,     // Basic uniforms (diffuse, opacity, etc.)
-                            THREE.UniformsLib.specularmap, // Specular mapping
-                            THREE.UniformsLib.envmap,     // Environment mapping
-                            THREE.UniformsLib.aomap,      // Ambient occlusion
-                            THREE.UniformsLib.lightmap,   // Light mapping
-                            THREE.UniformsLib.emissivemap, // Emissive mapping
-                            THREE.UniformsLib.fog,        // FOG COMPATIBILITY ✅
-                            THREE.UniformsLib.lights,     // LIGHT COMPATIBILITY ✅
-                            THREE.UniformsLib.shadowmap,  // Shadow mapping
-                            customUniforms               // Level-specific uniforms
-                        ]),
-                        vertexShader: vertexShader || `
-                            void main() {
-                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                            }
-                        `,
-                        fragmentShader: fragmentShader || `
-                            uniform vec3 diffuse;
-                            uniform float opacity;
-                            void main() {
-                                gl_FragColor = vec4(diffuse, opacity);
-                            }
-                        `,
-                        fog: true,           // ✅ Enable fog support
-                        lights: true,       // ✅ Enable light support
-                        transparent: transparent,
-                        side: side
-                    });
-                
-                default:
-                    console.warn(`[MaterialFactory] Unknown type: ${type}, falling back to MeshLambertMaterial`);
-                    return new THREE.MeshLambertMaterial({ color, opacity, transparent, wireframe, side });
-            }
-        }
-
-        // 🎯 CONVENIENCE FUNCTIONS for common use cases
-        function createSafeMaterial(color = 0xffffff, options = {}) {
-            return createUniversalMaterial('lambert', { color, ...options });
-        }
-
-        function createSafeShader(customUniforms, vertexShader, fragmentShader, options = {}) {
-            return createUniversalMaterial('shader', { 
-                customUniforms, 
-                vertexShader, 
-                fragmentShader, 
-                ...options 
-            });
-        }
-
-        // 🛡️ MATERIAL REPLACEMENT UTILITY - Replace problematic materials
-        function replaceMaterialSafely(object, newMaterialType = 'lambert', options = {}) {
-            if (object.material) {
-                const oldType = object.material.type;
-                const newMaterial = createUniversalMaterial(newMaterialType, options);
-                
-                // Dispose old material to prevent memory leaks
-                if (object.material.dispose) {
-                    object.material.dispose();
-                }
-                
-                object.material = newMaterial;
-                console.log(`[MaterialFactory] Replaced ${oldType} with safe ${newMaterialType} material`);
-            }
-        }
-
         // Game state
         let gameState = {
             isPlaying: false,
             isGameOver: false,
             isVictory: false,
             score: 0,
-            speed: 0.15, // Faster start for action gameplay
-            baseSpeed: 0.15,
-            maxSpeed: 0.60, // Even faster at the end!
+            speed: 0.08, // Langsamerer Start
+            baseSpeed: 0.08,
+            maxSpeed: 0.45, // Sehr schnell am Ende!
             lives: 3,
             gameTime: 60, // 60 Sekunden
             timeRemaining: 60,
@@ -3916,7 +1421,6 @@
             jumpVelocity: 0,
             jumpStartTime: 0,  // BUGFIX: Track jump start time for safety
             maxJumpDuration: 2000, // Maximum 2 seconds jump duration
-            isDuckingToggled: false, // MOBILE: Track if ducking is toggled on mobile
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -3924,16 +1428,13 @@
             cameraShakeIntensity: 0,
             cameraZoom: 1.0,
             slowMotionActive: false,
-            currentLevel: 1,           // Track current level
             
             // NEW: Power-Up & Collectibles System
             powerUps: [],              // Spawned power-ups in world
             kiwis: [],                 // Spawned kiwis in world
             broccolis: [],             // Spawned broccolis in world  
-            stars: [],                 // Spawned stars in world
             collectedKiwis: 0,         // Current session kiwis
             collectedBroccolis: 0,     // Current session broccolis
-            collectedStars: 0,         // Current session stars
             totalKiwis: 0,             // Lifetime kiwis
             totalBroccolis: 0,         // Lifetime broccolis
             totalCollectibles: 0,      // Total spawned this session
@@ -3980,7 +1481,7 @@
             // Touch Controls
             touchStartX: 0,
             touchStartY: 0,
-            touchThreshold: 30,        // Reduced for faster response
+            touchThreshold: 50,        // Swipe distance threshold
             isTouchDevice: false,      // Auto-detect touch support
             
             // Environment state
@@ -4021,7 +1522,6 @@
         let powerUps = [];
         let kiwis = [];
         let broccolis = [];  // NEW: Brokkoli tracking
-        let stars = [];       // NEW: Star tracking for invincibility
         
         // Power-Up configuration
         const POWER_UP_TYPES = {
@@ -4074,19 +1574,16 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
-                // Scene with enhanced fog
+                // Scene setup with conditional fog (3GS-Prevention)
                 scene = new THREE.Scene();
                 
-                // 🚨 DEBUG: Fog Elimination Test (Phase 3)
-                // Toggle between fog enabled/disabled to test if fog causes shader errors
-                const DEBUG_DISABLE_FOG = false; // Set to true to disable fog
-                
-                if (DEBUG_DISABLE_FOG) {
-                    console.log('🔍 [DEBUG] FOG DISABLED for testing');
+                // 🚨 CRITICAL: Fog Toggle Implementation (3GS-Safe)
+                if (DEBUG.DISABLE_FOG) {
+                    console.log('⚠️ [3GS-Prevention] Fog DISABLED for debugging - no refreshUniformsCommon crashes possible');
                     scene.fog = null;
                 } else {
+                    console.log('✅ [3GS-Prevention] Fog ENABLED with bulletproof materials');
                     scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
-                    console.log('🔍 [DEBUG] FOG ENABLED with density:', gameState.currentFogDensity);
                 }
 
             // Camera (Subway Surfers perspective)
@@ -4132,9 +1629,6 @@
 
             // Enhance renderer for better visuals
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            
-            // Make renderer globally available for level system
-            window.renderer = renderer;
             renderer.toneMappingExposure = 1.2;
             renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -4144,27 +1638,32 @@
             // Create track
             createTrack();
             
-            // Initialize Level System
-            initializeLevelSystem();
+            // Create environment
+            createEnvironment();
 
             // Handle window resize
             window.addEventListener('resize', onWindowResize);
             
-                // 🚨 DEBUG: Shader Material Audit (Phase 4)
-                console.log('🔍 [DEBUG] Starting ShaderMaterial audit...');
-                let shaderMaterialCount = 0;
-                scene.traverse(child => {
-                    if (child.material && child.material.type === 'ShaderMaterial') {
-                        shaderMaterialCount++;
-                        console.log('🚨 [DEBUG] Found ShaderMaterial:', child.name || 'unnamed', {
-                            material: child.material,
-                            uniforms: Object.keys(child.material.uniforms || {}),
-                            hasFogColor: !!(child.material.uniforms && child.material.uniforms.fogColor),
-                            fogEnabled: child.material.fog
-                        });
-                    }
-                });
-                console.log(`🔍 [DEBUG] ShaderMaterial audit complete. Found ${shaderMaterialCount} shader materials.`);
+                // 🔍 PHASE 1.5: Material Audit Tool - Check scene safety
+                if (DEBUG.MATERIAL_AUDIT) {
+                    setTimeout(() => {
+                        console.log('🔍 [3GS-Prevention] Running initial material audit...');
+                        const auditResult = auditSceneMaterials(scene);
+                        
+                        if (auditResult.problematicMaterials > 0) {
+                            console.error(`🚨 [3GS-WARNING] Found ${auditResult.problematicMaterials} problematic materials!`);
+                            console.warn('💡 [3GS-Fix] Consider using createSafeShader() for custom shaders');
+                            
+                            if (DEBUG.DISABLE_FOG) {
+                                console.log('✅ [3GS-Safe] Fog disabled - problematic materials won\'t cause crashes');
+                            } else {
+                                console.warn('⚠️ [3GS-Risk] Fog enabled with problematic materials - monitor for crashes');
+                            }
+                        } else {
+                            console.log('✅ [3GS-Safe] All materials are bulletproof - no shader crashes possible');
+                        }
+                    }, 1000); // Delay to ensure all objects are created
+                }
                 
                 // Start render loop
                 animate();
@@ -4180,9 +1679,7 @@
             // Player body (torso)
             const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
             const bodyMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x66B2FF,  // Brighter blue for better visibility
-                emissive: 0x1A4A70,
-                emissiveIntensity: 0.2
+                color: 0x4A90E2
             });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             body.position.y = 0.7;
@@ -4192,9 +1689,7 @@
             // Player head
             const headGeometry = new THREE.SphereGeometry(0.25);
             const headMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFCC66,  // Brighter yellow for better visibility
-                emissive: 0xCC9933,
-                emissiveIntensity: 0.1
+                color: 0xF5B041
             });
             const head = new THREE.Mesh(headGeometry, headMaterial);
             head.position.y = 1.35;
@@ -4215,11 +1710,7 @@
 
             // Arms
             const armGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6);
-            const armMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFCC66,  // Brighter arms to match head
-                emissive: 0xCC9933,
-                emissiveIntensity: 0.1
-            });
+            const armMaterial = new THREE.MeshLambertMaterial({ color: 0xF5B041 });
             
             const leftArm = new THREE.Mesh(armGeometry, armMaterial);
             leftArm.position.set(-0.4, 0.8, 0);
@@ -4329,47 +1820,11 @@
             track = trackGroup;
         }
 
-        // Initialize Level System
-        async function initializeLevelSystem() {
-            try {
-                // Clean up any orphaned shader materials in the scene before initialization
-                scene.traverse((child) => {
-                    if (child.isMesh && child.material && child.material.isShaderMaterial) {
-                        console.warn('[Game] Found orphaned shader material, disposing:', child);
-                        if (child.parent) child.parent.remove(child);
-                        if (child.geometry) child.geometry.dispose();
-                        if (child.material) child.material.dispose();
-                    }
-                });
-                
-                // Initialize LevelManagerPro
-                await window.LevelManagerPro.initialize(scene, window.ResourceManager);
-                
-                // Set up level transition callback
-                window.LevelManagerPro.onLevelTransition((levelId, level) => {
-                    console.log(`[Game] Transitioned to level ${levelId}: ${level.name}`);
-                    // Update game state
-                    gameState.currentLevel = levelId;
-                });
-                
-                // Load initial level
-                await window.LevelManagerPro.loadLevel(1, true);
-                console.log('[Game] Level system initialized');
-                
-            } catch (error) {
-                console.error('[Game] Failed to initialize level system:', error);
-                // Fallback to basic environment
-                createEnvironment();
-            }
-        }
-        
         function createEnvironment() {
             // Urban ground with asphalt texture
             const groundGeometry = new THREE.PlaneGeometry(80, 120);
             const groundMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x555555,  // Brighter ground for better contrast
-                emissive: 0x222222,
-                emissiveIntensity: 0.1
+                color: 0x333333
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
@@ -4564,7 +2019,7 @@
             
             // Sign post
             const postGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2.5);
-            const postMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
+            const postMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
             const post = new THREE.Mesh(postGeometry, postMaterial);
             post.position.y = 0.25;
             signGroup.add(post);
@@ -4600,9 +2055,7 @@
                     // Niedrige Barriere - muss übersprungen werden
                     obstacleGeometry = new THREE.BoxGeometry(1.5, 0.8, 0.3);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0xFF8555,  // Brighter orange for better visibility
-                        emissive: 0x441122,
-                        emissiveIntensity: 0.1
+                        color: 0xFF6B35
                     });
                     height = 0.8;
                     break;
@@ -4610,9 +2063,7 @@
                     // Hohe Barriere - muss unterduckt werden
                     obstacleGeometry = new THREE.BoxGeometry(1.8, 0.4, 0.3);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0xCC3333,  // Brighter red for better visibility
-                        emissive: 0x330000,
-                        emissiveIntensity: 0.15
+                        color: 0x8B0000
                     });
                     height = 0.4;
                     break;
@@ -4629,9 +2080,7 @@
                     // Block zum Überspringen - Concrete texture
                     obstacleGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0xBBBBBB,  // Brighter gray for better visibility
-                        emissive: 0x333333,
-                        emissiveIntensity: 0.1
+                        color: 0x8B8B8B
                     });
                     height = 1.2;
                     // Add concrete details
@@ -4652,9 +2101,7 @@
                     // Balken zum Unterducken - Metal beam
                     obstacleGeometry = new THREE.BoxGeometry(2.2, 0.3, 0.8);
                     obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x66AADD,  // Brighter blue for better visibility
-                        emissive: 0x223344,
-                        emissiveIntensity: 0.1
+                        color: 0x4682B4
                     });
                     height = 0.3;
                     // Add support struts
@@ -4787,7 +2234,7 @@
                     
                     // Support structure
                     const supportGeometry = new THREE.BoxGeometry(0.2, 3, 0.2);
-                    const supportMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
+                    const supportMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
                     const support = new THREE.Mesh(supportGeometry, supportMaterial);
                     support.position.y = 1.5;
                     support.castShadow = true;
@@ -4893,7 +2340,7 @@
                     // Central hub
                     const laserHubGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.6);
                     const laserHubMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x666666,
+                        color: 0x333333,
                         emissive: 0x110011
                     });
                     const laserHub = new THREE.Mesh(laserHubGeometry, laserHubMaterial);
@@ -5021,122 +2468,92 @@
             // Resume audio context
             audioManager.resume();
             
-            // Hide menu and show countdown
+            // Start background music
+            audioManager.startBackgroundMusic();
+            
+            // Start ambient city sounds
+            if (!ambientStarted) {
+                audioManager.play('ambient');
+                ambientStarted = true;
+            }
+            
+            gameState.isPlaying = true;
+            gameState.isGameOver = false;
+            gameState.isVictory = false;
+            gameState.score = 0;
+            gameState.speed = gameState.baseSpeed;
+            gameState.lives = 3;
+            gameState.timeRemaining = gameState.gameTime;
+            gameState.gameStartTime = Date.now();
+            gameState.playerLane = 1;
+            gameState.playerAction = 'running';
+            gameState.playerY = 0;
+            gameState.jumpVelocity = 0;
+            gameState.invulnerable = false;
+            gameState.invulnerabilityTime = 0;
+            gameState.timeScale = 1.0;
+            gameState.cameraShakeIntensity = 0;
+            gameState.slowMotionActive = false;
+            
+            // BUGFIX: Reset milestone tracking to prevent constant confetti
+            gameState.lastMilestone = 0;
+            gameState.milestoneReached = 0;
+            gameState.totalDistance = 0;
+            
+            // BUGFIX: Initialize centralized score system
+            gameState.lastScoreUpdate = performance.now();
+            gameState.scoreQueue = 0;
+            gameState.lastDistanceScore = performance.now();
+            
+            // Reset all multipliers and combos
+            gameState.comboMultiplier = 1;
+            gameState.nearMissMultiplier = 1;
+            gameState.skillMultiplier = 1;
+            gameState.scoreMultiplier = 1;
+            gameState.nearMissStreak = 0;
+            gameState.kiwiCombo = 0;
+            
+            // Reset collectible system with debug logging
+            console.log('🔄 RESETTING COLLECTIBLE COUNTERS');
+            console.log(`   Before reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            
+            gameState.collectedKiwis = 0;
+            gameState.collectedBroccolis = 0;
+            gameState.totalCollectibles = 0;
+            gameState.collectionBonusAwarded = {
+                fiveOfOne: false,
+                allOfOne: false, 
+                allThirtySeven: false,
+                broccoliMaster: false,
+                veggieChampion: false
+            };
+            
+            console.log(`   After reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            
+            // Force immediate UI update
+            updateKiwiUI();
+            
+            // Clear obstacles and collectibles
+            obstacles.forEach(obs => scene.remove(obs.mesh));
+            obstacles = [];
+            
+            // Clear existing collectibles
+            gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
+            gameState.kiwis = [];
+            gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
+            gameState.broccolis = [];
+            
+            // Start sound
+            audioManager.play('powerup');
+            
             document.getElementById('menu').style.display = 'none';
-            const countdownDisplay = document.getElementById('countdownDisplay');
-            countdownDisplay.style.display = 'block';
+            updateUI();
             
-            // Update level display
-            document.getElementById('currentLevelNum').textContent = gameState.currentLevel;
-            document.getElementById('currentLevelName').textContent = LevelManagerPro.getCurrentLevel()?.name || 'Subway';
-            
-            // Countdown sequence
-            let countdown = 3;
-            
-            const countdownInterval = setInterval(() => {
-                countdownDisplay.textContent = countdown;
-                audioManager.createTone(800 + (3 - countdown) * 200, 0.1, 'sine'); // Rising tone
-                
-                countdown--;
-                
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    countdownDisplay.style.display = 'none';
-                    
-                    // Start background music
-                    audioManager.startBackgroundMusic();
-                    
-                    // Start ambient city sounds
-                    if (!ambientStarted) {
-                        audioManager.play('ambient');
-                        ambientStarted = true;
-                    }
-                    
-                    gameState.isPlaying = true;
-                    gameState.isGameOver = false;
-                    gameState.isVictory = false;
-                    gameState.score = 0;
-                    gameState.speed = gameState.baseSpeed;
-                    gameState.lives = 3;
-                    gameState.timeRemaining = gameState.gameTime;
-                    gameState.gameStartTime = Date.now();
-                    gameState.playerLane = 1;
-                    gameState.playerAction = 'running';
-                    gameState.playerY = 0;
-                    gameState.jumpVelocity = 0;
-                    gameState.isDuckingToggled = false; // Reset mobile ducking toggle
-            
-                    // Hide duck indicator
-                    const duckIndicator = document.getElementById('duckToggleIndicator');
-                    if (duckIndicator) duckIndicator.style.opacity = '0';
-                    gameState.invulnerable = false;
-                    gameState.invulnerabilityTime = 0;
-                    gameState.timeScale = 1.0;
-                    gameState.cameraShakeIntensity = 0;
-                    gameState.slowMotionActive = false;
-                    
-                    // BUGFIX: Reset milestone tracking to prevent constant confetti
-                    gameState.lastMilestone = 0;
-                    gameState.milestoneReached = 0;
-                    gameState.totalDistance = 0;
-                    
-                    // BUGFIX: Initialize centralized score system
-                    gameState.lastScoreUpdate = performance.now();
-                    gameState.scoreQueue = 0;
-                    gameState.lastDistanceScore = performance.now();
-                    
-                    // Reset all multipliers and combos
-                    gameState.comboMultiplier = 1;
-                    gameState.nearMissMultiplier = 1;
-                    gameState.skillMultiplier = 1;
-                    gameState.scoreMultiplier = 1;
-                    gameState.nearMissStreak = 0;
-                    gameState.kiwiCombo = 0;
-                    
-                    // Reset collectible system with debug logging
-                    console.log('🔄 RESETTING COLLECTIBLE COUNTERS');
-                    console.log(`   Before reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
-                    
-                    gameState.collectedKiwis = 0;
-                    gameState.collectedBroccolis = 0;
-                    gameState.totalCollectibles = 0;
-                    gameState.collectionBonusAwarded = {
-                        fiveOfOne: false,
-                        allOfOne: false, 
-                        allThirtySeven: false,
-                        broccoliMaster: false,
-                        veggieChampion: false
-                    };
-                    
-                    console.log(`   After reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
-                    
-                    // Force immediate UI update
-                    updateKiwiUI();
-                    
-                    // Clear obstacles and collectibles
-                    obstacles.forEach(obs => scene.remove(obs.mesh));
-                    obstacles = [];
-                    
-                    // Clear existing collectibles
-                    gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
-                    gameState.kiwis = [];
-                    gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
-                    gameState.broccolis = [];
-                    gameState.stars.forEach(star => scene.remove(star.mesh));
-                    gameState.stars = [];
-                    
-                    // Start sound
-                    audioManager.play('powerup');
-                    
-                    updateUI();
-                    
-                    // Extra check to ensure UI is properly updated at game start
-                    setTimeout(() => {
-                        updateKiwiUI();
-                        console.log('✅ Game started - UI updated after delay');
-                    }, 100);
-                }
-            }, 1000);
+            // Extra check to ensure UI is properly updated at game start
+            setTimeout(() => {
+                updateKiwiUI();
+                console.log('✅ Game started - UI updated after delay');
+            }, 100);
         }
 
         function endGame() {
@@ -5201,10 +2618,6 @@
                 setTimeout(() => scoreElement.classList.remove('ui-bounce'), 500);
             }
             scoreElement.textContent = targetScore;
-            
-            // Update level display
-            document.getElementById('currentLevelNum').textContent = gameState.currentLevel;
-            document.getElementById('currentLevelName').textContent = LevelManagerPro.getCurrentLevel()?.name || 'Subway';
             
             // Speed display with color coding
             const speedElement = document.getElementById('speed');
@@ -6205,30 +3618,6 @@
                     gameState.broccolis.splice(index, 1);
                 }
             });
-            
-            // ==================== STAR COLLISION DETECTION ====================
-            
-            gameState.stars.forEach((star, index) => {
-                const starBBox = {
-                    min: {
-                        x: star.mesh.position.x - 0.5,
-                        y: star.mesh.position.y - 0.5,
-                        z: star.mesh.position.z - 0.5
-                    },
-                    max: {
-                        x: star.mesh.position.x + 0.5,
-                        y: star.mesh.position.y + 0.5,
-                        z: star.mesh.position.z + 0.5
-                    }
-                };
-                
-                const isCollecting = boundingBoxIntersection(playerBBox, starBBox);
-                
-                if (isCollecting && !star.collected) {
-                    collectStar(star);
-                    gameState.stars.splice(index, 1);
-                }
-            });
         }
         
         // Calculate precise player bounding box based on current action
@@ -6630,79 +4019,6 @@
             return kiwiData;
         }
         
-        // NEW: Star creation function for invincibility 
-        function createStar(lane, z) {
-            const starGroup = new THREE.Group();
-            
-            // Create a 3D star shape
-            const starShape = new THREE.Shape();
-            const spikes = 5;
-            const outerRadius = 0.5;
-            const innerRadius = 0.25;
-            
-            for (let i = 0; i < spikes * 2; i++) {
-                const angle = (i / (spikes * 2)) * Math.PI * 2;
-                const radius = i % 2 === 0 ? outerRadius : innerRadius;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                
-                if (i === 0) {
-                    starShape.moveTo(x, y);
-                } else {
-                    starShape.lineTo(x, y);
-                }
-            }
-            
-            const extrudeSettings = {
-                depth: 0.1,
-                bevelEnabled: true,
-                bevelSegments: 2,
-                steps: 2,
-                bevelSize: 0.02,
-                bevelThickness: 0.02
-            };
-            
-            const starGeometry = new THREE.ExtrudeGeometry(starShape, extrudeSettings);
-            const starMaterial = new THREE.MeshPhongMaterial({
-                color: 0xFFD700,
-                emissive: 0xFFD700,
-                emissiveIntensity: 0.5,
-                shininess: 100
-            });
-            
-            const star = new THREE.Mesh(starGeometry, starMaterial);
-            star.rotation.x = Math.PI / 2;
-            star.position.y = 1.2;
-            starGroup.add(star);
-            
-            // Add glow effect
-            const glowGeometry = new THREE.SphereGeometry(0.7, 16, 16);
-            const glowMaterial = new THREE.MeshBasicMaterial({
-                color: 0xFFFF00,
-                transparent: true,
-                opacity: 0.3
-            });
-            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-            glow.position.y = 1.2;
-            starGroup.add(glow);
-            
-            starGroup.position.set(LANE_POSITIONS[lane], 0, z);
-            starGroup.userData = { type: 'star', lane: lane };
-            scene.add(starGroup);
-            
-            const starData = {
-                mesh: starGroup,
-                lane: lane,
-                z: z,
-                type: 'star',
-                animationTime: 0,
-                collected: false
-            };
-            
-            stars.push(starData);
-            return starData;
-        }
-        
         // NEW: Brokkoli creation function for variety
         function createBroccoli(lane, z, pattern = 'single') {
             const broccoliGroup = new THREE.Group();
@@ -6845,6 +4161,7 @@
                 const config = POWER_UP_TYPES[gameState.activePowerUp];
                 powerUpDisplay.style.display = 'block';
                 powerUpIcon.textContent = config.icon;
+                powerUpName.textContent = config.name;
                 powerUpTime.textContent = Math.ceil(gameState.powerUpTimeRemaining / 1000);
             } else {
                 powerUpDisplay.style.display = 'none';
@@ -6924,40 +4241,6 @@
             updateCollectibleUI();
             
             console.log(`Collected broccoli! Health bonus: +${totalScore} points`);
-        }
-        
-        function collectStar(starData) {
-            if (starData.collected) return;
-            
-            starData.collected = true;
-            scene.remove(starData.mesh);
-            
-            gameState.collectedStars++;
-            
-            // Activate invincibility for 8 seconds
-            gameState.invulnerable = true;
-            gameState.invulnerabilityTime = 8.0;
-            
-            // Visual effect
-            player.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = child.material.clone();
-                    child.material.emissive = new THREE.Color(0xFFD700);
-                    child.material.emissiveIntensity = 0.5;
-                }
-            });
-            
-            // Score for collecting star
-            addScore(500, 'star_collection');
-            
-            // Audio feedback
-            audioManager.createTone(1200, 0.3, 'sine');
-            audioManager.createTone(1600, 0.3, 'sine');
-            
-            // Create star particle effect
-            createStarCollectionEffect(starData.mesh.position.clone());
-            
-            console.log(`Collected star! Invincible for 8 seconds!`);
         }
         
         // Kiwi-Saft-Splash-Effekt
@@ -7063,9 +4346,9 @@
                 console.error('❌ broccoliCount element not found!');
             }
             
-            // Update progress bars for 7:7 goals (perfect balance!)
+            // Update progress bars for 30:7 goals
             if (kiwiProgress) {
-                const kiwiPercent = Math.min((gameState.collectedKiwis / 7) * 100, 100);
+                const kiwiPercent = Math.min((gameState.collectedKiwis / 30) * 100, 100);
                 kiwiProgress.style.width = kiwiPercent + '%';
             }
             
@@ -7152,6 +4435,10 @@
                 }
                 
                 // Update combo message in UI
+                const comboTextElement = skillComboDisplay.querySelector('div');
+                if (comboTextElement) {
+                    comboTextElement.innerHTML = `<span style="color: #FFD700;">+${bonusPoints} ${comboMessage}</span>`;
+                }
                 
                 // Auto-hide after 3 seconds
                 setTimeout(() => {
@@ -7213,7 +4500,7 @@
             
             // Bridge deck (road above)
             const bridgeGeometry = new THREE.BoxGeometry(12, 0.5, 10);
-            const bridgeMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
+            const bridgeMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
             
             const bridge = new THREE.Mesh(bridgeGeometry, bridgeMaterial);
             bridge.position.set(0, 6.5, z);
@@ -7356,7 +4643,7 @@
                 // Curved top connection (simplified with box)
                 const topGeometry = new THREE.BoxGeometry(0.8 * scale, 0.3 * scale, 0.3 * scale);
                 const topMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x999999,
+                    color: 0x666666,
                     metalness: 0.8,
                     roughness: 0.2
                 });
@@ -7460,7 +4747,7 @@
             // Tunnel ceiling
             const ceilingGeometry = new THREE.BoxGeometry(8, 0.3, 8);
             const ceilingMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x666666,
+                color: 0x333333,
                 transparent: true,
                 opacity: 0.8
             });
@@ -7481,7 +4768,7 @@
             
             // Tunnel support beams
             const beamGeometry = new THREE.BoxGeometry(0.1, 5.5, 0.2);
-            const beamMaterial = new THREE.MeshLambertMaterial({ color: 0x999999 });
+            const beamMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
             
             for (let side of [-3.8, 3.8]) {
                 const beam = new THREE.Mesh(beamGeometry, beamMaterial);
@@ -7612,59 +4899,6 @@
                 updateEnvironmentUI();
                 console.log('Now in tunnel!');
             }, 2000);
-        }
-        
-        // NEW: Star collection effect
-        function createStarCollectionEffect(position) {
-            const starParticles = [];
-            const particleCount = 30;
-            
-            for (let i = 0; i < particleCount; i++) {
-                // Star sparkle particles
-                const particleGeometry = new THREE.SphereGeometry(0.05, 4, 4);
-                const particleMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xFFD700,
-                    emissive: 0xFFD700,
-                    emissiveIntensity: 1
-                });
-                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-                
-                particle.position.copy(position);
-                
-                const angle = (i / particleCount) * Math.PI * 2;
-                const speed = 0.2 + Math.random() * 0.3;
-                particle.velocity = new THREE.Vector3(
-                    Math.cos(angle) * speed,
-                    0.1 + Math.random() * 0.3,
-                    Math.sin(angle) * speed
-                );
-                particle.life = 1.0;
-                
-                scene.add(particle);
-                starParticles.push(particle);
-            }
-            
-            // Animate particles
-            const animateParticles = () => {
-                starParticles.forEach((particle, index) => {
-                    particle.position.add(particle.velocity.clone().multiplyScalar(gameState.timeScale));
-                    particle.velocity.y -= 0.01 * gameState.timeScale;
-                    particle.life -= 0.02 * gameState.timeScale;
-                    
-                    particle.material.opacity = particle.life;
-                    particle.scale.setScalar(particle.life);
-                    
-                    if (particle.life <= 0) {
-                        scene.remove(particle);
-                        starParticles.splice(index, 1);
-                    }
-                });
-                
-                if (starParticles.length > 0) {
-                    requestAnimationFrame(animateParticles);
-                }
-            };
-            animateParticles();
         }
         
         // NEW: Brokkoli health effect
@@ -8100,7 +5334,7 @@
             
             // Make player invulnerable for 2 seconds
             gameState.invulnerable = true;
-            gameState.invulnerabilityTime = 2.0;
+            gameState.invulnerabilityTime = 2000;
             
             // Visual feedback - make player flash red
             player.children.forEach(child => {
@@ -8221,11 +5455,6 @@
             lastFrameTime = currentTime;
             
             if (gameState.isPlaying) {
-                // Update Level System
-                if (window.LevelManagerPro && window.LevelManagerPro.currentLevel) {
-                    window.LevelManagerPro.update(deltaTime / 1000, gameState);
-                }
-                
                 // Update player position
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
@@ -8295,22 +5524,13 @@
                 
                 // Handle invulnerability
                 if (gameState.invulnerable) {
-                    gameState.invulnerabilityTime -= deltaTime * 0.001; // Convert ms to seconds
+                    gameState.invulnerabilityTime -= 16; // ~16ms per frame at 60fps
                     
-                    // Flash effect (golden for star, red for damage)
-                    const isStarInvincible = gameState.invulnerabilityTime > 2.5; // Star gives 8s, damage gives 2s
+                    // Flash effect
                     const flashRate = Math.sin(Date.now() * 0.02) > 0;
-                    
                     player.children.forEach(child => {
                         if (child.material) {
-                            if (isStarInvincible) {
-                                // Golden glow for star invincibility
-                                child.material.emissive = new THREE.Color(0xFFD700);
-                                child.material.emissiveIntensity = flashRate ? 0.5 : 0.2;
-                            } else {
-                                // Red flash for damage invincibility
-                                child.material.opacity = flashRate ? 0.3 : 0.7;
-                            }
+                            child.material.opacity = flashRate ? 0.3 : 0.7;
                         }
                     });
                     
@@ -8321,13 +5541,11 @@
                             if (child.material) {
                                 child.material.opacity = 1.0;
                                 child.material.transparent = false;
-                                child.material.emissive = new THREE.Color(0x000000);
-                                child.material.emissiveIntensity = 0;
                             }
                         });
-                        // Restore original brighter colors
-                        if (player.children[0]) player.children[0].material.color.setHex(0x66B2FF); // Brighter body
-                        if (player.children[1]) player.children[1].material.color.setHex(0xFFCC66); // Brighter head
+                        // Restore original colors
+                        if (player.children[0]) player.children[0].material.color.setHex(0x4A90E2); // Body
+                        if (player.children[1]) player.children[1].material.color.setHex(0xF5B041); // Head
                     }
                 }
                 
@@ -8498,28 +5716,11 @@
                     );
                 };
                 
-                // ENHANCED: Dynamic spawn rate based on speed (guaranteed collectibles!)
-                const baseCoinRate = 0.008; // Reduced to prevent clustering
-                const maxCoinRate = 0.015; // Lower max rate for better spacing
+                // Dynamic spawn rate based on speed (reduce at high speeds)
+                const baseCoinRate = 0.003; // Low starting rate
+                const maxCoinRate = 0.012; // Reduced max rate for better spacing
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
-                
-                // Star spawning - very rare (max 2 per game)
-                const starSpawnChance = 0.0005; // Very low chance
-                if (Math.random() < starSpawnChance && gameState.collectedStars < 2) {
-                    const safeLanes = [];
-                    for (let i = 0; i < 3; i++) {
-                        if (isLaneClearForCollectible(i, -30, 25)) {
-                            safeLanes.push(i);
-                        }
-                    }
-                    
-                    if (safeLanes.length > 0) {
-                        const lane = safeLanes[Math.floor(Math.random() * safeLanes.length)];
-                        createStar(lane, -35);
-                        console.log('⭐ Star spawned! Super rare!');
-                    }
-                }
                 
                 if (Math.random() < progressiveCoinRate) {
                     // Progressive kiwi pattern complexity
@@ -8549,10 +5750,10 @@
                         }
                     }
                     
-                    // BALANCED: Check COLLECTED collectibles, not spawned ones!
-                    // NEW BALANCE: 7 Kiwis + 7 Broccolis = 14 total (much more achievable!)
+                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
+                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 14) {
+                    if (collectedTotal >= 37) {
                         // Max collectibles collected, no more spawning
                         return;
                     }
@@ -8561,23 +5762,23 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 7:7 target ratio (perfect balance!)
+                    // Determine what to spawn based on 30:7 target ratio
                     let isKiwi;
-                    if (kiwiCount >= 7) {
-                        isKiwi = false; // Force broccoli if we have 7 kiwis
+                    if (kiwiCount >= 30) {
+                        isKiwi = false; // Force broccoli if we have 30 kiwis
                     } else if (broccoliCount >= 7) {
                         isKiwi = true; // Force kiwi if we have 7 broccolis
                     } else {
-                        // Balanced spawning for 7:7 ratio (50% kiwi, 50% broccoli)
-                        const totalTarget = 14;
+                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
+                        const totalTarget = 37;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 7 / totalTarget; // 0.5 (perfect balance)
+                        const targetRatio = 30 / totalTarget; // ~0.81
                         
-                        // Perfect balance: spawn what we need more of
+                        // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
-                            isKiwi = Math.random() < 0.7; // Slightly favor kiwis if behind
+                            isKiwi = Math.random() < 0.85; // Strong bias toward kiwis
                         } else {
-                            isKiwi = Math.random() < 0.3; // Slightly favor broccolis if behind
+                            isKiwi = Math.random() < 0.25; // Strong bias toward broccolis
                         }
                     }
                     
@@ -8639,8 +5840,8 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 7) {
-                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
@@ -8683,8 +5884,8 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 7) {
-                                    spawnKiwi = false; // Force broccoli if we have 7 kiwis
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
                                 } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
@@ -8793,34 +5994,6 @@
                     broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
                 });
                 
-                // Update Stars
-                gameState.stars.forEach((star, index) => {
-                    star.mesh.position.z += visualSpeed;
-                    star.z = star.mesh.position.z;
-                    
-                    // Remove if passed player
-                    if (star.z > 10) {
-                        scene.remove(star.mesh);
-                        gameState.stars.splice(index, 1);
-                    }
-                    
-                    // Animate star - spinning and pulsing
-                    star.animationTime += deltaTime * 0.001;
-                    star.mesh.rotation.y += deltaTime * 0.003;
-                    star.mesh.rotation.z += deltaTime * 0.002;
-                    
-                    // Pulsing glow effect
-                    const glow = star.mesh.children.find(child => child.geometry instanceof THREE.SphereGeometry);
-                    if (glow) {
-                        glow.scale.setScalar(1 + Math.sin(star.animationTime * 5) * 0.2);
-                        glow.material.opacity = 0.3 + Math.sin(star.animationTime * 3) * 0.1;
-                    }
-                    
-                    // Floating motion
-                    const baseY = 1.2;
-                    star.mesh.position.y = baseY + Math.sin(star.animationTime * 2) * 0.15;
-                });
-                
                 // Handle Power-Up Time Remaining
                 if (gameState.activePowerUp && gameState.powerUpTimeRemaining > 0) {
                     gameState.powerUpTimeRemaining -= deltaTime;
@@ -8926,28 +6099,6 @@
                 
                 updateUI();
             }
-            
-            // 🔧 ENGINE STABILIZATION: Apply Material Factory to fix shader issues
-            console.log('🔧 [ENGINE] Applying material factory safety fixes...');
-            scene.traverse(child => {
-                if (child.isMesh && child.material) {
-                    // Check for problematic ShaderMaterials
-                    if (child.material.type === 'ShaderMaterial') {
-                        console.log('🚨 [ENGINE] Found problematic ShaderMaterial on:', child.name || 'unnamed');
-                        
-                        // Check if it has fog uniforms
-                        const hasFogUniforms = child.material.uniforms && child.material.uniforms.fogColor;
-                        
-                        if (!hasFogUniforms) {
-                            console.log('⚠️ [ENGINE] ShaderMaterial missing fog uniforms - REPLACING with safe material');
-                            replaceMaterialSafely(child, 'lambert', { color: 0x87CEEB }); // Sky blue replacement
-                        } else {
-                            console.log('✅ [ENGINE] ShaderMaterial has fog uniforms - keeping original');
-                        }
-                    }
-                }
-            });
-            console.log('✅ [ENGINE] Material safety check complete - all materials are now fog-compatible');
             
             renderer.render(scene, camera);
         }
@@ -9077,7 +6228,7 @@
             
             if (milestoneDisplay) {
                 milestoneDisplay.style.display = 'block';
-                milestoneText.textContent = `${distance}m`;
+                milestoneText.textContent = `${distance}m!`;
                 milestoneBonus.textContent = bonus;
                 
                 // Special icons for major milestones
@@ -9258,54 +6409,20 @@
             } else {
                 // Vertical swipe
                 if (Math.abs(deltaY) > gameState.touchThreshold) {
-                    if (deltaY < 0) {
-                        // SWIPE UP: Stand up from duck OR jump
-                        if (gameState.playerAction === 'ducking' && gameState.isDuckingToggled) {
-                            // First: Stand up from duck
-                            gameState.playerAction = 'running';
-                            gameState.isDuckingToggled = false;
-                            audioManager.play('stand');
-                            
-                            // Hide duck indicator
-                            const indicator = document.getElementById('duckToggleIndicator');
-                            if (indicator) indicator.style.opacity = '0';
-                            
-                            console.log('📱 MOBILE: Stand up from ducking');
-                        } else if (gameState.playerAction === 'running') {
-                            // Second: Jump if standing
-                            gameState.playerAction = 'jumping';
-                            gameState.jumpVelocity = 10;
-                            gameState.jumpStartTime = Date.now();
-                            audioManager.play('jump');
-                            trackPlayerMove('jumping');
-                            console.log('📱 MOBILE: Jump!');
-                        }
-                    } else if (deltaY > 0) {
-                        // MOBILE TOGGLE DUCKING: Swipe down toggles duck state
-                        if (gameState.playerAction === 'running') {
-                            // Start ducking
-                            gameState.playerAction = 'ducking';
-                            gameState.isDuckingToggled = true;
-                            audioManager.play('duck');
-                            trackPlayerMove('ducking');
-                            
-                            // Show duck indicator
-                            const indicator = document.getElementById('duckToggleIndicator');
-                            if (indicator) indicator.style.opacity = '1';
-                            
-                            console.log('📱 MOBILE: Started ducking (toggle mode)');
-                        } else if (gameState.playerAction === 'ducking' && gameState.isDuckingToggled) {
-                            // Stop ducking (toggle off)
-                            gameState.playerAction = 'running';
-                            gameState.isDuckingToggled = false;
-                            audioManager.play('stand');
-                            
-                            // Hide duck indicator
-                            const indicator = document.getElementById('duckToggleIndicator');
-                            if (indicator) indicator.style.opacity = '0';
-                            
-                            console.log('📱 MOBILE: Stopped ducking (toggle mode)');
-                        }
+                    if (deltaY < 0 && gameState.playerAction === 'running') {
+                        // Swipe up - jump
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
+                        audioManager.play('jump');
+                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
+                        // Removed automatic jump particles - only success particles when avoiding obstacles
+                        trackPlayerMove('jumping');
+                    } else if (deltaY > 0 && gameState.playerAction === 'running') {
+                        // Swipe down - duck
+                        gameState.playerAction = 'ducking';
+                        audioManager.play('duck');
+                        trackPlayerMove('ducking');
                     }
                 }
             }
@@ -9336,8 +6453,16 @@
             document.addEventListener('touchend', handleTouchEnd, { passive: false });
             document.addEventListener('touchmove', handleTouchMove, { passive: false });
             
-            // REMOVED: Auto-release duck system (now using toggle system)
-            // Mobile ducking is now toggle-based for better control
+            // Auto-release duck after swipe down
+            document.addEventListener('touchend', (event) => {
+                if (gameState.playerAction === 'ducking') {
+                    setTimeout(() => {
+                        if (gameState.playerAction === 'ducking') {
+                            gameState.playerAction = 'running';
+                        }
+                    }, 500); // Auto-release after 500ms
+                }
+            });
         }
 
         // Debug function for testing
@@ -9806,10 +6931,10 @@
             // Update status text
             const statusEl = document.getElementById('gestureStatus');
             if (stats.faceDetected) {
-                statusEl.innerHTML = `🎥 ✓ (${stats.fps.toFixed(0)} FPS)`;
+                statusEl.textContent = `Gesten: Aktiv (${stats.fps.toFixed(0)} FPS)`;
                 statusEl.style.color = '#00ff88';
             } else {
-                statusEl.innerHTML = '🎥 ✗';
+                statusEl.textContent = 'Gesten: Kein Gesicht erkannt';
                 statusEl.style.color = '#ff4444';
             }
         }
@@ -9817,12 +6942,12 @@
         // Show gesture error
         function showGestureError(message) {
             const statusEl = document.getElementById('gestureStatus');
-            statusEl.innerHTML = '🎥 ❌';
+            statusEl.textContent = `Fehler: ${message}`;
             statusEl.style.color = '#ff4444';
             
             // Disable gesture controls
             gestureEnabled = false;
-            document.getElementById('gestureToggle').innerHTML = '🎥 ✓';
+            document.getElementById('gestureToggle').textContent = '🎥 Gesten aktivieren';
             document.getElementById('gestureToggle').classList.remove('active');
             document.getElementById('calibrateBtn').disabled = true;
             document.getElementById('gestureCanvas').classList.remove('active');
@@ -9842,21 +6967,21 @@
                 // Disable gesture control
                 gestureEnabled = false;
                 gestureController.stop();
-                toggleBtn.innerHTML = '🎥 ✓';
+                toggleBtn.textContent = '🎥 Gesten aktivieren';
                 toggleBtn.classList.remove('active');
                 calibrateBtn.disabled = true;
                 canvas.classList.remove('active');
-                document.getElementById('gestureStatus').innerHTML = '🎥 ✗';
+                document.getElementById('gestureStatus').textContent = 'Gesten: Inaktiv';
             } else {
                 // Enable gesture control
                 try {
                     await gestureController.start();
                     gestureEnabled = true;
-                    toggleBtn.innerHTML = '🎥 ✗';
+                    toggleBtn.textContent = '🎥 Gesten deaktivieren';
                     toggleBtn.classList.add('active');
                     calibrateBtn.disabled = false;
                     canvas.classList.add('active');
-                    document.getElementById('gestureStatus').innerHTML = '🎥 ⏳';
+                    document.getElementById('gestureStatus').textContent = 'Gesten: Wird initialisiert...';
                 } catch (error) {
                     showGestureError(error.message);
                 }
@@ -9868,7 +6993,7 @@
             if (gestureController && gestureEnabled) {
                 gestureController.calibrate();
                 const statusEl = document.getElementById('gestureStatus');
-                statusEl.innerHTML = '🎥 ✅';
+                statusEl.textContent = 'Kalibrierung erfolgreich!';
                 statusEl.style.color = '#4CAF50';
                 setTimeout(() => {
                     updateGestureStats(gestureController.stats);
