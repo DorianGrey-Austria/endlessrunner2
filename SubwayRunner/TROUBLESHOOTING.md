@@ -446,6 +446,21 @@ const targetLevel = Math.floor(gameState.score / 1000) + 1;
 if (targetLevel === 3) targetLevel = 2; // Skip Level 3
 ```
 
+#### **Option 4: Fix Disposal Issue** (IMPLEMENTED)
+The shader material error was also caused by improper disposal. Fixed by:
+1. **Level3_Sky.onDispose()**: Added proper material and geometry disposal
+2. **LevelBase.dispose()**: Added traverse to dispose all child materials
+3. **initializeLevelSystem()**: Added orphaned shader material cleanup
+
+```javascript
+// Proper disposal in Level 3
+if (this.skyDome) {
+    if (this.skyDome.material) this.skyDome.material.dispose();
+    if (this.skyDome.geometry) this.skyDome.geometry.dispose();
+    if (this.skyDome.parent) this.skyDome.parent.remove(this.skyDome);
+}
+```
+
 ### **DEBUGGING STEPS**:
 
 1. **Check Console for First Error**:
@@ -515,6 +530,123 @@ if (targetLevel === 3) targetLevel = 2; // Skip Level 3
 
 ---
 
-**Last Updated**: 10.07.2025 16:00 CET  
-**Status**: ⚠️ **SHADER ERRORS DOCUMENTED** - Recurring issue identified
-**Next Action**: Implement proper fix for Level 3 or remove it completely
+## 🔴 **CRITICAL UPDATE: SHADER ERROR ROOT CAUSE FOUND**
+
+### **THE REAL PROBLEM**: Memory Leak from Undisposed Shader Materials
+
+After extensive debugging with error stack trace analysis, we discovered the actual root cause:
+
+**Error Stack Trace Analysis**:
+```
+4087three.min.js:7 Uncaught TypeError: Cannot read properties of undefined (reading 'value')
+i @ three.min.js:7
+refreshMaterialUniforms @ three.min.js:7
+renderBufferDirect @ three.min.js:7
+render @ three.min.js:7
+animate @ (index):8739
+```
+
+### **ROOT CAUSE**: 
+The shader material from Level 3 was not being properly disposed when switching levels. Even though Level 3 was disabled, its shader materials remained in memory and Three.js tried to render them, causing the uniform error.
+
+### **THE FIX IMPLEMENTED**:
+
+#### **Option 4: Proper Material Disposal** ✅ **IMPLEMENTED**
+```javascript
+// In Level3_Sky.onDispose():
+if (this.skyDome) {
+    // Properly dispose of shader material
+    if (this.skyDome.material) {
+        this.skyDome.material.dispose();
+    }
+    if (this.skyDome.geometry) {
+        this.skyDome.geometry.dispose();
+    }
+    // Remove from parent before nulling
+    if (this.skyDome.parent) {
+        this.skyDome.parent.remove(this.skyDome);
+    }
+    this.skyDome = null;
+}
+```
+
+#### **Enhanced Base Level Disposal**:
+```javascript
+// In LevelBase.dispose():
+this.environmentGroup.traverse(child => {
+    if (child.isMesh) {
+        if (child.material) {
+            if (Array.isArray(child.material)) {
+                child.material.forEach(mat => mat.dispose());
+            } else {
+                child.material.dispose();
+            }
+        }
+        if (child.geometry) {
+            child.geometry.dispose();
+        }
+    }
+});
+```
+
+#### **Scene Cleanup on Initialization**:
+```javascript
+// Check for orphaned shader materials
+scene.traverse(child => {
+    if (child.material && child.material.type === 'ShaderMaterial') {
+        console.warn('Found orphaned ShaderMaterial, disposing:', child);
+        child.material.dispose();
+        if (child.parent) {
+            child.parent.remove(child);
+        }
+    }
+});
+```
+
+### **WHY THIS HAPPENS**:
+1. **Three.js Material Management**: Three.js doesn't automatically dispose of materials
+2. **WebGL Context**: Materials hold GPU resources that must be explicitly freed
+3. **Render Loop**: The renderer tries to update all materials in the scene, including orphaned ones
+4. **Shader Uniforms**: ShaderMaterials are especially sensitive because they have custom uniforms
+
+### **PREVENTION CHECKLIST**:
+- [ ] Always dispose materials in cleanup functions
+- [ ] Remove objects from scene before nulling references
+- [ ] Dispose geometry along with materials
+- [ ] Check for orphaned materials after level switches
+- [ ] Use material.dispose() for all custom materials
+
+### **DEBUGGING COMMANDS**:
+```javascript
+// Check for shader materials in scene
+scene.traverse(child => {
+    if (child.material && child.material.type === 'ShaderMaterial') {
+        console.log('ShaderMaterial found:', child.name, child);
+    }
+});
+
+// Monitor material count
+console.log('Total materials:', renderer.info.memory.materials);
+
+// Force garbage collection (Chrome DevTools)
+window.gc && window.gc();
+```
+
+### **SYMPTOMS OF UNDISPOSED MATERIALS**:
+1. **Memory Usage**: Increasing GPU memory over time
+2. **Performance**: FPS drops after multiple level switches
+3. **Errors**: "Cannot read properties of undefined" during render
+4. **WebGL Warnings**: "Too many uniforms" or context loss
+
+### **BEST PRACTICES FOR SHADER MATERIALS**:
+1. Always implement proper disposal
+2. Use WeakMap for material references when possible
+3. Implement material pooling for frequently used shaders
+4. Test memory usage after level transitions
+5. Use Chrome DevTools Memory Profiler
+
+---
+
+**Last Updated**: 10.07.2025 16:30 CET  
+**Status**: ✅ **SHADER ERROR ROOT CAUSE FIXED** - Proper disposal implemented
+**Next Action**: Monitor for any remaining shader issues

@@ -523,6 +523,19 @@ class Level3_Sky extends LevelBase {
     }
     
     onDispose() {
+        // Properly dispose of sky dome and its shader material
+        if (this.skyDome) {
+            if (this.skyDome.material) {
+                this.skyDome.material.dispose();
+            }
+            if (this.skyDome.geometry) {
+                this.skyDome.geometry.dispose();
+            }
+            if (this.skyDome.parent) {
+                this.skyDome.parent.remove(this.skyDome);
+            }
+        }
+        
         // Clear arrays
         this.clouds = [];
         this.windStreamers = [];

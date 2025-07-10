@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V5.1.2-LEVEL3-SKIP<br>
+            🚀 V5.1.3-SHADER-DISPOSAL<br>
             📅 10.07.2025
         </div>
         
@@ -1325,6 +1325,23 @@
                 
                 // Clear dynamic objects
                 this.dynamicObjects = [];
+                
+                // Dispose all materials in environment group (including shader materials)
+                if (this.environmentGroup) {
+                    this.environmentGroup.traverse((child) => {
+                        if (child.isMesh) {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                // Handle array of materials
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(mat => mat.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        }
+                    });
+                }
                 
                 // Remove environment group from scene
                 if (this.environmentGroup && scene) {
@@ -3072,6 +3089,19 @@
             }
             
             onDispose() {
+                // Properly dispose of sky dome and its shader material
+                if (this.skyDome) {
+                    if (this.skyDome.material) {
+                        this.skyDome.material.dispose();
+                    }
+                    if (this.skyDome.geometry) {
+                        this.skyDome.geometry.dispose();
+                    }
+                    if (this.skyDome.parent) {
+                        this.skyDome.parent.remove(this.skyDome);
+                    }
+                }
+                
                 // Clear arrays
                 this.clouds = [];
                 this.windStreamers = [];
@@ -4158,6 +4188,16 @@
         // Initialize Level System
         async function initializeLevelSystem() {
             try {
+                // Clean up any orphaned shader materials in the scene before initialization
+                scene.traverse((child) => {
+                    if (child.isMesh && child.material && child.material.isShaderMaterial) {
+                        console.warn('[Game] Found orphaned shader material, disposing:', child);
+                        if (child.parent) child.parent.remove(child);
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) child.material.dispose();
+                    }
+                });
+                
                 // Initialize LevelManagerPro
                 await window.LevelManagerPro.initialize(scene, window.ResourceManager);
                 
