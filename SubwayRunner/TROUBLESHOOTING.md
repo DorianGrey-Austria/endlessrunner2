@@ -367,3 +367,154 @@ setInterval(() => {
 **Last Updated**: 10.07.2025 15:30 CET  
 **Status**: ✅ **SHADER ERRORS FIXED** - v5.1.0-ACTION stable
 **Next Action**: Deploy to production, then implement character system
+
+---
+
+## 🚨 **SHADER ERROR PATTERN - RECURRING ISSUE** 🚨
+
+### **THE PROBLEM**: Three.js ShaderMaterial Uniform Errors
+These errors will likely occur frequently when working with custom shaders in Three.js.
+
+### **ERROR MESSAGE**:
+```
+Uncaught TypeError: Cannot read properties of undefined (reading 'value')
+    at ShaderMaterial.copy (three.min.js:7)
+    at Level3_Sky.createSkyGradient (index.html:2694)
+```
+
+### **ROOT CAUSE ANALYSIS**:
+1. **Direct Cause**: ShaderMaterial uniforms not properly initialized
+2. **Deeper Issue**: Level progression system automatically loads levels based on score
+3. **Trigger**: When score reaches 2000 points, game tries to load Level 3
+4. **Why it happens**: Even though Level 3 registration is commented out, the class is still defined and the level manager tries to load it
+
+### **DETAILED TECHNICAL EXPLANATION**:
+
+#### **1. ShaderMaterial Structure in Three.js**:
+```javascript
+// This is what causes the error:
+const skyMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        topColor: { value: new THREE.Color(0x0077be) },
+        bottomColor: { value: new THREE.Color(0x87CEEB) },
+        offset: { value: 0.3 },
+        exponent: { value: 0.6 }
+    },
+    vertexShader: `...`,
+    fragmentShader: `...`
+});
+```
+
+#### **2. Why the Error Occurs**:
+- Three.js expects uniforms to be in a specific format
+- When materials are cloned or copied, uniform references can become undefined
+- The error happens during material initialization or when Three.js tries to update uniforms
+
+#### **3. Level Progression Trigger**:
+```javascript
+// Lines 3564-3574 in index.html
+const targetLevel = Math.floor(gameState.score / 1000) + 1;
+if (targetLevel > gameState.currentLevel && targetLevel <= 10) {
+    window.LevelManagerPro.loadLevel(targetLevel);
+}
+```
+- Score 0-999: Level 1
+- Score 1000-1999: Level 2
+- Score 2000-2999: Level 3 (TRIGGERS ERROR!)
+
+### **SOLUTIONS**:
+
+#### **Option 1: Complete Level 3 Removal** (Quick Fix)
+```javascript
+// Comment out entire Level 3 class definition
+// Lines 2550-3081 in index.html
+```
+
+#### **Option 2: Fix ShaderMaterial** (Proper Fix)
+```javascript
+// Replace custom shader with standard material:
+const skyMaterial = new THREE.MeshBasicMaterial({
+    color: 0x87CEEB,
+    side: THREE.BackSide
+});
+```
+
+#### **Option 3: Prevent Level 3 Loading** (Temporary)
+```javascript
+// Modify level progression to skip Level 3
+const targetLevel = Math.floor(gameState.score / 1000) + 1;
+if (targetLevel === 3) targetLevel = 2; // Skip Level 3
+```
+
+### **DEBUGGING STEPS**:
+
+1. **Check Console for First Error**:
+   - Look for "Cannot read properties of undefined"
+   - Note the line number and function name
+
+2. **Identify Shader Usage**:
+   ```javascript
+   // Search for ShaderMaterial in code
+   grep -n "ShaderMaterial" index.html
+   ```
+
+3. **Test Level Progression**:
+   - Play game until score reaches 2000
+   - Watch console for errors when Level 3 loads
+
+4. **Verify Fix**:
+   - Errors should stop appearing
+   - Game should continue without crashes
+
+### **COMMON SHADER ERROR PATTERNS**:
+
+1. **Uniform Not Defined**:
+   - Error: "Cannot read properties of undefined (reading 'value')"
+   - Fix: Ensure all uniforms have proper initialization
+
+2. **Shader Compilation Failed**:
+   - Error: "THREE.WebGLProgram: shader error"
+   - Fix: Check shader syntax, especially variable declarations
+
+3. **Material Clone Issues**:
+   - Error: Occurs when cloning materials with custom shaders
+   - Fix: Override clone() method or use standard materials
+
+### **PREVENTIVE MEASURES**:
+
+1. **Always Test Shaders Separately**:
+   ```javascript
+   // Test shader in isolation before integrating
+   const testMaterial = new THREE.ShaderMaterial({...});
+   const testMesh = new THREE.Mesh(geometry, testMaterial);
+   scene.add(testMesh);
+   ```
+
+2. **Use Fallback Materials**:
+   ```javascript
+   try {
+       material = new THREE.ShaderMaterial({...});
+   } catch (e) {
+       console.warn('Shader failed, using fallback');
+       material = new THREE.MeshBasicMaterial({color: 0x87CEEB});
+   }
+   ```
+
+3. **Validate Uniforms**:
+   ```javascript
+   // Check uniforms before use
+   if (material.uniforms && material.uniforms.topColor) {
+       material.uniforms.topColor.value = newColor;
+   }
+   ```
+
+### **LONG-TERM FIX REQUIRED**:
+- Either properly implement Level 3 shaders
+- Or remove Level 3 entirely from the codebase
+- Current workaround only prevents registration, not instantiation
+
+---
+
+**Last Updated**: 10.07.2025 16:00 CET  
+**Status**: ⚠️ **SHADER ERRORS DOCUMENTED** - Recurring issue identified
+**Next Action**: Implement proper fix for Level 3 or remove it completely

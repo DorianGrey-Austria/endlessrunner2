@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V5.1.1-SHADER-FIX<br>
+            🚀 V5.1.2-LEVEL3-SKIP<br>
             📅 10.07.2025
         </div>
         
@@ -3562,14 +3562,16 @@
                 
                 // Check for level progression (every 1000 points)
                 const targetLevel = Math.floor(gameState.score / 1000) + 1;
-                if (targetLevel > gameState.currentLevel && targetLevel <= 10) {
-                    console.log(`🎯 Level progression triggered! Score: ${gameState.score}, Next level: ${targetLevel}`);
+                // TEMPORARY: Skip Level 3 due to shader errors
+                const actualLevel = targetLevel === 3 ? 2 : targetLevel;
+                if (actualLevel > gameState.currentLevel && actualLevel <= 10 && actualLevel !== 3) {
+                    console.log(`🎯 Level progression triggered! Score: ${gameState.score}, Next level: ${actualLevel}`);
                     // Load next level
                     if (window.LevelManagerPro) {
-                        window.LevelManagerPro.loadLevel(targetLevel).then(success => {
+                        window.LevelManagerPro.loadLevel(actualLevel).then(success => {
                             if (success) {
-                                console.log(`✅ Successfully loaded level ${targetLevel}`);
-                                gameState.currentLevel = targetLevel;
+                                console.log(`✅ Successfully loaded level ${actualLevel}`);
+                                gameState.currentLevel = actualLevel;
                             }
                         });
                     }
