@@ -600,6 +600,1429 @@
     </div>
 
     <script>
+        // ========================================
+        // RESOURCE MANAGER - Memory Leak Prevention
+        // ========================================
+        class ResourceManager {
+            constructor() {
+                this.resources = {
+                    geometries: new Set(),
+                    materials: new Set(),
+                    textures: new Set(),
+                    meshes: new Set(),
+                    groups: new Set(),
+                    lights: new Set(),
+                    helpers: new Set(),
+                    animations: new Set(),
+                    customObjects: new Set()
+                };
+                
+                this.levelResources = new Map();
+                this.memoryUsage = 0;
+                this.disposalLog = [];
+                this.debugMode = false;
+            }
+            
+            enableDebug() {
+                this.debugMode = true;
+                console.log('[ResourceManager] Debug mode enabled');
+            }
+            
+            trackGeometry(geometry, levelId = null) {
+                if (!geometry) return;
+                
+                this.resources.geometries.add(geometry);
+                if (levelId) {
+                    this._addToLevel(levelId, 'geometry', geometry);
+                }
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Tracked geometry: ${geometry.type || 'Unknown'}`);
+                }
+            }
+            
+            trackMaterial(material, levelId = null) {
+                if (!material) return;
+                
+                this.resources.materials.add(material);
+                if (levelId) {
+                    this._addToLevel(levelId, 'material', material);
+                }
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Tracked material: ${material.type || 'Unknown'}`);
+                }
+            }
+            
+            trackTexture(texture, levelId = null) {
+                if (!texture) return;
+                
+                this.resources.textures.add(texture);
+                if (levelId) {
+                    this._addToLevel(levelId, 'texture', texture);
+                }
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Tracked texture: ${texture.name || 'Unknown'}`);
+                }
+            }
+            
+            trackMesh(mesh, levelId = null) {
+                if (!mesh) return;
+                
+                this.resources.meshes.add(mesh);
+                
+                if (mesh.geometry) {
+                    this.trackGeometry(mesh.geometry, levelId);
+                }
+                
+                if (mesh.material) {
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material.forEach(mat => this.trackMaterial(mat, levelId));
+                    } else {
+                        this.trackMaterial(mesh.material, levelId);
+                    }
+                }
+                
+                if (levelId) {
+                    this._addToLevel(levelId, 'mesh', mesh);
+                }
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Tracked mesh: ${mesh.name || 'Unknown'}`);
+                }
+            }
+            
+            trackGroup(group, levelId = null) {
+                if (!group) return;
+                
+                this.resources.groups.add(group);
+                
+                group.traverse((child) => {
+                    if (child !== group) {
+                        if (child.isMesh) {
+                            this.trackMesh(child, levelId);
+                        } else if (child.isLight) {
+                            this.trackLight(child, levelId);
+                        } else if (child.isGroup || child.isObject3D) {
+                            this.resources.customObjects.add(child);
+                            if (levelId) {
+                                this._addToLevel(levelId, 'object', child);
+                            }
+                        }
+                    }
+                });
+                
+                if (levelId) {
+                    this._addToLevel(levelId, 'group', group);
+                }
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Tracked group: ${group.name || 'Unknown'} with ${group.children.length} children`);
+                }
+            }
+            
+            trackLight(light, levelId = null) {
+                if (!light) return;
+                
+                this.resources.lights.add(light);
+                if (levelId) {
+                    this._addToLevel(levelId, 'light', light);
+                }
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Tracked light: ${light.type || 'Unknown'}`);
+                }
+            }
+            
+            _addToLevel(levelId, type, resource) {
+                if (!this.levelResources.has(levelId)) {
+                    this.levelResources.set(levelId, {
+                        geometries: new Set(),
+                        materials: new Set(),
+                        textures: new Set(),
+                        meshes: new Set(),
+                        groups: new Set(),
+                        lights: new Set(),
+                        objects: new Set()
+                    });
+                }
+                
+                const levelRes = this.levelResources.get(levelId);
+                switch (type) {
+                    case 'geometry':
+                        levelRes.geometries.add(resource);
+                        break;
+                    case 'material':
+                        levelRes.materials.add(resource);
+                        break;
+                    case 'texture':
+                        levelRes.textures.add(resource);
+                        break;
+                    case 'mesh':
+                        levelRes.meshes.add(resource);
+                        break;
+                    case 'group':
+                        levelRes.groups.add(resource);
+                        break;
+                    case 'light':
+                        levelRes.lights.add(resource);
+                        break;
+                    case 'object':
+                        levelRes.objects.add(resource);
+                        break;
+                }
+            }
+            
+            disposeGeometry(geometry) {
+                if (!geometry || !this.resources.geometries.has(geometry)) return;
+                
+                geometry.dispose();
+                this.resources.geometries.delete(geometry);
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Disposed geometry: ${geometry.type || 'Unknown'}`);
+                }
+            }
+            
+            disposeMaterial(material) {
+                if (!material || !this.resources.materials.has(material)) return;
+                
+                const maps = ['map', 'alphaMap', 'aoMap', 'bumpMap', 'displacementMap', 
+                             'emissiveMap', 'envMap', 'lightMap', 'metalnessMap', 
+                             'normalMap', 'roughnessMap'];
+                
+                maps.forEach(mapName => {
+                    if (material[mapName]) {
+                        this.disposeTexture(material[mapName]);
+                    }
+                });
+                
+                material.dispose();
+                this.resources.materials.delete(material);
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Disposed material: ${material.type || 'Unknown'}`);
+                }
+            }
+            
+            disposeTexture(texture) {
+                if (!texture || !this.resources.textures.has(texture)) return;
+                
+                texture.dispose();
+                this.resources.textures.delete(texture);
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Disposed texture: ${texture.name || 'Unknown'}`);
+                }
+            }
+            
+            disposeMesh(mesh) {
+                if (!mesh || !this.resources.meshes.has(mesh)) return;
+                
+                if (mesh.parent) {
+                    mesh.parent.remove(mesh);
+                }
+                
+                if (mesh.geometry) {
+                    this.disposeGeometry(mesh.geometry);
+                }
+                
+                if (mesh.material) {
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material.forEach(mat => this.disposeMaterial(mat));
+                    } else {
+                        this.disposeMaterial(mesh.material);
+                    }
+                }
+                
+                this.resources.meshes.delete(mesh);
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Disposed mesh: ${mesh.name || 'Unknown'}`);
+                }
+            }
+            
+            disposeGroup(group) {
+                if (!group || !this.resources.groups.has(group)) return;
+                
+                if (group.parent) {
+                    group.parent.remove(group);
+                }
+                
+                while (group.children.length > 0) {
+                    const child = group.children[0];
+                    group.remove(child);
+                    
+                    if (child.isMesh) {
+                        this.disposeMesh(child);
+                    } else if (child.isLight) {
+                        this.disposeLight(child);
+                    } else if (child.isGroup) {
+                        this.disposeGroup(child);
+                    }
+                }
+                
+                this.resources.groups.delete(group);
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Disposed group: ${group.name || 'Unknown'}`);
+                }
+            }
+            
+            disposeLight(light) {
+                if (!light || !this.resources.lights.has(light)) return;
+                
+                if (light.parent) {
+                    light.parent.remove(light);
+                }
+                
+                if (light.shadow && light.shadow.map) {
+                    light.shadow.map.dispose();
+                }
+                
+                this.resources.lights.delete(light);
+                
+                if (this.debugMode) {
+                    console.log(`[ResourceManager] Disposed light: ${light.type || 'Unknown'}`);
+                }
+            }
+            
+            disposeLevelResources(levelId) {
+                if (!this.levelResources.has(levelId)) return;
+                
+                console.log(`[ResourceManager] Disposing resources for level ${levelId}`);
+                const startCount = this.getResourceCount();
+                
+                const levelRes = this.levelResources.get(levelId);
+                
+                levelRes.groups.forEach(group => this.disposeGroup(group));
+                levelRes.meshes.forEach(mesh => this.disposeMesh(mesh));
+                levelRes.lights.forEach(light => this.disposeLight(light));
+                levelRes.objects.forEach(obj => {
+                    if (obj.parent) obj.parent.remove(obj);
+                    this.resources.customObjects.delete(obj);
+                });
+                levelRes.materials.forEach(mat => this.disposeMaterial(mat));
+                levelRes.geometries.forEach(geo => this.disposeGeometry(geo));
+                levelRes.textures.forEach(tex => this.disposeTexture(tex));
+                
+                this.levelResources.delete(levelId);
+                
+                const endCount = this.getResourceCount();
+                console.log(`[ResourceManager] Disposed ${startCount - endCount} resources for level ${levelId}`);
+                
+                if (window.gc) {
+                    window.gc();
+                }
+            }
+            
+            disposeAll() {
+                console.log('[ResourceManager] Disposing all resources...');
+                const startCount = this.getResourceCount();
+                
+                this.resources.groups.forEach(group => this.disposeGroup(group));
+                this.resources.meshes.forEach(mesh => this.disposeMesh(mesh));
+                this.resources.lights.forEach(light => this.disposeLight(light));
+                this.resources.customObjects.forEach(obj => {
+                    if (obj.parent) obj.parent.remove(obj);
+                });
+                this.resources.materials.forEach(mat => this.disposeMaterial(mat));
+                this.resources.geometries.forEach(geo => this.disposeGeometry(geo));
+                this.resources.textures.forEach(tex => this.disposeTexture(tex));
+                
+                Object.values(this.resources).forEach(set => set.clear());
+                this.levelResources.clear();
+                
+                console.log(`[ResourceManager] Disposed ${startCount} total resources`);
+            }
+            
+            getResourceCount() {
+                let count = 0;
+                Object.values(this.resources).forEach(set => {
+                    count += set.size;
+                });
+                return count;
+            }
+            
+            getResourceReport() {
+                const report = {
+                    total: this.getResourceCount(),
+                    geometries: this.resources.geometries.size,
+                    materials: this.resources.materials.size,
+                    textures: this.resources.textures.size,
+                    meshes: this.resources.meshes.size,
+                    groups: this.resources.groups.size,
+                    lights: this.resources.lights.size,
+                    customObjects: this.resources.customObjects.size,
+                    levels: {}
+                };
+                
+                this.levelResources.forEach((resources, levelId) => {
+                    report.levels[levelId] = {
+                        geometries: resources.geometries.size,
+                        materials: resources.materials.size,
+                        textures: resources.textures.size,
+                        meshes: resources.meshes.size,
+                        groups: resources.groups.size,
+                        lights: resources.lights.size,
+                        objects: resources.objects.size
+                    };
+                });
+                
+                return report;
+            }
+            
+            estimateMemoryUsage() {
+                let bytes = 0;
+                
+                this.resources.geometries.forEach(geo => {
+                    if (geo.attributes && geo.attributes.position) {
+                        bytes += geo.attributes.position.count * 12;
+                    }
+                });
+                
+                this.resources.textures.forEach(tex => {
+                    if (tex.image) {
+                        bytes += (tex.image.width || 0) * (tex.image.height || 0) * 4;
+                    }
+                });
+                
+                bytes += this.resources.materials.size * 1024;
+                bytes += this.resources.meshes.size * 512;
+                
+                return {
+                    bytes: bytes,
+                    megabytes: (bytes / 1024 / 1024).toFixed(2),
+                    formatted: this._formatBytes(bytes)
+                };
+            }
+            
+            _formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        }
+        
+        // Initialize ResourceManager
+        window.ResourceManager = new ResourceManager();
+        console.log('[ResourceManager] Initialized and ready');
+        
+        // ========================================
+        // LEVEL BASE CLASS - Lifecycle Management
+        // ========================================
+        class LevelBase {
+            constructor(id, name, config) {
+                this.id = id;
+                this.name = name;
+                this.config = {
+                    // Visual settings
+                    fogColor: '#87CEEB',
+                    fogDensity: 0.02,
+                    skyColor: '#87CEEB',
+                    ambientIntensity: 0.6,
+                    sunIntensity: 0.8,
+                    
+                    // Gameplay settings
+                    baseSpeedMultiplier: 1.0,
+                    obstacleSpawnMultiplier: 1.0,
+                    collectibleSpawnMultiplier: 1.0,
+                    
+                    // Level-specific features
+                    hasSpecialMechanics: false,
+                    specialMechanics: [],
+                    
+                    // Override with level-specific config
+                    ...config
+                };
+                
+                // Level state
+                this.isInitialized = false;
+                this.isActive = false;
+                this.resources = new Set();
+                this.updateCallbacks = [];
+                this.animationFrames = new Set();
+                
+                // Environment objects
+                this.environmentGroup = null;
+                this.dynamicObjects = [];
+                this.particles = [];
+                this.lights = [];
+                
+                // Performance
+                this.lastUpdateTime = 0;
+                this.frameCount = 0;
+            }
+            
+            async init(scene, resourceManager) {
+                console.log(`[Level ${this.id}] Initializing ${this.name}...`);
+                
+                try {
+                    // Create environment group
+                    this.environmentGroup = new THREE.Group();
+                    this.environmentGroup.name = `Level${this.id}_Environment`;
+                    
+                    // Track with resource manager
+                    resourceManager.trackGroup(this.environmentGroup, `level_${this.id}`);
+                    
+                    // Apply visual settings
+                    this.applyVisualSettings(scene);
+                    
+                    // Create level-specific environment
+                    await this.createEnvironment(scene, resourceManager);
+                    
+                    // Initialize special mechanics if any
+                    if (this.config.hasSpecialMechanics) {
+                        this.initializeSpecialMechanics(scene, resourceManager);
+                    }
+                    
+                    // Add to scene
+                    scene.add(this.environmentGroup);
+                    
+                    this.isInitialized = true;
+                    this.isActive = true;
+                    
+                    console.log(`[Level ${this.id}] Initialization complete`);
+                    
+                } catch (error) {
+                    console.error(`[Level ${this.id}] Initialization failed:`, error);
+                    throw error;
+                }
+            }
+            
+            applyVisualSettings(scene) {
+                const config = this.config;
+                
+                // Update fog
+                if (scene.fog) {
+                    scene.fog.color.set(config.fogColor);
+                    scene.fog.density = config.fogDensity;
+                }
+                
+                // Update ambient light
+                const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
+                if (ambientLight) {
+                    ambientLight.intensity = config.ambientIntensity;
+                }
+                
+                // Update directional light
+                const directionalLight = scene.children.find(child => child.type === 'DirectionalLight');
+                if (directionalLight) {
+                    directionalLight.intensity = config.sunIntensity;
+                }
+                
+                // Store original renderer clear color for restoration
+                if (window.renderer) {
+                    this._originalClearColor = window.renderer.getClearColor(new THREE.Color());
+                    window.renderer.setClearColor(config.skyColor);
+                }
+            }
+            
+            async createEnvironment(scene, resourceManager) {
+                // This method should be overridden by child classes
+                console.warn(`[Level ${this.id}] createEnvironment not implemented`);
+            }
+            
+            initializeSpecialMechanics(scene, resourceManager) {
+                // Override in child classes that have special mechanics
+            }
+            
+            update(deltaTime, gameState) {
+                if (!this.isActive) return;
+                
+                this.frameCount++;
+                
+                // Update dynamic objects
+                this.updateDynamicObjects(deltaTime, gameState);
+                
+                // Update particles
+                this.updateParticles(deltaTime);
+                
+                // Update special mechanics
+                if (this.config.hasSpecialMechanics) {
+                    this.updateSpecialMechanics(deltaTime, gameState);
+                }
+                
+                // Call registered update callbacks
+                this.updateCallbacks.forEach(callback => callback(deltaTime, gameState));
+            }
+            
+            updateDynamicObjects(deltaTime, gameState) {
+                // Default rotation for floating objects
+                this.dynamicObjects.forEach(obj => {
+                    if (obj.userData.rotationSpeed) {
+                        obj.rotation.y += obj.userData.rotationSpeed * deltaTime;
+                    }
+                    if (obj.userData.floatSpeed) {
+                        obj.position.y = obj.userData.baseY + 
+                            Math.sin(Date.now() * 0.001 * obj.userData.floatSpeed) * obj.userData.floatAmplitude;
+                    }
+                });
+            }
+            
+            updateParticles(deltaTime) {
+                this.particles = this.particles.filter(particle => {
+                    if (!particle.userData.update) return false;
+                    
+                    const alive = particle.userData.update(particle, deltaTime);
+                    if (!alive && particle.parent) {
+                        particle.parent.remove(particle);
+                        if (particle.geometry) particle.geometry.dispose();
+                        if (particle.material) particle.material.dispose();
+                    }
+                    return alive;
+                });
+            }
+            
+            updateSpecialMechanics(deltaTime, gameState) {
+                // Override in child classes
+            }
+            
+            addDynamicObject(object, config = {}) {
+                object.userData = {
+                    ...object.userData,
+                    ...config
+                };
+                this.dynamicObjects.push(object);
+                this.environmentGroup.add(object);
+            }
+            
+            createParticle(position, config = {}) {
+                const defaultConfig = {
+                    size: 0.1,
+                    color: 0xFFFFFF,
+                    lifetime: 1.0,
+                    velocity: new THREE.Vector3(0, 1, 0),
+                    gravity: 0,
+                    fadeOut: true
+                };
+                
+                const particleConfig = { ...defaultConfig, ...config };
+                
+                const geometry = new THREE.SphereGeometry(particleConfig.size);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: particleConfig.color,
+                    transparent: particleConfig.fadeOut,
+                    opacity: 1.0
+                });
+                
+                const particle = new THREE.Mesh(geometry, material);
+                particle.position.copy(position);
+                
+                particle.userData = {
+                    velocity: particleConfig.velocity.clone(),
+                    lifetime: particleConfig.lifetime,
+                    maxLifetime: particleConfig.lifetime,
+                    gravity: particleConfig.gravity,
+                    fadeOut: particleConfig.fadeOut,
+                    update: (p, dt) => {
+                        // Update position
+                        p.position.add(p.userData.velocity.clone().multiplyScalar(dt));
+                        
+                        // Apply gravity
+                        if (p.userData.gravity) {
+                            p.userData.velocity.y -= p.userData.gravity * dt;
+                        }
+                        
+                        // Update lifetime
+                        p.userData.lifetime -= dt;
+                        
+                        // Fade out
+                        if (p.userData.fadeOut && p.material.opacity !== undefined) {
+                            p.material.opacity = Math.max(0, p.userData.lifetime / p.userData.maxLifetime);
+                        }
+                        
+                        return p.userData.lifetime > 0;
+                    }
+                };
+                
+                this.particles.push(particle);
+                this.environmentGroup.add(particle);
+                
+                return particle;
+            }
+            
+            registerUpdateCallback(callback) {
+                this.updateCallbacks.push(callback);
+            }
+            
+            pause() {
+                this.isActive = false;
+                console.log(`[Level ${this.id}] Paused`);
+            }
+            
+            resume() {
+                this.isActive = true;
+                console.log(`[Level ${this.id}] Resumed`);
+            }
+            
+            getStats() {
+                return {
+                    id: this.id,
+                    name: this.name,
+                    isActive: this.isActive,
+                    dynamicObjectCount: this.dynamicObjects.length,
+                    particleCount: this.particles.length,
+                    frameCount: this.frameCount,
+                    memoryEstimate: this.environmentGroup ? this.environmentGroup.children.length * 1024 : 0
+                };
+            }
+            
+            dispose(scene, resourceManager) {
+                console.log(`[Level ${this.id}] Starting disposal...`);
+                
+                this.isActive = false;
+                
+                // Clear update callbacks
+                this.updateCallbacks = [];
+                
+                // Clear animation frames
+                this.animationFrames.forEach(id => cancelAnimationFrame(id));
+                this.animationFrames.clear();
+                
+                // Remove particles
+                this.particles.forEach(particle => {
+                    if (particle.parent) particle.parent.remove(particle);
+                    if (particle.geometry) particle.geometry.dispose();
+                    if (particle.material) particle.material.dispose();
+                });
+                this.particles = [];
+                
+                // Clear dynamic objects
+                this.dynamicObjects = [];
+                
+                // Remove environment group from scene
+                if (this.environmentGroup && scene) {
+                    scene.remove(this.environmentGroup);
+                }
+                
+                // Dispose level-specific resources through ResourceManager
+                if (resourceManager) {
+                    resourceManager.disposeLevelResources(`level_${this.id}`);
+                }
+                
+                // Restore original clear color
+                if (window.renderer && this._originalClearColor) {
+                    window.renderer.setClearColor(this._originalClearColor);
+                }
+                
+                // Call level-specific cleanup
+                this.onDispose();
+                
+                this.environmentGroup = null;
+                this.isInitialized = false;
+                
+                console.log(`[Level ${this.id}] Disposal complete`);
+            }
+            
+            onDispose() {
+                // Override in child classes for level-specific cleanup
+            }
+            
+            createBuilding(width, height, depth, color, position) {
+                const geometry = new THREE.BoxGeometry(width, height, depth);
+                const material = new THREE.MeshLambertMaterial({ color });
+                const building = new THREE.Mesh(geometry, material);
+                
+                building.position.copy(position);
+                building.position.y = height / 2;
+                building.castShadow = true;
+                building.receiveShadow = true;
+                
+                return building;
+            }
+            
+            createNeonLight(geometry, color, intensity = 1) {
+                const material = new THREE.MeshBasicMaterial({
+                    color,
+                    emissive: color,
+                    emissiveIntensity: intensity,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                // Add glow animation
+                this.registerUpdateCallback((dt) => {
+                    if (material.opacity) {
+                        material.opacity = 0.6 + Math.sin(Date.now() * 0.003) * 0.2;
+                        material.emissiveIntensity = intensity + Math.sin(Date.now() * 0.002) * 0.3;
+                    }
+                });
+                
+                return mesh;
+            }
+        }
+        
+        // Export for use
+        window.LevelBase = LevelBase;
+        console.log('[LevelBase] Base level class loaded');
+        
+        // ========================================
+        // LEVEL MANAGER PRO - Advanced Level Management
+        // ========================================
+        class LevelManagerPro {
+            constructor() {
+                this.levels = new Map();
+                this.currentLevel = null;
+                this.previousLevel = null;
+                this.isTransitioning = false;
+                this.transitionCallbacks = [];
+                
+                // Loading state
+                this.loadingState = {
+                    isLoading: false,
+                    progress: 0,
+                    currentAsset: '',
+                    errors: []
+                };
+                
+                // Performance monitoring
+                this.performance = {
+                    levelLoadTimes: new Map(),
+                    transitionTimes: new Map(),
+                    lastTransitionStart: 0
+                };
+                
+                // Configuration
+                this.config = {
+                    transitionDuration: 2000,
+                    preloadNextLevel: true,
+                    maxRetries: 3,
+                    memoryWarningThreshold: 500 * 1024 * 1024,
+                    fallbackLevel: 1
+                };
+                
+                // Debug mode
+                this.debugMode = false;
+            }
+            
+            enableDebug() {
+                this.debugMode = true;
+                if (window.ResourceManager) {
+                    window.ResourceManager.enableDebug();
+                }
+                console.log('[LevelManagerPro] Debug mode enabled');
+            }
+            
+            registerLevel(level) {
+                if (!(level instanceof LevelBase)) {
+                    console.error('[LevelManagerPro] Level must extend LevelBase');
+                    return false;
+                }
+                
+                this.levels.set(level.id, level);
+                console.log(`[LevelManagerPro] Registered level ${level.id}: ${level.name}`);
+                return true;
+            }
+            
+            async initialize(scene, resourceManager) {
+                console.log('[LevelManagerPro] Initializing...');
+                
+                this.scene = scene;
+                this.resourceManager = resourceManager || window.ResourceManager;
+                
+                if (!this.resourceManager) {
+                    console.error('[LevelManagerPro] ResourceManager not found!');
+                    throw new Error('ResourceManager is required');
+                }
+                
+                if (this.levels.size === 0) {
+                    console.error('[LevelManagerPro] No levels registered!');
+                    throw new Error('No levels registered');
+                }
+                
+                console.log(`[LevelManagerPro] Initialized with ${this.levels.size} levels`);
+            }
+            
+            async loadLevel(levelId, skipTransition = false) {
+                if (this.isTransitioning) {
+                    console.warn('[LevelManagerPro] Already transitioning, request ignored');
+                    return false;
+                }
+                
+                const level = this.levels.get(levelId);
+                if (!level) {
+                    console.error(`[LevelManagerPro] Level ${levelId} not found`);
+                    return false;
+                }
+                
+                console.log(`[LevelManagerPro] Loading level ${levelId}: ${level.name}`);
+                
+                const startTime = performance.now();
+                this.performance.lastTransitionStart = startTime;
+                
+                try {
+                    this.isTransitioning = true;
+                    this.loadingState.isLoading = true;
+                    this.loadingState.errors = [];
+                    
+                    // Transition effect if not skipping
+                    if (!skipTransition && this.currentLevel) {
+                        await this.playTransition('out');
+                    }
+                    
+                    // Pause current level
+                    if (this.currentLevel) {
+                        this.currentLevel.pause();
+                        this.previousLevel = this.currentLevel;
+                    }
+                    
+                    // Initialize new level
+                    this.loadingState.currentAsset = 'Initializing level...';
+                    await this.initializeLevelWithRetry(level);
+                    
+                    // Dispose previous level after new one is ready
+                    if (this.previousLevel && this.previousLevel !== level) {
+                        this.loadingState.currentAsset = 'Cleaning up previous level...';
+                        await this.disposeLevelSafely(this.previousLevel);
+                    }
+                    
+                    // Set as current level
+                    this.currentLevel = level;
+                    
+                    // Transition effect
+                    if (!skipTransition) {
+                        await this.playTransition('in');
+                    }
+                    
+                    // Record performance
+                    const loadTime = performance.now() - startTime;
+                    this.performance.levelLoadTimes.set(levelId, loadTime);
+                    console.log(`[LevelManagerPro] Level ${levelId} loaded in ${loadTime.toFixed(0)}ms`);
+                    
+                    // Notify callbacks
+                    this.transitionCallbacks.forEach(cb => cb(levelId, level));
+                    
+                    // Check memory usage
+                    this.checkMemoryUsage();
+                    
+                    // Preload next level if configured
+                    if (this.config.preloadNextLevel) {
+                        this.preloadNextLevel(levelId);
+                    }
+                    
+                    return true;
+                    
+                } catch (error) {
+                    console.error(`[LevelManagerPro] Failed to load level ${levelId}:`, error);
+                    this.loadingState.errors.push(error.message);
+                    
+                    // Try fallback level
+                    if (levelId !== this.config.fallbackLevel) {
+                        console.log(`[LevelManagerPro] Attempting fallback to level ${this.config.fallbackLevel}`);
+                        return await this.loadLevel(this.config.fallbackLevel, true);
+                    }
+                    
+                    return false;
+                    
+                } finally {
+                    this.isTransitioning = false;
+                    this.loadingState.isLoading = false;
+                    this.loadingState.progress = 0;
+                }
+            }
+            
+            async initializeLevelWithRetry(level, retries = 0) {
+                try {
+                    await level.init(this.scene, this.resourceManager);
+                    return true;
+                } catch (error) {
+                    if (retries < this.config.maxRetries) {
+                        console.warn(`[LevelManagerPro] Retry ${retries + 1}/${this.config.maxRetries} for level ${level.id}`);
+                        await this.delay(1000);
+                        return await this.initializeLevelWithRetry(level, retries + 1);
+                    }
+                    throw error;
+                }
+            }
+            
+            async disposeLevelSafely(level) {
+                try {
+                    level.dispose(this.scene, this.resourceManager);
+                } catch (error) {
+                    console.error(`[LevelManagerPro] Error disposing level ${level.id}:`, error);
+                }
+            }
+            
+            async playTransition(direction) {
+                return new Promise(resolve => {
+                    const duration = this.config.transitionDuration;
+                    const startTime = Date.now();
+                    
+                    const fadeOverlay = this.getFadeOverlay();
+                    fadeOverlay.style.display = 'block';
+                    
+                    const animate = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        
+                        if (direction === 'out') {
+                            fadeOverlay.style.opacity = progress;
+                        } else {
+                            fadeOverlay.style.opacity = 1 - progress;
+                        }
+                        
+                        this.loadingState.progress = progress * 100;
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            if (direction === 'in') {
+                                fadeOverlay.style.display = 'none';
+                            }
+                            resolve();
+                        }
+                    };
+                    
+                    animate();
+                });
+            }
+            
+            getFadeOverlay() {
+                let overlay = document.getElementById('levelTransitionOverlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'levelTransitionOverlay';
+                    overlay.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: #000;
+                        opacity: 0;
+                        z-index: 1000;
+                        pointer-events: none;
+                        display: none;
+                    `;
+                    document.body.appendChild(overlay);
+                }
+                return overlay;
+            }
+            
+            update(deltaTime, gameState) {
+                if (this.currentLevel && this.currentLevel.isActive) {
+                    this.currentLevel.update(deltaTime, gameState);
+                }
+            }
+            
+            getCurrentLevelInfo() {
+                if (!this.currentLevel) return null;
+                
+                return {
+                    id: this.currentLevel.id,
+                    name: this.currentLevel.name,
+                    config: this.currentLevel.config,
+                    stats: this.currentLevel.getStats()
+                };
+            }
+            
+            getAllLevels() {
+                return Array.from(this.levels.values()).map(level => ({
+                    id: level.id,
+                    name: level.name,
+                    isLoaded: level === this.currentLevel
+                }));
+            }
+            
+            onLevelTransition(callback) {
+                this.transitionCallbacks.push(callback);
+            }
+            
+            checkMemoryUsage() {
+                if (!this.resourceManager) return;
+                
+                const usage = this.resourceManager.estimateMemoryUsage();
+                const report = this.resourceManager.getResourceReport();
+                
+                if (this.debugMode) {
+                    console.log('[LevelManagerPro] Memory usage:', usage.formatted);
+                    console.log('[LevelManagerPro] Resource report:', report);
+                }
+                
+                if (usage.bytes > this.config.memoryWarningThreshold) {
+                    console.warn(`[LevelManagerPro] High memory usage: ${usage.formatted}`);
+                    
+                    if (window.gc) {
+                        console.log('[LevelManagerPro] Forcing garbage collection...');
+                        window.gc();
+                    }
+                }
+            }
+            
+            async preloadNextLevel(currentLevelId) {
+                const nextLevelId = currentLevelId + 1;
+                const nextLevel = this.levels.get(nextLevelId);
+                
+                if (!nextLevel || nextLevel.isInitialized) return;
+                
+                if (this.debugMode) {
+                    console.log(`[LevelManagerPro] Preloading level ${nextLevelId} in background`);
+                }
+            }
+            
+            getLoadingProgress() {
+                return {
+                    isLoading: this.loadingState.isLoading,
+                    progress: this.loadingState.progress,
+                    currentAsset: this.loadingState.currentAsset,
+                    errors: [...this.loadingState.errors]
+                };
+            }
+            
+            getPerformanceStats() {
+                const stats = {
+                    averageLoadTime: 0,
+                    slowestLevel: null,
+                    fastestLevel: null,
+                    totalTransitions: this.performance.levelLoadTimes.size
+                };
+                
+                if (stats.totalTransitions > 0) {
+                    let total = 0;
+                    let slowest = 0;
+                    let fastest = Infinity;
+                    
+                    this.performance.levelLoadTimes.forEach((time, levelId) => {
+                        total += time;
+                        if (time > slowest) {
+                            slowest = time;
+                            stats.slowestLevel = { id: levelId, time };
+                        }
+                        if (time < fastest) {
+                            fastest = time;
+                            stats.fastestLevel = { id: levelId, time };
+                        }
+                    });
+                    
+                    stats.averageLoadTime = total / stats.totalTransitions;
+                }
+                
+                return stats;
+            }
+            
+            reset() {
+                if (this.currentLevel) {
+                    this.disposeLevelSafely(this.currentLevel);
+                }
+                
+                this.currentLevel = null;
+                this.previousLevel = null;
+                this.isTransitioning = false;
+                this.loadingState.errors = [];
+                
+                this.performance.levelLoadTimes.clear();
+                this.performance.transitionTimes.clear();
+                
+                console.log('[LevelManagerPro] Manager reset');
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Export as singleton
+        window.LevelManagerPro = new LevelManagerPro();
+        console.log('[LevelManagerPro] Professional level manager loaded');
+        
+        // ========================================
+        // LEVEL 1: SUBWAY DAYLIGHT
+        // ========================================
+        class Level1_Subway extends LevelBase {
+            constructor() {
+                super(1, 'Subway Daylight', {
+                    // Visual settings
+                    fogColor: '#444444',
+                    fogDensity: 0.01,
+                    skyColor: '#87CEEB',
+                    ambientIntensity: 0.6,
+                    sunIntensity: 0.8,
+                    
+                    // Gameplay settings
+                    baseSpeedMultiplier: 1.0,
+                    obstacleSpawnMultiplier: 1.0,
+                    collectibleSpawnMultiplier: 1.0,
+                    
+                    // Level-specific features
+                    hasSpecialMechanics: false
+                });
+                
+                // Level-specific objects
+                this.streetElements = [];
+                this.trafficCones = [];
+                this.buildings = [];
+                this.steamParticles = [];
+                this.sparkEffects = [];
+            }
+            
+            async createEnvironment(scene, resourceManager) {
+                // Enhanced subway tunnel atmosphere
+                const tunnelGeometry = new THREE.CylinderGeometry(15, 15, 200, 32);
+                const tunnelMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x2C2C2C,
+                    emissive: 0x111111,
+                    emissiveIntensity: 0.1
+                });
+                const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+                tunnel.rotation.z = Math.PI / 2;
+                tunnel.position.y = 5;
+                tunnel.position.z = -50;
+                tunnel.userData = { type: 'subwayTunnel' };
+                this.environmentGroup.add(tunnel);
+                
+                // Create street lines
+                this.createStreetLines();
+                
+                // Create sidewalks
+                this.createSidewalks();
+                
+                // Create subway platform lights
+                this.createSubwayLights();
+                
+                // Create buildings
+                this.createBuildings();
+                
+                // Create subway tracks with sparks
+                this.createSubwayTracks();
+                
+                // Create steam vents
+                this.createSteamVents();
+                
+                console.log('[Level 1] Subway environment created');
+            }
+            
+            createStreetLines() {
+                const lineGeometry = new THREE.BoxGeometry(0.2, 0.02, 5);
+                const lineMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0xFFFFFF,
+                    emissive: 0xFFFFFF,
+                    emissiveIntensity: 0.1
+                });
+                
+                for (let i = 0; i < 50; i++) {
+                    const line = new THREE.Mesh(lineGeometry, lineMaterial);
+                    line.position.set(0, 0.01, -i * 10);
+                    line.userData = { type: 'streetLine' };
+                    this.streetElements.push(line);
+                    this.environmentGroup.add(line);
+                }
+            }
+            
+            createSidewalks() {
+                const sidewalkGeometry = new THREE.BoxGeometry(4, 0.2, 200);
+                const sidewalkMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x808080 
+                });
+                
+                // Left sidewalk
+                const leftSidewalk = new THREE.Mesh(sidewalkGeometry, sidewalkMaterial);
+                leftSidewalk.position.set(-7, 0.1, -100);
+                leftSidewalk.receiveShadow = true;
+                leftSidewalk.userData = { type: 'sidewalk' };
+                this.environmentGroup.add(leftSidewalk);
+                
+                // Right sidewalk
+                const rightSidewalk = new THREE.Mesh(sidewalkGeometry, sidewalkMaterial);
+                rightSidewalk.position.set(7, 0.1, -100);
+                rightSidewalk.receiveShadow = true;
+                rightSidewalk.userData = { type: 'sidewalk' };
+                this.environmentGroup.add(rightSidewalk);
+                
+                // Subway tiles on walls
+                for (let i = 0; i < 20; i++) {
+                    for (let j = 0; j < 10; j++) {
+                        const tileGeometry = new THREE.PlaneGeometry(1, 1);
+                        const tileMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xF0F0F0,
+                            emissive: 0x222222,
+                            emissiveIntensity: 0.05
+                        });
+                        const tile = new THREE.Mesh(tileGeometry, tileMaterial);
+                        tile.position.set(-8 + Math.random() * 16, 1 + j * 1.1, -i * 10);
+                        tile.userData = { type: 'subwayTile' };
+                        this.environmentGroup.add(tile);
+                    }
+                }
+            }
+            
+            createSubwayLights() {
+                const lightGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8);
+                const lightMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFAA,
+                    emissive: 0xFFFFAA,
+                    emissiveIntensity: 0.8
+                });
+                
+                for (let i = 0; i < 15; i++) {
+                    const light = new THREE.Mesh(lightGeometry, lightMaterial);
+                    light.position.set(Math.random() > 0.5 ? -7 : 7, 8, -i * 8);
+                    light.userData = { type: 'subwayLight' };
+                    this.environmentGroup.add(light);
+                    
+                    // Light glow effect
+                    const glowLight = new THREE.PointLight(0xFFFFAA, 0.5, 10);
+                    glowLight.position.copy(light.position);
+                    this.environmentGroup.add(glowLight);
+                    this.lights.push(glowLight);
+                }
+            }
+            
+            createBuildings() {
+                const buildingColors = [0x8B7355, 0xA0522D, 0xCD853F, 0xDEB887, 0xF4A460];
+                
+                for (let i = 0; i < 30; i++) {
+                    // Left side buildings
+                    const leftBuilding = this.createBuilding(
+                        4 + Math.random() * 6,
+                        10 + Math.random() * 20,
+                        4 + Math.random() * 6,
+                        buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                        new THREE.Vector3(-20 - Math.random() * 10, 0, -i * 12)
+                    );
+                    this.buildings.push(leftBuilding);
+                    this.environmentGroup.add(leftBuilding);
+                    
+                    // Right side buildings
+                    const rightBuilding = this.createBuilding(
+                        4 + Math.random() * 6,
+                        10 + Math.random() * 20,
+                        4 + Math.random() * 6,
+                        buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                        new THREE.Vector3(20 + Math.random() * 10, 0, -i * 12)
+                    );
+                    this.buildings.push(rightBuilding);
+                    this.environmentGroup.add(rightBuilding);
+                }
+            }
+            
+            createSubwayTracks() {
+                const trackGeometry = new THREE.BoxGeometry(0.2, 0.1, 2);
+                const trackMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x666666,
+                    emissive: 0x222222,
+                    emissiveIntensity: 0.1
+                });
+                
+                for (let i = 0; i < 50; i++) {
+                    const track = new THREE.Mesh(trackGeometry, trackMaterial);
+                    track.position.set(-3 + Math.random() * 6, 0.05, -i * 2);
+                    track.userData = { type: 'subwayTrack' };
+                    this.environmentGroup.add(track);
+                    
+                    // Occasional sparks
+                    if (Math.random() < 0.1) {
+                        this.createSparkEffect(track.position.x, track.position.z);
+                    }
+                }
+            }
+            
+            createSteamVents() {
+                const ventGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.5, 8);
+                const ventMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                
+                for (let i = 0; i < 8; i++) {
+                    const vent = new THREE.Mesh(ventGeometry, ventMaterial);
+                    vent.position.set(-6 + Math.random() * 12, 0.25, -i * 12 - 5);
+                    vent.userData = { type: 'steamVent' };
+                    this.environmentGroup.add(vent);
+                    
+                    // Steam particle system
+                    this.createSteamParticles(vent.position.x, vent.position.z);
+                }
+            }
+            
+            createSteamParticles(x, z) {
+                // Create continuous steam using particle system
+                this.registerUpdateCallback((dt) => {
+                    if (Math.random() < 0.3) {
+                        const particle = this.createParticle(
+                            new THREE.Vector3(
+                                x + (Math.random() - 0.5) * 0.5,
+                                0.5,
+                                z + (Math.random() - 0.5) * 0.5
+                            ),
+                            {
+                                size: 0.05 + Math.random() * 0.05,
+                                color: 0xFFFFFF,
+                                lifetime: 2.0,
+                                velocity: new THREE.Vector3(
+                                    (Math.random() - 0.5) * 0.02,
+                                    0.02 + Math.random() * 0.01,
+                                    (Math.random() - 0.5) * 0.02
+                                ),
+                                gravity: -0.001,
+                                fadeOut: true
+                            }
+                        );
+                        particle.material.opacity = 0.3;
+                    }
+                });
+            }
+            
+            createSparkEffect(x, z) {
+                // Create spark burst
+                for (let i = 0; i < 10; i++) {
+                    const spark = this.createParticle(
+                        new THREE.Vector3(x, 0.1, z),
+                        {
+                            size: 0.02,
+                            color: 0xFFAA00,
+                            lifetime: 0.5,
+                            velocity: new THREE.Vector3(
+                                (Math.random() - 0.5) * 0.1,
+                                Math.random() * 0.1,
+                                (Math.random() - 0.5) * 0.1
+                            ),
+                            gravity: 0.02,
+                            fadeOut: true
+                        }
+                    );
+                    spark.material.emissive = new THREE.Color(0xFFAA00);
+                    spark.material.emissiveIntensity = 1.0;
+                }
+            }
+            
+            updateDynamicObjects(deltaTime, gameState) {
+                super.updateDynamicObjects(deltaTime, gameState);
+                
+                // Animate subway lights flicker
+                const time = Date.now() * 0.001;
+                this.environmentGroup.children.forEach(child => {
+                    if (child.userData.type === 'subwayLight') {
+                        if (child.material && child.material.emissiveIntensity !== undefined) {
+                            child.material.emissiveIntensity = 0.7 + Math.sin(time * 2 + child.position.z) * 0.1;
+                        }
+                    }
+                });
+            }
+            
+            onDispose() {
+                // Clear arrays
+                this.streetElements = [];
+                this.trafficCones = [];
+                this.buildings = [];
+                this.steamParticles = [];
+                this.sparkEffects = [];
+                
+                console.log('[Level 1] Subway level disposed');
+            }
+        }
+        
+        // Register Level 1
+        if (window.LevelManagerPro) {
+            const level1 = new Level1_Subway();
+            window.LevelManagerPro.registerLevel(level1);
+            console.log('[Level 1] Subway level registered');
+        }
+        
         // Audio System
         class AudioManager {
             constructor() {
@@ -1069,6 +2492,21 @@
                 gameState.lastScoreUpdate = currentTime;
                 
                 console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
+                
+                // Check for level progression (every 1000 points)
+                const targetLevel = Math.floor(gameState.score / 1000) + 1;
+                if (targetLevel > gameState.currentLevel && targetLevel <= 10) {
+                    console.log(`🎯 Level progression triggered! Score: ${gameState.score}, Next level: ${targetLevel}`);
+                    // Load next level
+                    if (window.LevelManagerPro) {
+                        window.LevelManagerPro.loadLevel(targetLevel).then(success => {
+                            if (success) {
+                                console.log(`✅ Successfully loaded level ${targetLevel}`);
+                                gameState.currentLevel = targetLevel;
+                            }
+                        });
+                    }
+                }
             }
         }
         
@@ -1262,6 +2700,7 @@
             cameraShakeIntensity: 0,
             cameraZoom: 1.0,
             slowMotionActive: false,
+            currentLevel: 1,           // Track current level
             
             // NEW: Power-Up & Collectibles System
             powerUps: [],              // Spawned power-ups in world
@@ -1455,6 +2894,9 @@
 
             // Enhance renderer for better visuals
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            
+            // Make renderer globally available for level system
+            window.renderer = renderer;
             renderer.toneMappingExposure = 1.2;
             renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -1464,8 +2906,8 @@
             // Create track
             createTrack();
             
-            // Create environment
-            createEnvironment();
+            // Initialize Level System
+            initializeLevelSystem();
 
             // Handle window resize
             window.addEventListener('resize', onWindowResize);
@@ -1625,6 +3067,30 @@
             track = trackGroup;
         }
 
+        // Initialize Level System
+        async function initializeLevelSystem() {
+            try {
+                // Initialize LevelManagerPro
+                await window.LevelManagerPro.initialize(scene, window.ResourceManager);
+                
+                // Set up level transition callback
+                window.LevelManagerPro.onLevelTransition((levelId, level) => {
+                    console.log(`[Game] Transitioned to level ${levelId}: ${level.name}`);
+                    // Update game state
+                    gameState.currentLevel = levelId;
+                });
+                
+                // Load initial level
+                await window.LevelManagerPro.loadLevel(1, true);
+                console.log('[Game] Level system initialized');
+                
+            } catch (error) {
+                console.error('[Game] Failed to initialize level system:', error);
+                // Fallback to basic environment
+                createEnvironment();
+            }
+        }
+        
         function createEnvironment() {
             // Urban ground with asphalt texture
             const groundGeometry = new THREE.PlaneGeometry(80, 120);
@@ -5260,6 +6726,11 @@
             lastFrameTime = currentTime;
             
             if (gameState.isPlaying) {
+                // Update Level System
+                if (window.LevelManagerPro && window.LevelManagerPro.currentLevel) {
+                    window.LevelManagerPro.update(deltaTime / 1000, gameState);
+                }
+                
                 // Update player position
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
