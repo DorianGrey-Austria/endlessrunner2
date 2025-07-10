@@ -6,7 +6,7 @@
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com;">
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.158.0/build/three.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
@@ -3975,7 +3975,18 @@
             try {
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
-                scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
+                
+                // 🚨 DEBUG: Fog Elimination Test (Phase 3)
+                // Toggle between fog enabled/disabled to test if fog causes shader errors
+                const DEBUG_DISABLE_FOG = false; // Set to true to disable fog
+                
+                if (DEBUG_DISABLE_FOG) {
+                    console.log('🔍 [DEBUG] FOG DISABLED for testing');
+                    scene.fog = null;
+                } else {
+                    scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
+                    console.log('🔍 [DEBUG] FOG ENABLED with density:', gameState.currentFogDensity);
+                }
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -4038,6 +4049,22 @@
             // Handle window resize
             window.addEventListener('resize', onWindowResize);
             
+                // 🚨 DEBUG: Shader Material Audit (Phase 4)
+                console.log('🔍 [DEBUG] Starting ShaderMaterial audit...');
+                let shaderMaterialCount = 0;
+                scene.traverse(child => {
+                    if (child.material && child.material.type === 'ShaderMaterial') {
+                        shaderMaterialCount++;
+                        console.log('🚨 [DEBUG] Found ShaderMaterial:', child.name || 'unnamed', {
+                            material: child.material,
+                            uniforms: Object.keys(child.material.uniforms || {}),
+                            hasFogColor: !!(child.material.uniforms && child.material.uniforms.fogColor),
+                            fogEnabled: child.material.fog
+                        });
+                    }
+                });
+                console.log(`🔍 [DEBUG] ShaderMaterial audit complete. Found ${shaderMaterialCount} shader materials.`);
+                
                 // Start render loop
                 animate();
                 console.log('Three.js initialization complete');
@@ -8798,6 +8825,22 @@
                 
                 updateUI();
             }
+            
+            // 🚨 DEBUG: Material Destruction Test (Phase 2)
+            // Uncomment this block to test if materials are causing the crash
+            /*
+            console.log('🔍 [DEBUG] Testing material safety...');
+            scene.traverse(child => {
+                if (child.isMesh && child.material) {
+                    console.log('🔍 [DEBUG] Replacing material on:', child.name, 'Type:', child.material.type);
+                    child.material = new THREE.MeshBasicMaterial({ 
+                        color: 0xff00ff, // Bright pink for visibility
+                        wireframe: true 
+                    });
+                }
+            });
+            console.log('🔍 [DEBUG] All materials replaced with safe pink wireframe');
+            */
             
             renderer.render(scene, camera);
         }

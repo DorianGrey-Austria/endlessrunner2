@@ -676,3 +676,191 @@ Sometimes the best fix is to remove problematic code entirely, especially when:
 **Last Updated**: 10.07.2025 17:00 CET  
 **Status**: ✅ **SHADER ERRORS ELIMINATED** - Level 3 removed completely
 **Next Action**: Focus on implementing features that work reliably
+
+---
+
+## 🚨 **ATTEMPT 7: JULY 10TH - PERSISTENT GAME LOADING ISSUES** ❌ **CRITICAL**
+
+### **CURRENT SITUATION - 10.07.2025 19:20 CET**:
+- **Problem**: Game still doesn't start despite all previous shader fixes
+- **Symptoms**: 
+  - Website loads correctly
+  - No visible game initialization
+  - Possible Three.js uniform errors in console
+  - Black screen or no response from game canvas
+
+### **COLLEAGUE'S EXPERT ANALYSIS**:
+Based on extensive Three.js experience, the core issue is likely:
+
+**Root Cause**: `refreshMaterialUniforms` error in Three.js
+- **Trigger**: Scene fog activation (`scene.fog = new THREE.FogExp2(...)`)
+- **Problem**: ShaderMaterials without fog uniforms
+- **Error**: `Cannot read properties of undefined (reading 'value')`
+- **Location**: When Three.js tries to access `material.uniforms.fogColor.value`
+
+### **SYSTEMATIC DEBUGGING PLAN** 🔍
+
+#### **PHASE 1: ERROR VISIBILITY (HIGHEST PRIORITY)**
+**Current Issue**: `three.min.js:7` gives no debugging information
+**Critical Fix**: Switch to unminified Three.js
+
+```html
+<!-- CURRENT (CHANGE THIS) -->
+<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+
+<!-- TO THIS -->
+<script src="https://unpkg.com/three@0.158.0/build/three.js"></script>
+```
+
+**Expected Result**: Clear error messages with function names and line numbers
+
+#### **PHASE 2: MATERIAL DESTRUCTION TEST**
+**Goal**: Confirm if the problem is material-related
+
+```javascript
+// Add this code before renderer.render(scene, camera):
+scene.traverse(child => {
+    if (child.isMesh) {
+        // Replace ALL materials with safe basic material
+        child.material = new THREE.MeshBasicMaterial({ 
+            color: 0xff00ff, // Bright pink for visibility
+            wireframe: true 
+        });
+    }
+});
+renderer.render(scene, camera);
+```
+
+**Analysis**:
+- **If game renders (pink wireframe)**: Material problem confirmed ✅
+- **If still crashes**: Problem is deeper (geometry, lights, renderer) ❌
+
+#### **PHASE 3: FOG ELIMINATION TEST**
+**Goal**: Test if scene fog is the trigger
+
+```javascript
+// Find ALL instances of scene.fog assignment and replace with:
+scene.fog = null; // Completely disable fog
+```
+
+**Expected Result**: If fog was causing uniform errors, game should work
+
+#### **PHASE 4: SHADERMATERIAL AUDIT**
+**Goal**: Identify all custom shaders in the scene
+
+```javascript
+// Browser console command:
+scene.traverse(child => {
+    if (child.material && child.material.type === 'ShaderMaterial') {
+        console.log('🚨 Found ShaderMaterial:', child.name, child.material.uniforms);
+        // Check if it has fog uniforms
+        console.log('Has fogColor:', !!child.material.uniforms.fogColor);
+    }
+});
+```
+
+#### **PHASE 5: FOG-SAFE SHADER FIXES**
+**Goal**: Make all ShaderMaterials fog-compatible
+
+```javascript
+// For each problematic ShaderMaterial, change from:
+const material = new THREE.ShaderMaterial({
+    uniforms: {
+        topColor: { value: new THREE.Color(0x0077be) },
+        bottomColor: { value: new THREE.Color(0x87CEEB) }
+    },
+    vertexShader: `...`,
+    fragmentShader: `...`
+});
+
+// To:
+const material = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib.fog,  // ✅ Adds fogColor, fogNear, fogFar, fogDensity
+        {
+            topColor: { value: new THREE.Color(0x0077be) },
+            bottomColor: { value: new THREE.Color(0x87CEEB) }
+        }
+    ]),
+    fog: true,  // ✅ Enable fog support in shader
+    vertexShader: `...`,
+    fragmentShader: `...`
+});
+```
+
+### **TESTING METHODOLOGY**:
+1. **One Phase at a Time**: Don't combine multiple changes
+2. **Document Each Result**: Note what works and what doesn't
+3. **Keep Backups**: Save working versions before changes
+4. **Test Immediately**: After each change, test in browser
+
+### **BROWSER CONSOLE DEBUGGING COMMANDS**:
+
+```javascript
+// 1. Monitor Three.js errors
+window.addEventListener('error', (e) => {
+    console.error('🚨 JavaScript Error:', e.error);
+    console.error('Stack:', e.error.stack);
+});
+
+// 2. Check scene materials
+scene.traverse(child => {
+    if (child.material) {
+        console.log(`Material: ${child.name} - Type: ${child.material.type}`);
+    }
+});
+
+// 3. Monitor fog settings
+console.log('Current fog:', scene.fog);
+
+// 4. Check WebGL resources
+console.log('WebGL Info:', renderer.info);
+
+// 5. Force material disposal test
+scene.traverse(child => {
+    if (child.material && child.material.type === 'ShaderMaterial') {
+        console.warn('🚨 Potential problematic material:', child);
+    }
+});
+```
+
+### **KNOWN SHADER LOCATIONS** (From Code Analysis):
+1. **Line 2683**: `skyMaterial` in `createSkyGradient()` - Sky dome shader
+2. **Already Fixed**: Line 2685 shows `THREE.UniformsLib.fog` is included
+3. **Cleanup Code**: Line 4209 has orphaned shader material disposal
+
+### **NUCLEAR OPTION - ROLLBACK PLAN**:
+If systematic debugging fails:
+
+```bash
+# 1. Emergency rollback to known working version
+git checkout 456c560  # v3.6.1 (confirmed working)
+cp SubwayRunner/index.html ./index_working_backup.html
+git checkout main
+
+# 2. Selective feature re-integration:
+# - Take working base
+# - Add ONE feature at a time
+# - Test after each addition
+# - When it breaks, we know the exact cause
+```
+
+### **SUCCESS CRITERIA**:
+- ✅ Game initializes without console errors
+- ✅ Player mesh appears and responds to controls
+- ✅ Scene renders with all objects visible
+- ✅ Level progression system works
+- ✅ 60 FPS performance maintained
+
+### **ESTIMATED TIMELINE**:
+- **Phase 1**: 5 minutes (Three.js swap + test)
+- **Phase 2**: 10 minutes (Material test + analysis)
+- **Phase 3**: 5 minutes (Fog elimination + test)
+- **Phase 4**: 10 minutes (Shader audit + documentation)
+- **Phase 5**: 20-30 minutes (Implementation + testing)
+- **Total**: 50-60 minutes to complete systematic debug
+
+---
+
+**Status**: 🔄 **SYSTEMATIC DEBUGGING READY**
+**Next Action**: Execute Phase 1 - Three.js de-minification for error visibility
