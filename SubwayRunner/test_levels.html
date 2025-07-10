@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level System Test</title>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        
+        #controls button {
+            display: block;
+            margin: 5px 0;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        #info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div id="controls">
+        <h3>Level System Test</h3>
+        <button onclick="loadLevel(1)">Load Level 1</button>
+        <button onclick="loadLevel(2)">Load Level 2</button>
+        <button onclick="toggleDebug()">Toggle Debug</button>
+        <button onclick="showMemoryReport()">Memory Report</button>
+        <button onclick="disposeCurrentLevel()">Dispose Current</button>
+    </div>
+    
+    <div id="info">
+        <div id="levelInfo">No level loaded</div>
+        <div id="performance">FPS: 0</div>
+        <div id="resources">Resources: 0</div>
+    </div>
+    
+    <div id="loading">
+        <div>Loading...</div>
+        <div id="loadingProgress">0%</div>
+    </div>
+    
+    <!-- Load modules -->
+    <script src="ResourceManager.js"></script>
+    <script src="LevelBase.js"></script>
+    <script src="LevelManagerPro.js"></script>
+    <script src="Level1_Subway.js"></script>
+    
+    <script>
+        // Global variables
+        let scene, camera, renderer;
+        let frameCount = 0;
+        let lastTime = performance.now();
+        let fps = 0;
+        
+        // Initialize Three.js
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.02);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('canvas'),
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.setClearColor(0x87CEEB);
+            
+            // Make renderer globally available
+            window.renderer = renderer;
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -50;
+            directionalLight.shadow.camera.right = 50;
+            directionalLight.shadow.camera.top = 50;
+            directionalLight.shadow.camera.bottom = -50;
+            scene.add(directionalLight);
+            
+            // Ground plane
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x404040 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Initialize managers
+            window.ResourceManager.enableDebug();
+            window.LevelManagerPro.enableDebug();
+            window.LevelManagerPro.initialize(scene, window.ResourceManager);
+            
+            // Set up level transition callback
+            window.LevelManagerPro.onLevelTransition((levelId, level) => {
+                console.log(`Transitioned to level ${levelId}: ${level.name}`);
+                updateLevelInfo();
+            });
+            
+            // Handle resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const currentTime = performance.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            
+            // Update FPS
+            frameCount++;
+            if (frameCount % 60 === 0) {
+                fps = Math.round(1 / deltaTime);
+                document.getElementById('performance').textContent = `FPS: ${fps}`;
+            }
+            
+            // Update level
+            if (window.LevelManagerPro) {
+                window.LevelManagerPro.update(deltaTime, { /* game state */ });
+            }
+            
+            // Update loading UI
+            updateLoadingUI();
+            
+            // Update resource count
+            if (frameCount % 30 === 0) {
+                updateResourceInfo();
+            }
+            
+            // Rotate camera for viewing
+            camera.position.x = Math.sin(currentTime * 0.0001) * 15;
+            camera.position.z = Math.cos(currentTime * 0.0001) * 15;
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Load a level
+        async function loadLevel(levelId) {
+            console.log(`Loading level ${levelId}...`);
+            const success = await window.LevelManagerPro.loadLevel(levelId);
+            if (success) {
+                console.log(`Level ${levelId} loaded successfully`);
+            } else {
+                console.error(`Failed to load level ${levelId}`);
+            }
+        }
+        
+        // Toggle debug mode
+        function toggleDebug() {
+            const debugMode = !window.ResourceManager.debugMode;
+            window.ResourceManager.debugMode = debugMode;
+            window.LevelManagerPro.debugMode = debugMode;
+            console.log(`Debug mode: ${debugMode}`);
+        }
+        
+        // Show memory report
+        function showMemoryReport() {
+            const report = window.ResourceManager.getResourceReport();
+            const memory = window.ResourceManager.estimateMemoryUsage();
+            console.log('Resource Report:', report);
+            console.log('Memory Usage:', memory);
+            alert(`Resources: ${report.total}\nMemory: ${memory.formatted}`);
+        }
+        
+        // Dispose current level
+        function disposeCurrentLevel() {
+            const current = window.LevelManagerPro.getCurrentLevelInfo();
+            if (current) {
+                window.LevelManagerPro.currentLevel.dispose(scene, window.ResourceManager);
+                window.LevelManagerPro.currentLevel = null;
+                updateLevelInfo();
+                console.log('Current level disposed');
+            }
+        }
+        
+        // Update level info display
+        function updateLevelInfo() {
+            const info = window.LevelManagerPro.getCurrentLevelInfo();
+            const infoDiv = document.getElementById('levelInfo');
+            
+            if (info) {
+                infoDiv.innerHTML = `
+                    <strong>Level ${info.id}: ${info.name}</strong><br>
+                    Objects: ${info.stats.dynamicObjectCount}<br>
+                    Particles: ${info.stats.particleCount}<br>
+                    Active: ${info.stats.isActive}
+                `;
+            } else {
+                infoDiv.textContent = 'No level loaded';
+            }
+        }
+        
+        // Update resource info
+        function updateResourceInfo() {
+            const report = window.ResourceManager.getResourceReport();
+            document.getElementById('resources').textContent = `Resources: ${report.total}`;
+        }
+        
+        // Update loading UI
+        function updateLoadingUI() {
+            const loadingState = window.LevelManagerPro.getLoadingProgress();
+            const loadingDiv = document.getElementById('loading');
+            
+            if (loadingState.isLoading) {
+                loadingDiv.style.display = 'block';
+                document.getElementById('loadingProgress').textContent = 
+                    `${Math.round(loadingState.progress)}% - ${loadingState.currentAsset}`;
+            } else {
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
