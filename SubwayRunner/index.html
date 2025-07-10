@@ -6,7 +6,7 @@
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com;">
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.155.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V5.1.4-LEVEL3-REMOVED<br>
+            🚀 V5.1.5-STABILITY-FIX<br>
             📅 10.07.2025
         </div>
         
@@ -1675,6 +1675,10 @@
                     config: this.currentLevel.config,
                     stats: this.currentLevel.getStats()
                 };
+            }
+            
+            getCurrentLevel() {
+                return this.currentLevel;
             }
             
             getAllLevels() {
@@ -3626,13 +3630,24 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // Initialize Supabase connection
+        // Initialize Supabase connection with better error handling
         try {
             if (window.supabase) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase initialized successfully');
-                console.log('🔗 Database URL:', SUPABASE_URL);
-                console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+                console.log('✅ Supabase client created');
+                
+                // Test connection with a simple query
+                setTimeout(async () => {
+                    try {
+                        const { data, error } = await supabase.from('subway_runner_scores').select('id').limit(1);
+                        if (error) throw error;
+                        console.log('✅ Supabase connection verified');
+                    } catch (testError) {
+                        console.log('⚠️ Supabase connection test failed, disabling online features:', testError.message);
+                        supabase = null;
+                    }
+                }, 1000);
+                
             } else {
                 throw new Error('Supabase library not loaded');
             }

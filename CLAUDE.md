@@ -42,17 +42,17 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 5.1.0-ACTION (Fast action gameplay, mobile controls, stars, icons-only UI)
-- **Previous**: 5.0.0-ULTIMATE (Initial V5 with reduced collectibles, mobile ducking)
+- **Latest**: 5.1.4-LEVEL3-REMOVED (Completely removed Level 3 to eliminate shader errors)
+- **Previous**: 5.1.3-SHADER-DISPOSAL (Fixed shader material memory leak)
+- **Before**: 5.1.2-LEVEL3-SKIP (Prevent Level 3 loading to avoid shader errors)
+- **Before**: 5.1.1-SHADER-FIX (Fixed critical Three.js shader errors)
+- **Before**: 5.1.0-ACTION (Fast action gameplay, mobile controls, stars, icons-only UI)
+- **Before**: 5.0.0-ULTIMATE (Initial V5 with reduced collectibles, mobile ducking)
 - **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels with Cyberpunk Theme)
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
-- **Before**: 4.4.0-VISUAL-OVERHAUL (Massive Visual Enhancement for All 10 Levels)
-- **Before**: 4.3.0-MEGA-LEVELS (10 Epic Levels with Unique Mechanics)
-- **Before**: 4.2.0-GHOST-MODE (Daily Ghost Racing with Seeded Levels)
-- **Before**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 5.1.0-ACTION. Major improvements include faster gameplay speed (0.15 start, 0.60 max), improved mobile controls (swipe up to stand, swipe up again to jump), star collectibles for invincibility (replacing mystery boxes), icons-only UI during gameplay, proper 3-2-1 countdown at start, and level display. The SubwayRunner/index.html is the primary production file with embedded modules.
+The game is currently at version 5.1.4-LEVEL3-REMOVED. This version has completely removed Level 3 to eliminate recurring shader errors. The game now features faster gameplay speed (0.15 start, 0.60 max), improved mobile controls (swipe up to stand, swipe up again to jump), star collectibles for invincibility (replacing mystery boxes), icons-only UI during gameplay, proper 3-2-1 countdown at start, and level display. The SubwayRunner/index.html is the primary production file with embedded modules.
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (search for "version:" string)
@@ -67,7 +67,7 @@ The game is currently at version 5.1.0-ACTION. Major improvements include faster
 - **Development Backups**: Multiple .backup files in SubwayRunner/ for version rollbacks
 
 ### **KEY FEATURES IMPLEMENTED**
-- **10 Unique Levels**: Each with distinct themes, obstacles, and mechanics
+- **9 Unique Levels**: Each with distinct themes, obstacles, and mechanics (Level 3 removed)
 - **5 Playable Characters**: NEON-7 (Cyberpunk), Commander Void (Space), Lara Thornwood (Jungle), Bjorn Frostbeard (Ice), Seraphina Prism (Crystal)
 - **Level System**: Automatic progression every 1000 points
 - **Visual Effects**: Enhanced graphics with particles, shaders, and post-processing
@@ -75,6 +75,7 @@ The game is currently at version 5.1.0-ACTION. Major improvements include faster
 - **Ghost Racing**: Daily challenges with Supabase integration
 - **Collectibles**: Kiwis (7), Broccolis (7), and Stars (max 2 for invincibility)
 - **Performance**: Object pooling, frustum culling, adaptive quality
+- **Shader Error Resolution**: Complete removal of problematic Level 3 to ensure stable gameplay
 
 ### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**
 **WICHTIGE REGEL**: Nach jeder längeren Programmier-Session IMMER sofort online stellen!
@@ -268,10 +269,10 @@ npm run inspector    # Run MCP inspector
 - **Development Port**: 8001 (python -m http.server)
 - **Production**: Single HTML file deployment (index.html)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 4.5.10-LEVEL-PROGRESSION
+- **Current Version**: 5.1.4-LEVEL3-REMOVED
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 - **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
-- **Key Features**: 10 levels, 5 characters, gesture control, ghost racing, visual effects
+- **Key Features**: 9 levels (Level 3 removed), 5 characters, gesture control, ghost racing, visual effects
 - **Testing**: Playwright test suite (`npm run test`), custom test runner (`test-runner.js`)
 
 ### Endless3D
