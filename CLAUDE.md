@@ -42,8 +42,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels with Cyberpunk Theme)
-- **Previous**: 4.5.9-UNPKG-CSP-FIX (Switched back to unpkg.com due to CSP)
+- **Latest**: 5.1.0-ACTION (Fast action gameplay, mobile controls, stars, icons-only UI)
+- **Previous**: 5.0.0-ULTIMATE (Initial V5 with reduced collectibles, mobile ducking)
+- **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels with Cyberpunk Theme)
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 - **Before**: 4.4.0-VISUAL-OVERHAUL (Massive Visual Enhancement for All 10 Levels)
 - **Before**: 4.3.0-MEGA-LEVELS (10 Epic Levels with Unique Mechanics)
@@ -51,7 +52,7 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.5.10-LEVEL-PROGRESSION. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 5.1.0-ACTION. Major improvements include faster gameplay speed (0.15 start, 0.60 max), improved mobile controls (swipe up to stand, swipe up again to jump), star collectibles for invincibility (replacing mystery boxes), icons-only UI during gameplay, proper 3-2-1 countdown at start, and level display. The SubwayRunner/index.html is the primary production file with embedded modules.
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (search for "version:" string)
@@ -72,7 +73,7 @@ The game is currently at version 4.5.10-LEVEL-PROGRESSION. The SubwayRunner/inde
 - **Visual Effects**: Enhanced graphics with particles, shaders, and post-processing
 - **Gesture Control**: MediaPipe integration for head tracking
 - **Ghost Racing**: Daily challenges with Supabase integration
-- **Collectibles**: Kiwis, Broccolis, and Mystery Boxes (strict no-power-ups rule)
+- **Collectibles**: Kiwis (7), Broccolis (7), and Stars (max 2 for invincibility)
 - **Performance**: Object pooling, frustum culling, adaptive quality
 
 ### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**

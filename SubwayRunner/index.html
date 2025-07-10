@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V5.0.0-ULTIMATE<br>
+            🚀 V5.1.0-ACTION<br>
             📅 10.07.2025
         </div>
         
@@ -505,11 +505,41 @@
         <!-- Canvas for gesture preview -->
         <canvas id="gestureCanvas"></canvas>
         
+        <!-- Countdown display -->
+        <div id="countdownDisplay" style="
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: none;
+        "></div>
+        
         <div id="ui">
-            <div>Score: <span id="score">0</span></div>
-            <div>Speed: <span id="speed">100</span></div>
-            <div>❤️ Leben: <span id="lives">3</span></div>
-            <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 20px;">🏆</span>
+                <span id="score" style="min-width: 60px;">0</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 20px;">🚀</span>
+                <span id="speed" style="min-width: 40px;">100</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 20px;">❤️</span>
+                <span id="lives" style="min-width: 20px;">3</span>
+            </div>
+            <div id="timer" style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 20px;">⏱️</span>
+                <span id="timeRemaining" style="min-width: 30px;">60</span>
+            </div>
+            <div id="levelDisplay" style="color: #FFD700; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 20px;">🎮</span>
+                <span id="currentLevelNum">1</span>
+            </div>
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
@@ -525,45 +555,33 @@
                     </div>
                 </div>
             </div>
-            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
-                COMBO x<span id="comboMultiplier">1</span>!
+            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 24px; animation: pulse 0.5s infinite;">
+                🔥x<span id="comboMultiplier">1</span>
             </div>
             
             <!-- NEW: Near Miss Display -->
-            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 18px; font-weight: bold;">
-                NEAR MISS! x<span id="nearMissCount">1</span>
-                <div style="font-size: 14px;">+<span id="nearMissBonus">50</span> Bonus!</div>
+            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 20px; font-weight: bold;">
+                ⚡x<span id="nearMissCount">1</span> +<span id="nearMissBonus">50</span>
             </div>
             
             <!-- NEW: Milestone Display -->
             <div id="milestoneDisplay" style="color: #00FF00; display: none; font-size: 24px; font-weight: bold; animation: bounce 1s;">
-                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m!</span>
-                <div style="font-size: 16px;">+<span id="milestoneBonus">500</span> Punkte!</div>
+                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m</span> +<span id="milestoneBonus">500</span>
             </div>
             
             <!-- NEW: Score Multiplier Display -->
-            <div id="multiplierDisplay" style="color: #FF1493; font-size: 16px; font-weight: bold; margin-top: 5px;">
-                Multiplikator: x<span id="currentMultiplier">1.0</span>
+            <div id="multiplierDisplay" style="color: #FF1493; font-size: 18px; font-weight: bold; margin-top: 5px;">
+                ✨x<span id="currentMultiplier">1.0</span>
             </div>
-            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
-                <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
+            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold; font-size: 18px;">
+                <span id="powerUpIcon">⚡</span> <span id="powerUpTime">8</span>s
             </div>
             
             <!-- NEW: Skill Combo UI -->
-            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <span id="skillComboIcon">🔥</span> SKILL COMBO x<span id="skillComboCount">1</span>! 
-                <div style="font-size: 14px; color: #FFD700;"><span id="skillComboBonus">+100</span> Punkte!</div>
+            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                <span id="skillComboIcon">🔥</span>x<span id="skillComboCount">1</span> +<span id="skillComboBonus">100</span>
             </div>
             
-            <!-- NEW: Environment Display -->
-            <div id="environmentDisplay" style="color: #87CEEB; font-weight: bold; margin-top: 10px;">
-                🏙️ <span id="currentEnvironment">Straße</span>
-            </div>
-            
-            <!-- NEW: Difficulty Progress Display -->
-            <div id="difficultyDisplay" style="color: #FFB347; font-weight: bold; margin-top: 5px; font-size: 14px;">
-                📈 Schwierigkeit: <span id="difficultyLevel">Leicht</span>
-            </div>
         </div>
         
         <div id="instructions">
@@ -3726,9 +3744,9 @@
             isGameOver: false,
             isVictory: false,
             score: 0,
-            speed: 0.08, // Langsamerer Start
-            baseSpeed: 0.08,
-            maxSpeed: 0.45, // Sehr schnell am Ende!
+            speed: 0.15, // Faster start for action gameplay
+            baseSpeed: 0.15,
+            maxSpeed: 0.60, // Even faster at the end!
             lives: 3,
             gameTime: 60, // 60 Sekunden
             timeRemaining: 60,
@@ -3753,8 +3771,10 @@
             powerUps: [],              // Spawned power-ups in world
             kiwis: [],                 // Spawned kiwis in world
             broccolis: [],             // Spawned broccolis in world  
+            stars: [],                 // Spawned stars in world
             collectedKiwis: 0,         // Current session kiwis
             collectedBroccolis: 0,     // Current session broccolis
+            collectedStars: 0,         // Current session stars
             totalKiwis: 0,             // Lifetime kiwis
             totalBroccolis: 0,         // Lifetime broccolis
             totalCollectibles: 0,      // Total spawned this session
@@ -3801,7 +3821,7 @@
             // Touch Controls
             touchStartX: 0,
             touchStartY: 0,
-            touchThreshold: 50,        // Swipe distance threshold
+            touchThreshold: 30,        // Reduced for faster response
             isTouchDevice: false,      // Auto-detect touch support
             
             // Environment state
@@ -3842,6 +3862,7 @@
         let powerUps = [];
         let kiwis = [];
         let broccolis = [];  // NEW: Brokkoli tracking
+        let stars = [];       // NEW: Star tracking for invincibility
         
         // Power-Up configuration
         const POWER_UP_TYPES = {
@@ -4804,97 +4825,122 @@
             // Resume audio context
             audioManager.resume();
             
-            // Start background music
-            audioManager.startBackgroundMusic();
-            
-            // Start ambient city sounds
-            if (!ambientStarted) {
-                audioManager.play('ambient');
-                ambientStarted = true;
-            }
-            
-            gameState.isPlaying = true;
-            gameState.isGameOver = false;
-            gameState.isVictory = false;
-            gameState.score = 0;
-            gameState.speed = gameState.baseSpeed;
-            gameState.lives = 3;
-            gameState.timeRemaining = gameState.gameTime;
-            gameState.gameStartTime = Date.now();
-            gameState.playerLane = 1;
-            gameState.playerAction = 'running';
-            gameState.playerY = 0;
-            gameState.jumpVelocity = 0;
-            gameState.isDuckingToggled = false; // Reset mobile ducking toggle
-            
-            // Hide duck indicator
-            const duckIndicator = document.getElementById('duckToggleIndicator');
-            if (duckIndicator) duckIndicator.style.opacity = '0';
-            gameState.invulnerable = false;
-            gameState.invulnerabilityTime = 0;
-            gameState.timeScale = 1.0;
-            gameState.cameraShakeIntensity = 0;
-            gameState.slowMotionActive = false;
-            
-            // BUGFIX: Reset milestone tracking to prevent constant confetti
-            gameState.lastMilestone = 0;
-            gameState.milestoneReached = 0;
-            gameState.totalDistance = 0;
-            
-            // BUGFIX: Initialize centralized score system
-            gameState.lastScoreUpdate = performance.now();
-            gameState.scoreQueue = 0;
-            gameState.lastDistanceScore = performance.now();
-            
-            // Reset all multipliers and combos
-            gameState.comboMultiplier = 1;
-            gameState.nearMissMultiplier = 1;
-            gameState.skillMultiplier = 1;
-            gameState.scoreMultiplier = 1;
-            gameState.nearMissStreak = 0;
-            gameState.kiwiCombo = 0;
-            
-            // Reset collectible system with debug logging
-            console.log('🔄 RESETTING COLLECTIBLE COUNTERS');
-            console.log(`   Before reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
-            
-            gameState.collectedKiwis = 0;
-            gameState.collectedBroccolis = 0;
-            gameState.totalCollectibles = 0;
-            gameState.collectionBonusAwarded = {
-                fiveOfOne: false,
-                allOfOne: false, 
-                allThirtySeven: false,
-                broccoliMaster: false,
-                veggieChampion: false
-            };
-            
-            console.log(`   After reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
-            
-            // Force immediate UI update
-            updateKiwiUI();
-            
-            // Clear obstacles and collectibles
-            obstacles.forEach(obs => scene.remove(obs.mesh));
-            obstacles = [];
-            
-            // Clear existing collectibles
-            gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
-            gameState.kiwis = [];
-            gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
-            gameState.broccolis = [];
-            
-            // Start sound
-            audioManager.play('powerup');
-            
+            // Hide menu and show countdown
             document.getElementById('menu').style.display = 'none';
-            updateUI();
+            const countdownDisplay = document.getElementById('countdownDisplay');
+            countdownDisplay.style.display = 'block';
             
-            // Extra check to ensure UI is properly updated at game start
-            setTimeout(() => {
-                updateKiwiUI();
-                console.log('✅ Game started - UI updated after delay');
-            }, 100);
+            // Update level display
+            document.getElementById('currentLevelNum').textContent = gameState.currentLevel;
+            document.getElementById('currentLevelName').textContent = LevelManagerPro.getCurrentLevel()?.name || 'Subway';
+            
+            // Countdown sequence
+            let countdown = 3;
+            
+            const countdownInterval = setInterval(() => {
+                countdownDisplay.textContent = countdown;
+                audioManager.createTone(800 + (3 - countdown) * 200, 0.1, 'sine'); // Rising tone
+                
+                countdown--;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownDisplay.style.display = 'none';
+                    
+                    // Start background music
+                    audioManager.startBackgroundMusic();
+                    
+                    // Start ambient city sounds
+                    if (!ambientStarted) {
+                        audioManager.play('ambient');
+                        ambientStarted = true;
+                    }
+                    
+                    gameState.isPlaying = true;
+                    gameState.isGameOver = false;
+                    gameState.isVictory = false;
+                    gameState.score = 0;
+                    gameState.speed = gameState.baseSpeed;
+                    gameState.lives = 3;
+                    gameState.timeRemaining = gameState.gameTime;
+                    gameState.gameStartTime = Date.now();
+                    gameState.playerLane = 1;
+                    gameState.playerAction = 'running';
+                    gameState.playerY = 0;
+                    gameState.jumpVelocity = 0;
+                    gameState.isDuckingToggled = false; // Reset mobile ducking toggle
+            
+                    // Hide duck indicator
+                    const duckIndicator = document.getElementById('duckToggleIndicator');
+                    if (duckIndicator) duckIndicator.style.opacity = '0';
+                    gameState.invulnerable = false;
+                    gameState.invulnerabilityTime = 0;
+                    gameState.timeScale = 1.0;
+                    gameState.cameraShakeIntensity = 0;
+                    gameState.slowMotionActive = false;
+                    
+                    // BUGFIX: Reset milestone tracking to prevent constant confetti
+                    gameState.lastMilestone = 0;
+                    gameState.milestoneReached = 0;
+                    gameState.totalDistance = 0;
+                    
+                    // BUGFIX: Initialize centralized score system
+                    gameState.lastScoreUpdate = performance.now();
+                    gameState.scoreQueue = 0;
+                    gameState.lastDistanceScore = performance.now();
+                    
+                    // Reset all multipliers and combos
+                    gameState.comboMultiplier = 1;
+                    gameState.nearMissMultiplier = 1;
+                    gameState.skillMultiplier = 1;
+                    gameState.scoreMultiplier = 1;
+                    gameState.nearMissStreak = 0;
+                    gameState.kiwiCombo = 0;
+                    
+                    // Reset collectible system with debug logging
+                    console.log('🔄 RESETTING COLLECTIBLE COUNTERS');
+                    console.log(`   Before reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+                    
+                    gameState.collectedKiwis = 0;
+                    gameState.collectedBroccolis = 0;
+                    gameState.totalCollectibles = 0;
+                    gameState.collectionBonusAwarded = {
+                        fiveOfOne: false,
+                        allOfOne: false, 
+                        allThirtySeven: false,
+                        broccoliMaster: false,
+                        veggieChampion: false
+                    };
+                    
+                    console.log(`   After reset - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+                    
+                    // Force immediate UI update
+                    updateKiwiUI();
+                    
+                    // Clear obstacles and collectibles
+                    obstacles.forEach(obs => scene.remove(obs.mesh));
+                    obstacles = [];
+                    
+                    // Clear existing collectibles
+                    gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
+                    gameState.kiwis = [];
+                    gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
+                    gameState.broccolis = [];
+                    gameState.stars.forEach(star => scene.remove(star.mesh));
+                    gameState.stars = [];
+                    
+                    // Start sound
+                    audioManager.play('powerup');
+                    
+                    updateUI();
+                    
+                    // Extra check to ensure UI is properly updated at game start
+                    setTimeout(() => {
+                        updateKiwiUI();
+                        console.log('✅ Game started - UI updated after delay');
+                    }, 100);
+                }
+            }, 1000);
         }
 
         function endGame() {
@@ -4959,6 +5005,10 @@
                 setTimeout(() => scoreElement.classList.remove('ui-bounce'), 500);
             }
             scoreElement.textContent = targetScore;
+            
+            // Update level display
+            document.getElementById('currentLevelNum').textContent = gameState.currentLevel;
+            document.getElementById('currentLevelName').textContent = LevelManagerPro.getCurrentLevel()?.name || 'Subway';
             
             // Speed display with color coding
             const speedElement = document.getElementById('speed');
@@ -5959,6 +6009,30 @@
                     gameState.broccolis.splice(index, 1);
                 }
             });
+            
+            // ==================== STAR COLLISION DETECTION ====================
+            
+            gameState.stars.forEach((star, index) => {
+                const starBBox = {
+                    min: {
+                        x: star.mesh.position.x - 0.5,
+                        y: star.mesh.position.y - 0.5,
+                        z: star.mesh.position.z - 0.5
+                    },
+                    max: {
+                        x: star.mesh.position.x + 0.5,
+                        y: star.mesh.position.y + 0.5,
+                        z: star.mesh.position.z + 0.5
+                    }
+                };
+                
+                const isCollecting = boundingBoxIntersection(playerBBox, starBBox);
+                
+                if (isCollecting && !star.collected) {
+                    collectStar(star);
+                    gameState.stars.splice(index, 1);
+                }
+            });
         }
         
         // Calculate precise player bounding box based on current action
@@ -6360,6 +6434,79 @@
             return kiwiData;
         }
         
+        // NEW: Star creation function for invincibility 
+        function createStar(lane, z) {
+            const starGroup = new THREE.Group();
+            
+            // Create a 3D star shape
+            const starShape = new THREE.Shape();
+            const spikes = 5;
+            const outerRadius = 0.5;
+            const innerRadius = 0.25;
+            
+            for (let i = 0; i < spikes * 2; i++) {
+                const angle = (i / (spikes * 2)) * Math.PI * 2;
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                
+                if (i === 0) {
+                    starShape.moveTo(x, y);
+                } else {
+                    starShape.lineTo(x, y);
+                }
+            }
+            
+            const extrudeSettings = {
+                depth: 0.1,
+                bevelEnabled: true,
+                bevelSegments: 2,
+                steps: 2,
+                bevelSize: 0.02,
+                bevelThickness: 0.02
+            };
+            
+            const starGeometry = new THREE.ExtrudeGeometry(starShape, extrudeSettings);
+            const starMaterial = new THREE.MeshPhongMaterial({
+                color: 0xFFD700,
+                emissive: 0xFFD700,
+                emissiveIntensity: 0.5,
+                shininess: 100
+            });
+            
+            const star = new THREE.Mesh(starGeometry, starMaterial);
+            star.rotation.x = Math.PI / 2;
+            star.position.y = 1.2;
+            starGroup.add(star);
+            
+            // Add glow effect
+            const glowGeometry = new THREE.SphereGeometry(0.7, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFFFF00,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.y = 1.2;
+            starGroup.add(glow);
+            
+            starGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            starGroup.userData = { type: 'star', lane: lane };
+            scene.add(starGroup);
+            
+            const starData = {
+                mesh: starGroup,
+                lane: lane,
+                z: z,
+                type: 'star',
+                animationTime: 0,
+                collected: false
+            };
+            
+            stars.push(starData);
+            return starData;
+        }
+        
         // NEW: Brokkoli creation function for variety
         function createBroccoli(lane, z, pattern = 'single') {
             const broccoliGroup = new THREE.Group();
@@ -6502,7 +6649,6 @@
                 const config = POWER_UP_TYPES[gameState.activePowerUp];
                 powerUpDisplay.style.display = 'block';
                 powerUpIcon.textContent = config.icon;
-                powerUpName.textContent = config.name;
                 powerUpTime.textContent = Math.ceil(gameState.powerUpTimeRemaining / 1000);
             } else {
                 powerUpDisplay.style.display = 'none';
@@ -6582,6 +6728,40 @@
             updateCollectibleUI();
             
             console.log(`Collected broccoli! Health bonus: +${totalScore} points`);
+        }
+        
+        function collectStar(starData) {
+            if (starData.collected) return;
+            
+            starData.collected = true;
+            scene.remove(starData.mesh);
+            
+            gameState.collectedStars++;
+            
+            // Activate invincibility for 8 seconds
+            gameState.invulnerable = true;
+            gameState.invulnerabilityTime = 8.0;
+            
+            // Visual effect
+            player.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = child.material.clone();
+                    child.material.emissive = new THREE.Color(0xFFD700);
+                    child.material.emissiveIntensity = 0.5;
+                }
+            });
+            
+            // Score for collecting star
+            addScore(500, 'star_collection');
+            
+            // Audio feedback
+            audioManager.createTone(1200, 0.3, 'sine');
+            audioManager.createTone(1600, 0.3, 'sine');
+            
+            // Create star particle effect
+            createStarCollectionEffect(starData.mesh.position.clone());
+            
+            console.log(`Collected star! Invincible for 8 seconds!`);
         }
         
         // Kiwi-Saft-Splash-Effekt
@@ -6776,10 +6956,6 @@
                 }
                 
                 // Update combo message in UI
-                const comboTextElement = skillComboDisplay.querySelector('div');
-                if (comboTextElement) {
-                    comboTextElement.innerHTML = `<span style="color: #FFD700;">+${bonusPoints} ${comboMessage}</span>`;
-                }
                 
                 // Auto-hide after 3 seconds
                 setTimeout(() => {
@@ -7242,6 +7418,59 @@
             }, 2000);
         }
         
+        // NEW: Star collection effect
+        function createStarCollectionEffect(position) {
+            const starParticles = [];
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Star sparkle particles
+                const particleGeometry = new THREE.SphereGeometry(0.05, 4, 4);
+                const particleMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xFFD700,
+                    emissive: 0xFFD700,
+                    emissiveIntensity: 1
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                
+                particle.position.copy(position);
+                
+                const angle = (i / particleCount) * Math.PI * 2;
+                const speed = 0.2 + Math.random() * 0.3;
+                particle.velocity = new THREE.Vector3(
+                    Math.cos(angle) * speed,
+                    0.1 + Math.random() * 0.3,
+                    Math.sin(angle) * speed
+                );
+                particle.life = 1.0;
+                
+                scene.add(particle);
+                starParticles.push(particle);
+            }
+            
+            // Animate particles
+            const animateParticles = () => {
+                starParticles.forEach((particle, index) => {
+                    particle.position.add(particle.velocity.clone().multiplyScalar(gameState.timeScale));
+                    particle.velocity.y -= 0.01 * gameState.timeScale;
+                    particle.life -= 0.02 * gameState.timeScale;
+                    
+                    particle.material.opacity = particle.life;
+                    particle.scale.setScalar(particle.life);
+                    
+                    if (particle.life <= 0) {
+                        scene.remove(particle);
+                        starParticles.splice(index, 1);
+                    }
+                });
+                
+                if (starParticles.length > 0) {
+                    requestAnimationFrame(animateParticles);
+                }
+            };
+            animateParticles();
+        }
+        
         // NEW: Brokkoli health effect
         function createBroccoliHealthEffect(position) {
             const healthParticles = [];
@@ -7675,7 +7904,7 @@
             
             // Make player invulnerable for 2 seconds
             gameState.invulnerable = true;
-            gameState.invulnerabilityTime = 2000;
+            gameState.invulnerabilityTime = 2.0;
             
             // Visual feedback - make player flash red
             player.children.forEach(child => {
@@ -7870,13 +8099,22 @@
                 
                 // Handle invulnerability
                 if (gameState.invulnerable) {
-                    gameState.invulnerabilityTime -= 16; // ~16ms per frame at 60fps
+                    gameState.invulnerabilityTime -= deltaTime * 0.001; // Convert ms to seconds
                     
-                    // Flash effect
+                    // Flash effect (golden for star, red for damage)
+                    const isStarInvincible = gameState.invulnerabilityTime > 2.5; // Star gives 8s, damage gives 2s
                     const flashRate = Math.sin(Date.now() * 0.02) > 0;
+                    
                     player.children.forEach(child => {
                         if (child.material) {
-                            child.material.opacity = flashRate ? 0.3 : 0.7;
+                            if (isStarInvincible) {
+                                // Golden glow for star invincibility
+                                child.material.emissive = new THREE.Color(0xFFD700);
+                                child.material.emissiveIntensity = flashRate ? 0.5 : 0.2;
+                            } else {
+                                // Red flash for damage invincibility
+                                child.material.opacity = flashRate ? 0.3 : 0.7;
+                            }
                         }
                     });
                     
@@ -7887,6 +8125,8 @@
                             if (child.material) {
                                 child.material.opacity = 1.0;
                                 child.material.transparent = false;
+                                child.material.emissive = new THREE.Color(0x000000);
+                                child.material.emissiveIntensity = 0;
                             }
                         });
                         // Restore original brighter colors
@@ -8063,10 +8303,27 @@
                 };
                 
                 // ENHANCED: Dynamic spawn rate based on speed (guaranteed collectibles!)
-                const baseCoinRate = 0.015; // INCREASED starting rate (5x higher!)
-                const maxCoinRate = 0.035; // INCREASED max rate for guaranteed spawns
+                const baseCoinRate = 0.008; // Reduced to prevent clustering
+                const maxCoinRate = 0.015; // Lower max rate for better spacing
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
+                
+                // Star spawning - very rare (max 2 per game)
+                const starSpawnChance = 0.0005; // Very low chance
+                if (Math.random() < starSpawnChance && gameState.collectedStars < 2) {
+                    const safeLanes = [];
+                    for (let i = 0; i < 3; i++) {
+                        if (isLaneClearForCollectible(i, -30, 25)) {
+                            safeLanes.push(i);
+                        }
+                    }
+                    
+                    if (safeLanes.length > 0) {
+                        const lane = safeLanes[Math.floor(Math.random() * safeLanes.length)];
+                        createStar(lane, -35);
+                        console.log('⭐ Star spawned! Super rare!');
+                    }
+                }
                 
                 if (Math.random() < progressiveCoinRate) {
                     // Progressive kiwi pattern complexity
@@ -8340,6 +8597,34 @@
                     broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
                 });
                 
+                // Update Stars
+                gameState.stars.forEach((star, index) => {
+                    star.mesh.position.z += visualSpeed;
+                    star.z = star.mesh.position.z;
+                    
+                    // Remove if passed player
+                    if (star.z > 10) {
+                        scene.remove(star.mesh);
+                        gameState.stars.splice(index, 1);
+                    }
+                    
+                    // Animate star - spinning and pulsing
+                    star.animationTime += deltaTime * 0.001;
+                    star.mesh.rotation.y += deltaTime * 0.003;
+                    star.mesh.rotation.z += deltaTime * 0.002;
+                    
+                    // Pulsing glow effect
+                    const glow = star.mesh.children.find(child => child.geometry instanceof THREE.SphereGeometry);
+                    if (glow) {
+                        glow.scale.setScalar(1 + Math.sin(star.animationTime * 5) * 0.2);
+                        glow.material.opacity = 0.3 + Math.sin(star.animationTime * 3) * 0.1;
+                    }
+                    
+                    // Floating motion
+                    const baseY = 1.2;
+                    star.mesh.position.y = baseY + Math.sin(star.animationTime * 2) * 0.15;
+                });
+                
                 // Handle Power-Up Time Remaining
                 if (gameState.activePowerUp && gameState.powerUpTimeRemaining > 0) {
                     gameState.powerUpTimeRemaining -= deltaTime;
@@ -8574,7 +8859,7 @@
             
             if (milestoneDisplay) {
                 milestoneDisplay.style.display = 'block';
-                milestoneText.textContent = `${distance}m!`;
+                milestoneText.textContent = `${distance}m`;
                 milestoneBonus.textContent = bonus;
                 
                 // Special icons for major milestones
@@ -8755,15 +9040,28 @@
             } else {
                 // Vertical swipe
                 if (Math.abs(deltaY) > gameState.touchThreshold) {
-                    if (deltaY < 0 && gameState.playerAction === 'running') {
-                        // Swipe up - jump
-                        gameState.playerAction = 'jumping';
-                        gameState.jumpVelocity = 10;
-                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
-                        audioManager.play('jump');
-                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
-                        // Removed automatic jump particles - only success particles when avoiding obstacles
-                        trackPlayerMove('jumping');
+                    if (deltaY < 0) {
+                        // SWIPE UP: Stand up from duck OR jump
+                        if (gameState.playerAction === 'ducking' && gameState.isDuckingToggled) {
+                            // First: Stand up from duck
+                            gameState.playerAction = 'running';
+                            gameState.isDuckingToggled = false;
+                            audioManager.play('stand');
+                            
+                            // Hide duck indicator
+                            const indicator = document.getElementById('duckToggleIndicator');
+                            if (indicator) indicator.style.opacity = '0';
+                            
+                            console.log('📱 MOBILE: Stand up from ducking');
+                        } else if (gameState.playerAction === 'running') {
+                            // Second: Jump if standing
+                            gameState.playerAction = 'jumping';
+                            gameState.jumpVelocity = 10;
+                            gameState.jumpStartTime = Date.now();
+                            audioManager.play('jump');
+                            trackPlayerMove('jumping');
+                            console.log('📱 MOBILE: Jump!');
+                        }
                     } else if (deltaY > 0) {
                         // MOBILE TOGGLE DUCKING: Swipe down toggles duck state
                         if (gameState.playerAction === 'running') {
@@ -9290,10 +9588,10 @@
             // Update status text
             const statusEl = document.getElementById('gestureStatus');
             if (stats.faceDetected) {
-                statusEl.textContent = `Gesten: Aktiv (${stats.fps.toFixed(0)} FPS)`;
+                statusEl.innerHTML = `🎥 ✓ (${stats.fps.toFixed(0)} FPS)`;
                 statusEl.style.color = '#00ff88';
             } else {
-                statusEl.textContent = 'Gesten: Kein Gesicht erkannt';
+                statusEl.innerHTML = '🎥 ✗';
                 statusEl.style.color = '#ff4444';
             }
         }
@@ -9301,12 +9599,12 @@
         // Show gesture error
         function showGestureError(message) {
             const statusEl = document.getElementById('gestureStatus');
-            statusEl.textContent = `Fehler: ${message}`;
+            statusEl.innerHTML = '🎥 ❌';
             statusEl.style.color = '#ff4444';
             
             // Disable gesture controls
             gestureEnabled = false;
-            document.getElementById('gestureToggle').textContent = '🎥 Gesten aktivieren';
+            document.getElementById('gestureToggle').innerHTML = '🎥 ✓';
             document.getElementById('gestureToggle').classList.remove('active');
             document.getElementById('calibrateBtn').disabled = true;
             document.getElementById('gestureCanvas').classList.remove('active');
@@ -9326,21 +9624,21 @@
                 // Disable gesture control
                 gestureEnabled = false;
                 gestureController.stop();
-                toggleBtn.textContent = '🎥 Gesten aktivieren';
+                toggleBtn.innerHTML = '🎥 ✓';
                 toggleBtn.classList.remove('active');
                 calibrateBtn.disabled = true;
                 canvas.classList.remove('active');
-                document.getElementById('gestureStatus').textContent = 'Gesten: Inaktiv';
+                document.getElementById('gestureStatus').innerHTML = '🎥 ✗';
             } else {
                 // Enable gesture control
                 try {
                     await gestureController.start();
                     gestureEnabled = true;
-                    toggleBtn.textContent = '🎥 Gesten deaktivieren';
+                    toggleBtn.innerHTML = '🎥 ✗';
                     toggleBtn.classList.add('active');
                     calibrateBtn.disabled = false;
                     canvas.classList.add('active');
-                    document.getElementById('gestureStatus').textContent = 'Gesten: Wird initialisiert...';
+                    document.getElementById('gestureStatus').innerHTML = '🎥 ⏳';
                 } catch (error) {
                     showGestureError(error.message);
                 }
@@ -9352,7 +9650,7 @@
             if (gestureController && gestureEnabled) {
                 gestureController.calibrate();
                 const statusEl = document.getElementById('gestureStatus');
-                statusEl.textContent = 'Kalibrierung erfolgreich!';
+                statusEl.innerHTML = '🎥 ✅';
                 statusEl.style.color = '#4CAF50';
                 setTimeout(() => {
                     updateGestureStats(gestureController.stats);
