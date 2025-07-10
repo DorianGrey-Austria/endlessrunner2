@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.2.1-HOTFIX<br>
+            🚀 V7.3.0-SMART-DEBUG<br>
             📅 10.07.2025
         </div>
         
@@ -843,10 +843,32 @@
                 this.logs = [];
                 this.maxEntries = 50;
                 this.isVisible = false;
+                this.problemPatterns = this.initializeProblemPatterns();
+                this.performanceAlerts = [];
+                this.memoryBaseline = 0;
+                this.shaderHealthCheck = true;
+                this.assetHealthStatus = new Map();
                 this.setupErrorCapture();
                 this.createErrorDisplay();
+                this.initializeSmartMonitoring();
                 
-                console.log('🚨 [ErrorTracker] Live error tracking system activated!');
+                console.log('🚨 [SmartDebug] Ultra-Intelligent Debug Console 2.0 activated!');
+            }
+            
+            // 🧠 PUNKT 1: Problem Pattern Recognition
+            initializeProblemPatterns() {
+                return {
+                    '3GS_SHADER': /Cannot read properties of undefined.*reading.*value|ShaderMaterial|refreshUniformsCommon/,
+                    'SCORE_EXPLOSION': /score.*\+=|totalScore|scoreMultiplier/,
+                    'MEMORY_LEAK': /dispose|material.*geometry|THREE\.Object3D/,
+                    'SCOPE_ERROR': /is not defined|playerGroup|ReferenceError/,
+                    'LEVEL_CRASH': /level.*load|LevelManager|transition/,
+                    'PERFORMANCE_DROP': /FPS|render|triangles/,
+                    'ASSET_404': /404|Failed to load|sound.*not found/,
+                    'JUMP_PHYSICS': /playerY|jumpVelocity|position\.y/,
+                    'SPEED_BALANCE': /speed.*too|gameSpeed|acceleration/,
+                    'CSP_BLOCK': /Content Security Policy|CSP|unsafe/
+                };
             }
             
             setupErrorCapture() {
@@ -895,6 +917,13 @@
                     id: Date.now() + Math.random()
                 };
                 
+                // 🧠 PUNKT 2: Smart Problem Analysis
+                const problemType = this.analyzeProblemPattern(message);
+                if (problemType) {
+                    entry.problemType = problemType;
+                    this.handleKnownProblem(problemType, message);
+                }
+                
                 this.errors.unshift(entry);
                 if (this.errors.length > this.maxEntries) {
                     this.errors.pop();
@@ -908,18 +937,50 @@
                 }
             }
             
+            // 🧠 PUNKT 2 & 3: Problem Pattern Analysis + Smart Alerts
+            analyzeProblemPattern(message) {
+                for (const [pattern, regex] of Object.entries(this.problemPatterns)) {
+                    if (regex.test(message)) {
+                        return pattern;
+                    }
+                }
+                return null;
+            }
+            
+            handleKnownProblem(problemType, message) {
+                const solutions = {
+                    '3GS_SHADER': () => this.suggest3GSFix(),
+                    'SCORE_EXPLOSION': () => this.suggestScoreFix(),
+                    'MEMORY_LEAK': () => this.suggestMemoryFix(),
+                    'SCOPE_ERROR': () => this.suggestScopeFix(),
+                    'LEVEL_CRASH': () => this.suggestLevelFix(),
+                    'PERFORMANCE_DROP': () => this.suggestPerformanceFix(),
+                    'ASSET_404': () => this.suggestAssetFix(),
+                    'JUMP_PHYSICS': () => this.suggestJumpFix(),
+                    'SPEED_BALANCE': () => this.suggestSpeedFix(),
+                    'CSP_BLOCK': () => this.suggestCSPFix()
+                };
+                
+                const solution = solutions[problemType];
+                if (solution) {
+                    setTimeout(solution, 100); // Show after error is logged
+                }
+            }
+            
             createErrorDisplay() {
                 // Create floating error console
                 const errorConsole = document.createElement('div');
                 errorConsole.id = 'liveErrorConsole';
                 errorConsole.innerHTML = `
                     <div id="errorHeader">
-                        🚨 Live Debug Console 
+                        🧠 Smart Debug Console 2.0
                         <button id="toggleErrors" onclick="window.errorTracker.toggle()">Hide</button>
                         <button id="clearErrors" onclick="window.errorTracker.clear()">Clear</button>
                         <button id="copyErrors" onclick="window.errorTracker.copyErrors()">Copy</button>
                     </div>
+                    <div id="alertsContent"></div>
                     <div id="metricsContent"></div>
+                    <div id="quickFixContent"></div>
                     <div id="errorContent"></div>
                 `;
                 
@@ -954,6 +1015,19 @@
                     align-items: center;
                 `;
                 
+                // Style the alerts area
+                const alertsContent = document.getElementById('alertsContent');
+                alertsContent.style.cssText = `
+                    background: rgba(255, 165, 0, 0.2);
+                    border: 1px solid #ffa500;
+                    margin: 4px;
+                    padding: 6px;
+                    font-size: 10px;
+                    color: #ffa500;
+                    border-radius: 3px;
+                    display: none;
+                `;
+                
                 // Style the metrics area
                 const metricsContent = document.getElementById('metricsContent');
                 metricsContent.style.cssText = `
@@ -964,6 +1038,19 @@
                     font-size: 10px;
                     color: #00ff00;
                     border-radius: 3px;
+                `;
+                
+                // Style the quick fix area
+                const quickFixContent = document.getElementById('quickFixContent');
+                quickFixContent.style.cssText = `
+                    background: rgba(0, 150, 255, 0.2);
+                    border: 1px solid #0096ff;
+                    margin: 4px;
+                    padding: 6px;
+                    font-size: 10px;
+                    color: #0096ff;
+                    border-radius: 3px;
+                    display: none;
                 `;
                 
                 // Style the content area
@@ -1002,6 +1089,101 @@
                 
                 // Start live metrics monitoring
                 this.startMetricsMonitoring();
+            }
+            
+            // 🧠 PUNKT 4: Smart Monitoring Initialization
+            initializeSmartMonitoring() {
+                // Initialize baseline measurements
+                this.memoryBaseline = performance.memory?.usedJSHeapSize || 0;
+                
+                // Start proactive monitoring
+                setInterval(() => this.proactiveHealthCheck(), 1000);
+                setInterval(() => this.memoryLeakDetection(), 5000);
+                setInterval(() => this.performanceProfiler(), 2000);
+                setInterval(() => this.assetHealthMonitor(), 3000);
+                
+                console.log('🧠 [SmartDebug] Proactive monitoring systems activated');
+            }
+            
+            // 🧠 PUNKT 5: Proactive Health Checks
+            proactiveHealthCheck() {
+                // Check for potential 3GS issues
+                if (window.scene) {
+                    let shaderMaterialCount = 0;
+                    window.scene.traverse(child => {
+                        if (child.material && child.material.type === 'ShaderMaterial') {
+                            shaderMaterialCount++;
+                            if (!child.material.fog) {
+                                this.showAlert('SHADER_WARNING', 'ShaderMaterial without fog support detected - potential 3GS risk!');
+                            }
+                        }
+                    });
+                }
+                
+                // Check variable scope issues
+                if (typeof playerGroup !== 'undefined' && window.validatePlayerGroundPosition) {
+                    this.showAlert('SCOPE_WARNING', 'playerGroup variable may cause scope conflicts');
+                }
+                
+                // Check score explosion patterns
+                if (window.gameState?.score > 1000000) {
+                    this.showAlert('SCORE_WARNING', 'Score explosion detected - check score throttling');
+                }
+            }
+            
+            // 🧠 PUNKT 6: Memory Leak Detection
+            memoryLeakDetection() {
+                if (!performance.memory) return;
+                
+                const currentMemory = performance.memory.usedJSHeapSize;
+                const memoryIncrease = currentMemory - this.memoryBaseline;
+                
+                if (memoryIncrease > 50 * 1024 * 1024) { // 50MB increase
+                    this.showAlert('MEMORY_LEAK', `Memory increased by ${this.formatBytes(memoryIncrease)} - potential leak detected`);
+                    this.suggestMemoryFix();
+                }
+            }
+            
+            // 🧠 PUNKT 7: Performance Profiler
+            performanceProfiler() {
+                const fps = this.currentFPS || 60;
+                const threejsInfo = window.renderer?.info;
+                
+                if (fps < 30) {
+                    this.showAlert('PERFORMANCE_CRITICAL', `Critical FPS drop: ${fps} FPS - performance issues detected`);
+                    this.suggestPerformanceFix();
+                }
+                
+                if (threejsInfo?.render.triangles > 100000) {
+                    this.showAlert('TRIANGLES_HIGH', `High triangle count: ${threejsInfo.render.triangles} - optimize geometry`);
+                }
+            }
+            
+            // 🧠 PUNKT 8: Asset Health Monitor
+            assetHealthMonitor() {
+                // Monitor for 404 errors and asset loading failures
+                if (window.audioManager?.loadingErrors?.length > 0) {
+                    this.showAlert('ASSET_ERRORS', `${window.audioManager.loadingErrors.length} audio assets failed to load`);
+                }
+            }
+            
+            // 🧠 PUNKT 9: Smart Alerts System
+            showAlert(type, message) {
+                const alertsDiv = document.getElementById('alertsContent');
+                if (!alertsDiv) return;
+                
+                alertsDiv.style.display = 'block';
+                alertsDiv.innerHTML = `⚠️ ${type}: ${message}<br>` + alertsDiv.innerHTML;
+                
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    if (alertsDiv.innerHTML.includes(message)) {
+                        alertsDiv.innerHTML = alertsDiv.innerHTML.replace(`⚠️ ${type}: ${message}<br>`, '');
+                        if (alertsDiv.innerHTML.trim() === '') {
+                            alertsDiv.style.display = 'none';
+                        }
+                    }
+                }, 10000);
             }
             
             startMetricsMonitoring() {
@@ -1053,6 +1235,148 @@
                 const sizes = ['B', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+            
+            // 🧠 PUNKT 10: Quick-Fix Suggestions (Based on TROUBLESHOOTING.md patterns)
+            suggest3GSFix() {
+                this.showQuickFix('3GS_SHADER', '🔧 3GS Shader Fix', [
+                    'Replace ShaderMaterial with MeshBasicMaterial',
+                    'Add THREE.UniformsLib.fog to shader uniforms',
+                    'Set material.fog = true on all custom shaders',
+                    'Use Material Factory for fog-compatible shaders'
+                ], () => this.auto3GSFix());
+            }
+            
+            suggestScoreFix() {
+                this.showQuickFix('SCORE_EXPLOSION', '🎯 Score Explosion Fix', [
+                    'Centralize score updates through addScore() function',
+                    'Throttle score updates to max 100 points per 100ms',
+                    'Replace all gameState.score += with addScore()',
+                    'Check for unthrottled bonus systems'
+                ], () => this.autoScoreFix());
+            }
+            
+            suggestMemoryFix() {
+                this.showQuickFix('MEMORY_LEAK', '🧹 Memory Leak Fix', [
+                    'Force garbage collection: window.gc?.()',
+                    'Dispose unused materials and geometries',
+                    'Check for undisposed Three.js objects',
+                    'Clear orphaned shader materials'
+                ], () => this.autoMemoryFix());
+            }
+            
+            suggestScopeFix() {
+                this.showQuickFix('SCOPE_ERROR', '🔍 Variable Scope Fix', [
+                    'Use global player variable instead of playerGroup',
+                    'Declare variables in global scope if needed',
+                    'Check for undefined variable references',
+                    'Add null checks before variable access'
+                ], () => this.autoScopeFix());
+            }
+            
+            suggestLevelFix() {
+                this.showQuickFix('LEVEL_CRASH', '🎮 Level Loading Fix', [
+                    'Dispose previous level materials before loading new level',
+                    'Use LevelManagerPro for safe level transitions',
+                    'Check level registration in LevelManagerPro',
+                    'Verify level class extends LevelBase correctly'
+                ], () => this.autoLevelFix());
+            }
+            
+            suggestPerformanceFix() {
+                this.showQuickFix('PERFORMANCE_DROP', '⚡ Performance Fix', [
+                    'Reduce triangle count in complex models',
+                    'Use object pooling for frequently created objects',
+                    'Enable frustum culling for off-screen objects',
+                    'Lower render quality or disable shadows'
+                ], () => this.autoPerformanceFix());
+            }
+            
+            suggestAssetFix() {
+                this.showQuickFix('ASSET_404', '📁 Asset Loading Fix', [
+                    'Check asset paths in sounds/ directory',
+                    'Implement graceful fallback for missing assets',
+                    'Use audioManager.playSpeedDependentSound() safely',
+                    'Add asset existence validation before loading'
+                ], () => this.autoAssetFix());
+            }
+            
+            suggestJumpFix() {
+                this.showQuickFix('JUMP_PHYSICS', '🦘 Jump Physics Fix', [
+                    'Force player.position.y = 0 when grounded',
+                    'Add validatePlayerGroundPosition() validation',
+                    'Reset jumpVelocity to 0 on landing',
+                    'Check for floating point precision errors'
+                ], () => this.autoJumpFix());
+            }
+            
+            suggestSpeedFix() {
+                this.showQuickFix('SPEED_BALANCE', '🏃 Speed Balance Fix', [
+                    'Reduce baseSpeed to 0.05 (currently too fast)',
+                    'Lower maxSpeed to 0.25 (currently too high)',
+                    'Use gentler acceleration curve',
+                    'Add speed scaling based on difficulty'
+                ], () => this.autoSpeedFix());
+            }
+            
+            suggestCSPFix() {
+                this.showQuickFix('CSP_BLOCK', '🔒 CSP Security Fix', [
+                    'Add missing domains to Content-Security-Policy',
+                    'Include https://cdn.jsdelivr.net for MediaPipe',
+                    'Add font-src directive for Google Fonts',
+                    'Use unsafe-inline cautiously for development'
+                ], () => this.autoCSPFix());
+            }
+            
+            showQuickFix(type, title, suggestions, autoFixCallback) {
+                const quickFixDiv = document.getElementById('quickFixContent');
+                if (!quickFixDiv) return;
+                
+                quickFixDiv.style.display = 'block';
+                
+                const suggestionsHTML = suggestions.map(s => `• ${s}`).join('<br>');
+                const autoFixButton = autoFixCallback ? 
+                    `<button onclick="window.errorTracker.${autoFixCallback.name}()" style="background: #0096ff; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-top: 4px;">Auto-Fix</button>` : '';
+                
+                quickFixDiv.innerHTML = `
+                    <strong>${title}:</strong><br>
+                    ${suggestionsHTML}
+                    ${autoFixButton}
+                    <hr style="margin: 8px 0; border: 1px solid #0096ff;">
+                ` + quickFixDiv.innerHTML;
+            }
+            
+            // Auto-Fix Methods (Conservative implementations)
+            auto3GSFix() {
+                console.log('🔧 [Auto-Fix] Applying 3GS prevention measures...');
+                if (window.scene) {
+                    window.scene.traverse(child => {
+                        if (child.material && child.material.type === 'ShaderMaterial' && !child.material.fog) {
+                            console.warn('Found problematic ShaderMaterial, consider replacing with MeshBasicMaterial');
+                        }
+                    });
+                }
+            }
+            
+            autoMemoryFix() {
+                console.log('🧹 [Auto-Fix] Performing memory cleanup...');
+                if (window.gc) window.gc(); // Force garbage collection if available
+                
+                // Conservative memory cleanup
+                if (window.renderer) {
+                    console.log('Renderer info:', window.renderer.info);
+                }
+            }
+            
+            autoJumpFix() {
+                console.log('🦘 [Auto-Fix] Validating jump physics...');
+                if (window.gameState && window.player && window.gameState.playerAction !== 'jumping') {
+                    if (Math.abs(window.gameState.playerY) > 0.01) {
+                        window.gameState.playerY = 0;
+                        window.player.position.y = 0;
+                        console.log('✅ Player position corrected to ground level');
+                    }
+                }
             }
             
             updateDisplay() {
