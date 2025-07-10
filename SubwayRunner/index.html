@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.3.1-MEGA-FIX<br>
+            🚀 V7.4.0-LINE-DRAWING-SYSTEM<br>
             📅 10.07.2025
         </div>
         
@@ -582,6 +582,7 @@
             <button onclick="testLevel(9)" style="margin: 2px; padding: 4px 8px; background: #cc3300; color: white; border: none; border-radius: 3px; cursor: pointer;">L9 Volcano</button><br>
             <button onclick="testLevel(10)" style="margin: 2px; padding: 4px 8px; background: #9900cc; color: white; border: none; border-radius: 3px; cursor: pointer;">L10 Crystal</button><br>
             <hr style="margin: 8px 0; border: 1px solid #00ff00;">
+            <button onclick="importLineDrawing()" style="margin: 2px; padding: 4px 8px; background: #ff6600; color: white; border: none; border-radius: 3px; cursor: pointer;">🎨 Import Strichzeichnung</button><br>
             <button onclick="document.getElementById('levelTestPanel').style.display='none'" style="margin: 2px; padding: 4px 8px; background: #cc0000; color: white; border: none; border-radius: 3px; cursor: pointer;">Close</button>
         </div>
         
@@ -8191,11 +8192,201 @@
             }
         }
         
+        // ==================== LINE DRAWING IMPORT SYSTEM ====================
+        
+        /**
+         * Handle line drawing file import
+         * @param {File} file - The image file to process
+         * @param {Function} callback - Callback function to handle processed image
+         */
+        function handleLineDrawingFile(file, callback) {
+            console.log('🎨 [LineDrawing] Processing file:', file.name);
+            
+            if (!file || !file.type.startsWith('image/')) {
+                console.error('❌ [LineDrawing] Invalid file type:', file.type);
+                if (callback) callback(null, 'Invalid file type');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        console.log('🎨 [LineDrawing] Image loaded:', img.width, 'x', img.height);
+                        
+                        // Create canvas for image processing
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set canvas size
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        // Draw image to canvas
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Process image data for line drawing
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const processedData = processLineDrawing(imageData);
+                        
+                        // Create new image from processed data
+                        ctx.putImageData(processedData, 0, 0);
+                        
+                        // Convert to data URL
+                        const dataURL = canvas.toDataURL('image/png');
+                        
+                        console.log('✅ [LineDrawing] Processing complete');
+                        if (callback) callback(dataURL, null);
+                        
+                    } catch (error) {
+                        console.error('❌ [LineDrawing] Processing error:', error);
+                        if (callback) callback(null, error.message);
+                    }
+                };
+                
+                img.onerror = function() {
+                    console.error('❌ [LineDrawing] Image load error');
+                    if (callback) callback(null, 'Failed to load image');
+                };
+                
+                img.src = e.target.result;
+            };
+            
+            reader.onerror = function() {
+                console.error('❌ [LineDrawing] File read error');
+                if (callback) callback(null, 'Failed to read file');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        /**
+         * Process image data for line drawing (fix black image issue)
+         * @param {ImageData} imageData - Canvas image data
+         * @returns {ImageData} Processed image data
+         */
+        function processLineDrawing(imageData) {
+            console.log('🎨 [LineDrawing] Processing image data...');
+            
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            // Create new image data
+            const processedData = new ImageData(width, height);
+            const processed = processedData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const a = data[i + 3];
+                
+                // Convert to grayscale
+                const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+                
+                // Apply threshold for line drawing (invert if needed)
+                const threshold = 128;
+                const isLine = gray < threshold;
+                
+                // FIX: Proper line drawing colors (black lines on white background)
+                if (isLine) {
+                    // Line pixels - black
+                    processed[i] = 0;     // R
+                    processed[i + 1] = 0; // G
+                    processed[i + 2] = 0; // B
+                    processed[i + 3] = 255; // A
+                } else {
+                    // Background pixels - white/transparent
+                    processed[i] = 255;   // R
+                    processed[i + 1] = 255; // G
+                    processed[i + 2] = 255; // B
+                    processed[i + 3] = 0;   // A (transparent background)
+                }
+            }
+            
+            console.log('✅ [LineDrawing] Image processing complete');
+            return processedData;
+        }
+        
+        /**
+         * Create file input for line drawing import
+         * @returns {HTMLInputElement} File input element
+         */
+        function createLineDrawingInput() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.style.display = 'none';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleLineDrawingFile(file, function(dataURL, error) {
+                        if (error) {
+                            console.error('❌ [LineDrawing] Import failed:', error);
+                            alert('Fehler beim Importieren der Strichzeichnung: ' + error);
+                        } else {
+                            console.log('✅ [LineDrawing] Import successful');
+                            // TODO: Integrate with game (create obstacle, collectible, etc.)
+                            showLineDrawingPreview(dataURL);
+                        }
+                    });
+                }
+            };
+            
+            return input;
+        }
+        
+        /**
+         * Show line drawing preview
+         * @param {string} dataURL - Processed image data URL
+         */
+        function showLineDrawingPreview(dataURL) {
+            // Create preview element
+            const preview = document.createElement('div');
+            preview.style.position = 'fixed';
+            preview.style.top = '50%';
+            preview.style.left = '50%';
+            preview.style.transform = 'translate(-50%, -50%)';
+            preview.style.background = 'white';
+            preview.style.border = '2px solid #333';
+            preview.style.borderRadius = '8px';
+            preview.style.padding = '20px';
+            preview.style.zIndex = '10000';
+            preview.style.maxWidth = '80%';
+            preview.style.maxHeight = '80%';
+            preview.style.overflow = 'auto';
+            
+            preview.innerHTML = `
+                <h3>Strichzeichnung importiert!</h3>
+                <img src="${dataURL}" style="max-width: 100%; max-height: 400px; border: 1px solid #ccc;">
+                <br><br>
+                <button onclick="document.body.removeChild(this.parentElement)">Schließen</button>
+            `;
+            
+            document.body.appendChild(preview);
+        }
+        
+        // Initialize line drawing system
+        const lineDrawingInput = createLineDrawingInput();
+        document.body.appendChild(lineDrawingInput);
+        
+        // Function to trigger line drawing import
+        function importLineDrawing() {
+            lineDrawingInput.click();
+        }
+        
+        // ==================== END LINE DRAWING IMPORT SYSTEM ====================
+
         // Make functions globally available
         window.toggleGestureControl = toggleGestureControl;
         window.calibrateGestures = calibrateGestures;
         window.submitHighscore = submitHighscoreInternal;
         window.skipHighscore = skipHighscoreInternal;
+        window.handleLineDrawingFile = handleLineDrawingFile;
+        window.importLineDrawing = importLineDrawing;
         
         // ==================== END GESTURE CONTROL SYSTEM ====================
     </script>
