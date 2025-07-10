@@ -5012,10 +5012,10 @@
         function createBroccoli(lane, z, pattern = 'single') {
             const broccoliGroup = new THREE.Group();
             
-            // Brokkoli Geometrie - Baum-ähnliche Form
-            const stemRadius = 0.15;
-            const stemHeight = 0.4;
-            const headRadius = 0.4;
+            // Brokkoli Geometrie - Baum-ähnliche Form (größer für bessere Sichtbarkeit)
+            const stemRadius = 0.25;
+            const stemHeight = 0.6;
+            const headRadius = 0.6;
             
             // Stiel (Stamm)
             const stemGeometry = new THREE.CylinderGeometry(stemRadius, stemRadius * 1.2, stemHeight, 8);
@@ -5540,9 +5540,9 @@
             const kiwiGroup = new THREE.Group();
             
             // Simplified elongated kiwi for performance (less detailed than createKiwi)
-            const kiwiRadiusX = 0.2;   // Smaller width
-            const kiwiRadiusY = 0.35;  // Taller height 
-            const kiwiRadiusZ = 0.2;   // Smaller depth
+            const kiwiRadiusX = 0.4;   // Larger width for better visibility
+            const kiwiRadiusY = 0.6;   // Taller height for better visibility
+            const kiwiRadiusZ = 0.4;   // Larger depth for better visibility
             
             // Half ellipsoid for kiwi body
             const kiwiGeometry = new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
@@ -6753,8 +6753,8 @@
                 };
                 
                 // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.003; // Low starting rate
-                const maxCoinRate = 0.012; // Reduced max rate for better spacing
+                const baseCoinRate = 0.02; // Increased starting rate for more collectibles
+                const maxCoinRate = 0.08; // Increased max rate for better visibility
                 const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
                 const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
@@ -6823,7 +6823,7 @@
                     if (pattern === 'single') {
                         // ENHANCED: Find safe lanes for spawning
                         const safeLanes = [];
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05; // Further away at high speeds
+                        const baseSpawnZ = -25 - (gameState.speed - 100) * 0.02; // Closer spawn for better visibility
                         
                         for (let lane = 0; lane < 3; lane++) {
                             if (isLaneClearForCollectible(lane, baseSpawnZ)) {
@@ -6843,7 +6843,7 @@
                         }
                     } else if (pattern === 'line') {
                         // ENHANCED: Smart line spawning with obstacle avoidance
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        const baseSpawnZ = -25 - (gameState.speed - 100) * 0.02;
                         const safeLanes = [];
                         
                         for (let lane = 0; lane < 3; lane++) {
@@ -6899,7 +6899,7 @@
                         }
                     } else if (pattern === 'arc') {
                         // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        const baseSpawnZ = -25 - (gameState.speed - 100) * 0.02;
                         const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
                         
