@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Runner 3D - Enterprise Edition</title>
+    
+    <!-- Performance optimizations -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://unpkg.com/three@0.158.0/build/three.module.js" as="script" type="module">
+    <link rel="preload" href="src/core/GameCore.js" as="script" type="module">
+    <link rel="preload" href="src/core/renderer/PerformanceRenderer.js" as="script" type="module">
+    
+    <!-- Critical CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Loading screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #loadingScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .loading-progress {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .loading-info {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.4;
+        }
+        
+        /* Game container */
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #000;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* UI overlay */
+        #uiOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        #gameUI {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        
+        #performanceStats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        #versionInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #FFD700;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,215,0,0.5);
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Start screen */
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #startScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .game-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .game-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .start-button {
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            transition: all 0.3s ease;
+            margin: 10px;
+            min-width: 200px;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+        
+        .start-button:active {
+            transform: translateY(0);
+        }
+        
+        /* Psychology effects */
+        .psychology-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 10000;
+            pointer-events: none;
+            border: 2px solid;
+            backdrop-filter: blur(10px);
+        }
+        
+        .psychology-notification.flow_state {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        .psychology-notification.comeback_fuel {
+            border-color: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+        }
+        
+        .psychology-notification.peak_focus {
+            border-color: #ffaa00;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 32px;
+            }
+            
+            .game-subtitle {
+                font-size: 16px;
+            }
+            
+            .start-button {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+            
+            #gameUI {
+                font-size: 20px;
+            }
+            
+            #performanceStats {
+                font-size: 10px;
+                padding: 8px;
+            }
+        }
+        
+        /* Error screen */
+        #errorScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 15000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .error-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .error-message {
+            font-size: 18px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+        
+        .error-details {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 30px;
+            max-width: 800px;
+            word-break: break-word;
+        }
+        
+        .retry-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .retry-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Subway Runner 3D</div>
+        <div class="loading-text">Enterprise Edition</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar" id="loadingProgressBar"></div>
+        </div>
+        <div class="loading-info" id="loadingInfo">
+            Initializing enterprise game systems...
+        </div>
+    </div>
+    
+    <!-- Error Screen -->
+    <div id="errorScreen">
+        <div class="error-title">🚨 Game Error</div>
+        <div class="error-message" id="errorMessage">
+            An error occurred while loading the game. Please try again.
+        </div>
+        <div class="error-details" id="errorDetails"></div>
+        <button class="retry-button" onclick="location.reload()">Retry</button>
+    </div>
+    
+    <!-- Start Screen -->
+    <div id="startScreen">
+        <div class="game-title">🚇 Subway Runner 3D</div>
+        <div class="game-subtitle">Enterprise Edition - Optimized for Performance</div>
+        <button class="start-button" onclick="startGame()">🎮 Start Game</button>
+        <button class="start-button" onclick="showSettings()">⚙️ Settings</button>
+        <button class="start-button" onclick="showHighscores()">🏆 Highscores</button>
+    </div>
+    
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Overlay -->
+        <div id="uiOverlay">
+            <div id="gameUI">
+                <div>Score: <span id="score">0</span></div>
+                <div>Level: <span id="level">1</span></div>
+                <div>Lives: <span id="lives">3</span></div>
+            </div>
+            
+            <div id="performanceStats">
+                <div>FPS: <span id="fps">60</span></div>
+                <div>Draw Calls: <span id="drawCalls">0</span></div>
+                <div>Triangles: <span id="triangles">0</span></div>
+                <div>Memory: <span id="memory">0MB</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Version Info -->
+    <div id="versionInfo">
+        🚀 Subway Runner v6.0.0-ENTERPRISE<br>
+        🏗️ Modular Architecture<br>
+        ⚡ Performance Optimized<br>
+        📱 Mobile Ready
+    </div>
+    
+    <!-- Core Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+                "three/": "https://unpkg.com/three@0.158.0/"
+            }
+        }
+    </script>
+    
+    <!-- Main Application -->
+    <script type="module">
+        /**
+         * 🚀 SUBWAY RUNNER 3D - ENTERPRISE EDITION
+         * Modular, high-performance endless runner game
+         * 
+         * @version 6.0.0-ENTERPRISE
+         * @author Claude Code Senior Developer
+         */
+        
+        // Import core systems
+        import { GameCore } from './src/core/GameCore.js';
+        
+        // Global game instance
+        let game = null;
+        let isInitialized = false;
+        
+        // Loading progress tracker
+        const loadingProgress = {
+            current: 0,
+            total: 10,
+            
+            update: function(step, message) {
+                this.current = Math.min(step, this.total);
+                const percentage = (this.current / this.total) * 100;
+                
+                const progressBar = document.getElementById('loadingProgressBar');
+                const loadingInfo = document.getElementById('loadingInfo');
+                
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+                
+                if (loadingInfo) {
+                    loadingInfo.textContent = message || 'Loading...';
+                }
+                
+                console.log(`📊 Loading Progress: ${percentage.toFixed(1)}% - ${message}`);
+            }
+        };
+        
+        /**
+         * 🏗️ INITIALIZE APPLICATION
+         * Main initialization sequence
+         */
+        async function initializeApp() {
+            try {
+                console.log('🚀 [App] Starting Subway Runner 3D Enterprise Edition');
+                
+                // Update loading progress
+                loadingProgress.update(1, 'Creating game core...');
+                
+                // Create game instance
+                game = new GameCore();
+                
+                // Initialize game systems
+                loadingProgress.update(2, 'Initializing renderer...');
+                await game.initialize();
+                
+                // Setup UI
+                loadingProgress.update(8, 'Setting up user interface...');
+                setupUI();
+                
+                // Setup event listeners
+                loadingProgress.update(9, 'Configuring event handlers...');
+                setupEventListeners();
+                
+                // Final setup
+                loadingProgress.update(10, 'Finalizing initialization...');
+                await finalizeSetup();
+                
+                // Mark as initialized
+                isInitialized = true;
+                
+                // Hide loading screen
+                hideLoadingScreen();
+                
+                console.log('✅ [App] Initialization complete');
+                
+            } catch (error) {
+                console.error('❌ [App] Initialization failed:', error);
+                showError('Failed to initialize game', error);
+            }
+        }
+        
+        /**
+         * 🎮 START GAME
+         * Start the game after initialization
+         */
+        async function startGame() {
+            try {
+                if (!isInitialized) {
+                    console.log('⚠️ [App] Game not initialized, initializing now...');
+                    await initializeApp();
+                }
+                
+                // Hide start screen
+                hideStartScreen();
+                
+                // Start game
+                await game.start();
+                
+                // Start performance monitoring
+                startPerformanceMonitoring();
+                
+                console.log('🎮 [App] Game started successfully');
+                
+            } catch (error) {
+                console.error('❌ [App] Failed to start game:', error);
+                showError('Failed to start game', error);
+            }
+        }
+        
+        /**
+         * 🎯 SETUP UI
+         * Configure user interface elements
+         */
+        function setupUI() {
+            // Setup score display
+            const scoreElement = document.getElementById('score');
+            const levelElement = document.getElementById('level');
+            const livesElement = document.getElementById('lives');
+            
+            // Update UI every frame
+            function updateUI() {
+                if (game && game.gameState) {
+                    const state = game.gameState;
+                    
+                    if (scoreElement) scoreElement.textContent = state.score;
+                    if (levelElement) levelElement.textContent = state.currentLevel;
+                    if (livesElement) livesElement.textContent = state.lives;
+                }
+                
+                requestAnimationFrame(updateUI);
+            }
+            
+            updateUI();
+        }
+        
+        /**
+         * 🎮 SETUP EVENT LISTENERS
+         * Configure input and system events
+         */
+        function setupEventListeners() {
+            // Window events
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('beforeunload', onBeforeUnload);
+            
+            // Visibility change
+            document.addEventListener('visibilitychange', onVisibilityChange);
+            
+            // Touch events for mobile
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas) {
+                canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+                canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+                canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+            }
+            
+            // Keyboard events
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            
+            // Error handling
+            window.addEventListener('error', onGlobalError);
+            window.addEventListener('unhandledrejection', onUnhandledRejection);
+        }
+        
+        /**
+         * 📊 START PERFORMANCE MONITORING
+         * Monitor and display performance metrics
+         */
+        function startPerformanceMonitoring() {
+            const fpsElement = document.getElementById('fps');
+            const drawCallsElement = document.getElementById('drawCalls');
+            const trianglesElement = document.getElementById('triangles');
+            const memoryElement = document.getElementById('memory');
+            
+            function updateStats() {
+                if (game && game.getPerformanceStats) {
+                    const stats = game.getPerformanceStats();
+                    
+                    if (fpsElement) fpsElement.textContent = Math.round(stats.fps);
+                    if (drawCallsElement) drawCallsElement.textContent = stats.drawCalls;
+                    if (trianglesElement) trianglesElement.textContent = stats.triangles;
+                    
+                    // Memory usage
+                    if (memoryElement && stats.memoryUsage) {
+                        const memoryMB = (stats.memoryUsage.used / 1024 / 1024).toFixed(1);
+                        memoryElement.textContent = memoryMB + 'MB';
+                    }
+                }
+                
+                requestAnimationFrame(updateStats);
+            }
+            
+            updateStats();
+        }
+        
+        /**
+         * 🎨 FINALIZE SETUP
+         * Final setup steps
+         */
+        async function finalizeSetup() {
+            // Preload audio
+            await preloadAudio();
+            
+            // Preload textures
+            await preloadTextures();
+            
+            // Initialize analytics
+            initializeAnalytics();
+            
+            // Setup service worker
+            setupServiceWorker();
+        }
+        
+        /**
+         * 🔊 PRELOAD AUDIO
+         * Preload audio files
+         */
+        async function preloadAudio() {
+            // Audio files will be loaded by the AudioManager
+            console.log('🔊 [App] Audio preloading delegated to AudioManager');
+        }
+        
+        /**
+         * 🖼️ PRELOAD TEXTURES
+         * Preload texture assets
+         */
+        async function preloadTextures() {
+            // Textures will be loaded by the renderer
+            console.log('🖼️ [App] Texture preloading delegated to PerformanceRenderer');
+        }
+        
+        /**
+         * 📊 INITIALIZE ANALYTICS
+         * Setup game analytics
+         */
+        function initializeAnalytics() {
+            // Analytics will be handled by the psychology system
+            console.log('📊 [App] Analytics delegated to PsychologyEngine');
+        }
+        
+        /**
+         * 🔄 SETUP SERVICE WORKER
+         * Configure service worker for offline support
+         */
+        function setupServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ [App] Service Worker registered');
+                    })
+                    .catch(error => {
+                        console.log('⚠️ [App] Service Worker registration failed:', error);
+                    });
+            }
+        }
+        
+        /**
+         * 🎮 EVENT HANDLERS
+         */
+        function onWindowResize() {
+            if (game && game.renderer) {
+                game.renderer.onWindowResize();
+            }
+        }
+        
+        function onBeforeUnload() {
+            if (game) {
+                game.stop();
+            }
+        }
+        
+        function onVisibilityChange() {
+            if (document.hidden) {
+                if (game) game.isPaused = true;
+            } else {
+                if (game) game.isPaused = false;
+            }
+        }
+        
+        function onTouchStart(event) {
+            event.preventDefault();
+            if (game && game.input) {
+                game.input.handleTouchStart(event);
+            }
+        }
+        
+        function onTouchMove(event) {
+            event.preventDefault();
+            if (game && game.input) {
+                game.input.handleTouchMove(event);
+            }
+        }
+        
+        function onTouchEnd(event) {
+            event.preventDefault();
+            if (game && game.input) {
+                game.input.handleTouchEnd(event);
+            }
+        }
+        
+        function onKeyDown(event) {
+            if (game && game.input) {
+                game.input.handleKeyDown(event);
+            }
+        }
+        
+        function onKeyUp(event) {
+            if (game && game.input) {
+                game.input.handleKeyUp(event);
+            }
+        }
+        
+        function onGlobalError(event) {
+            console.error('❌ [App] Global error:', event);
+            showError('A JavaScript error occurred', event.error);
+        }
+        
+        function onUnhandledRejection(event) {
+            console.error('❌ [App] Unhandled promise rejection:', event);
+            showError('An async error occurred', event.reason);
+        }
+        
+        /**
+         * 🎯 UI CONTROL FUNCTIONS
+         */
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+        }
+        
+        function hideStartScreen() {
+            const startScreen = document.getElementById('startScreen');
+            if (startScreen) {
+                startScreen.classList.add('hidden');
+                setTimeout(() => {
+                    startScreen.style.display = 'none';
+                }, 500);
+            }
+        }
+        
+        function showError(message, error) {
+            const errorScreen = document.getElementById('errorScreen');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorDetails = document.getElementById('errorDetails');
+            
+            if (errorScreen) {
+                errorScreen.style.display = 'flex';
+            }
+            
+            if (errorMessage) {
+                errorMessage.textContent = message;
+            }
+            
+            if (errorDetails && error) {
+                errorDetails.textContent = error.stack || error.message || error.toString();
+            }
+        }
+        
+        function showSettings() {
+            alert('Settings panel will be implemented in the next phase');
+        }
+        
+        function showHighscores() {
+            alert('Highscores panel will be implemented in the next phase');
+        }
+        
+        /**
+         * 🚀 GLOBAL FUNCTIONS
+         * Make functions available globally
+         */
+        window.startGame = startGame;
+        window.showSettings = showSettings;
+        window.showHighscores = showHighscores;
+        
+        /**
+         * 🏁 APPLICATION STARTUP
+         * Start the application when page loads
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🏁 [App] DOM loaded, starting initialization...');
+            
+            // Add a small delay to ensure smooth loading animation
+            setTimeout(() => {
+                initializeApp();
+            }, 100);
+        });
+        
+        console.log('📱 [App] Subway Runner 3D Enterprise Edition script loaded');
+    </script>
+</body>
+</html>

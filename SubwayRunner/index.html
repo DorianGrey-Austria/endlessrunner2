@@ -527,7 +527,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V7.8.0-ULTIMATE-DISTRIBUTION<br>
+            🚀 V8.1.0-PSYCHOLOGY-ENGINE<br>
             📅 10.07.2025
         </div>
         
@@ -2295,6 +2295,25 @@
             console.log('startGame called');
             try {
                 startGameInternal();
+                
+                // 🚀 PSYCHOLOGY SYSTEM INTEGRATION
+                // Start real-time psychology tracking
+                if (window.psychologyGameLoop) {
+                    psychologyGameLoop.start();
+                }
+                
+                // Start real-time metrics session
+                if (window.realtimeMetrics) {
+                    realtimeMetrics.startSession();
+                }
+                
+                // Track daily attempts for scarcity psychology
+                if (window.scarcitySystem) {
+                    scarcitySystem.incrementAttempt();
+                }
+                
+                console.log('🧠 Psychology systems activated for new game');
+                
             } catch (error) {
                 console.error('Error in startGame:', error);
             }
@@ -2645,6 +2664,12 @@
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.2;
             renderer.outputColorSpace = THREE.SRGBColorSpace;
+            
+            // 🌟 ADVANCED VISUAL EFFECTS SYSTEM - HOUR 1 INNOVATION
+            console.log('🎨 [AdvancedVFX] Initializing next-generation visual effects...');
+            
+            // Initialize Advanced Post-Processing Pipeline
+            initializeAdvancedVisualEffects();
 
             // Create player
             createPlayer();
@@ -9166,6 +9191,1646 @@
         }
         
         // ==================== END LINE DRAWING IMPORT SYSTEM ====================
+
+        // 🌟🌟🌟 ADVANCED VISUAL EFFECTS SYSTEM (HOUR 1 INNOVATION) 🌟🌟🌟
+        console.log('🎨 [AdvancedVFX] Loading next-generation visual effects system...');
+
+        /**
+         * ADVANCED VISUAL EFFECTS PIPELINE
+         * Spectacular effects without breaking existing code
+         */
+        let vfxSystem = {
+            initialized: false,
+            effects: {
+                speedLines: null,
+                motionBlur: null,
+                chromaShift: null,
+                dynamicFog: null,
+                particleField: null,
+                energyField: null
+            },
+            config: {
+                performance: 'auto', // auto, high, medium, low
+                enabled: true,
+                intensity: 1.0
+            }
+        };
+
+        function initializeAdvancedVisualEffects() {
+            if (vfxSystem.initialized) return;
+            
+            console.log('🚀 [AdvancedVFX] Initializing revolutionary visual effects...');
+            
+            try {
+                // Initialize speed lines effect
+                initSpeedLinesEffect();
+                
+                // Initialize dynamic particle field
+                initDynamicParticleField();
+                
+                // Initialize energy field effect
+                initEnergyFieldEffect();
+                
+                // Initialize chromatic aberration
+                initChromaticAberration();
+                
+                vfxSystem.initialized = true;
+                console.log('✅ [AdvancedVFX] All effects initialized successfully!');
+                
+            } catch (error) {
+                console.error('❌ [AdvancedVFX] Initialization failed:', error);
+                vfxSystem.config.enabled = false;
+            }
+        }
+
+        /**
+         * SPEED LINES EFFECT - Dynamic velocity visualization
+         */
+        function initSpeedLinesEffect() {
+            const speedLinesGroup = new THREE.Group();
+            
+            for (let i = 0; i < 50; i++) {
+                const lineGeometry = new THREE.BufferGeometry();
+                const positions = new Float32Array([
+                    0, 0, 0,
+                    0, 0, -Math.random() * 5 - 2
+                ]);
+                lineGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const lineMaterial = new THREE.LineBasicMaterial({
+                    color: new THREE.Color().setHSL(0.6, 1, 0.5 + Math.random() * 0.5),
+                    transparent: true,
+                    opacity: 0.3 + Math.random() * 0.4
+                });
+                
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                line.position.set(
+                    (Math.random() - 0.5) * 50,
+                    Math.random() * 20,
+                    -Math.random() * 100
+                );
+                
+                line.userData = {
+                    speed: 1 + Math.random() * 3,
+                    resetZ: -100,
+                    maxZ: 20
+                };
+                
+                speedLinesGroup.add(line);
+            }
+            
+            scene.add(speedLinesGroup);
+            vfxSystem.effects.speedLines = speedLinesGroup;
+            console.log('🌟 [AdvancedVFX] Speed Lines Effect initialized');
+        }
+
+        /**
+         * DYNAMIC PARTICLE FIELD - Immersive environment particles
+         */
+        function initDynamicParticleField() {
+            const particleCount = 200;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                
+                positions[i3] = (Math.random() - 0.5) * 100;
+                positions[i3 + 1] = Math.random() * 30;
+                positions[i3 + 2] = -Math.random() * 200;
+                
+                const hue = Math.random() * 0.3 + 0.5; // Blue to cyan
+                const color = new THREE.Color().setHSL(hue, 0.7, 0.5);
+                colors[i3] = color.r;
+                colors[i3 + 1] = color.g;
+                colors[i3 + 2] = color.b;
+                
+                sizes[i] = Math.random() * 3 + 1;
+            }
+            
+            const particleGeometry = new THREE.BufferGeometry();
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 0.5,
+                transparent: true,
+                opacity: 0.6,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const particleField = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particleField);
+            vfxSystem.effects.particleField = particleField;
+            console.log('✨ [AdvancedVFX] Dynamic Particle Field initialized');
+        }
+
+        /**
+         * ENERGY FIELD EFFECT - Sci-fi energy visualization
+         */
+        function initEnergyFieldEffect() {
+            const energyGroup = new THREE.Group();
+            
+            // Create energy rings
+            for (let i = 0; i < 8; i++) {
+                const ringGeometry = new THREE.RingGeometry(5 + i * 2, 6 + i * 2, 32);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color().setHSL(0.6 + i * 0.05, 1, 0.5),
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.DoubleSide
+                });
+                
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2;
+                ring.position.z = -20 - i * 10;
+                ring.userData = {
+                    rotationSpeed: 0.001 + i * 0.0005,
+                    pulseSpeed: 1 + i * 0.2
+                };
+                
+                energyGroup.add(ring);
+            }
+            
+            scene.add(energyGroup);
+            vfxSystem.effects.energyField = energyGroup;
+            console.log('⚡ [AdvancedVFX] Energy Field Effect initialized');
+        }
+
+        /**
+         * CHROMATIC ABERRATION - Film-like distortion effect
+         */
+        function initChromaticAberration() {
+            // This would typically use post-processing, but we'll create a simpler version
+            // Add a subtle color shift to existing materials when moving at high speed
+            vfxSystem.effects.chromaShift = {
+                enabled: true,
+                intensity: 0.002,
+                update: function(speed) {
+                    const intensity = (speed / 300) * this.intensity;
+                    // Apply subtle color shifting based on speed
+                    if (renderer && intensity > 0.001) {
+                        renderer.toneMappingExposure = 1.2 + intensity * 0.3;
+                    }
+                }
+            };
+            console.log('🌈 [AdvancedVFX] Chromatic Aberration initialized');
+        }
+
+        /**
+         * UPDATE ALL VISUAL EFFECTS - Called every frame
+         */
+        function updateAdvancedVisualEffects(deltaTime, gameState) {
+            if (!vfxSystem.initialized || !vfxSystem.config.enabled) return;
+            
+            const currentTime = Date.now() * 0.001;
+            const speed = gameState ? gameState.speed : 100;
+            const speedMultiplier = speed / 200; // Normalize speed
+            
+            // Update Speed Lines
+            if (vfxSystem.effects.speedLines) {
+                vfxSystem.effects.speedLines.children.forEach(line => {
+                    line.position.z += line.userData.speed * speedMultiplier * 2;
+                    
+                    if (line.position.z > line.userData.maxZ) {
+                        line.position.z = line.userData.resetZ;
+                        line.position.x = (Math.random() - 0.5) * 50;
+                        line.position.y = Math.random() * 20;
+                    }
+                    
+                    // Fade based on distance
+                    const alpha = Math.max(0, 1 - (line.position.z + 100) / 120);
+                    line.material.opacity = alpha * (0.3 + Math.random() * 0.4);
+                });
+            }
+            
+            // Update Particle Field
+            if (vfxSystem.effects.particleField) {
+                const positions = vfxSystem.effects.particleField.geometry.attributes.position.array;
+                
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i + 2] += speedMultiplier * 0.8; // Move particles towards camera
+                    
+                    if (positions[i + 2] > 20) {
+                        positions[i + 2] = -200;
+                        positions[i] = (Math.random() - 0.5) * 100;
+                        positions[i + 1] = Math.random() * 30;
+                    }
+                }
+                
+                vfxSystem.effects.particleField.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            // Update Energy Field
+            if (vfxSystem.effects.energyField) {
+                vfxSystem.effects.energyField.children.forEach(ring => {
+                    ring.rotation.z += ring.userData.rotationSpeed * speedMultiplier;
+                    
+                    const pulse = Math.sin(currentTime * ring.userData.pulseSpeed) * 0.5 + 0.5;
+                    ring.material.opacity = 0.05 + pulse * 0.1 * speedMultiplier;
+                });
+            }
+            
+            // Update Chromatic Aberration
+            if (vfxSystem.effects.chromaShift) {
+                vfxSystem.effects.chromaShift.update(speed);
+            }
+        }
+
+        // Integrate with main game loop
+        const originalAnimate = animate;
+        if (typeof animate === 'function') {
+            animate = function() {
+                originalAnimate();
+                
+                // Update advanced visual effects
+                if (gameState && gameState.isPlaying) {
+                    updateAdvancedVisualEffects(16, gameState); // Assume 60fps
+                }
+            };
+        }
+
+        // Performance monitoring
+        setInterval(() => {
+            if (vfxSystem.initialized && vfxSystem.config.performance === 'auto') {
+                const fps = 1000 / (performance.now() - (window.lastFrameTime || 0));
+                
+                if (fps < 30) {
+                    vfxSystem.config.intensity = Math.max(0.5, vfxSystem.config.intensity - 0.1);
+                    console.log('🔧 [AdvancedVFX] Performance optimization: Reducing intensity to', vfxSystem.config.intensity);
+                } else if (fps > 55) {
+                    vfxSystem.config.intensity = Math.min(1.0, vfxSystem.config.intensity + 0.1);
+                }
+            }
+        }, 2000);
+
+        console.log('🎨 [AdvancedVFX] Visual Effects System loaded and ready!');
+
+        // ==================== END ADVANCED VISUAL EFFECTS SYSTEM ====================
+
+        // 🎲🎲🎲 DYNAMIC LEVEL GENERATION SYSTEM (HOUR 2 INNOVATION) 🎲🎲🎲
+        console.log('🏗️ [DynamicLevelGen] Loading procedural level generation system...');
+
+        /**
+         * DYNAMIC LEVEL GENERATION ENGINE
+         * Creates infinite level variations and custom themes
+         */
+        let dynamicLevelSystem = {
+            initialized: false,
+            generators: {
+                themeGenerator: null,
+                obstaclePatternGenerator: null,
+                environmentGenerator: null,
+                musicGenerator: null
+            },
+            currentTheme: null,
+            generationSeed: Date.now(),
+            config: {
+                enabled: true,
+                complexity: 'progressive', // simple, moderate, complex, progressive
+                variation: 'high' // low, medium, high
+            }
+        };
+
+        /**
+         * INITIALIZE DYNAMIC LEVEL GENERATION
+         */
+        function initializeDynamicLevelGeneration() {
+            if (dynamicLevelSystem.initialized) return;
+            
+            console.log('🚀 [DynamicLevelGen] Initializing procedural generation...');
+            
+            try {
+                // Initialize theme generator
+                initThemeGenerator();
+                
+                // Initialize pattern generators
+                initObstaclePatternGenerator();
+                
+                // Initialize environment generator
+                initEnvironmentGenerator();
+                
+                // Initialize adaptive music system
+                initAdaptiveMusicSystem();
+                
+                dynamicLevelSystem.initialized = true;
+                console.log('✅ [DynamicLevelGen] All generators initialized successfully!');
+                
+            } catch (error) {
+                console.error('❌ [DynamicLevelGen] Initialization failed:', error);
+                dynamicLevelSystem.config.enabled = false;
+            }
+        }
+
+        /**
+         * THEME GENERATOR - Creates unique visual themes
+         */
+        function initThemeGenerator() {
+            const themes = {
+                neonCyberpunk: {
+                    name: 'Neon Cyberpunk',
+                    colors: {
+                        primary: 0xFF0080,
+                        secondary: 0x00FFFF,
+                        accent: 0xFFFF00,
+                        background: 0x0D0D0D
+                    },
+                    lighting: {
+                        ambient: 0.2,
+                        directional: 0.8,
+                        neon: true
+                    },
+                    effects: ['glitch', 'scanlines', 'chromatic']
+                },
+                mysticForest: {
+                    name: 'Mystic Forest',
+                    colors: {
+                        primary: 0x228B22,
+                        secondary: 0x9370DB,
+                        accent: 0xFFD700,
+                        background: 0x2F4F2F
+                    },
+                    lighting: {
+                        ambient: 0.4,
+                        directional: 0.6,
+                        magical: true
+                    },
+                    effects: ['particles', 'glow', 'mist']
+                },
+                cosmicVoid: {
+                    name: 'Cosmic Void',
+                    colors: {
+                        primary: 0x4B0082,
+                        secondary: 0x9400D3,
+                        accent: 0xFFFFFF,
+                        background: 0x000011
+                    },
+                    lighting: {
+                        ambient: 0.1,
+                        directional: 1.0,
+                        cosmic: true
+                    },
+                    effects: ['stars', 'nebula', 'warp']
+                },
+                lavaRealm: {
+                    name: 'Lava Realm',
+                    colors: {
+                        primary: 0xFF4500,
+                        secondary: 0xFF8C00,
+                        accent: 0xFFFF00,
+                        background: 0x8B0000
+                    },
+                    lighting: {
+                        ambient: 0.6,
+                        directional: 1.2,
+                        heat: true
+                    },
+                    effects: ['ember', 'heat', 'distortion']
+                }
+            };
+            
+            dynamicLevelSystem.generators.themeGenerator = {
+                themes: themes,
+                generate: function(seed) {
+                    const themeKeys = Object.keys(themes);
+                    const randomIndex = Math.floor(seededRandom(seed) * themeKeys.length);
+                    return themes[themeKeys[randomIndex]];
+                },
+                blend: function(theme1, theme2, factor) {
+                    // Blend two themes for smooth transitions
+                    return {
+                        name: `${theme1.name} × ${theme2.name}`,
+                        colors: {
+                            primary: blendColors(theme1.colors.primary, theme2.colors.primary, factor),
+                            secondary: blendColors(theme1.colors.secondary, theme2.colors.secondary, factor),
+                            accent: blendColors(theme1.colors.accent, theme2.colors.accent, factor),
+                            background: blendColors(theme1.colors.background, theme2.colors.background, factor)
+                        },
+                        lighting: {
+                            ambient: lerp(theme1.lighting.ambient, theme2.lighting.ambient, factor),
+                            directional: lerp(theme1.lighting.directional, theme2.lighting.directional, factor)
+                        },
+                        effects: [...theme1.effects, ...theme2.effects]
+                    };
+                }
+            };
+            
+            console.log('🎨 [DynamicLevelGen] Theme Generator initialized with', Object.keys(themes).length, 'base themes');
+        }
+
+        /**
+         * OBSTACLE PATTERN GENERATOR - Creates dynamic obstacle sequences
+         */
+        function initObstaclePatternGenerator() {
+            const patterns = {
+                wave: {
+                    name: 'Wave Pattern',
+                    generate: function(length, difficulty) {
+                        const pattern = [];
+                        for (let i = 0; i < length; i++) {
+                            const wavePos = Math.sin(i * 0.5) * 1.5 + 1; // 0-2 range
+                            const lane = Math.floor(wavePos);
+                            pattern.push({
+                                type: difficulty > 0.5 ? 'complex' : 'simple',
+                                lane: Math.min(2, lane),
+                                spacing: 15 + Math.random() * 10
+                            });
+                        }
+                        return pattern;
+                    }
+                },
+                spiral: {
+                    name: 'Spiral Pattern',
+                    generate: function(length, difficulty) {
+                        const pattern = [];
+                        for (let i = 0; i < length; i++) {
+                            const spiralPos = (i * 0.3) % (Math.PI * 2);
+                            const lane = Math.floor((Math.sin(spiralPos) + 1) * 1.5);
+                            pattern.push({
+                                type: 'rotating',
+                                lane: Math.min(2, lane),
+                                spacing: 12 + difficulty * 8
+                            });
+                        }
+                        return pattern;
+                    }
+                },
+                chaos: {
+                    name: 'Chaos Pattern',
+                    generate: function(length, difficulty) {
+                        const pattern = [];
+                        for (let i = 0; i < length; i++) {
+                            pattern.push({
+                                type: Math.random() > 0.7 ? 'surprise' : 'standard',
+                                lane: Math.floor(Math.random() * 3),
+                                spacing: 8 + Math.random() * 15,
+                                variant: Math.random() > 0.5 ? 'moving' : 'static'
+                            });
+                        }
+                        return pattern;
+                    }
+                }
+            };
+            
+            dynamicLevelSystem.generators.obstaclePatternGenerator = {
+                patterns: patterns,
+                generate: function(type, length, difficulty) {
+                    if (patterns[type]) {
+                        return patterns[type].generate(length, difficulty);
+                    }
+                    // Default to random pattern
+                    const patternKeys = Object.keys(patterns);
+                    const randomPattern = patterns[patternKeys[Math.floor(Math.random() * patternKeys.length)]];
+                    return randomPattern.generate(length, difficulty);
+                }
+            };
+            
+            console.log('🌊 [DynamicLevelGen] Obstacle Pattern Generator initialized');
+        }
+
+        /**
+         * ENVIRONMENT GENERATOR - Creates dynamic environments
+         */
+        function initEnvironmentGenerator() {
+            const environmentTypes = {
+                floating: {
+                    name: 'Floating Islands',
+                    generate: function(theme) {
+                        // Generate floating platforms and sky elements
+                        const elements = [];
+                        for (let i = 0; i < 20; i++) {
+                            elements.push({
+                                type: 'floatingPlatform',
+                                position: {
+                                    x: (Math.random() - 0.5) * 100,
+                                    y: 10 + Math.random() * 20,
+                                    z: -i * 30 - Math.random() * 20
+                                },
+                                size: 5 + Math.random() * 10,
+                                color: theme.colors.secondary
+                            });
+                        }
+                        return elements;
+                    }
+                },
+                tunnel: {
+                    name: 'Dynamic Tunnel',
+                    generate: function(theme) {
+                        const elements = [];
+                        for (let i = 0; i < 50; i++) {
+                            const radius = 8 + Math.sin(i * 0.2) * 3;
+                            elements.push({
+                                type: 'tunnelSection',
+                                position: { x: 0, y: 0, z: -i * 10 },
+                                radius: radius,
+                                color: theme.colors.primary,
+                                lighting: theme.lighting.ambient > 0.3
+                            });
+                        }
+                        return elements;
+                    }
+                },
+                garden: {
+                    name: 'Procedural Garden',
+                    generate: function(theme) {
+                        const elements = [];
+                        for (let i = 0; i < 100; i++) {
+                            if (Math.random() > 0.7) {
+                                elements.push({
+                                    type: 'tree',
+                                    position: {
+                                        x: (Math.random() - 0.5) * 80,
+                                        y: 0,
+                                        z: -Math.random() * 500
+                                    },
+                                    height: 3 + Math.random() * 8,
+                                    color: theme.colors.primary
+                                });
+                            }
+                        }
+                        return elements;
+                    }
+                }
+            };
+            
+            dynamicLevelSystem.generators.environmentGenerator = {
+                types: environmentTypes,
+                generate: function(type, theme) {
+                    if (environmentTypes[type]) {
+                        return environmentTypes[type].generate(theme);
+                    }
+                    return [];
+                }
+            };
+            
+            console.log('🏞️ [DynamicLevelGen] Environment Generator initialized');
+        }
+
+        /**
+         * ADAPTIVE MUSIC SYSTEM - Dynamic soundtrack generation
+         */
+        function initAdaptiveMusicSystem() {
+            const musicLayers = {
+                ambient: ['forest', 'space', 'urban', 'mystical'],
+                rhythm: ['driving', 'pulsing', 'flowing', 'chaotic'],
+                melody: ['heroic', 'mysterious', 'energetic', 'dreamy'],
+                effects: ['reverb', 'distortion', 'echo', 'clean']
+            };
+            
+            dynamicLevelSystem.generators.musicGenerator = {
+                layers: musicLayers,
+                generate: function(theme, intensity) {
+                    // This would integrate with Web Audio API for real-time music generation
+                    const composition = {
+                        ambient: musicLayers.ambient[Math.floor(Math.random() * musicLayers.ambient.length)],
+                        rhythm: musicLayers.rhythm[Math.floor(Math.random() * musicLayers.rhythm.length)],
+                        melody: musicLayers.melody[Math.floor(Math.random() * musicLayers.melody.length)],
+                        effects: musicLayers.effects[Math.floor(Math.random() * musicLayers.effects.length)],
+                        bpm: 120 + intensity * 40,
+                        key: theme.name.toLowerCase().includes('mystic') ? 'minor' : 'major'
+                    };
+                    
+                    console.log('🎵 [DynamicLevelGen] Generated music composition:', composition);
+                    return composition;
+                }
+            };
+            
+            console.log('🎵 [DynamicLevelGen] Adaptive Music System initialized');
+        }
+
+        /**
+         * GENERATE COMPLETE DYNAMIC LEVEL
+         */
+        function generateDynamicLevel(seed, difficulty) {
+            if (!dynamicLevelSystem.initialized || !dynamicLevelSystem.config.enabled) {
+                return null;
+            }
+            
+            console.log('🎲 [DynamicLevelGen] Generating dynamic level with seed:', seed);
+            
+            // Generate theme
+            const theme = dynamicLevelSystem.generators.themeGenerator.generate(seed);
+            
+            // Generate obstacle patterns
+            const patterns = dynamicLevelSystem.generators.obstaclePatternGenerator.generate(
+                'chaos', 30, difficulty
+            );
+            
+            // Generate environment
+            const environment = dynamicLevelSystem.generators.environmentGenerator.generate(
+                'floating', theme
+            );
+            
+            // Generate music
+            const music = dynamicLevelSystem.generators.musicGenerator.generate(theme, difficulty);
+            
+            const dynamicLevel = {
+                id: `dynamic_${seed}`,
+                name: `${theme.name} Adventure`,
+                theme: theme,
+                patterns: patterns,
+                environment: environment,
+                music: music,
+                difficulty: difficulty,
+                seed: seed,
+                generated: Date.now()
+            };
+            
+            console.log('✅ [DynamicLevelGen] Dynamic level generated:', dynamicLevel.name);
+            return dynamicLevel;
+        }
+
+        // Utility functions
+        function seededRandom(seed) {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function blendColors(color1, color2, factor) {
+            const c1 = new THREE.Color(color1);
+            const c2 = new THREE.Color(color2);
+            return c1.lerp(c2, factor).getHex();
+        }
+
+        function lerp(a, b, factor) {
+            return a + (b - a) * factor;
+        }
+
+        // Initialize system on load
+        if (typeof scene !== 'undefined') {
+            initializeDynamicLevelGeneration();
+        } else {
+            document.addEventListener('DOMContentLoaded', initializeDynamicLevelGeneration);
+        }
+
+        console.log('🏗️ [DynamicLevelGen] Dynamic Level Generation System loaded!');
+
+        // ==================== END DYNAMIC LEVEL GENERATION SYSTEM ====================
+
+        // 🧠🧠🧠 ULTIMATE HIGHSCORE PSYCHOLOGY SYSTEM (HOUR 1-2 INNOVATION) 🧠🧠🧠
+        console.log('🎯 [HighscorePsyche] Loading addiction-driven highscore system...');
+
+        /**
+         * HIGHSCORE PSYCHOLOGY ENGINE
+         * Creates maximum addiction through psychological triggers
+         */
+        let highscorePsychology = {
+            initialized: false,
+            metrics: {
+                streakBonus: 0,
+                perfectRuns: 0,
+                nearMisses: 0,
+                lastSecondWins: 0,
+                comebackStories: 0
+            },
+            triggers: {
+                microMargins: true,    // 1-3 point differences
+                falseHope: true,       // Almost-wins
+                socialPressure: true,  // Ranking anxiety
+                streakAddiction: true, // Consecutive wins
+                scarcity: true        // Limited attempts
+            },
+            config: {
+                enabled: true,
+                intensityLevel: 'maximum' // low, medium, high, maximum
+            }
+        };
+
+        /**
+         * INITIALIZE PSYCHOLOGICAL HIGHSCORE SYSTEM
+         */
+        function initializeHighscorePsychology() {
+            if (highscorePsychology.initialized) return;
+            
+            console.log('🧠 [HighscorePsyche] Initializing psychological triggers...');
+            
+            try {
+                // Initialize micro-margin system
+                initMicroMarginSystem();
+                
+                // Initialize streak addiction
+                initStreakAddictionSystem();
+                
+                // Initialize social pressure mechanics
+                initSocialPressureSystem();
+                
+                // Initialize comeback mechanics
+                initComebackMechanics();
+                
+                // Initialize scarcity psychology
+                initScarcityPsychology();
+                
+                highscorePsychology.initialized = true;
+                console.log('✅ [HighscorePsyche] All psychological triggers initialized!');
+                
+            } catch (error) {
+                console.error('❌ [HighscorePsyche] Initialization failed:', error);
+                highscorePsychology.config.enabled = false;
+            }
+        }
+
+        /**
+         * MICRO-MARGIN SYSTEM - Creates obsessive competition
+         * "You lost by just 2 points! So close!"
+         */
+        function initMicroMarginSystem() {
+            window.microMarginSystem = {
+                calculateMargin: function(userScore, topScore) {
+                    const margin = topScore - userScore;
+                    
+                    if (margin <= 0) return null; // User won
+                    
+                    if (margin <= 5) {
+                        return {
+                            type: 'MICRO_LOSS',
+                            margin: margin,
+                            message: `💔 So close! Just ${margin} points behind!`,
+                            urgency: 'MAXIMUM',
+                            motivationBoost: '+50% next attempt confidence'
+                        };
+                    } else if (margin <= 20) {
+                        return {
+                            type: 'CLOSE_LOSS',
+                            margin: margin,
+                            message: `🎯 Almost there! ${margin} points to beat!`,
+                            urgency: 'HIGH',
+                            motivationBoost: '+30% next attempt confidence'
+                        };
+                    } else if (margin <= 100) {
+                        return {
+                            type: 'REACHABLE_LOSS',
+                            margin: margin,
+                            message: `🚀 You can do this! ${margin} points gap`,
+                            urgency: 'MEDIUM',
+                            motivationBoost: '+15% next attempt confidence'
+                        };
+                    }
+                    
+                    return null;
+                },
+                
+                generateMotivation: function(marginData) {
+                    const motivationalPhrases = {
+                        MICRO_LOSS: [
+                            'One more kiwi and you would have won!',
+                            'A single perfect jump away from victory!',
+                            'Your next run will be THE ONE!',
+                            'You feel it - victory is SO close!'
+                        ],
+                        CLOSE_LOSS: [
+                            'Perfect your technique just a little more!',
+                            'You\'re in the elite tier now!',
+                            'Every master was once a disaster!',
+                            'The champion title is calling your name!'
+                        ],
+                        REACHABLE_LOSS: [
+                            'Level up your game with one more try!',
+                            'Every attempt makes you stronger!',
+                            'The podium is waiting for you!',
+                            'Today could be your breakthrough day!'
+                        ]
+                    };
+                    
+                    const phrases = motivationalPhrases[marginData.type] || [];
+                    return phrases[Math.floor(Math.random() * phrases.length)];
+                }
+            };
+            
+            console.log('💔 [HighscorePsyche] Micro-Margin System initialized');
+        }
+
+        /**
+         * STREAK ADDICTION SYSTEM - Creates habit formation
+         */
+        function initStreakAddictionSystem() {
+            window.streakSystem = {
+                currentStreak: parseInt(localStorage.getItem('currentStreak') || '0'),
+                bestStreak: parseInt(localStorage.getItem('bestStreak') || '0'),
+                streakType: 'improvement', // improvement, victory, consistency
+                
+                updateStreak: function(scoreImproved) {
+                    if (scoreImproved) {
+                        this.currentStreak++;
+                        if (this.currentStreak > this.bestStreak) {
+                            this.bestStreak = this.currentStreak;
+                            localStorage.setItem('bestStreak', this.bestStreak.toString());
+                        }
+                    } else {
+                        this.currentStreak = 0;
+                    }
+                    
+                    localStorage.setItem('currentStreak', this.currentStreak.toString());
+                    return this.analyzeStreakPsychology();
+                },
+                
+                analyzeStreakPsychology: function() {
+                    if (this.currentStreak === 0) {
+                        return {
+                            type: 'STREAK_BROKEN',
+                            message: '💔 Streak broken! Time to rebuild your empire!',
+                            motivation: 'Your comeback story starts now!',
+                            urgency: 'REBUILD_NOW'
+                        };
+                    } else if (this.currentStreak < 3) {
+                        return {
+                            type: 'BUILDING_MOMENTUM',
+                            message: `🔥 ${this.currentStreak} improvements in a row!`,
+                            motivation: 'You\'re on fire! Keep the momentum!',
+                            urgency: 'DONT_STOP'
+                        };
+                    } else if (this.currentStreak < 10) {
+                        return {
+                            type: 'HOT_STREAK',
+                            message: `🚀 ${this.currentStreak}-game hot streak!`,
+                            motivation: 'You\'re in the zone! This is your moment!',
+                            urgency: 'MAXIMUM_FLOW'
+                        };
+                    } else {
+                        return {
+                            type: 'LEGENDARY_STREAK',
+                            message: `👑 LEGENDARY ${this.currentStreak}-game streak!`,
+                            motivation: 'You\'re unstoppable! Legend status!',
+                            urgency: 'IMMORTAL_MODE'
+                        };
+                    }
+                }
+            };
+            
+            console.log('🔥 [HighscorePsyche] Streak Addiction System initialized');
+        }
+
+        /**
+         * SOCIAL PRESSURE SYSTEM - Creates competitive anxiety
+         */
+        function initSocialPressureSystem() {
+            window.socialPressureSystem = {
+                generateRankingAnxiety: function(userRank, totalPlayers) {
+                    if (userRank <= 3) {
+                        return {
+                            pressure: 'ELITE',
+                            message: `🏆 You're #${userRank}! Everyone's watching you!`,
+                            anxiety: 'Can you handle the pressure of being at the top?',
+                            stakes: 'MAXIMUM'
+                        };
+                    } else if (userRank <= 10) {
+                        return {
+                            pressure: 'TOP_TIER',
+                            message: `⭐ Top 10 player! Just ${3 - userRank + 1} spots from podium!`,
+                            anxiety: 'So close to glory! Don\'t let it slip away!',
+                            stakes: 'HIGH'
+                        };
+                    } else {
+                        const peopleAhead = userRank - 1;
+                        return {
+                            pressure: 'CLIMBING',
+                            message: `📈 Rank #${userRank} - ${peopleAhead} players ahead`,
+                            anxiety: 'Every point counts! Fight your way up!',
+                            stakes: 'MEDIUM'
+                        };
+                    }
+                },
+                
+                generateChallengerThreat: function(userScore) {
+                    // Simulate threatening challengers
+                    const threats = [
+                        { name: 'SpeedRunner_Pro', score: userScore + Math.floor(Math.random() * 10) + 1 },
+                        { name: 'KiwiMaster2024', score: userScore + Math.floor(Math.random() * 25) + 5 },
+                        { name: 'RunnerLegend', score: userScore + Math.floor(Math.random() * 50) + 10 }
+                    ];
+                    
+                    const closestThreat = threats[0];
+                    return {
+                        threat: 'IMMEDIATE',
+                        challenger: closestThreat.name,
+                        gap: closestThreat.score - userScore,
+                        warning: `⚠️ ${closestThreat.name} is only ${closestThreat.score - userScore} points ahead!`,
+                        urgency: 'They could be playing RIGHT NOW!'
+                    };
+                }
+            };
+            
+            console.log('👥 [HighscorePsyche] Social Pressure System initialized');
+        }
+
+        /**
+         * COMEBACK MECHANICS - Creates emotional investment
+         */
+        function initComebackMechanics() {
+            window.comebackSystem = {
+                trackPerformance: function(currentScore, previousBest) {
+                    const improvement = currentScore - previousBest;
+                    
+                    if (improvement > 0) {
+                        return {
+                            type: 'COMEBACK_SUCCESS',
+                            improvement: improvement,
+                            message: `🎉 Personal best destroyed by ${improvement} points!`,
+                            emotion: 'TRIUMPH',
+                            momentum: 'UNSTOPPABLE'
+                        };
+                    } else if (improvement > -50) {
+                        return {
+                            type: 'ALMOST_COMEBACK',
+                            deficit: Math.abs(improvement),
+                            message: `💪 Just ${Math.abs(improvement)} points from your personal best!`,
+                            emotion: 'DETERMINATION',
+                            momentum: 'BUILDING'
+                        };
+                    } else {
+                        return {
+                            type: 'REBUILDING_PHASE',
+                            deficit: Math.abs(improvement),
+                            message: `🔨 Time to rebuild! Down ${Math.abs(improvement)} from your peak`,
+                            emotion: 'CHALLENGE_ACCEPTED',
+                            momentum: 'STARTING'
+                        };
+                    }
+                },
+                
+                generateComebackStory: function(sessionData) {
+                    const story = `📖 Your Journey: Started at ${sessionData.firstScore}, ` +
+                                `peaked at ${sessionData.bestScore}, ` +
+                                `${sessionData.gamesPlayed} games of pure determination!`;
+                    
+                    return {
+                        narrative: story,
+                        character: 'THE_DETERMINED_CHALLENGER',
+                        legacy: 'Every legend has their struggles. This is yours.'
+                    };
+                }
+            };
+            
+            console.log('💪 [HighscorePsyche] Comeback Mechanics initialized');
+        }
+
+        /**
+         * SCARCITY PSYCHOLOGY - Creates urgency
+         */
+        function initScarcityPsychology() {
+            window.scarcitySystem = {
+                dailyAttempts: 0,
+                maxDailyAttempts: 50, // Creates artificial scarcity
+                
+                checkDailyLimit: function() {
+                    const today = new Date().toDateString();
+                    const lastPlayDate = localStorage.getItem('lastPlayDate');
+                    
+                    if (lastPlayDate !== today) {
+                        this.dailyAttempts = 0;
+                        localStorage.setItem('lastPlayDate', today);
+                        localStorage.setItem('dailyAttempts', '0');
+                    } else {
+                        this.dailyAttempts = parseInt(localStorage.getItem('dailyAttempts') || '0');
+                    }
+                    
+                    return this.generateScarcityPressure();
+                },
+                
+                generateScarcityPressure: function() {
+                    const remaining = this.maxDailyAttempts - this.dailyAttempts;
+                    
+                    if (remaining <= 0) {
+                        return {
+                            type: 'DAILY_LIMIT_REACHED',
+                            message: '⏰ Daily limit reached! Come back tomorrow for more!',
+                            emotion: 'ANTICIPATION',
+                            urgency: 'TOMORROW_ADDICTION'
+                        };
+                    } else if (remaining <= 5) {
+                        return {
+                            type: 'RUNNING_OUT',
+                            remaining: remaining,
+                            message: `⚠️ Only ${remaining} attempts left today!`,
+                            emotion: 'URGENT_PRESSURE',
+                            urgency: 'MAKE_EVERY_SHOT_COUNT'
+                        };
+                    } else if (remaining <= 15) {
+                        return {
+                            type: 'LIMITED_TIME',
+                            remaining: remaining,
+                            message: `⏳ ${remaining} attempts remaining today`,
+                            emotion: 'FOCUSED_INTENSITY',
+                            urgency: 'OPTIMIZE_YOUR_RUNS'
+                        };
+                    }
+                    
+                    return null;
+                },
+                
+                incrementAttempt: function() {
+                    this.dailyAttempts++;
+                    localStorage.setItem('dailyAttempts', this.dailyAttempts.toString());
+                }
+            };
+            
+            console.log('⏰ [HighscorePsyche] Scarcity Psychology initialized');
+        }
+
+        /**
+         * MASTER PSYCHOLOGY ANALYZER - Combines all triggers
+         */
+        function analyzePlayerPsychology(gameData) {
+            if (!highscorePsychology.initialized) return null;
+            
+            const analysis = {
+                session: gameData,
+                triggers: {},
+                recommendations: [],
+                addictionLevel: 'BUILDING' // BUILDING, HOOKED, OBSESSED, LEGENDARY
+            };
+            
+            // Analyze micro-margins
+            if (gameData.topScore) {
+                const marginData = microMarginSystem.calculateMargin(gameData.finalScore, gameData.topScore);
+                if (marginData) {
+                    analysis.triggers.microMargin = marginData;
+                    analysis.recommendations.push({
+                        type: 'IMMEDIATE_RETRY',
+                        message: microMarginSystem.generateMotivation(marginData),
+                        priority: 'MAXIMUM'
+                    });
+                }
+            }
+            
+            // Analyze streak psychology
+            const streakData = streakSystem.updateStreak(gameData.scoreImproved);
+            analysis.triggers.streak = streakData;
+            
+            // Analyze social pressure
+            if (gameData.currentRank) {
+                const pressureData = socialPressureSystem.generateRankingAnxiety(
+                    gameData.currentRank, 
+                    gameData.totalPlayers || 100
+                );
+                analysis.triggers.socialPressure = pressureData;
+            }
+            
+            // Analyze comeback potential
+            const comebackData = comebackSystem.trackPerformance(
+                gameData.finalScore, 
+                gameData.previousBest || 0
+            );
+            analysis.triggers.comeback = comebackData;
+            
+            // Check scarcity pressure
+            const scarcityData = scarcitySystem.checkDailyLimit();
+            if (scarcityData) {
+                analysis.triggers.scarcity = scarcityData;
+            }
+            
+            // Calculate overall addiction level
+            analysis.addictionLevel = calculateAddictionLevel(analysis.triggers);
+            
+            console.log('🧠 [HighscorePsyche] Psychology analysis complete:', analysis);
+            return analysis;
+        }
+
+        function calculateAddictionLevel(triggers) {
+            let score = 0;
+            
+            if (triggers.microMargin?.type === 'MICRO_LOSS') score += 4;
+            if (triggers.streak?.type === 'HOT_STREAK') score += 3;
+            if (triggers.socialPressure?.pressure === 'ELITE') score += 3;
+            if (triggers.comeback?.type === 'COMEBACK_SUCCESS') score += 2;
+            if (triggers.scarcity?.type === 'RUNNING_OUT') score += 2;
+            
+            if (score >= 10) return 'LEGENDARY';
+            if (score >= 7) return 'OBSESSED';
+            if (score >= 4) return 'HOOKED';
+            return 'BUILDING';
+        }
+
+        // Initialize psychology system
+        initializeHighscorePsychology();
+
+        console.log('🧠 [HighscorePsyche] Ultimate Highscore Psychology System loaded!');
+
+        // ==================== HOUR 3-4: ADVANCED METRICS & ADDICTION MECHANICS ====================
+        
+        /**
+         * REAL-TIME ADDICTION METRICS SYSTEM
+         * Creates dynamic psychological pressure during gameplay
+         */
+        function initRealTimeMetrics() {
+            window.realtimeMetrics = {
+                // Live performance tracking
+                currentSession: {
+                    attempts: 0,
+                    improvementRate: 0,
+                    frustrationLevel: 0,
+                    focusIntensity: 0,
+                    timeSpent: 0,
+                    peakPerformance: 0,
+                    sessions: [],
+                    scoreHistory: [],
+                    lastUpdate: Date.now()
+                },
+                
+                // Real-time addiction tracking
+                trackGameplayIntensity: function(currentScore, timeElapsed) {
+                    const scoreRate = currentScore / Math.max(timeElapsed, 1);
+                    const expectedRate = this.currentSession.peakPerformance * 0.8;
+                    
+                    // Update peak performance
+                    if (scoreRate > this.currentSession.peakPerformance) {
+                        this.currentSession.peakPerformance = scoreRate;
+                    }
+                    
+                    // Calculate intensity based on performance
+                    if (scoreRate > expectedRate) {
+                        this.currentSession.focusIntensity += 0.1;
+                        this.currentSession.frustrationLevel = Math.max(0, this.currentSession.frustrationLevel - 0.05);
+                    } else {
+                        this.currentSession.frustrationLevel += 0.08;
+                        this.currentSession.focusIntensity = Math.max(0, this.currentSession.focusIntensity - 0.03);
+                    }
+                    
+                    // Cap values
+                    this.currentSession.focusIntensity = Math.min(1, this.currentSession.focusIntensity);
+                    this.currentSession.frustrationLevel = Math.min(1, this.currentSession.frustrationLevel);
+                    
+                    // Track score history
+                    this.currentSession.scoreHistory.push(currentScore);
+                    if (this.currentSession.scoreHistory.length > 20) {
+                        this.currentSession.scoreHistory.shift();
+                    }
+                    
+                    return this.generateRealTimeMessage();
+                },
+                
+                // Dynamic messaging system
+                generateRealTimeMessage: function() {
+                    const focus = this.currentSession.focusIntensity;
+                    const frustration = this.currentSession.frustrationLevel;
+                    
+                    if (focus > 0.8 && frustration < 0.3) {
+                        return {
+                            type: 'FLOW_STATE',
+                            message: '🌟 FLOW STATE! You\'re in the zone!',
+                            color: '#00ff00',
+                            urgency: 'RIDE_THE_WAVE',
+                            effect: 'glow',
+                            duration: 2000
+                        };
+                    } else if (focus > 0.6 && frustration < 0.5) {
+                        return {
+                            type: 'PEAK_FOCUS',
+                            message: '🎯 Peak focus! Keep pushing!',
+                            color: '#ffaa00',
+                            urgency: 'MAINTAIN_INTENSITY',
+                            effect: 'pulse',
+                            duration: 1500
+                        };
+                    } else if (frustration > 0.7) {
+                        return {
+                            type: 'COMEBACK_FUEL',
+                            message: '🔥 Turn frustration into power!',
+                            color: '#ff4444',
+                            urgency: 'CHANNEL_ANGER',
+                            effect: 'shake',
+                            duration: 2500
+                        };
+                    } else {
+                        return {
+                            type: 'BUILDING_MOMENTUM',
+                            message: '⚡ Building momentum...',
+                            color: '#4444ff',
+                            urgency: 'FOCUS_DEEPER',
+                            effect: 'fade',
+                            duration: 1000
+                        };
+                    }
+                },
+                
+                // Performance pattern analysis
+                analyzePerformancePattern: function(scoreHistory) {
+                    if (scoreHistory.length < 3) return null;
+                    
+                    const recent = scoreHistory.slice(-3);
+                    const trend = recent[recent.length - 1] - recent[0];
+                    const consistency = this.calculateConsistency(recent);
+                    
+                    if (trend > 0 && consistency > 0.7) {
+                        return {
+                            pattern: 'IMPROVING_CONSISTENTLY',
+                            message: '📈 Consistent improvement!',
+                            prediction: 'Breakthrough incoming!',
+                            confidence: 'HIGH',
+                            action: 'KEEP_CURRENT_STRATEGY'
+                        };
+                    } else if (trend > 0 && consistency < 0.4) {
+                        return {
+                            pattern: 'ERRATIC_IMPROVEMENT',
+                            message: '🎢 Improving but inconsistent!',
+                            prediction: 'Focus on consistency',
+                            confidence: 'MEDIUM',
+                            action: 'STABILIZE_APPROACH'
+                        };
+                    } else if (trend < 0) {
+                        return {
+                            pattern: 'DECLINING_PERFORMANCE',
+                            message: '⚠️ Performance declining!',
+                            prediction: 'Change strategy or rest',
+                            confidence: 'HIGH',
+                            action: 'STRATEGIC_BREAK'
+                        };
+                    }
+                    
+                    return {
+                        pattern: 'STABLE_PERFORMANCE',
+                        message: '🔄 Steady performance',
+                        prediction: 'Ready for next level',
+                        confidence: 'MEDIUM',
+                        action: 'PUSH_HARDER'
+                    };
+                },
+                
+                calculateConsistency: function(scores) {
+                    if (scores.length < 2) return 0;
+                    
+                    const mean = scores.reduce((a, b) => a + b) / scores.length;
+                    const variance = scores.reduce((a, b) => a + Math.pow(b - mean, 2)) / scores.length;
+                    return Math.max(0, 1 - (variance / Math.max(mean * mean, 1)));
+                },
+                
+                // Session tracking
+                startSession: function() {
+                    this.currentSession.attempts = 0;
+                    this.currentSession.sessions.push({
+                        startTime: Date.now(),
+                        scores: [],
+                        peakScore: 0,
+                        improvement: 0
+                    });
+                },
+                
+                recordAttempt: function(score) {
+                    this.currentSession.attempts++;
+                    const currentSessionData = this.currentSession.sessions[this.currentSession.sessions.length - 1];
+                    
+                    if (currentSessionData) {
+                        currentSessionData.scores.push(score);
+                        currentSessionData.peakScore = Math.max(currentSessionData.peakScore, score);
+                        
+                        // Calculate session improvement
+                        if (currentSessionData.scores.length > 1) {
+                            const first = currentSessionData.scores[0];
+                            const latest = currentSessionData.scores[currentSessionData.scores.length - 1];
+                            currentSessionData.improvement = latest - first;
+                        }
+                    }
+                    
+                    // Calculate improvement rate
+                    if (this.currentSession.attempts > 1) {
+                        const sessions = this.currentSession.sessions;
+                        const recentScores = sessions[sessions.length - 1].scores;
+                        if (recentScores.length >= 2) {
+                            this.currentSession.improvementRate = 
+                                (recentScores[recentScores.length - 1] - recentScores[0]) / recentScores.length;
+                        }
+                    }
+                }
+            };
+            
+            console.log('📊 [RealTimeMetrics] Advanced metrics system initialized');
+        }
+
+        /**
+         * DYNAMIC UI RESPONSE SYSTEM
+         * Creates living, breathing UI that responds to psychology
+         */
+        function initDynamicUI() {
+            window.dynamicUI = {
+                // Dynamic colors based on psychological state
+                getThemeColors: function(psychologyState) {
+                    const themes = {
+                        'LEGENDARY': {
+                            primary: '#ff0066',
+                            secondary: '#ffaa00',
+                            accent: '#ffffff',
+                            glow: '#ff0066',
+                            shadow: 'rgba(255, 0, 102, 0.5)',
+                            name: 'LEGENDARY_OBSESSION'
+                        },
+                        'OBSESSED': {
+                            primary: '#ff4444',
+                            secondary: '#ff8800',
+                            accent: '#ffcccc',
+                            glow: '#ff4444',
+                            shadow: 'rgba(255, 68, 68, 0.4)',
+                            name: 'OBSESSED_FOCUS'
+                        },
+                        'HOOKED': {
+                            primary: '#4488ff',
+                            secondary: '#88aaff',
+                            accent: '#ccddff',
+                            glow: '#4488ff',
+                            shadow: 'rgba(68, 136, 255, 0.3)',
+                            name: 'HOOKED_ADDICTION'
+                        },
+                        'BUILDING': {
+                            primary: '#44ff44',
+                            secondary: '#88ff88',
+                            accent: '#ccffcc',
+                            glow: '#44ff44',
+                            shadow: 'rgba(68, 255, 68, 0.2)',
+                            name: 'BUILDING_MOMENTUM'
+                        }
+                    };
+                    
+                    return themes[psychologyState] || themes['BUILDING'];
+                },
+                
+                // Apply dynamic styling to elements
+                applyPsychologyTheme: function(element, psychologyState) {
+                    if (!element) return;
+                    
+                    const theme = this.getThemeColors(psychologyState);
+                    
+                    // Apply theme colors
+                    element.style.borderColor = theme.primary;
+                    element.style.color = theme.accent;
+                    element.style.backgroundColor = theme.secondary + '20';
+                    element.style.boxShadow = `0 0 20px ${theme.shadow}`;
+                    
+                    // Apply intensity-based effects
+                    switch(psychologyState) {
+                        case 'LEGENDARY':
+                            element.style.animation = 'legendary-pulse 0.5s infinite alternate';
+                            break;
+                        case 'OBSESSED':
+                            element.style.animation = 'obsessed-glow 1s infinite alternate';
+                            break;
+                        case 'HOOKED':
+                            element.style.animation = 'hooked-fade 2s infinite alternate';
+                            break;
+                        case 'BUILDING':
+                            element.style.animation = 'building-steady 3s infinite linear';
+                            break;
+                    }
+                },
+                
+                // Dynamic score display with psychological pressure
+                createPsychologicalScoreDisplay: function(currentScore, bestScore, psychology) {
+                    const difference = currentScore - bestScore;
+                    const percentage = Math.abs(difference) / Math.max(bestScore, 1) * 100;
+                    
+                    let display = {
+                        score: currentScore,
+                        message: '',
+                        color: '#ffffff',
+                        effect: 'none',
+                        size: '1em',
+                        urgency: 'LOW'
+                    };
+                    
+                    if (difference > 0) {
+                        display.message = `🎉 NEW RECORD! +${difference}`;
+                        display.color = '#00ff00';
+                        display.effect = 'celebration';
+                        display.size = '1.3em';
+                        display.urgency = 'VICTORY';
+                    } else if (Math.abs(difference) <= 3) {
+                        display.message = `💥 ${Math.abs(difference)} AWAY!`;
+                        display.color = '#ff0066';
+                        display.effect = 'micro-margin-pulse';
+                        display.size = '1.2em';
+                        display.urgency = 'CRITICAL';
+                    } else if (Math.abs(difference) <= 10) {
+                        display.message = `🎯 ${Math.abs(difference)} to beat!`;
+                        display.color = '#ff4444';
+                        display.effect = 'close-call-glow';
+                        display.size = '1.1em';
+                        display.urgency = 'HIGH';
+                    } else if (percentage < 20) {
+                        display.message = `📈 ${Math.abs(difference)} behind`;
+                        display.color = '#ffaa00';
+                        display.effect = 'motivational-fade';
+                        display.urgency = 'MEDIUM';
+                    } else {
+                        display.message = `🚀 ${Math.abs(difference)} to go`;
+                        display.color = '#4488ff';
+                        display.effect = 'steady-pulse';
+                        display.urgency = 'LOW';
+                    }
+                    
+                    return display;
+                },
+                
+                // Live motivation messages
+                generateMotivationMessage: function(gameState, psychology) {
+                    const messages = {
+                        'LEGENDARY': [
+                            '👑 LEGENDARY PLAYER ACTIVATED!',
+                            '🔥 Absolutely unstoppable!',
+                            '⚡ Pure gaming excellence!'
+                        ],
+                        'OBSESSED': [
+                            '🚀 You\'re completely hooked!',
+                            '💪 Obsession mode engaged!',
+                            '🎯 Laser focus locked!'
+                        ],
+                        'HOOKED': [
+                            '📈 Serious addiction building!',
+                            '🌟 You\'re getting hooked!',
+                            '💎 Consistency incoming!'
+                        ],
+                        'BUILDING': [
+                            '🌱 Addiction growing!',
+                            '🎮 Finding your flow!',
+                            '🎪 The journey begins!'
+                        ]
+                    };
+                    
+                    const levelMessages = messages[psychology.addictionLevel] || messages['BUILDING'];
+                    const randomMessage = levelMessages[Math.floor(Math.random() * levelMessages.length)];
+                    
+                    return {
+                        text: randomMessage,
+                        duration: 3000,
+                        style: psychology.addictionLevel,
+                        priority: psychology.urgencyLevel
+                    };
+                },
+                
+                // Create dynamic notification system
+                showPsychologyNotification: function(message, type = 'INFO') {
+                    const notification = document.createElement('div');
+                    notification.className = `psychology-notification ${type.toLowerCase()}`;
+                    notification.textContent = message;
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(0, 0, 0, 0.9);
+                        color: white;
+                        padding: 20px;
+                        border-radius: 10px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        z-index: 10000;
+                        animation: psychology-notification-appear 0.5s ease-out;
+                        pointer-events: none;
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.style.animation = 'psychology-notification-disappear 0.5s ease-in';
+                        setTimeout(() => notification.remove(), 500);
+                    }, 2000);
+                }
+            };
+            
+            console.log('🎨 [DynamicUI] Responsive UI system initialized');
+        }
+
+        /**
+         * INTEGRATED PSYCHOLOGY GAME LOOP
+         * Connects psychology system with live gameplay
+         */
+        function initPsychologyGameLoop() {
+            window.psychologyGameLoop = {
+                isActive: false,
+                updateInterval: null,
+                
+                start: function() {
+                    if (this.isActive) return;
+                    
+                    this.isActive = true;
+                    this.updateInterval = setInterval(() => {
+                        this.updatePsychologyState();
+                    }, 1000); // Update every second
+                    
+                    console.log('🎮 [PsychologyGameLoop] Started');
+                },
+                
+                stop: function() {
+                    if (!this.isActive) return;
+                    
+                    this.isActive = false;
+                    if (this.updateInterval) {
+                        clearInterval(this.updateInterval);
+                        this.updateInterval = null;
+                    }
+                    
+                    console.log('🎮 [PsychologyGameLoop] Stopped');
+                },
+                
+                updatePsychologyState: function() {
+                    if (!gameState.isPlaying) return;
+                    
+                    // Track real-time metrics
+                    const metricsMessage = realtimeMetrics.trackGameplayIntensity(
+                        gameState.score,
+                        gameState.timeElapsed || 0
+                    );
+                    
+                    // Show dynamic message if intense enough
+                    if (metricsMessage.type === 'FLOW_STATE' || metricsMessage.type === 'COMEBACK_FUEL') {
+                        dynamicUI.showPsychologyNotification(metricsMessage.message, metricsMessage.type);
+                    }
+                    
+                    // Update UI theme based on current state
+                    const currentPsychology = this.getCurrentPsychologyState();
+                    if (currentPsychology) {
+                        this.applyLivePsychologyEffects(currentPsychology);
+                    }
+                },
+                
+                getCurrentPsychologyState: function() {
+                    const gameData = {
+                        finalScore: gameState.score,
+                        topScore: gameState.bestScore,
+                        scoreImproved: gameState.score > gameState.bestScore,
+                        currentRank: Math.floor(Math.random() * 50) + 1, // Simulate rank
+                        totalPlayers: 1000,
+                        previousBest: gameState.bestScore
+                    };
+                    
+                    return analyzePlayerPsychology(gameData);
+                },
+                
+                applyLivePsychologyEffects: function(psychology) {
+                    // Apply theme to score display
+                    const scoreElement = document.getElementById('score');
+                    if (scoreElement && psychology.addictionLevel) {
+                        dynamicUI.applyPsychologyTheme(scoreElement, psychology.addictionLevel);
+                    }
+                    
+                    // Apply theme to UI elements
+                    const ui = document.getElementById('ui');
+                    if (ui && psychology.addictionLevel) {
+                        const theme = dynamicUI.getThemeColors(psychology.addictionLevel);
+                        ui.style.color = theme.accent;
+                        ui.style.textShadow = `0 0 10px ${theme.glow}`;
+                    }
+                }
+            };
+            
+            console.log('🔄 [PsychologyGameLoop] Integrated psychology loop initialized');
+        }
+
+        // Initialize all advanced systems
+        initRealTimeMetrics();
+        initDynamicUI();
+        initPsychologyGameLoop();
+
+        // Add CSS animations for psychology effects
+        const psychologyCSS = `
+            @keyframes legendary-pulse {
+                0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 102, 0.5); }
+                100% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 0, 102, 0.8); }
+            }
+            
+            @keyframes obsessed-glow {
+                0% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.4); }
+                100% { box-shadow: 0 0 25px rgba(255, 68, 68, 0.7); }
+            }
+            
+            @keyframes hooked-fade {
+                0% { opacity: 0.8; }
+                100% { opacity: 1; }
+            }
+            
+            @keyframes building-steady {
+                0% { transform: translateX(-2px); }
+                25% { transform: translateX(0px); }
+                50% { transform: translateX(2px); }
+                75% { transform: translateX(0px); }
+                100% { transform: translateX(-2px); }
+            }
+            
+            @keyframes micro-margin-pulse {
+                0% { transform: scale(1); color: #ff0066; }
+                50% { transform: scale(1.1); color: #ffffff; }
+                100% { transform: scale(1); color: #ff0066; }
+            }
+            
+            @keyframes psychology-notification-appear {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            }
+            
+            @keyframes psychology-notification-disappear {
+                0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            }
+        `;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = psychologyCSS;
+        document.head.appendChild(styleSheet);
+
+        console.log('🚀 [HOUR 3-4] Advanced Metrics & Addiction Mechanics - COMPLETE!');
+
+        // ==================== END HOUR 3-4: ADVANCED METRICS & ADDICTION MECHANICS ====================
+
+        // ==================== END HIGHSCORE PSYCHOLOGY SYSTEM ====================
 
         // Make functions globally available
         window.toggleGestureControl = toggleGestureControl;
