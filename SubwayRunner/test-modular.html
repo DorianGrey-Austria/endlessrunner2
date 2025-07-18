@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Modular Architecture Test</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00ff00;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background: #1a4d1a;
+            color: #00ff00;
+        }
+        .fail {
+            background: #4d1a1a;
+            color: #ff4444;
+        }
+        .pending {
+            background: #4d4d1a;
+            color: #ffff00;
+        }
+        .info {
+            background: #1a1a4d;
+            color: #4444ff;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #44ff44;
+        }
+        #console {
+            background: #000;
+            color: #00ff00;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Enterprise Architecture Test Suite</h1>
+    <p>Testing the modular Subway Runner 3D architecture...</p>
+    
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="testResults"></div>
+        <button onclick="runAllTests()">🚀 Run All Tests</button>
+        <button onclick="clearResults()">🧹 Clear Results</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Console Output</h2>
+        <div id="console"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔗 Links</h2>
+        <p>
+            <a href="index-modular.html" target="_blank" style="color: #00ff00;">🚀 Test Modular Version</a> |
+            <a href="index.html" target="_blank" style="color: #00ff00;">📁 Original Version</a>
+        </p>
+    </div>
+    
+    <script>
+        const testResults = document.getElementById('testResults');
+        const consoleOutput = document.getElementById('console');
+        
+        let testCount = 0;
+        let passCount = 0;
+        let failCount = 0;
+        
+        function log(message) {
+            consoleOutput.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        function addTestResult(name, status, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            div.innerHTML = `
+                <strong>${status.toUpperCase()}</strong>: ${name}<br>
+                <small>${message}</small>
+            `;
+            testResults.appendChild(div);
+            
+            testCount++;
+            if (status === 'pass') passCount++;
+            if (status === 'fail') failCount++;
+            
+            log(`[${status.toUpperCase()}] ${name}: ${message}`);
+        }
+        
+        function clearResults() {
+            testResults.innerHTML = '';
+            consoleOutput.textContent = '';
+            testCount = 0;
+            passCount = 0;
+            failCount = 0;
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            log('🧪 Starting Enterprise Architecture Test Suite...');
+            
+            // Test 1: Check if modular HTML exists
+            try {
+                const response = await fetch('index-modular.html');
+                if (response.ok) {
+                    addTestResult('Modular HTML File', 'pass', 'index-modular.html exists and is accessible');
+                } else {
+                    addTestResult('Modular HTML File', 'fail', `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                addTestResult('Modular HTML File', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 2: Check if core modules exist
+            const modules = [
+                'src/core/GameCore.js',
+                'src/core/renderer/PerformanceRenderer.js',
+                'src/core/physics/LightweightPhysics.js'
+            ];
+            
+            for (const module of modules) {
+                try {
+                    const response = await fetch(module);
+                    if (response.ok) {
+                        addTestResult(`Module: ${module}`, 'pass', 'Module file exists and is accessible');
+                    } else {
+                        addTestResult(`Module: ${module}`, 'fail', `HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    addTestResult(`Module: ${module}`, 'fail', `Error: ${error.message}`);
+                }
+            }
+            
+            // Test 3: Test Three.js import
+            try {
+                const response = await fetch('https://unpkg.com/three@0.158.0/build/three.module.js');
+                if (response.ok) {
+                    addTestResult('Three.js CDN', 'pass', 'Three.js module is accessible from CDN');
+                } else {
+                    addTestResult('Three.js CDN', 'fail', `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                addTestResult('Three.js CDN', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 4: Test ES6 module support
+            try {
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.textContent = `
+                    console.log('ES6 modules supported');
+                    window.es6ModuleTest = true;
+                `;
+                document.head.appendChild(script);
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                if (window.es6ModuleTest) {
+                    addTestResult('ES6 Module Support', 'pass', 'Browser supports ES6 modules');
+                } else {
+                    addTestResult('ES6 Module Support', 'fail', 'ES6 modules not working');
+                }
+            } catch (error) {
+                addTestResult('ES6 Module Support', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 5: Test WebGL support
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                if (gl) {
+                    addTestResult('WebGL Support', 'pass', 'WebGL is supported and working');
+                } else {
+                    addTestResult('WebGL Support', 'fail', 'WebGL is not supported');
+                }
+            } catch (error) {
+                addTestResult('WebGL Support', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 6: Test performance.memory
+            try {
+                if (performance.memory) {
+                    const memoryMB = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                    addTestResult('Memory Monitoring', 'pass', `Memory usage: ${memoryMB}MB`);
+                } else {
+                    addTestResult('Memory Monitoring', 'fail', 'performance.memory not available');
+                }
+            } catch (error) {
+                addTestResult('Memory Monitoring', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 7: Test device capabilities
+            try {
+                const userAgent = navigator.userAgent;
+                const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+                const isTablet = /iPad|Android(?=.*Mobile)/i.test(userAgent);
+                
+                let deviceType = 'Desktop';
+                if (isMobile && !isTablet) deviceType = 'Mobile';
+                if (isTablet) deviceType = 'Tablet';
+                
+                addTestResult('Device Detection', 'pass', `Device: ${deviceType}`);
+            } catch (error) {
+                addTestResult('Device Detection', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 8: Test viewport responsiveness
+            try {
+                const viewport = {
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    ratio: window.devicePixelRatio
+                };
+                
+                addTestResult('Viewport Info', 'pass', `${viewport.width}x${viewport.height} @ ${viewport.ratio}x`);
+            } catch (error) {
+                addTestResult('Viewport Info', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 9: Test local storage
+            try {
+                localStorage.setItem('architectureTest', 'success');
+                const result = localStorage.getItem('architectureTest');
+                if (result === 'success') {
+                    addTestResult('Local Storage', 'pass', 'Local storage is working');
+                    localStorage.removeItem('architectureTest');
+                } else {
+                    addTestResult('Local Storage', 'fail', 'Local storage read/write failed');
+                }
+            } catch (error) {
+                addTestResult('Local Storage', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Test 10: Test async/await support
+            try {
+                const asyncTest = async () => {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                    return 'async/await working';
+                };
+                
+                const result = await asyncTest();
+                addTestResult('Async/Await Support', 'pass', result);
+            } catch (error) {
+                addTestResult('Async/Await Support', 'fail', `Error: ${error.message}`);
+            }
+            
+            // Final summary
+            log(`\n🎯 TEST SUMMARY:`);
+            log(`Total tests: ${testCount}`);
+            log(`Passed: ${passCount}`);
+            log(`Failed: ${failCount}`);
+            log(`Success rate: ${((passCount / testCount) * 100).toFixed(1)}%`);
+            
+            if (failCount === 0) {
+                log(`\n✅ ALL TESTS PASSED! Architecture is ready for deployment.`);
+            } else {
+                log(`\n⚠️ ${failCount} tests failed. Review issues before deployment.`);
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>
