@@ -1824,28 +1824,100 @@ cp SubwayRunner/index.html deploy/
 
 ---
 
-**Last Updated**: 18.07.2025 17:50 CET  
-**Status**: ❌ **ROLLBACK FAILED - ARCHITECTURE MISMATCH**  
-**Next Action**: Find truly monolithic version before level externalization
-**Version**: v7.8.0-ULTIMATE-DISTRIBUTION (BROKEN - needs external files)
-**Confidence**: 0% - Must find earlier truly working version
+## 🚨 **ATTEMPT 10: V3.6.1-ROLLBACK FAILURE** ❌ **SAME ISSUES PERSIST**
+
+### **KRITISCHER FEHLER - 18.07.2025 17:58 CET**:
+**Status**: ❌ **EVEN "STABLE" VERSION FAILS** - Same errors as before!
+
+#### **ERROR MESSAGES (PERSISTENT)**:
+```
+[17:58:29] UNCAUGHT: Uncaught SyntaxError: Unexpected token '(' at https://ki-revolution.at/:1:21
+[17:58:27] UNCAUGHT: Uncaught SyntaxError: Unexpected token '(' at https://ki-revolution.at/:1:21
+[17:53:32] ERROR: Error initializing Three.js: ReferenceError: Cannot access 'vfxSystem' before initialization
+[17:53:32] ERROR: ❌ [LevelSystem] LevelManagerPro not found! Check script loading order
+[17:53:32] ERROR: ❌ Level10_Crystal not found! Loading Level10_Crystal.js...
+[17:53:32] ERROR: ❌ Level9_Volcano not found! Loading Level9_Volcano.js...
+[17:53:32] ERROR: ❌ Level8_Forest not found! Loading Level8_Forest.js...
+[17:53:32] ERROR: ❌ Level7_Desert not found! Loading Level7_Desert.js...
+[17:53:32] ERROR: ❌ Level6_Underwater not found! Loading Level6_Underwater.js...
+[17:53:32] ERROR: ❌ Level5_Ice not found! Loading Level5_Ice.js...
+[17:53:32] ERROR: ❌ Level4_Jungle not found! Loading Level4_Jungle.js...
+[17:53:32] ERROR: ❌ Level3_Space not found! Loading Level3_Space.js...
+[17:53:32] ERROR: ❌ Level2_Cyberpunk not found! Loading Level2_Cyberpunk.js...
+[17:53:32] ERROR: ❌ LevelManagerPro not found! Loading LevelManagerPro.js...
+[17:53:32] ERROR: ❌ LevelBase not found! Loading LevelBase.js...
+```
+
+#### **SCHOCKIERENDE ERKENNTNIS**:
+**V3.6.1 war NIEMALS eine monolithische Version!**
+
+**Beweis**: `index_stable.html` (V3.6.1) zeigt externe Dependencies:
+```html
+<script src="LevelBase.js"></script>
+<script src="LevelManagerPro.js"></script>
+<script src="Level1_Subway.js"></script>
+<script src="Level2_Cyberpunk.js"></script>
+```
+
+**REALITÄT**: **ALLE** "stabilen" Versionen seit V3.6.1 erwarten externe Module!
+
+#### **ROOT CAUSE - DEPLOYMENT ARCHITECTURE MISMATCH**:
+1. **Lokal**: Alle .js Dateien verfügbar
+2. **Produktion**: GitHub Actions kopiert NUR `index.html`
+3. **Resultat**: 404 Fehler für alle externen Scripts
+
+#### **DEPLOYMENT WORKFLOW PROBLEM**:
+```yaml
+# .github/workflows/deploy-enterprise.yml
+# Lines 25-26:
+cp SubwayRunner/index.html index.html
+cp index.html deploy/
+# FEHLT: cp SubwayRunner/*.js deploy/
+```
+
+### **SOLUTION: FINDE WIRKLICH MONOLITHISCHE VERSION**
+
+#### **SEARCH TASK**:
+1. **Git History** nach Version **VOR** der Externalisierung
+2. **Suche** nach komplett embedded System
+3. **Prüfe** auf keine externe Script-Referenzen
+
+#### **ALTERNATIVE SOLUTION**:
+**Fix Deployment Pipeline** um alle .js Dateien zu kopieren:
+```yaml
+# Add to deploy workflow:
+cp SubwayRunner/LevelBase.js deploy/
+cp SubwayRunner/LevelManagerPro.js deploy/
+cp SubwayRunner/Level*.js deploy/
+```
+
+### **LESSONS LEARNED (FINAL)**:
+1. **DEPLOYMENT** Pipeline muss alle Dependencies kopieren
+2. **HYBRID-SYSTEME** sind fragil ohne vollständige Datei-Kopie
+3. **TESTING** muss Produktionsumgebung exakt simulieren
+4. **"STABLE"** bedeutet nichts wenn Dependencies fehlen
+
+---
+
+**Last Updated**: 18.07.2025 18:00 CET  
+**Status**: ❌ **ALL RECENT VERSIONS HYBRID - NEED TRULY MONOLITHIC**  
+**Next Action**: Find version from git history before level externalization
+**Critical Issue**: Deployment pipeline only copies index.html, not external .js files
+**User Request**: "Das ist sehr anstrengend so" - need working version ASAP
 
 ---
 
 ## 🎯 **NÄCHSTE SCHRITTE (User-Requested)**:
 
-### **Sofort zu implementieren**:
-1. **Copy-Button für Live-Konsole** (15 Minuten)
-2. **Jump-Landing 100% Fix** (30 Minuten)
-3. **Geschwindigkeits-Balancing** (45 Minuten)
-4. **v7.2.0-STABLE Deployment** (15 Minuten)
+### **SOFORT (KRITISCH)**:
+1. **Finde letzte wirklich funktionierende Version** (Git History Analyse)
+2. **Organisiere bessere Ordnerstruktur** wie vom User gewünscht
+3. **Deploy funktionierende Version** die tatsächlich startet
 
-### **Mittelfristig (nächste Session)**:
-1. **Level 4-10 Implementation** (3-4 Stunden)
-2. **Sound System Integration** (1-2 Stunden)
-3. **Advanced UI/UX Improvements** (2-3 Stunden)
+### **DANACH**:
+1. **Deployment Pipeline Fix** für hybride Systeme
+2. **Bessere Dokumentation** welche Versionen wirklich funktionieren
+3. **Strukturierte Entwicklung** mit klaren Rollback-Punkten
 
-**Total Implementation Time**: 1.5 Stunden für alle kritischen Fixes
-**Deployment Ready**: v7.2.0-STABLE mit allen User-Requests
-
-🎉 **WIR HABEN ES GESCHAFFT!** 🎉
+**User Frustration Level**: ⚠️ **SEHR HOCH** - "Das ist sehr anstrengend so"
+**Priority**: 🚨 **MAXIMUM** - Spiel muss wieder funktionieren

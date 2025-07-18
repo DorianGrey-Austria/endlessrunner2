@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Runner 3D - Modular Edition</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
+    
+    <!-- External Dependencies -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    
+    <!-- Module Loader (Must be loaded first) -->
+    <script src="./src/core/ModuleLoader.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            max-width: 133.33vh;
+            max-height: 75vw;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-progress {
+            width: 300px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .loading-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+        
+        #versionInfo {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: #FFD700;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 999;
+            background: rgba(0,0,0,0.8);
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,215,0,0.5);
+            font-family: monospace;
+            line-height: 1.2;
+        }
+        
+        .start-button {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        
+        .start-button:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .module-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 999;
+            max-width: 300px;
+        }
+        
+        .error-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+            z-index: 1001;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div id="loadingText">Lade Spiel-Module...</div>
+        <div class="loading-progress">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+    </div>
+    
+    <div id="gameContainer">
+        <!-- Game canvas will be inserted here by GameEngine -->
+    </div>
+    
+    <div id="ui">
+        <div id="score">Score: 0</div>
+        <div id="level">Level: 1</div>
+        <div id="lives">Lives: 3</div>
+        <div id="collectibles">Kiwis: 0/10 | Broccoli: 0/10</div>
+    </div>
+    
+    <div id="versionInfo">
+        🚀 Subway Runner v1.0.0-MODULAR<br>
+        📅 Deployed: <span id="deployDate"></span><br>
+        🔧 Architecture: Modular ES6<br>
+        📊 Modules: <span id="moduleCount">0</span> loaded
+    </div>
+    
+    <button class="start-button" id="startButton" style="display: none;">
+        🎮 Spiel Starten
+    </button>
+    
+    <div class="module-info" id="moduleInfo">
+        <strong>Geladene Module:</strong><br>
+        <span id="moduleList">Lade...</span>
+    </div>
+    
+    <div class="error-display" id="errorDisplay">
+        <h3>❌ Ladefehler</h3>
+        <p id="errorMessage"></p>
+        <button onclick="location.reload()">🔄 Neu laden</button>
+    </div>
+
+    <script>
+        // Global game objects
+        let gameEngine = null;
+        let physicsSystem = null;
+        let audioSystem = null;
+        let inputHandler = null;
+        let gameState = null;
+        let currentLevel = null;
+        let player = null;
+        
+        // Loading state
+        let loadingProgress = 0;
+        let totalModules = 6;
+        
+        // Update loading progress
+        function updateLoadingProgress(progress, text) {
+            const loadingBar = document.getElementById('loadingBar');
+            const loadingText = document.getElementById('loadingText');
+            
+            loadingBar.style.width = progress + '%';
+            loadingText.textContent = text;
+            
+            // Update module count
+            const moduleCount = document.getElementById('moduleCount');
+            const moduleList = document.getElementById('moduleList');
+            const status = window.moduleLoader.getStatus();
+            
+            moduleCount.textContent = status.loaded;
+            moduleList.textContent = status.modules.join(', ') || 'Keine';
+        }
+        
+        // Show error
+        function showError(message) {
+            const errorDisplay = document.getElementById('errorDisplay');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.textContent = message;
+            errorDisplay.style.display = 'block';
+            
+            console.error('❌ Game Error:', message);
+        }
+        
+        // Hide loading screen
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.display = 'none';
+            
+            const startButton = document.getElementById('startButton');
+            startButton.style.display = 'block';
+        }
+        
+        // Initialize the game
+        async function initializeGame() {
+            try {
+                updateLoadingProgress(10, 'Lade Core-Module...');
+                
+                // Load essential modules
+                const GameEngineClass = await window.moduleLoader.loadModule('GameEngine');
+                updateLoadingProgress(25, 'GameEngine geladen');
+                
+                const PhysicsSystemClass = await window.moduleLoader.loadModule('PhysicsSystem');
+                updateLoadingProgress(40, 'PhysicsSystem geladen');
+                
+                const AudioSystemClass = await window.moduleLoader.loadModule('AudioSystem');
+                updateLoadingProgress(55, 'AudioSystem geladen');
+                
+                const InputHandlerClass = await window.moduleLoader.loadModule('InputHandler');
+                updateLoadingProgress(70, 'InputHandler geladen');
+                
+                const GameStateClass = await window.moduleLoader.loadModule('GameState');
+                updateLoadingProgress(85, 'GameState geladen');
+                
+                // Initialize core systems
+                gameEngine = new GameEngineClass();
+                physicsSystem = new PhysicsSystemClass();
+                audioSystem = new AudioSystemClass();
+                inputHandler = new InputHandlerClass();
+                gameState = new GameStateClass();
+                
+                updateLoadingProgress(90, 'Initialisiere Systeme...');
+                
+                // Initialize systems
+                await gameEngine.init();
+                physicsSystem.setCallbacks({
+                    onJump: () => {
+                        audioSystem.playJumpSound();
+                        gameEngine.shakeCamera(0.1);
+                    },
+                    onObstacleCollision: () => {
+                        audioSystem.playCollisionSound();
+                        gameState.loseLife();
+                    },
+                    onItemCollection: (item, type) => {
+                        audioSystem.playCollectSound();
+                        gameState.collectItem(type);
+                    }
+                });
+                
+                inputHandler.init();
+                gameState.init();
+                
+                // Setup input handlers
+                inputHandler.onInput('jump', () => physicsSystem.jump());
+                inputHandler.onInput('moveLeft', () => physicsSystem.moveLeft());
+                inputHandler.onInput('moveRight', () => physicsSystem.moveRight());
+                inputHandler.onInput('duckStart', () => physicsSystem.duck());
+                inputHandler.onInput('duckEnd', () => physicsSystem.stopDucking());
+                
+                // Setup game state callbacks
+                gameState.on('onScoreChange', updateUI);
+                gameState.on('onLivesChange', updateUI);
+                gameState.on('onLevelChange', updateUI);
+                gameState.on('onGameOver', handleGameOver);
+                
+                updateLoadingProgress(100, 'Spiel bereit!');
+                
+                // Hide loading screen after short delay
+                setTimeout(() => {
+                    hideLoadingScreen();
+                }, 500);
+                
+                console.log('✅ Game initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Game initialization failed:', error);
+                showError('Spiel konnte nicht geladen werden: ' + error.message);
+            }
+        }
+        
+        // Start the game
+        async function startGame() {
+            try {
+                const startButton = document.getElementById('startButton');
+                startButton.style.display = 'none';
+                
+                // Load Level 1
+                const Level1Class = await window.moduleLoader.loadModule('Level1_Subway');
+                currentLevel = new Level1Class();
+                
+                // Initialize level
+                await currentLevel.init(gameEngine);
+                
+                // Create player
+                createPlayer();
+                
+                // Setup game loop
+                setupGameLoop();
+                
+                // Start systems
+                gameEngine.start();
+                gameState.start();
+                
+                // Start background music
+                audioSystem.playBackgroundMusic();
+                
+                console.log('🎮 Game started');
+                
+            } catch (error) {
+                console.error('❌ Game start failed:', error);
+                showError('Spiel konnte nicht gestartet werden: ' + error.message);
+            }
+        }
+        
+        // Create player
+        function createPlayer() {
+            const playerGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+            const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.set(0, 0.5, 0);
+            player.castShadow = true;
+            
+            gameEngine.addToScene(player);
+        }
+        
+        // Setup game loop
+        function setupGameLoop() {
+            gameEngine.onUpdate((deltaTime) => {
+                // Update physics
+                if (player) {
+                    physicsSystem.update(player, deltaTime);
+                }
+                
+                // Update game state
+                gameState.update(deltaTime);
+                
+                // Update level
+                if (currentLevel) {
+                    currentLevel.update(deltaTime);
+                }
+                
+                // Simple obstacle spawning (placeholder)
+                if (Math.random() < 0.01) {
+                    spawnObstacle();
+                }
+                
+                // Simple collectible spawning (placeholder)
+                if (Math.random() < 0.005) {
+                    spawnCollectible();
+                }
+            });
+        }
+        
+        // Spawn obstacle (placeholder)
+        function spawnObstacle() {
+            if (currentLevel && currentLevel.spawnObstacle) {
+                const lane = Math.floor(Math.random() * 3);
+                const x = physicsSystem.lanePositions[lane];
+                const obstacle = currentLevel.spawnObstacle(x, 0.5, 50);
+                
+                // Move obstacle towards player
+                const moveObstacle = () => {
+                    if (obstacle && obstacle.position.z > -20) {
+                        obstacle.position.z -= gameState.gameSpeed * 2;
+                        
+                        // Check collision
+                        if (player && physicsSystem.checkObstacleCollision(player, obstacle)) {
+                            physicsSystem.handleObstacleCollision(gameEngine);
+                            gameEngine.removeFromScene(obstacle);
+                            return;
+                        }
+                        
+                        requestAnimationFrame(moveObstacle);
+                    } else if (obstacle) {
+                        gameEngine.removeFromScene(obstacle);
+                    }
+                };
+                
+                requestAnimationFrame(moveObstacle);
+            }
+        }
+        
+        // Spawn collectible (placeholder)
+        function spawnCollectible() {
+            if (currentLevel && currentLevel.spawnCollectible) {
+                const lane = Math.floor(Math.random() * 3);
+                const x = physicsSystem.lanePositions[lane];
+                const type = Math.random() < 0.5 ? 'kiwi' : 'broccoli';
+                const collectible = currentLevel.spawnCollectible(x, 0.5, 50, type);
+                
+                // Move collectible towards player
+                const moveCollectible = () => {
+                    if (collectible && collectible.position.z > -20) {
+                        collectible.position.z -= gameState.gameSpeed * 2;
+                        
+                        // Check collection
+                        if (player && physicsSystem.canCollectItem(player, collectible)) {
+                            physicsSystem.handleItemCollection(collectible, type);
+                            gameEngine.removeFromScene(collectible);
+                            return;
+                        }
+                        
+                        requestAnimationFrame(moveCollectible);
+                    } else if (collectible) {
+                        gameEngine.removeFromScene(collectible);
+                    }
+                };
+                
+                requestAnimationFrame(moveCollectible);
+            }
+        }
+        
+        // Update UI
+        function updateUI() {
+            const stats = gameState.getStats();
+            
+            document.getElementById('score').textContent = `Score: ${stats.score}`;
+            document.getElementById('level').textContent = `Level: ${stats.level}`;
+            document.getElementById('lives').textContent = `Lives: ${stats.lives}`;
+            document.getElementById('collectibles').textContent = 
+                `Kiwis: ${stats.kiwisCollected}/10 | Broccoli: ${stats.broccolisCollected}/10`;
+        }
+        
+        // Handle game over
+        function handleGameOver(gameOverData) {
+            console.log('Game Over:', gameOverData);
+            
+            // Show game over screen (placeholder)
+            setTimeout(() => {
+                const restart = confirm(`Game Over!\nScore: ${gameOverData.finalScore}\nMöchten Sie erneut spielen?`);
+                if (restart) {
+                    location.reload();
+                }
+            }, 1000);
+        }
+        
+        // Set deploy date
+        document.getElementById('deployDate').textContent = new Date().toLocaleDateString('de-DE');
+        
+        // Add start button event listener
+        document.getElementById('startButton').addEventListener('click', startGame);
+        
+        // Initialize game on page load
+        window.addEventListener('load', initializeGame);
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (gameEngine) {
+                gameEngine.onWindowResize();
+            }
+        });
+        
+        // Handle errors
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            showError('Ein unerwarteter Fehler ist aufgetreten: ' + event.message);
+        });
+        
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            showError('Ladefehler: ' + event.reason);
+        });
+    </script>
+</body>
+</html>

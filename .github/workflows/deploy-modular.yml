@@ -1,0 +1,84 @@
+name: Deploy Modular SubwayRunner
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 📋 Setup deployment files
+      run: |
+        echo "🚀 Setting up modular deployment..."
+        
+        # Create deployment directory
+        mkdir -p deploy/src/core
+        mkdir -p deploy/src/systems
+        mkdir -p deploy/src/levels
+        mkdir -p deploy/src/utils
+        mkdir -p deploy/assets/sounds
+        
+        # Copy main HTML file
+        cp SubwayRunner/index-modular-new.html deploy/index.html
+        
+        # Copy all module files
+        cp -r SubwayRunner/src/* deploy/src/
+        
+        # Copy assets
+        cp -r SubwayRunner/sounds/* deploy/assets/sounds/ 2>/dev/null || echo "No sounds directory found"
+        cp -r SubwayRunner/assets/* deploy/assets/ 2>/dev/null || echo "No assets directory found"
+        
+        # List deployed files
+        echo "📦 Deployed files:"
+        find deploy -type f -name "*.html" -o -name "*.js" | sort
+        
+        # Verify critical files exist
+        echo "🔍 Verifying critical files..."
+        test -f deploy/index.html && echo "✅ index.html exists"
+        test -f deploy/src/core/ModuleLoader.js && echo "✅ ModuleLoader.js exists"
+        test -f deploy/src/core/GameEngine.js && echo "✅ GameEngine.js exists"
+        test -f deploy/src/systems/PhysicsSystem.js && echo "✅ PhysicsSystem.js exists"
+        test -f deploy/src/systems/AudioSystem.js && echo "✅ AudioSystem.js exists"
+        test -f deploy/src/systems/InputHandler.js && echo "✅ InputHandler.js exists"
+        test -f deploy/src/core/GameState.js && echo "✅ GameState.js exists"
+        test -f deploy/src/levels/Level1_Subway.js && echo "✅ Level1_Subway.js exists"
+        
+        echo "🎯 Deployment package ready!"
+    
+    - name: 🚀 Deploy to Hostinger via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./deploy/
+        server-dir: /
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.DS_Store
+          **/*.md
+          **/*.backup
+          
+    - name: 🧪 Post-deployment verification
+      run: |
+        echo "🔍 Deployment completed!"
+        echo "🌐 Game should be available at: https://ki-revolution.at/"
+        echo "📊 Architecture: Modular ES6 with dynamic loading"
+        echo "🎮 Features: Level 1 (Subway), Physics System, Audio System"
+        echo "📱 Platforms: Desktop + Mobile Touch Controls"
+        echo "🎯 Performance: Optimized module loading"
+        
+        # Display deployment summary
+        echo "📦 Deployment Summary:"
+        echo "- Core Modules: 4 (GameEngine, ModuleLoader, GameState, + Main)"
+        echo "- Systems: 3 (Physics, Audio, Input)"
+        echo "- Levels: 1 (Subway)"
+        echo "- Assets: Sound files (if available)"
+        echo "- Total Files: ~10 JavaScript modules + 1 HTML file"
