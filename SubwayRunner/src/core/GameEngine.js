@@ -321,6 +321,9 @@ class GameEngine {
     }
 }
 
+// Make class available globally
+window.GameEngine = GameEngine;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = GameEngine;

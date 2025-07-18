@@ -585,6 +585,9 @@ class Level1_Subway {
     }
 }
 
+// Make class available globally
+window.Level1_Subway = Level1_Subway;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Level1_Subway;

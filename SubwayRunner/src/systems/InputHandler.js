@@ -339,6 +339,9 @@ class InputHandler {
     }
 }
 
+// Make class available globally
+window.InputHandler = InputHandler;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = InputHandler;

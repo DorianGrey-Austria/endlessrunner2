@@ -460,6 +460,9 @@ class ObjectPool {
     }
 }
 
+// Make class available globally
+window.ObjectPool = ObjectPool;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ObjectPool;

@@ -350,6 +350,9 @@ class DeviceDetector {
     }
 }
 
+// Make class available globally
+window.DeviceDetector = DeviceDetector;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = DeviceDetector;

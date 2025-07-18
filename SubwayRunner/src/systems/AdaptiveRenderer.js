@@ -358,6 +358,9 @@ class AdaptiveRenderer {
     }
 }
 
+// Make class available globally
+window.AdaptiveRenderer = AdaptiveRenderer;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AdaptiveRenderer;

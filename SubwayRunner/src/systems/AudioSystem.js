@@ -365,6 +365,9 @@ class AudioSystem {
     }
 }
 
+// Make class available globally
+window.AudioSystem = AudioSystem;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AudioSystem;

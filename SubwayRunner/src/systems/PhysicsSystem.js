@@ -341,6 +341,9 @@ class PhysicsSystem {
     }
 }
 
+// Make class available globally
+window.PhysicsSystem = PhysicsSystem;
+
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = PhysicsSystem;
