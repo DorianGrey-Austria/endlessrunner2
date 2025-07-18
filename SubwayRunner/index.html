@@ -102,6 +102,20 @@
             z-index: 100;
         }
         
+        #performanceMonitor {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
         #versionInfo {
             position: fixed;
             bottom: 10px;
@@ -191,6 +205,15 @@
         <div id="collectibles">Kiwis: 0/10 | Broccoli: 0/10</div>
     </div>
     
+    <div id="performanceMonitor" style="display: none;">
+        <div><strong>📊 Performance Monitor</strong></div>
+        <div id="fpsDisplay">FPS: --</div>
+        <div id="qualityDisplay">Quality: --</div>
+        <div id="deviceDisplay">Device: --</div>
+        <div id="poolDisplay">Pool: --</div>
+        <div id="memoryDisplay">Memory: --</div>
+    </div>
+    
     <div id="versionInfo">
         🚀 Subway Runner v1.0.0-MODULAR<br>
         📅 Deployed: <span id="deployDate"></span><br>
@@ -223,9 +246,14 @@
         let currentLevel = null;
         let player = null;
         
+        // Performance optimization objects
+        let deviceDetector = null;
+        let adaptiveRenderer = null;
+        let objectPool = null;
+        
         // Loading state
         let loadingProgress = 0;
-        let totalModules = 6;
+        let totalModules = 12;
         
         // Update loading progress
         function updateLoadingProgress(progress, text) {
@@ -267,23 +295,37 @@
         // Initialize the game
         async function initializeGame() {
             try {
-                updateLoadingProgress(10, 'Lade Core-Module...');
+                updateLoadingProgress(5, 'Lade Performance-Module...');
+                
+                // Load performance optimization modules first
+                const DeviceDetectorClass = await window.moduleLoader.loadModule('DeviceDetector');
+                updateLoadingProgress(10, 'DeviceDetector geladen');
+                
+                const AdaptiveRendererClass = await window.moduleLoader.loadModule('AdaptiveRenderer');
+                updateLoadingProgress(15, 'AdaptiveRenderer geladen');
+                
+                const ObjectPoolClass = await window.moduleLoader.loadModule('ObjectPool');
+                updateLoadingProgress(20, 'ObjectPool geladen');
+                
+                // Initialize device detection first
+                deviceDetector = new DeviceDetectorClass();
+                updateLoadingProgress(25, 'Geräte-Erkennung initialisiert');
                 
                 // Load essential modules
                 const GameEngineClass = await window.moduleLoader.loadModule('GameEngine');
-                updateLoadingProgress(25, 'GameEngine geladen');
+                updateLoadingProgress(35, 'GameEngine geladen');
                 
                 const PhysicsSystemClass = await window.moduleLoader.loadModule('PhysicsSystem');
-                updateLoadingProgress(40, 'PhysicsSystem geladen');
+                updateLoadingProgress(50, 'PhysicsSystem geladen');
                 
                 const AudioSystemClass = await window.moduleLoader.loadModule('AudioSystem');
-                updateLoadingProgress(55, 'AudioSystem geladen');
+                updateLoadingProgress(65, 'AudioSystem geladen');
                 
                 const InputHandlerClass = await window.moduleLoader.loadModule('InputHandler');
-                updateLoadingProgress(70, 'InputHandler geladen');
+                updateLoadingProgress(75, 'InputHandler geladen');
                 
                 const GameStateClass = await window.moduleLoader.loadModule('GameState');
-                updateLoadingProgress(85, 'GameState geladen');
+                updateLoadingProgress(80, 'GameState geladen');
                 
                 // Initialize core systems
                 gameEngine = new GameEngineClass();
@@ -292,10 +334,20 @@
                 inputHandler = new InputHandlerClass();
                 gameState = new GameStateClass();
                 
-                updateLoadingProgress(90, 'Initialisiere Systeme...');
+                updateLoadingProgress(85, 'Initialisiere Performance-Systeme...');
+                
+                // Initialize performance systems
+                objectPool = new ObjectPoolClass();
+                objectPool.init();
                 
                 // Initialize systems
                 await gameEngine.init();
+                
+                // Initialize adaptive renderer after game engine
+                adaptiveRenderer = new AdaptiveRendererClass(gameEngine, deviceDetector);
+                adaptiveRenderer.init();
+                
+                updateLoadingProgress(92, 'Performance-Optimierung aktiviert...');
                 physicsSystem.setCallbacks({
                     onJump: () => {
                         audioSystem.playJumpSound();
@@ -329,12 +381,28 @@
                 
                 updateLoadingProgress(100, 'Spiel bereit!');
                 
+                // Log device information
+                console.log('📱 Device Info:', deviceDetector.getDeviceInfo());
+                console.log('🎮 Performance Settings:', adaptiveRenderer.getPerformanceStats());
+                console.log('🔄 Object Pool Statistics:', objectPool.getStatistics());
+                
+                // Update version info with quality level
+                const versionInfo = document.getElementById('versionInfo');
+                versionInfo.innerHTML = `
+                    🚀 Subway Runner v1.0.0-MODULAR<br>
+                    📅 Deployed: <span id="deployDate">${new Date().toLocaleDateString('de-DE')}</span><br>
+                    🔧 Architecture: Modular ES6<br>
+                    📊 Modules: <span id="moduleCount">${window.moduleLoader.getStatus().loaded}</span> loaded<br>
+                    🎯 Quality: ${deviceDetector.qualityLevel.toUpperCase()}<br>
+                    📱 Device: ${deviceDetector.deviceInfo.type.toUpperCase()}
+                `;
+                
                 // Hide loading screen after short delay
                 setTimeout(() => {
                     hideLoadingScreen();
                 }, 500);
                 
-                console.log('✅ Game initialized successfully');
+                console.log('✅ Game initialized successfully with mobile optimization');
                 
             } catch (error) {
                 console.error('❌ Game initialization failed:', error);
@@ -368,7 +436,13 @@
                 // Start background music
                 audioSystem.playBackgroundMusic();
                 
-                console.log('🎮 Game started');
+                // Show performance monitor on mobile devices
+                if (deviceDetector.isMobile || deviceDetector.isTablet) {
+                    document.getElementById('performanceMonitor').style.display = 'block';
+                }
+                
+                console.log('🎮 Game started with performance optimization');
+                console.log('💡 Press P to toggle performance monitor');
                 
             } catch (error) {
                 console.error('❌ Game start failed:', error);
@@ -389,6 +463,8 @@
         
         // Setup game loop
         function setupGameLoop() {
+            let lastPerformanceUpdate = 0;
+            
             gameEngine.onUpdate((deltaTime) => {
                 // Update physics
                 if (player) {
@@ -403,6 +479,23 @@
                     currentLevel.update(deltaTime);
                 }
                 
+                // Update object pool
+                if (objectPool) {
+                    objectPool.update(deltaTime);
+                }
+                
+                // Update performance monitoring
+                if (adaptiveRenderer) {
+                    adaptiveRenderer.updatePerformanceMetrics();
+                }
+                
+                // Update performance display every second
+                const currentTime = performance.now();
+                if (currentTime - lastPerformanceUpdate > 1000) {
+                    updatePerformanceDisplay();
+                    lastPerformanceUpdate = currentTime;
+                }
+                
                 // Simple obstacle spawning (placeholder)
                 if (Math.random() < 0.01) {
                     spawnObstacle();
@@ -415,28 +508,46 @@
             });
         }
         
-        // Spawn obstacle (placeholder)
+        // Spawn obstacle (using object pool)
         function spawnObstacle() {
-            if (currentLevel && currentLevel.spawnObstacle) {
-                const lane = Math.floor(Math.random() * 3);
-                const x = physicsSystem.lanePositions[lane];
-                const obstacle = currentLevel.spawnObstacle(x, 0.5, 50);
+            if (!objectPool) return;
+            
+            const lane = Math.floor(Math.random() * 3);
+            const x = physicsSystem.lanePositions[lane];
+            
+            // Get obstacle from pool
+            const obstacle = objectPool.get('obstacle', (obj) => {
+                obj.position.set(x, 0.5, 50);
+                obj.visible = true;
+                obj.userData.lane = lane;
+                obj.userData.active = true;
+            });
+            
+            if (obstacle) {
+                gameEngine.addToScene(obstacle);
                 
                 // Move obstacle towards player
                 const moveObstacle = () => {
-                    if (obstacle && obstacle.position.z > -20) {
+                    if (obstacle && obstacle.userData.active && obstacle.position.z > -20) {
                         obstacle.position.z -= gameState.gameSpeed * 2;
                         
                         // Check collision
                         if (player && physicsSystem.checkObstacleCollision(player, obstacle)) {
                             physicsSystem.handleObstacleCollision(gameEngine);
+                            
+                            // Return obstacle to pool
+                            obstacle.userData.active = false;
                             gameEngine.removeFromScene(obstacle);
+                            objectPool.return(obstacle);
                             return;
                         }
                         
                         requestAnimationFrame(moveObstacle);
                     } else if (obstacle) {
+                        // Return obstacle to pool when it's out of bounds
+                        obstacle.userData.active = false;
                         gameEngine.removeFromScene(obstacle);
+                        objectPool.return(obstacle);
                     }
                 };
                 
@@ -444,29 +555,61 @@
             }
         }
         
-        // Spawn collectible (placeholder)
+        // Spawn collectible (using object pool)
         function spawnCollectible() {
-            if (currentLevel && currentLevel.spawnCollectible) {
-                const lane = Math.floor(Math.random() * 3);
-                const x = physicsSystem.lanePositions[lane];
-                const type = Math.random() < 0.5 ? 'kiwi' : 'broccoli';
-                const collectible = currentLevel.spawnCollectible(x, 0.5, 50, type);
+            if (!objectPool) return;
+            
+            const lane = Math.floor(Math.random() * 3);
+            const x = physicsSystem.lanePositions[lane];
+            const type = Math.random() < 0.5 ? 'kiwi' : 'broccoli';
+            
+            // Get collectible from pool
+            const collectible = objectPool.get('collectible', (obj) => {
+                obj.position.set(x, 0.5, 50);
+                obj.visible = true;
+                obj.userData.lane = lane;
+                obj.userData.collectibleType = type;
+                obj.userData.active = true;
+            });
+            
+            if (collectible) {
+                gameEngine.addToScene(collectible);
                 
                 // Move collectible towards player
                 const moveCollectible = () => {
-                    if (collectible && collectible.position.z > -20) {
+                    if (collectible && collectible.userData.active && collectible.position.z > -20) {
                         collectible.position.z -= gameState.gameSpeed * 2;
                         
                         // Check collection
                         if (player && physicsSystem.canCollectItem(player, collectible)) {
                             physicsSystem.handleItemCollection(collectible, type);
+                            
+                            // Create collection effect
+                            if (objectPool) {
+                                const effect = objectPool.get('effect', (obj) => {
+                                    obj.position.copy(collectible.position);
+                                    obj.visible = true;
+                                    obj.userData.life = 1.0;
+                                    obj.userData.maxLife = 1.0;
+                                });
+                                if (effect) {
+                                    gameEngine.addToScene(effect);
+                                }
+                            }
+                            
+                            // Return collectible to pool
+                            collectible.userData.active = false;
                             gameEngine.removeFromScene(collectible);
+                            objectPool.return(collectible);
                             return;
                         }
                         
                         requestAnimationFrame(moveCollectible);
                     } else if (collectible) {
+                        // Return collectible to pool when it's out of bounds
+                        collectible.userData.active = false;
                         gameEngine.removeFromScene(collectible);
+                        objectPool.return(collectible);
                     }
                 };
                 
@@ -498,11 +641,38 @@
             }, 1000);
         }
         
+        // Update performance display
+        function updatePerformanceDisplay() {
+            if (!adaptiveRenderer || !deviceDetector || !objectPool) return;
+            
+            const performanceStats = adaptiveRenderer.getPerformanceStats();
+            const poolStats = objectPool.getStatistics();
+            
+            document.getElementById('fpsDisplay').textContent = `FPS: ${performanceStats.currentFPS}`;
+            document.getElementById('qualityDisplay').textContent = `Quality: ${performanceStats.qualityLevel}`;
+            document.getElementById('deviceDisplay').textContent = `Device: ${deviceDetector.deviceInfo.type}`;
+            document.getElementById('poolDisplay').textContent = `Pool: ${poolStats.activeCount}/${poolStats.totalCreated}`;
+            document.getElementById('memoryDisplay').textContent = `Memory: ${deviceDetector.deviceInfo.memory}GB`;
+        }
+        
+        // Toggle performance monitor
+        function togglePerformanceMonitor() {
+            const monitor = document.getElementById('performanceMonitor');
+            monitor.style.display = monitor.style.display === 'none' ? 'block' : 'none';
+        }
+        
         // Set deploy date
         document.getElementById('deployDate').textContent = new Date().toLocaleDateString('de-DE');
         
         // Add start button event listener
         document.getElementById('startButton').addEventListener('click', startGame);
+        
+        // Add keyboard shortcut for performance monitor (P key)
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'p' || event.key === 'P') {
+                togglePerformanceMonitor();
+            }
+        });
         
         // Initialize game on page load
         window.addEventListener('load', initializeGame);

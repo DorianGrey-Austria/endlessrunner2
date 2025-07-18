@@ -22,6 +22,9 @@ class ModuleLoader {
         this.dependencies.set('Level1_Subway', []);
         this.dependencies.set('InputHandler', []);
         this.dependencies.set('GameState', []);
+        this.dependencies.set('DeviceDetector', []);
+        this.dependencies.set('AdaptiveRenderer', ['DeviceDetector']);
+        this.dependencies.set('ObjectPool', []);
     }
 
     /**
@@ -93,7 +96,10 @@ class ModuleLoader {
             'AudioSystem': 'systems/AudioSystem.js',
             'Level1_Subway': 'levels/Level1_Subway.js',
             'InputHandler': 'systems/InputHandler.js',
-            'GameState': 'core/GameState.js'
+            'GameState': 'core/GameState.js',
+            'DeviceDetector': 'utils/DeviceDetector.js',
+            'AdaptiveRenderer': 'systems/AdaptiveRenderer.js',
+            'ObjectPool': 'systems/ObjectPool.js'
         };
 
         const path = moduleMap[moduleName];
