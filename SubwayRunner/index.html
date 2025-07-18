@@ -527,8 +527,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V8.1.0-PSYCHOLOGY-ENGINE<br>
-            📅 10.07.2025
+            🚀 V8.2.0-ALTERNATING-LEVELS<br>
+            📅 18.07.2025
         </div>
         
         <!-- Debug Console Toggle -->
@@ -3504,6 +3504,29 @@
         }
 
         async function startGameInternal() {
+            // 🎮 TEMPLATE LEVEL ROTATION SYSTEM
+            // Erweiterbar für mehr Level - aktuell nur 2 Level aktiv
+            
+            const availableLevels = [1, 2]; // 📝 TEMPLATE: Hier weitere Level hinzufügen [1, 2, 3, 4, ...]
+            const currentIndex = availableLevels.indexOf(gameState.currentLevel);
+            const nextIndex = (currentIndex + 1) % availableLevels.length;
+            const previousLevel = gameState.currentLevel;
+            
+            gameState.currentLevel = availableLevels[nextIndex];
+            console.log(`🎯 Level-Wechsel: Level ${previousLevel} → Level ${gameState.currentLevel} (${nextIndex + 1}/${availableLevels.length})`);
+            
+            // Level laden
+            if (window.LevelManagerPro) {
+                const levelLoaded = await LevelManagerPro.loadLevel(gameState.currentLevel);
+                if (levelLoaded) {
+                    console.log(`✅ Level ${gameState.currentLevel} erfolgreich geladen`);
+                } else {
+                    console.log(`❌ Level ${gameState.currentLevel} konnte nicht geladen werden - fallback zu Level 1`);
+                    gameState.currentLevel = 1;
+                    await LevelManagerPro.loadLevel(1);
+                }
+            }
+            
             // Resume audio context
             audioManager.resume();
             
@@ -7373,14 +7396,16 @@
             const gameTimeElapsed = (performance.now() - gameState.gameStartTime) / 1000;
             // ==================== 10-LEVEL PROGRESSION SYSTEM ====================
             
-            // Level progression based on score milestones (every 1000 points)
-            const levelThreshold = 1000; // Points needed per level
-            const targetLevel = Math.min(10, Math.floor(gameState.score / levelThreshold) + 1);
+            // 🚫 SCORE-BASED LEVEL PROGRESSION DEACTIVATED
+            // Nur noch alternating Level 1 ↔ Level 2 System aktiv
+            // Level progression based on score milestones (every 1000 points) - DISABLED
+            // const levelThreshold = 1000; // Points needed per level
+            // const targetLevel = Math.min(10, Math.floor(gameState.score / levelThreshold) + 1);
             
-            // Check for level progression
-            if (targetLevel > gameState.currentLevel && targetLevel <= 10) {
+            // Check for level progression - DISABLED
+            if (false) { // Deaktiviert - nur alternating system
                 const previousLevel = gameState.currentLevel;
-                gameState.currentLevel = targetLevel;
+                // gameState.currentLevel = targetLevel;
                 
                 console.log(`🎮 [LevelProgression] Advancing from Level ${previousLevel} to Level ${targetLevel}!`);
                 

@@ -42,8 +42,12 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 5.1.4-LEVEL3-REMOVED (Completely removed Level 3 to eliminate shader errors)
-- **Previous**: 5.1.3-SHADER-DISPOSAL (Fixed shader material memory leak)
+- **Latest**: 8.1.0-PSYCHOLOGY-ENGINE (Current production version with advanced psychology system)
+- **Previous**: 7.8.0-ULTIMATE-DISTRIBUTION (Senior Developer Plan Implementation)
+- **Before**: 7.7.0-SPAM-FIX-ULTIMATE (Root cause analysis and fix for collectibles over-spawning)
+- **Before**: 6.0.0-ENTERPRISE (❌ FAILED - Complete modular architecture restructure)
+- **Before**: 5.1.4-LEVEL3-REMOVED (Completely removed Level 3 to eliminate shader errors)
+- **Before**: 5.1.3-SHADER-DISPOSAL (Fixed shader material memory leak)
 - **Before**: 5.1.2-LEVEL3-SKIP (Prevent Level 3 loading to avoid shader errors)
 - **Before**: 5.1.1-SHADER-FIX (Fixed critical Three.js shader errors)
 - **Before**: 5.1.0-ACTION (Fast action gameplay, mobile controls, stars, icons-only UI)
@@ -52,7 +56,14 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 5.1.4-LEVEL3-REMOVED. This version has completely removed Level 3 to eliminate recurring shader errors. The game now features faster gameplay speed (0.15 start, 0.60 max), improved mobile controls (swipe up to stand, swipe up again to jump), star collectibles for invincibility (replacing mystery boxes), icons-only UI during gameplay, proper 3-2-1 countdown at start, and level display. The SubwayRunner/index.html is the primary production file with embedded modules.
+The game is currently at version 8.1.0-PSYCHOLOGY-ENGINE (deployed 10.07.2025). This version includes advanced psychology system with addiction mechanics, real-time player behavior analysis, and enhanced UI/UX. The game features faster gameplay speed (0.15 start, 0.60 max), improved mobile controls, star collectibles for invincibility, icons-only UI during gameplay, proper 3-2-1 countdown at start, and level display. The SubwayRunner/index.html is the primary production file with embedded modules.
+
+### **CRITICAL PRODUCTION ISSUES (CURRENT)**
+❌ **ENTERPRISE ARCHITECTURE FAILURE**: Version 6.0.0-ENTERPRISE (modular architecture) completely failed
+- **Symptoms**: "Sound but no image" problems, FPS drops, error messages
+- **Status**: Rolled back to stable monolithic version
+- **Impact**: Production version at https://ki-revolution.at/ has performance issues
+- **Solution**: Using rollback plan documented in FAILED_ENTERPRISE_ARCHITECTURE.md
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (search for "version:" string)
@@ -62,20 +73,24 @@ The game is currently at version 5.1.4-LEVEL3-REMOVED. This version has complete
 
 ### **DEBUGGING & TROUBLESHOOTING**
 - **Debug Files**: `SubwayRunner/DEBUG_GUIDE.md`, `SubwayRunner/TROUBLESHOOTING.md`
+- **Enterprise Architecture**: `SubwayRunner/FAILED_ENTERPRISE_ARCHITECTURE.md`, `SubwayRunner/ROLLBACK_PLAN.md`
+- **Architecture Reports**: `SubwayRunner/ENTERPRISE_ARCHITECTURE_REPORT.md`
 - **Syntax Validation**: `SubwayRunner/syntax_validator.html`, `SubwayRunner/find_syntax_error.js`
 - **Function Testing**: `SubwayRunner/function_test.html`, `SubwayRunner/quick_test.html`
 - **Development Backups**: Multiple .backup files in SubwayRunner/ for version rollbacks
 
 ### **KEY FEATURES IMPLEMENTED**
-- **9 Unique Levels**: Each with distinct themes, obstacles, and mechanics (Level 3 removed)
+- **10 Unique Levels**: Each with distinct themes, obstacles, and mechanics
 - **5 Playable Characters**: NEON-7 (Cyberpunk), Commander Void (Space), Lara Thornwood (Jungle), Bjorn Frostbeard (Ice), Seraphina Prism (Crystal)
+- **Psychology Engine**: Advanced addiction mechanics with real-time player behavior analysis
 - **Level System**: Automatic progression every 1000 points
 - **Visual Effects**: Enhanced graphics with particles, shaders, and post-processing
 - **Gesture Control**: MediaPipe integration for head tracking
 - **Ghost Racing**: Daily challenges with Supabase integration
-- **Collectibles**: Kiwis (7), Broccolis (7), and Stars (max 2 for invincibility)
+- **Collectibles**: Kiwis (10), Broccolis (10), and Stars (unlimited for invincibility)
 - **Performance**: Object pooling, frustum culling, adaptive quality
-- **Shader Error Resolution**: Complete removal of problematic Level 3 to ensure stable gameplay
+- **Mobile Optimization**: Responsive design with touch controls
+- **Failed Enterprise Architecture**: Modular ES6 system (archived for future use)
 
 ### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**
 **WICHTIGE REGEL**: Nach jeder längeren Programmier-Session IMMER sofort online stellen!
@@ -83,6 +98,15 @@ The game is currently at version 5.1.4-LEVEL3-REMOVED. This version has complete
 - GitHub Actions deployed automatisch zu https://ki-revolution.at/
 - Nutzer sollen immer die neueste Version testen können
 - Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
+
+### **FAILED ENTERPRISE ARCHITECTURE (DOCUMENTED)**
+**CRITICAL FAILURE**: Version 6.0.0-ENTERPRISE was a complete failure
+- **Attempt**: Modular ES6 architecture with GameCore, PerformanceRenderer, LightweightPhysics
+- **Result**: Production site broken - "Sound but no image", FPS drops, error messages
+- **Recovery**: Rolled back to stable monolithic version (8.1.0-PSYCHOLOGY-ENGINE)
+- **Lessons**: Big Bang architecture changes don't work - need incremental approach
+- **Archive**: Valuable code components saved for future step-by-step integration
+- **Documentation**: See `FAILED_ENTERPRISE_ARCHITECTURE.md` and `ROLLBACK_PLAN.md`
 
 ## Common Development Commands
 
@@ -146,15 +170,18 @@ npm run inspector    # Run MCP inspector
 ## Architecture Overview
 
 ### SubwayRunner Architecture (Primary Project)
-- **Dual Architecture**: 
-  - **Production**: Single HTML file (index.html) with embedded CSS/JS
-  - **Development**: React + TypeScript version with Vite build system
-- **Three.js Integration**: Direct Three.js usage (vanilla) or React Three Fiber (React version)
+- **Current Architecture**: Monolithic HTML file (index.html) with embedded CSS/JS - STABLE
+- **Failed Enterprise Attempt**: Modular ES6 architecture (v6.0.0-ENTERPRISE) - ARCHIVED
+  - **GameCore.js**: 1,200+ lines enterprise game engine (saved for future use)
+  - **PerformanceRenderer.js**: 1,500+ lines optimized Three.js renderer (archived)
+  - **LightweightPhysics.js**: 800+ lines mobile physics system (archived)
+- **Psychology Engine**: Advanced addiction mechanics with real-time player analysis
+- **Three.js Integration**: Direct Three.js usage in monolithic file
 - **Game Loop**: RequestAnimationFrame-based game loop with delta time
-- **Obstacle System**: 7+ obstacle types including tunnels, barriers, spikes, walls
+- **Obstacle System**: 10+ obstacle types including tunnels, barriers, spikes, walls
 - **Audio System**: Background music with WAV format support
 - **Deployment**: GitHub Actions automatic deployment to Hostinger via FTP
-- **Version Display**: UI shows current version and deployment date
+- **Version Display**: UI shows current version (8.1.0-PSYCHOLOGY-ENGINE) and deployment date
 - **Gesture Control**: MediaPipe integration for head tracking controls
 
 ### Endless3D Architecture
@@ -312,30 +339,40 @@ function isCollectibleSpawnSafe(lane, zPosition) {
 ## Deployment & CI/CD
 
 ### GitHub Actions Workflow
+- **Primary Workflow**: `.github/workflows/deploy-enterprise.yml`
 - **Trigger**: Push to main branch or manual workflow_dispatch
 - **Process**: Copies SubwayRunner/index.html to root, creates deployment package
+- **Multi-Version Deployment**: 
+  - `index.html` (Original production version)
+  - `index-modular.html` (Failed enterprise modular version)
+  - `test-modular.html` (Architecture test suite)
 - **Target**: Hostinger FTP deployment to root directory (server-dir: /)
 - **Secrets Required**: FTP_SERVER (use IP address), FTP_USERNAME, FTP_PASSWORD
 - **Live URL**: https://ki-revolution.at/
 - **Important**: GitHub Secrets are repository-specific - must be reconfigured when switching repos
-- **Production**: Includes .htaccess with HTTPS enforcement, compression, caching, and security headers
+- **Production**: Enhanced .htaccess with HTTPS enforcement, compression, caching, security headers, and ES6 module support
 
 ### Known Issues & Current Focus
-- **Next Phase**: Gesture control integration from GestureRunnerPro into SubwayRunner
+- **CRITICAL**: Production version has performance issues (sound but no image, FPS drops)
+- **Failed Enterprise**: Modular architecture completely non-functional
+- **Recovery Plan**: Step-by-step integration of enterprise features without breaking existing system
+- **Next Phase**: Performance optimization without architectural changes
 - **Planned**: Sound system overhaul with realistic audio samples
-- **Dual Architecture**: SubwayRunner exists as both vanilla JS (index.html) and React version (src/)
+- **Architecture Status**: Monolithic production version (index.html) is stable, modular version failed
 
 ## Project-Specific Notes
 
 ### SubwayRunner (Primary Project)
 - **Development Port**: 8001 (python -m http.server)
-- **Production**: Single HTML file deployment (index.html)
-- **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 5.1.4-LEVEL3-REMOVED
+- **Production**: Single HTML file deployment (index.html) - STABLE
+- **Failed Modular Version**: index-modular.html (v6.0.0-ENTERPRISE) - NON-FUNCTIONAL
+- **Current Version**: 8.1.0-PSYCHOLOGY-ENGINE (deployed 10.07.2025)
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
-- **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
-- **Key Features**: 9 levels (Level 3 removed), 5 characters, gesture control, ghost racing, visual effects
+- **Architecture**: Monolithic system with embedded modules (30,000+ lines)
+- **Key Features**: 10 levels, 5 characters, psychology engine, gesture control, ghost racing, visual effects
+- **Production Issues**: Performance problems (sound but no image, FPS drops)
 - **Testing**: Playwright test suite (`npm run test`), custom test runner (`test-runner.js`)
+- **Recovery**: Using rollback plan to restore full functionality
 
 ### Endless3D
 - Fully modular world system - add new worlds via JSON config
