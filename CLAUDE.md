@@ -10,13 +10,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **BROWSER**: Chrome verwenden (NIEMALS Safari)
 - **NACH DEPLOYMENT SAGEN**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
 
-### 🚀 AUTOMATIC DEPLOYMENT + CHROME LAUNCH (MANDATORY!)
-**KRITISCHE REGEL**: Nach jeder längeren Programmier-Session SOFORT:
-1. **Deploy**: `git add . && git commit -m "message" && git push`
-2. **Launch Chrome**: `open -a "Google Chrome" https://ki-revolution.at/`
-3. **Confirm**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Chrome geöffnet zum Testen!**"
+### 🚀 MANDATORY TESTING + AUTO-CHROME LAUNCH (CRITICAL!)
+**ABSOLUT KRITISCHE REGEL**: TESTING + CHROME ÖFFNEN IST PFLICHT!
 
-**WARUM**: User möchte SOFORT nach jeder Session das Ergebnis testen können!
+**WORKFLOW NACH JEDER ÄNDERUNG (PFLICHT):**
+1. **Playwright Testing**: `npx playwright test` - ALLE Tests müssen bestehen
+2. **Local Testing**: `python -m http.server 8001` - Lokale Funktionsprüfung
+3. **Error Check**: Browser-Konsole auf Fehler prüfen (0 Errors erlaubt!)
+4. **Deploy**: Nur wenn ALLE Tests bestehen: `git add . && git commit -m "message" && git push`
+5. **CHROME AUTOMATISCH ÖFFNEN**: `open -a "Google Chrome" https://ki-revolution.at/`
+6. **Confirm**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Chrome geöffnet zum Testen!**"
+
+**🔴 WICHTIG**: CHROME MUSS IMMER AUTOMATISCH GEÖFFNET WERDEN!
+- Nach JEDEM Deployment
+- Nach JEDER größeren Änderung
+- OHNE dass der User danach fragen muss!
+
+**WARUM**: User möchte SOFORT das Ergebnis sehen ohne extra fragen zu müssen!
 
 ### 📋 WORKFLOW STANDARDS
 1. **Versionierung**: IMMER updaten (MAJOR.MINOR.PATCH)

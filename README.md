@@ -1,5 +1,17 @@
 # 🏃‍♂️ Endless Runner MVP
 
+## 🚨 **CRITICAL RULES FOR CLAUDE CODE (MUST READ!)**
+
+### 🔴 **AUTO-CHROME LAUNCH IS MANDATORY!**
+**AFTER EVERY DEPLOYMENT, CLAUDE CODE MUST:**
+1. Deploy: `git add . && git commit -m "message" && git push`
+2. **AUTOMATICALLY OPEN CHROME**: `open -a "Google Chrome" https://ki-revolution.at/`
+3. Confirm: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Chrome geöffnet zum Testen!**"
+
+**NO EXCEPTIONS! User wants to see results IMMEDIATELY without asking!**
+
+---
+
 ## 🎯 **Core Philosophy: UI/UX First**
 
 > **"UI and UX is paramount - alongside gameplay, it's the most critical element of any modern app."**
