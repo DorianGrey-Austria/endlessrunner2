@@ -10,6 +10,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **BROWSER**: Chrome verwenden (NIEMALS Safari)
 - **NACH DEPLOYMENT SAGEN**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
 
+### 🚀 AUTOMATIC DEPLOYMENT + CHROME LAUNCH (MANDATORY!)
+**KRITISCHE REGEL**: Nach jeder längeren Programmier-Session SOFORT:
+1. **Deploy**: `git add . && git commit -m "message" && git push`
+2. **Launch Chrome**: `open -a "Google Chrome" https://ki-revolution.at/`
+3. **Confirm**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Chrome geöffnet zum Testen!**"
+
+**WARUM**: User möchte SOFORT nach jeder Session das Ergebnis testen können!
+
 ### 📋 WORKFLOW STANDARDS
 1. **Versionierung**: IMMER updaten (MAJOR.MINOR.PATCH)
 2. **Dokumentation**: Änderungen sofort in .md Dateien
