@@ -468,7 +468,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.6.2-MONOLITH-RESTORE<br>
+            🚀 V3.6.3-OFFLINE-RESILIENT<br>
             📅 07.07.2025
         </div>
         
@@ -1085,20 +1085,31 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // Initialize Supabase connection
-        try {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase initialized successfully');
-                console.log('🔗 Database URL:', SUPABASE_URL);
-                console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
-            } else {
-                throw new Error('Supabase library not loaded');
+        // Initialize Supabase connection with better error handling
+        async function initSupabase() {
+            try {
+                if (window.supabase) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✅ Supabase initialized successfully');
+                    
+                    // Test connection with a simple query
+                    const { error } = await supabase.from('daily_scores').select('count').limit(1);
+                    if (error) {
+                        console.warn('⚠️ Supabase connected but database unreachable:', error.message);
+                        supabase = null;
+                    }
+                } else {
+                    console.warn('⚠️ Supabase library not loaded - continuing offline');
+                    supabase = null;
+                }
+            } catch (error) {
+                console.warn('⚠️ Supabase initialization failed, using offline mode:', error.message);
+                supabase = null;
             }
-        } catch (error) {
-            console.log('⚠️ Supabase initialization failed, using offline mode:', error);
-            supabase = null;
         }
+        
+        // Initialize asynchronously without blocking game start
+        initSupabase();
 
         // Highscore Management System
         class HighscoreManager {
@@ -6380,8 +6391,9 @@
                     try {
                         await this.initializeMediaPipe();
                     } catch (error) {
-                        console.error('MediaPipe initialization failed:', error);
-                        throw new Error('MediaPipe Vision library not loaded. Please refresh the page.');
+                        console.warn('⚠️ MediaPipe initialization failed - continuing without gesture control:', error.message);
+                        this.enabled = false;
+                        return;
                     }
                     
                     this.isRunning = true;
