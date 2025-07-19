@@ -472,10 +472,54 @@
             📅 07.07.2025
         </div>
         
-        <!-- Collectible Debug Display -->
-        <div id="collectibleDebug" style="position: fixed; top: 150px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-size: 12px; font-family: monospace; display: none; z-index: 1000;">
-            <strong>Collectible Manager Debug</strong><br>
-            <div id="debugInfo">Loading...</div>
+        <!-- INTELLIGENT COLLECTIBLE BALANCE DASHBOARD -->
+        <div id="balanceDashboard" style="position: fixed; top: 120px; right: 20px; background: rgba(0,20,40,0.95); color: #00ff88; padding: 15px; font-size: 11px; font-family: 'Courier New', monospace; display: none; z-index: 1000; border: 2px solid #00ff88; border-radius: 8px; width: 320px; box-shadow: 0 0 20px rgba(0,255,136,0.3);">
+            <div style="text-align: center; font-weight: bold; margin-bottom: 10px; color: #00ffff; font-size: 13px;">
+                🎯 COLLECTIBLE BALANCE DASHBOARD
+            </div>
+            
+            <!-- Live Balance Monitor -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(0,40,80,0.7); border-radius: 4px;">
+                <div style="color: #ffff00; font-weight: bold;">📊 LIVE BALANCE</div>
+                <div id="balanceRatio">Collectibles: 0% | Obstacles: 0%</div>
+                <div id="spawnSuccess">Spawn Success: 0%</div>
+                <div id="gameStatus" style="color: #ff6600;">Status: Loading...</div>
+            </div>
+            
+            <!-- Collectible Stats -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(0,60,40,0.7); border-radius: 4px;">
+                <div style="color: #00ff00; font-weight: bold;">🥝🥦 COLLECTIBLE STATS</div>
+                <div id="collectibleCounts">Kiwis: 0/30 | Broccolis: 0/30</div>
+                <div id="spawnQueue">Queue: 0 pending spawns</div>
+                <div id="collectibleRate">Rate: 0 per minute</div>
+            </div>
+            
+            <!-- Smart Analytics -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(60,0,40,0.7); border-radius: 4px;">
+                <div style="color: #ff88ff; font-weight: bold;">🧠 SMART ANALYTICS</div>
+                <div id="blockingReasons">Blocking: None detected</div>
+                <div id="safeZoneStatus">Safe Zones: All clear</div>
+                <div id="performanceImpact">Performance: Normal</div>
+            </div>
+            
+            <!-- Problem Solver -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(60,20,0,0.7); border-radius: 4px;">
+                <div style="color: #ff4444; font-weight: bold;">🚨 PROBLEM SOLVER</div>
+                <div id="currentProblems">No issues detected</div>
+                <div id="solutions">All systems optimal</div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div style="text-align: center; margin-top: 10px;">
+                <button onclick="forceSpawnCollectible()" style="background: #004400; color: #00ff00; border: 1px solid #00ff00; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">Force Spawn</button>
+                <button onclick="resetCollectibleSystem()" style="background: #440000; color: #ff4444; border: 1px solid #ff4444; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">Reset System</button>
+                <button onclick="toggleDashboard()" style="background: #000044; color: #4444ff; border: 1px solid #4444ff; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">Close</button>
+            </div>
+        </div>
+        
+        <!-- Dashboard Toggle Button -->
+        <div id="dashboardToggle" style="position: fixed; top: 80px; right: 20px; background: rgba(0,20,40,0.9); color: #00ff88; padding: 8px 12px; font-size: 12px; font-family: monospace; z-index: 999; border: 1px solid #00ff88; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="toggleDashboard()">
+            📊 DEBUG
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -507,7 +551,7 @@
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/7
+                🥝 <span id="kiwiCount">0</span>/30 | 🥦 <span id="broccoliCount">0</span>/30
                 <div style="font-size: 12px; margin-top: 2px;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
@@ -2288,9 +2332,22 @@
             }
             
             obstacles.push(obstacleData);
+            
+            // Track obstacle creation for dashboard
+            dashboardStats.obstacleCount++;
+            updateDashboard();
         }
 
         function startGameInternal() {
+            // Initialize dashboard on game start
+            dashboardStats.gameStartTime = Date.now();
+            dashboardStats.obstacleCount = 0;
+            dashboardStats.collectibleCount = 0;
+            dashboardStats.spawnAttempts = 0;
+            dashboardStats.spawnSuccesses = 0;
+            dashboardStats.spawnFailures = 0;
+            dashboardStats.blockingReasons = {};
+            
             // Resume audio context
             audioManager.resume();
             
@@ -2646,6 +2703,227 @@
             console.log('Force updated UI - check values now');
         };
         
+        // ==================== INTELLIGENT DASHBOARD SYSTEM ====================
+        
+        let dashboardStats = {
+            obstacleCount: 0,
+            collectibleCount: 0,
+            spawnAttempts: 0,
+            spawnSuccesses: 0,
+            spawnFailures: 0,
+            blockingReasons: {},
+            lastUpdate: Date.now(),
+            gameStartTime: Date.now()
+        };
+        
+        // Toggle Dashboard
+        function toggleDashboard() {
+            const dashboard = document.getElementById('balanceDashboard');
+            const isVisible = dashboard.style.display !== 'none';
+            dashboard.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                updateDashboard(); // Immediate update when opening
+            }
+        }
+        
+        // Force Spawn Collectible for Testing
+        function forceSpawnCollectible() {
+            if (!gameState.isPlaying) {
+                console.log('🚫 Cannot force spawn - game not playing');
+                return;
+            }
+            
+            const lane = Math.floor(Math.random() * 3);
+            const z = -30;
+            
+            if (gameState.collectedKiwis < 30) {
+                const kiwi = createSimpleKiwi(lane, z);
+                gameState.kiwis.push(kiwi);
+                console.log('🥝 Force spawned kiwi in lane', lane);
+            } else if (gameState.collectedBroccolis < 30) {
+                const broccoli = createBroccoli(lane, z, 'single');
+                gameState.broccolis.push(broccoli);
+                console.log('🥦 Force spawned broccoli in lane', lane);
+            }
+            
+            dashboardStats.spawnSuccesses++;
+            updateDashboard();
+        }
+        
+        // Reset Collectible System
+        function resetCollectibleSystem() {
+            if (collectibleManager) {
+                collectibleManager.reset();
+                collectibleManager.init();
+                console.log('🔄 Collectible manager reset');
+            }
+            
+            // Reset dashboard stats
+            dashboardStats.spawnAttempts = 0;
+            dashboardStats.spawnSuccesses = 0;
+            dashboardStats.spawnFailures = 0;
+            dashboardStats.blockingReasons = {};
+            
+            updateDashboard();
+        }
+        
+        // Track Spawn Attempt
+        function trackSpawnAttempt(success, reason = null) {
+            dashboardStats.spawnAttempts++;
+            
+            if (success) {
+                dashboardStats.spawnSuccesses++;
+            } else {
+                dashboardStats.spawnFailures++;
+                if (reason) {
+                    dashboardStats.blockingReasons[reason] = (dashboardStats.blockingReasons[reason] || 0) + 1;
+                }
+            }
+        }
+        
+        // Smart Analytics Engine
+        function analyzeGameBalance() {
+            const gameTime = (Date.now() - dashboardStats.gameStartTime) / 1000; // seconds
+            const collectibleRate = dashboardStats.collectibleCount / (gameTime / 60); // per minute
+            const obstacleRate = dashboardStats.obstacleCount / (gameTime / 60); // per minute
+            
+            const totalSpawns = dashboardStats.obstacleCount + dashboardStats.collectibleCount;
+            const collectiblePercentage = totalSpawns > 0 ? (dashboardStats.collectibleCount / totalSpawns * 100) : 0;
+            const obstaclePercentage = 100 - collectiblePercentage;
+            
+            const successRate = dashboardStats.spawnAttempts > 0 ? 
+                (dashboardStats.spawnSuccesses / dashboardStats.spawnAttempts * 100) : 100;
+                
+            return {
+                collectiblePercentage: collectiblePercentage.toFixed(1),
+                obstaclePercentage: obstaclePercentage.toFixed(1),
+                successRate: successRate.toFixed(1),
+                collectibleRate: collectibleRate.toFixed(1),
+                gameTime: gameTime.toFixed(0)
+            };
+        }
+        
+        // Problem Detection System
+        function detectProblems() {
+            const problems = [];
+            const solutions = [];
+            
+            const stats = analyzeGameBalance();
+            
+            // Problem 1: Too few collectibles
+            if (parseFloat(stats.collectiblePercentage) < 40) {
+                problems.push('⚠️ Collectibles < 40%');
+                solutions.push('• Reduce obstacle spawn rate');
+            }
+            
+            // Problem 2: Low spawn success rate
+            if (parseFloat(stats.successRate) < 60) {
+                problems.push('🚫 Low spawn success (<60%)');
+                solutions.push('• Check safe zone algorithm');
+            }
+            
+            // Problem 3: Specific blocking reasons
+            const topBlockingReason = Object.keys(dashboardStats.blockingReasons).reduce((a, b) => 
+                dashboardStats.blockingReasons[a] > dashboardStats.blockingReasons[b] ? a : b, null);
+                
+            if (topBlockingReason) {
+                problems.push(`🔒 Main block: ${topBlockingReason}`);
+                
+                switch (topBlockingReason) {
+                    case 'obstacle_too_close':
+                        solutions.push('• Increase safe zone distance');
+                        break;
+                    case 'lane_occupied':
+                        solutions.push('• Improve lane selection logic');
+                        break;
+                    case 'spawn_cooldown':
+                        solutions.push('• Reduce spawn interval');
+                        break;
+                }
+            }
+            
+            // Problem 4: No collectibles in last 30 seconds
+            const lastCollectibleTime = dashboardStats.lastCollectibleSpawn || 0;
+            if (Date.now() - lastCollectibleTime > 30000 && gameState.isPlaying) {
+                problems.push('⏰ No collectibles 30s+');
+                solutions.push('• Force emergency spawn');
+            }
+            
+            return { problems, solutions };
+        }
+        
+        // Update Dashboard Display
+        function updateDashboard() {
+            if (document.getElementById('balanceDashboard').style.display === 'none') return;
+            
+            const stats = analyzeGameBalance();
+            const { problems, solutions } = detectProblems();
+            
+            // Update balance ratio
+            document.getElementById('balanceRatio').textContent = 
+                `Collectibles: ${stats.collectiblePercentage}% | Obstacles: ${stats.obstaclePercentage}%`;
+                
+            document.getElementById('spawnSuccess').textContent = 
+                `Spawn Success: ${stats.successRate}%`;
+                
+            document.getElementById('gameStatus').textContent = 
+                `Status: ${gameState.isPlaying ? 'Playing' : 'Paused'} (${stats.gameTime}s)`;
+            
+            // Update collectible stats
+            document.getElementById('collectibleCounts').textContent = 
+                `Kiwis: ${gameState.collectedKiwis}/30 | Broccolis: ${gameState.collectedBroccolis}/30`;
+                
+            const queueCount = collectibleManager ? collectibleManager.spawnQueue.filter(i => !i.spawned).length : 0;
+            document.getElementById('spawnQueue').textContent = `Queue: ${queueCount} pending spawns`;
+            
+            document.getElementById('collectibleRate').textContent = 
+                `Rate: ${stats.collectibleRate} per minute`;
+                
+            // Update analytics
+            const activeObstacles = obstacles.length;
+            const activeCollectibles = gameState.kiwis.length + gameState.broccolis.length;
+            
+            document.getElementById('safeZoneStatus').textContent = 
+                `Safe Zones: ${activeObstacles} obstacles active`;
+                
+            const performanceStatus = parseFloat(stats.successRate) > 80 ? 'Excellent' : 
+                                    parseFloat(stats.successRate) > 60 ? 'Good' : 'Poor';
+            document.getElementById('performanceImpact').textContent = 
+                `Performance: ${performanceStatus} (${stats.successRate}%)`;
+                
+            // Update problems
+            document.getElementById('currentProblems').textContent = 
+                problems.length > 0 ? problems.join(' | ') : 'No issues detected';
+                
+            document.getElementById('solutions').textContent = 
+                solutions.length > 0 ? solutions.join(' ') : 'All systems optimal';
+                
+            // Color coding based on performance
+            const dashboard = document.getElementById('balanceDashboard');
+            if (parseFloat(stats.collectiblePercentage) < 30) {
+                dashboard.style.borderColor = '#ff4444'; // Red - bad balance
+            } else if (parseFloat(stats.collectiblePercentage) > 50) {
+                dashboard.style.borderColor = '#44ff44'; // Green - good balance
+            } else {
+                dashboard.style.borderColor = '#ffff44'; // Yellow - okay balance
+            }
+        }
+        
+        // Enhanced Spawn Tracking Integration
+        const originalIsSmartLaneSafe = isSmartLaneSafe;
+        function isSmartLaneSafe(lane, z) {
+            const result = originalIsSmartLaneSafe(lane, z);
+            
+            if (!result) {
+                // Track why spawn failed
+                const obstacleTypes = obstacles.map(obs => obs.type).join(',');
+                trackSpawnAttempt(false, 'obstacle_too_close');
+            }
+            
+            return result;
+        }
+
         // Function to manually reset and test counters
         window.testCollectibles = function() {
             console.log('Testing collectible system...');
@@ -4398,6 +4676,70 @@
             return bridgeGroup;
         }
         
+        // DYNAMIC SMART SAFE-ZONE ALGORITHM
+        function isSmartLaneSafe(lane, z) {
+            // Dynamic distance based on game conditions
+            const baseDistance = 20; // Base safe distance
+            
+            // 1. SPEED-BASED SCALING: Higher speed = larger safe zones
+            const speedRatio = gameState.speed / gameState.maxSpeed;
+            const speedMultiplier = 1 + speedRatio * 0.8; // Up to 80% larger at max speed
+            
+            // 2. PERFORMANCE-BASED SCALING: Struggling player = larger safe zones
+            const performanceMultiplier = gameState.lives === 1 ? 1.5 : 
+                                         gameState.consecutiveAvoidances < 3 ? 1.3 : 1.0;
+            
+            // 3. GESTURE-CONTROL READY: 50% larger for future gesture control
+            const gestureMultiplier = 1.5;
+            
+            // Calculate final dynamic distance
+            const dynamicDistance = baseDistance * speedMultiplier * performanceMultiplier * gestureMultiplier;
+            const lanePosition = LANE_POSITIONS[lane];
+            
+            // Check against all obstacles
+            for (const obstacle of obstacles) {
+                if (!obstacle || !obstacle.position) continue;
+                
+                const obstacleDistance = Math.abs(obstacle.position.z - z);
+                const laneDistance = Math.abs(obstacle.position.x - lanePosition);
+                
+                // 4. OBSTACLE-TYPE SPECIFIC DISTANCES
+                let typeMultiplier = 1.0;
+                switch (obstacle.type) {
+                    case 'movingwall':
+                    case 'swinginghammer':
+                    case 'bouncingball':
+                        typeMultiplier = 1.8; // Moving obstacles need more space
+                        break;
+                    case 'rotatingblade':
+                    case 'spinninglaser':
+                        typeMultiplier = 1.6; // Rotating obstacles need extra clearance
+                        break;
+                    case 'spikes':
+                        typeMultiplier = 1.4; // Spikes are dangerous
+                        break;
+                    default:
+                        typeMultiplier = 1.0; // Normal obstacles
+                }
+                
+                const requiredDistance = dynamicDistance * typeMultiplier;
+                
+                // Check if too close to obstacle
+                if (obstacleDistance < requiredDistance && laneDistance < 2.0) {
+                    console.log(`🚫 Lane ${lane} blocked by ${obstacle.type} (distance: ${obstacleDistance.toFixed(1)} < required: ${requiredDistance.toFixed(1)})`);
+                    return false;
+                }
+            }
+            
+            console.log(`✅ Lane ${lane} safe (dynamic distance: ${dynamicDistance.toFixed(1)})`);
+            return true;
+        }
+        
+        // Backup function for old system compatibility
+        function isLaneClearForCollectible(lane, z) {
+            return isSmartLaneSafe(lane, z);
+        }
+
         function createSimpleKiwi(lane, z) {
             const kiwiGroup = new THREE.Group();
             
@@ -5307,6 +5649,12 @@
             const deltaTime = currentTime - lastFrameTime;
             lastFrameTime = currentTime;
             
+            // Update dashboard every 500ms for performance
+            if (currentTime - dashboardStats.lastUpdate > 500) {
+                updateDashboard();
+                dashboardStats.lastUpdate = currentTime;
+            }
+            
             if (gameState.isPlaying) {
                 // Update player position
                 const targetX = LANE_POSITIONS[gameState.playerLane];
@@ -5458,21 +5806,21 @@
                 let baseSpawnRate, maxSpawnRate;
                 
                 if (gameProgress < 0.2) {
-                    // Phase 1: Very gentle start (0-12s)
-                    baseSpawnRate = 0.003;
-                    maxSpawnRate = 0.008;
+                    // Phase 1: Very gentle start (0-12s) - BALANCED FOR 60/40 RATIO
+                    baseSpawnRate = 0.001;
+                    maxSpawnRate = 0.002;
                 } else if (gameProgress < 0.5) {
-                    // Phase 2: Moderate challenge (12-30s)
-                    baseSpawnRate = 0.008;
-                    maxSpawnRate = 0.015;
+                    // Phase 2: Moderate challenge (12-30s) - BALANCED FOR 60/40 RATIO
+                    baseSpawnRate = 0.002;
+                    maxSpawnRate = 0.004;
                 } else if (gameProgress < 0.8) {
-                    // Phase 3: Challenging (30-48s)
-                    baseSpawnRate = 0.012;
-                    maxSpawnRate = 0.020;
+                    // Phase 3: Challenging (30-48s) - BALANCED FOR 60/40 RATIO
+                    baseSpawnRate = 0.003;
+                    maxSpawnRate = 0.006;
                 } else {
-                    // Phase 4: Extreme finale (48-60s)
-                    baseSpawnRate = 0.015;
-                    maxSpawnRate = 0.025;
+                    // Phase 4: Extreme finale (48-60s) - BALANCED FOR 60/40 RATIO
+                    baseSpawnRate = 0.004;
+                    maxSpawnRate = 0.007;
                 }
                 
                 const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
@@ -5582,11 +5930,8 @@
                     const spawnData = collectibleManager.update(gameState.gameTime - gameState.timeRemaining, player.position.z);
                     
                     if (spawnData) {
-                        // Check if lane is safe from obstacles
-                        const isLaneSafe = !obstacles.some(obs => 
-                            Math.abs(obs.position.x - LANE_POSITIONS[spawnData.lane]) < 1.5 && 
-                            Math.abs(obs.position.z - spawnData.z) < 15
-                        );
+                        // DYNAMIC SMART SAFE-ZONE ALGORITHM
+                        const isLaneSafe = isSmartLaneSafe(spawnData.lane, spawnData.z);
                         
                         if (isLaneSafe) {
                             // Spawn the collectible
@@ -5594,10 +5939,20 @@
                                 const kiwi = createSimpleKiwi(spawnData.lane, spawnData.z);
                                 gameState.kiwis.push(kiwi);
                                 console.log('🥝 Kiwi spawned in lane', spawnData.lane);
+                                
+                                // Track successful collectible spawn
+                                dashboardStats.collectibleCount++;
+                                dashboardStats.lastCollectibleSpawn = Date.now();
+                                trackSpawnAttempt(true);
                             } else if (spawnData.type === 'broccoli') {
                                 const broccoli = createBroccoli(spawnData.lane, spawnData.z, 'single');
                                 gameState.broccolis.push(broccoli);
                                 console.log('🥦 Broccoli spawned in lane', spawnData.lane);
+                                
+                                // Track successful collectible spawn
+                                dashboardStats.collectibleCount++;
+                                dashboardStats.lastCollectibleSpawn = Date.now();
+                                trackSpawnAttempt(true);
                             }
                         }
                     }
@@ -6366,8 +6721,8 @@
                 this.spawnHistory = [];
                 this.lastSpawnTime = 0;
                 this.lastSpawnZ = 0;
-                this.minSpawnInterval = 1500; // Minimum 1.5 seconds between spawns
-                this.minSpawnDistance = 25; // Minimum distance between items
+                this.minSpawnInterval = 1000; // BALANCED: 1 second for 60 collectibles in 120s
+                this.minSpawnDistance = 20; // BALANCED: Reduced for better distribution
                 this.laneHistory = [null, null, null]; // Track last 3 lanes used
                 this.itemsSpawned = {};
                 this.itemsCollected = {};
@@ -6604,7 +6959,7 @@
         const LEVEL_CONFIGS = {
             level1: {
                 duration: 120, // 2 minutes
-                collectibles: { kiwi: 10, broccoli: 10 },
+                collectibles: { kiwi: 30, broccoli: 30 }, // BALANCED: 60 total for 60/40 ratio
                 powerups: { star: 5 },
                 distribution: 'balanced'
             },
