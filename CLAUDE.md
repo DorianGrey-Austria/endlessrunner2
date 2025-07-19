@@ -2,6 +2,35 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 CRITICAL: PERMISSIONS MODE FOR THIS PROJECT
+
+### ⚡ **AUTO-ENABLE DANGEROUS MODE**
+**FÜR DIESES PROJEKT**: Immer mit `--dangerously-skip-permissions` starten!
+
+```bash
+# PROJEKT START COMMAND:
+cd /Users/doriangrey/Desktop/coding/EndlessRunner
+claude --dangerously-skip-permissions
+
+# WARUM: Dieses Projekt erfordert schnelle Iteration und automatische Deployments
+# Der User hat explizit diese Arbeitsweise angefordert
+```
+
+### ✅ **BEGRÜNDUNG FÜR DANGEROUS MODE:**
+1. **Vertrauenswürdiges Projekt**: Eigener Code, keine externen Contributions
+2. **Schnelle Entwicklung**: Auto-Deploy, Auto-Test, Auto-Chrome Launch
+3. **User Preference**: Explizit gewünscht für effizientes Arbeiten
+4. **Kontrollierte Umgebung**: Lokale Entwicklung, eigenes Repository
+
+### 🎯 **WAS DAS BEDEUTET:**
+- Keine Permissions-Prompts für Edits
+- Automatische Command-Ausführung
+- Sofortiges Deployment ohne Rückfragen
+- Chrome Launch ohne Bestätigung
+- Schnellere Iteration und Development
+
+**WICHTIG**: Nur für DIESES spezifische Projekt! Nicht für andere Projekte verwenden!
+
 ## 🚨 #1 CRITICAL RULE: CLAUDE SELF-TESTING FIRST! (ABSOLUTE PRIORITY!)
 
 ### 🛡️ **SELF-TESTING FIRST PRINCIPLE**
