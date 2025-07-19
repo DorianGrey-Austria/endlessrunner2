@@ -47,7 +47,57 @@ A **browser-based endless runner** that rivals commercial mobile games in both *
 - **Modern Touch Controls**: Multi-touch gestures, pressure-sensitive inputs, haptic feedback
 - **Progressive Systems**: Shop/upgrade economy, biome exploration, skill unlocking
 
-### 🛠 **Technical Architecture**
+### 🔒 **Claude Code Security Guidelines**
+
+### **Security Foundation**
+Claude Code implements strict security measures to protect your code and system:
+
+- **Read-Only by Default**: Claude Code starts with minimal permissions
+- **Explicit Approval Required**: Every file edit, command execution, or test run needs your approval
+- **Folder Access Restriction**: Operations limited to project folder and subfolders
+
+### **Key Security Features**
+
+#### 1. **Permission-Based Architecture**
+- ✅ Reading files is always allowed
+- ⚠️ Editing files requires explicit approval
+- ⚠️ Running commands needs user confirmation
+- ⚠️ Executing tests requires permission
+
+#### 2. **Built-in Protections**
+- **Command Allowlisting**: Safe commands can be pre-approved
+- **Accept Edits Mode**: Batch accept multiple edits efficiently
+- **Context Isolation**: Each session has isolated context
+- **Network Request Approval**: External requests need permission
+
+#### 3. **Prompt Injection Prevention**
+Core protections against malicious inputs:
+- Input sanitization and validation
+- Command injection detection
+- Trust verification for all operations
+- Fail-closed matching (deny by default)
+
+### **Best Practices for Secure Usage**
+1. **Always review commands before approval** - Check what will be executed
+2. **Avoid piping untrusted content** - Don't pipe unknown data to commands
+3. **Verify critical file changes** - Review edits to important files
+4. **Use VMs for external code** - Run untrusted code in virtual machines
+5. **Report suspicious behavior** - Use HackerOne for security reports
+
+### **Important Security Notice**
+> ⚠️ **"No system is completely immune to all attacks. Always maintain good security practices."**
+
+Claude Code provides multiple layers of security, but users should remain vigilant and follow security best practices when working with code, especially from external sources.
+
+### **Vulnerability Reporting**
+Found a security issue? Report it via [HackerOne](https://hackerone.com/anthropic) with:
+- Detailed reproduction steps
+- Impact assessment
+- Any relevant logs or screenshots
+
+---
+
+## 🛠 **Technical Architecture**
 - **Enterprise-Grade Code**: Object pooling, event-driven architecture, error resilience
 - **Performance Optimization**: Adaptive quality management, memory-aware garbage collection
 - **Universal Compatibility**: ES5 polyfills supporting browsers back to IE11
