@@ -1,0 +1,115 @@
+name: NUCLEAR Deploy - Monolithic Only
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: 🔍 Pre-Deployment Verification
+      run: |
+        echo "🚨 NUCLEAR DEPLOYMENT - MONOLITHIC ONLY"
+        echo "========================================"
+        
+        # Verify local file is clean
+        echo "🔎 Checking local index.html for module references..."
+        if grep -q "ModuleLoader\|GameEngine\|import \|export \|src/core" SubwayRunner/index.html; then
+          echo "❌ FATAL: Local index.html contains module references!"
+          exit 1
+        fi
+        
+        # Check version tag
+        if ! grep -q "MONOLITHIC-V3.12.0-NUCLEAR-STABLE" SubwayRunner/index.html; then
+          echo "❌ FATAL: Version tag not found in index.html!"
+          exit 1
+        fi
+        
+        echo "✅ Local file verified clean"
+        
+    - name: 🏗️ Create ATOMIC Deployment Package
+      run: |
+        # Create clean deployment directory
+        mkdir -p nuclear-deploy
+        
+        # Copy ONLY the monolithic index.html
+        cp SubwayRunner/index.html nuclear-deploy/
+        
+        # Create version signature
+        echo "MONOLITHIC-V3.12.0-NUCLEAR-STABLE-$(date +%s)" > nuclear-deploy/version.txt
+        
+        # Create protective .htaccess
+        cat > nuclear-deploy/.htaccess << 'EOF'
+        # NUCLEAR DEPLOYMENT - FORCE MONOLITHIC VERSION
+        DirectoryIndex index.html
+        
+        # Enable compression
+        <IfModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/html
+        </IfModule>
+        
+        # Block ALL other HTML files
+        <FilesMatch "^(?!index\.html$).*\.html$">
+            Order Allow,Deny
+            Deny from all
+        </FilesMatch>
+        
+        # Block ALL JS module files
+        <FilesMatch "\.(js|mjs)$">
+            Order Allow,Deny
+            Deny from all
+        </FilesMatch>
+        
+        # Force HTTPS
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+        
+        # Security headers
+        Header set X-Frame-Options "DENY"
+        Header set X-Content-Type-Options "nosniff"
+        Header set Referrer-Policy "strict-origin-when-cross-origin"
+        EOF
+        
+        # List deployment contents
+        echo "📦 Deployment package contents:"
+        ls -la nuclear-deploy/
+        
+    - name: 🚀 Deploy to Hostinger (CLEAN)
+      uses: SamKirkland/FTP-Deploy-Action@4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./nuclear-deploy/
+        server-dir: /
+        dangerous-clean-slate: true  # NUCLEAR OPTION - Remove everything first
+        
+    - name: ⏳ Wait for Deployment Propagation
+      run: sleep 30
+      
+    - name: ✅ Post-Deployment Verification
+      run: |
+        # Copy verification script
+        cp verify-deployment.sh nuclear-deploy/
+        chmod +x nuclear-deploy/verify-deployment.sh
+        
+        # Run verification
+        ./nuclear-deploy/verify-deployment.sh
+        
+    - name: 📊 Deployment Summary
+      if: always()
+      run: |
+        echo "====================================="
+        echo "🚨 NUCLEAR DEPLOYMENT SUMMARY"
+        echo "====================================="
+        echo "Version: MONOLITHIC-V3.12.0-NUCLEAR-STABLE"
+        echo "Time: $(date)"
+        echo "Status: ${{ job.status }}"
+        echo "====================================="

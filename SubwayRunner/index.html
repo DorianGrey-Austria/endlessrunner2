@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<!-- VERSION: MONOLITHIC-V3.12.0-NUCLEAR-STABLE -->
+<!-- CRITICAL: This is the ONLY version that should be deployed! -->
+<!-- NO MODULES, NO IMPORTS, EVERYTHING INLINE -->
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -1489,6 +1492,29 @@
 
         function init() {
             console.log('Initializing Three.js scene...');
+            console.log('🔒 VERSION: MONOLITHIC-V3.12.0-NUCLEAR-STABLE');
+            
+            // CRITICAL VERSION CHECK
+            window.DEPLOYMENT_VERSION = 'MONOLITHIC-V3.12.0-NUCLEAR-STABLE';
+            
+            // Check for module contamination
+            if (typeof GameEngine !== 'undefined' || 
+                typeof ModuleLoader !== 'undefined' ||
+                document.querySelector('script[src*="ModuleLoader"]') ||
+                document.querySelector('script[src*="GameEngine"]')) {
+                const errorMsg = '🚨 CRITICAL ERROR: Wrong version deployed! Module references detected!';
+                console.error(errorMsg);
+                alert(errorMsg);
+                document.body.innerHTML = `
+                    <div style="background: red; color: white; padding: 20px; font-size: 24px;">
+                        ${errorMsg}<br>
+                        Expected: MONOLITHIC version<br>
+                        Detected: MODULAR version
+                    </div>
+                `;
+                throw new Error(errorMsg);
+            }
+            
             try {
                 // Initialize the collectible manager
                 collectibleManager = new UniversalCollectibleManager(LEVEL_CONFIGS.level1);

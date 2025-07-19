@@ -1,9 +1,12 @@
-name: Deploy SubwayRunner Enterprise to Hostinger
+name: DEPRECATED - Deploy SubwayRunner Enterprise to Hostinger
 
+# DISABLED - USE deploy-nuclear.yml INSTEAD!
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPRECATED to run this old workflow'
+        required: true
 
 jobs:
   deploy:
