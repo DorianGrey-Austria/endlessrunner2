@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ MULTI-PROJECT CONTEXT WARNING
+
+**AKTUELLE PARALLELE PROJEKTE:**
+- 🏃‍♂️ **EndlessRunner** (dieses Projekt) - Gesture-controlled gaming, SubwayRunner, Stars/Kiwis/Broccolis
+- 🎨 **Zeichen-App** (JOE FLOW APP 2025) - Digital drawing/design app mit Canvas-System  
+- 📱 **Claude Code Mobile App** - Mobile development project
+
+**CRITICAL:** Claude arbeitet gleichzeitig an mehreren Projekten. IMMER den Projekt-Kontext prüfen bevor Änderungen gemacht werden. Informationen nicht zwischen Projekten verwechseln!
+
 ## Project Overview
 
 A collection of endless runner games built with different technologies, following a UI/UX-first philosophy. The primary project is **SubwayRunner** - a browser-based endless runner with automated deployment to https://ki-revolution.at/
@@ -27,20 +36,28 @@ Before ANY deployment, Claude must thoroughly self-test:
 ✅ Core gameplay mechanics working
 ```
 
-### 2. Deployment Process
-After successful self-testing:
+### 2. Deployment Process (MANDATORY AUTO-WORKFLOW)
+**IMMER auf ki-revolution.at deployen - KEINE lokalen Tests!**
+
 ```bash
 # 1. Commit and push
 git add . && git commit -m "descriptive message" && git push
 
-# 2. Wait 60 seconds for GitHub Actions
+# 2. Wait 60 seconds for GitHub Actions deployment
 
 # 3. Auto-open Chrome (REQUIRED)
 open -a "Google Chrome" https://ki-revolution.at/
 
-# 4. Confirm deployment
+# 4. Take screenshot and analyze functionality
+# 5. Confirm deployment
 "🌐 Version X.Y.Z live at https://ki-revolution.at/ - SELF-TESTED ✅"
 ```
+
+**CRITICAL RULE:** Claude MUSS sich selbst testen durch:
+- 60s Timeout nach Push
+- Screenshot von ki-revolution.at machen
+- Funktionalität analysieren 
+- Bestätigung geben
 
 ### 3. Version Management
 - Format: MAJOR.MINOR.PATCH (e.g., 8.1.0)
