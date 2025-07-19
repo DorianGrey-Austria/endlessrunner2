@@ -17,6 +17,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    ✅ Configuration: Neue Configs/Werte validieren
    ✅ Console Errors: 0 Errors bei Server-Start
    ✅ Feature Validation: Core Features funktional
+   ✅ FUNCTION DUPLICATION CHECK: grep -n "function functionName" file
+
+2. CRITICAL FUNCTION DUPLICATION PREVENTION:
+   ❌ NEVER define same function twice in one file
+   ❌ NEVER reference function before it's defined
+   ❌ NEVER use const originalFunc = func with function declarations
+   ✅ ALWAYS search before adding: grep "function newFunctionName"
+   ✅ ONE FUNCTION = ONE DEFINITION rule (absolute!)
+   ✅ Test JavaScript syntax: node -c or browser console check
 
 2. OPTIONAL: AUTOMATED BROWSER TESTING:
    - Puppeteer/Playwright wenn verfügbar

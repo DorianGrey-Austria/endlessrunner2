@@ -494,12 +494,33 @@
                 <div id="collectibleRate">Rate: 0 per minute</div>
             </div>
             
+            <!-- ENHANCED: Spawn Plan Visualizer -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(40,0,60,0.7); border-radius: 4px;">
+                <div style="color: #ff88ff; font-weight: bold;">📋 SPAWN PLAN VISUALIZER</div>
+                <div id="spawnPlan">Loading spawn plan...</div>
+                <div id="planProgress">Progress: 0/60 items processed</div>
+                <div style="max-height: 120px; overflow-y: auto; margin-top: 5px; font-size: 9px;">
+                    <div id="spawnTimeline">Timeline loading...</div>
+                </div>
+            </div>
+            
+            <!-- ENHANCED: Real-time Spawn Logger -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(60,40,0,0.7); border-radius: 4px;">
+                <div style="color: #ffaa44; font-weight: bold;">📡 LIVE SPAWN ATTEMPTS</div>
+                <div id="lastSpawnAttempt">No attempts yet</div>
+                <div id="spawnFailureReason">Waiting for game start...</div>
+                <div style="max-height: 80px; overflow-y: auto; margin-top: 5px; font-size: 9px;">
+                    <div id="spawnLog">Log will appear here...</div>
+                </div>
+            </div>
+            
             <!-- Smart Analytics -->
             <div style="margin-bottom: 8px; padding: 8px; background: rgba(60,0,40,0.7); border-radius: 4px;">
                 <div style="color: #ff88ff; font-weight: bold;">🧠 SMART ANALYTICS</div>
                 <div id="blockingReasons">Blocking: None detected</div>
                 <div id="safeZoneStatus">Safe Zones: All clear</div>
                 <div id="performanceImpact">Performance: Normal</div>
+                <div id="systemConflicts">System Conflicts: Checking...</div>
             </div>
             
             <!-- Problem Solver -->
@@ -2713,7 +2734,17 @@
             spawnFailures: 0,
             blockingReasons: {},
             lastUpdate: Date.now(),
-            gameStartTime: Date.now()
+            gameStartTime: Date.now(),
+            
+            // ENHANCED: Spawn Plan Tracking
+            spawnLog: [],
+            lastSpawnAttemptDetails: null,
+            processedItems: 0,
+            
+            // System Conflict Detection
+            oldSystemActive: false,
+            newSystemActive: false,
+            conflictDetected: false
         };
         
         // Toggle Dashboard
@@ -2853,7 +2884,7 @@
             return { problems, solutions };
         }
         
-        // Update Dashboard Display
+        // ENHANCED: Update Dashboard with advanced analytics
         function updateDashboard() {
             if (document.getElementById('balanceDashboard').style.display === 'none') return;
             
@@ -2879,7 +2910,13 @@
             
             document.getElementById('collectibleRate').textContent = 
                 `Rate: ${stats.collectibleRate} per minute`;
-                
+            
+            // ENHANCED: Update Spawn Plan Visualizer
+            updateSpawnPlanVisualizer();
+            
+            // ENHANCED: Update Real-time Spawn Logger
+            updateSpawnLogger();
+            
             // Update analytics
             const activeObstacles = obstacles.length;
             const activeCollectibles = gameState.kiwis.length + gameState.broccolis.length;
@@ -2891,6 +2928,9 @@
                                     parseFloat(stats.successRate) > 60 ? 'Good' : 'Poor';
             document.getElementById('performanceImpact').textContent = 
                 `Performance: ${performanceStatus} (${stats.successRate}%)`;
+            
+            // ENHANCED: System Conflict Detection
+            updateSystemConflictAnalysis();
                 
             // Update problems
             document.getElementById('currentProblems').textContent = 
@@ -2908,6 +2948,120 @@
             } else {
                 dashboard.style.borderColor = '#ffff44'; // Yellow - okay balance
             }
+        }
+        
+        // ENHANCED: Spawn Plan Visualizer Functions
+        function updateSpawnPlanVisualizer() {
+            if (!collectibleManager || !collectibleManager.spawnQueue) {
+                document.getElementById('spawnPlan').textContent = 'Collectible Manager not initialized';
+                return;
+            }
+            
+            const queue = collectibleManager.spawnQueue;
+            const spawned = queue.filter(item => item.spawned).length;
+            const pending = queue.length - spawned;
+            
+            document.getElementById('spawnPlan').textContent = 
+                `Plan: ${queue.length} items total (${spawned} spawned, ${pending} pending)`;
+            document.getElementById('planProgress').textContent = 
+                `Progress: ${spawned}/${queue.length} items processed`;
+            
+            // Show next 10 items in timeline
+            const currentTime = gameState.gameTime - gameState.timeRemaining;
+            const nextItems = queue.filter(item => !item.spawned).slice(0, 10);
+            
+            let timelineHTML = '';
+            nextItems.forEach((item, i) => {
+                const requiredTime = (item.time / 1000).toFixed(1);
+                const status = currentTime >= item.time / 1000 ? '⏰ READY' : '⏳ WAITING';
+                timelineHTML += `${requiredTime}s: ${item.type} ${status}<br>`;
+            });
+            
+            if (nextItems.length === 0) {
+                timelineHTML = 'No more items scheduled';
+            }
+            
+            document.getElementById('spawnTimeline').innerHTML = timelineHTML;
+        }
+        
+        // ENHANCED: Real-time Spawn Logger
+        function updateSpawnLogger() {
+            if (dashboardStats.lastSpawnAttemptDetails) {
+                const attempt = dashboardStats.lastSpawnAttemptDetails;
+                document.getElementById('lastSpawnAttempt').textContent = 
+                    `Last: ${attempt.type} @ lane ${attempt.lane} - ${attempt.success ? 'SUCCESS' : 'FAILED'}`;
+                document.getElementById('spawnFailureReason').textContent = 
+                    attempt.success ? 'Spawn successful' : `Failed: ${attempt.reason}`;
+            }
+            
+            // Show last 5 log entries
+            const recentLogs = dashboardStats.spawnLog.slice(-5);
+            let logHTML = '';
+            recentLogs.forEach(log => {
+                const color = log.success ? '#4CAF50' : '#f44336';
+                logHTML += `<div style="color: ${color}">${log.time}: ${log.message}</div>`;
+            });
+            
+            if (logHTML === '') {
+                logHTML = 'No spawn attempts logged yet';
+            }
+            
+            document.getElementById('spawnLog').innerHTML = logHTML;
+        }
+        
+        // ENHANCED: System Conflict Analysis
+        function updateSystemConflictAnalysis() {
+            // Detect if old and new spawning systems are conflicting
+            const newSystemActive = collectibleManager && collectibleManager.initialized;
+            const oldSystemActive = gameState.kiwis.length > 0 || gameState.broccolis.length > 0;
+            
+            dashboardStats.newSystemActive = newSystemActive;
+            dashboardStats.oldSystemActive = oldSystemActive;
+            
+            let conflictStatus = 'Systems: ';
+            if (newSystemActive && oldSystemActive) {
+                conflictStatus += '⚠️ DUAL ACTIVE (conflict possible)';
+                dashboardStats.conflictDetected = true;
+            } else if (newSystemActive) {
+                conflictStatus += '✅ New System Active';
+            } else if (oldSystemActive) {
+                conflictStatus += '🟡 Old System Active';
+            } else {
+                conflictStatus += '❌ No Systems Active';
+            }
+            
+            document.getElementById('systemConflicts').textContent = conflictStatus;
+        }
+        
+        // ENHANCED: Track Spawn Attempts with detailed logging
+        function trackSpawnAttemptDetailed(type, lane, success, reason = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const attempt = {
+                type,
+                lane,
+                success,
+                reason,
+                timestamp: Date.now(),
+                gameTime: gameState.gameTime - gameState.timeRemaining
+            };
+            
+            dashboardStats.lastSpawnAttemptDetails = attempt;
+            
+            const logEntry = {
+                time: timestamp,
+                message: `${type} L${lane}: ${success ? 'OK' : reason}`,
+                success
+            };
+            
+            dashboardStats.spawnLog.push(logEntry);
+            
+            // Keep only last 20 log entries for performance
+            if (dashboardStats.spawnLog.length > 20) {
+                dashboardStats.spawnLog = dashboardStats.spawnLog.slice(-20);
+            }
+            
+            // Update traditional tracking
+            trackSpawnAttempt(success, reason);
         }
         
         // REMOVED: Enhanced Spawn Tracking Integration - was causing function duplication bug
@@ -6812,9 +6966,13 @@
                         if (spawnData) {
                             item.spawned = true;
                             console.log(`✅ SPAWNED: ${item.type} in lane ${spawnData.lane}`);
+                            // ENHANCED: Track successful spawn with details
+                            trackSpawnAttemptDetailed(item.type, spawnData.lane, true, 'Success');
                             return spawnData;
                         } else {
                             console.log(`❌ SPAWN FAILED: ${item.type} - no safe lane`);
+                            // ENHANCED: Track failed spawn with reason
+                            trackSpawnAttemptDetailed(item.type, -1, false, 'No safe lane available');
                         }
                     }
                 }
