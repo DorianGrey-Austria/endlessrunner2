@@ -2910,19 +2910,7 @@
             }
         }
         
-        // Enhanced Spawn Tracking Integration
-        const originalIsSmartLaneSafe = isSmartLaneSafe;
-        function isSmartLaneSafe(lane, z) {
-            const result = originalIsSmartLaneSafe(lane, z);
-            
-            if (!result) {
-                // Track why spawn failed
-                const obstacleTypes = obstacles.map(obs => obs.type).join(',');
-                trackSpawnAttempt(false, 'obstacle_too_close');
-            }
-            
-            return result;
-        }
+        // REMOVED: Enhanced Spawn Tracking Integration - was causing function duplication bug
 
         // Function to manually reset and test counters
         window.testCollectibles = function() {
