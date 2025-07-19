@@ -1,0 +1,6 @@
+{
+  "dangerouslySkipPermissions": true,
+  "projectName": "EndlessRunner",
+  "justification": "Trusted project with auto-deployment requirements",
+  "warning": "This file enables dangerous mode - only use in trusted environments!"
+}

@@ -47,7 +47,27 @@ A **browser-based endless runner** that rivals commercial mobile games in both *
 - **Modern Touch Controls**: Multi-touch gestures, pressure-sensitive inputs, haptic feedback
 - **Progressive Systems**: Shop/upgrade economy, biome exploration, skill unlocking
 
-### 🔒 **Claude Code Security Guidelines**
+### 🚀 **Quick Start with Claude Code**
+
+### **Auto-Start with Dangerous Permissions**
+This project is configured to use `--dangerously-skip-permissions` for faster development:
+
+```bash
+# Option 1: Use the start script
+./start-claude.sh
+
+# Option 2: Add to your shell profile (~/.zshrc or ~/.bashrc)
+alias claude-runner='cd /Users/doriangrey/Desktop/coding/EndlessRunner && claude --dangerously-skip-permissions'
+
+# Option 3: Direct command
+cd /Users/doriangrey/Desktop/coding/EndlessRunner && claude --dangerously-skip-permissions
+```
+
+**⚠️ WARNING**: This skips all permission prompts! Only use because this is a trusted project.
+
+---
+
+## 🔒 **Claude Code Security Guidelines**
 
 ### **Security Foundation**
 Claude Code implements strict security measures to protect your code and system:
