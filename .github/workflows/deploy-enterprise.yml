@@ -28,19 +28,11 @@ jobs:
         # Create deployment directory
         mkdir -p deploy
         
-        # Copy all necessary files
+        # Copy ONLY the monolithic index.html - NO MODULES!
         cp index.html deploy/
-        cp SubwayRunner/index-modular.html deploy/
-        cp SubwayRunner/test-modular.html deploy/
         
-        # Copy source modules
-        mkdir -p deploy/src
-        cp -r SubwayRunner/src/* deploy/src/
-        
-        # Copy level files
-        cp SubwayRunner/Level*.js deploy/
-        cp SubwayRunner/LevelBase.js deploy/
-        cp SubwayRunner/LevelManagerPro.js deploy/
+        # REMOVED: Module files that cause "Module not found" errors
+        # DO NOT COPY: index-modular.html, src/*, Level*.js
         
         # Create .htaccess for production security and performance
         cat > deploy/.htaccess << 'EOF'
