@@ -2,7 +2,44 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚨 CRITICAL DEPLOYMENT & WORKFLOW RULES (TOP PRIORITY!)
+## 🚨 #1 CRITICAL RULE: CLAUDE SELF-TESTING FIRST! (ABSOLUTE PRIORITY!)
+
+### 🛡️ **SELF-TESTING FIRST PRINCIPLE**
+**ABSOLUT WICHTIGSTES PRINZIP**: Claude testet IMMER gründlich selbst BEVOR User testen muss!
+
+**WARUM**: User soll NIEMALS Zeit verschwenden mit Dingen die nicht funktionieren!
+
+#### 🧪 **CLAUDE MANDATORY SELF-TEST PROCESS:**
+```bash
+1. COMPREHENSIVE TESTING (PFLICHT!):
+   ✅ HTML Structure: curl + grep für alle Features
+   ✅ JavaScript Functions: Alle implementierten Funktionen prüfen  
+   ✅ Configuration: Neue Configs/Werte validieren
+   ✅ Console Errors: 0 Errors bei Server-Start
+   ✅ Feature Validation: Core Features funktional
+
+2. OPTIONAL: AUTOMATED BROWSER TESTING:
+   - Puppeteer/Playwright wenn verfügbar
+   - Real gameplay testing
+   - Screenshot bei Errors
+
+3. NUR WENN ALLE SELF-TESTS ✅ → DEPLOYMENT + CHROME LAUNCH
+```
+
+#### ❌ **ABSOLUT VERBOTEN:**
+- Chrome öffnen ohne Self-Test
+- "Probier mal aus" ohne eigene Validierung  
+- Deployment ohne Feature-Verification
+- User als Beta-Tester missbrauchen
+
+#### ✅ **KORREKTE REIHENFOLGE:**
+1. **SELF-TEST** (5-10 Minuten gründlich)
+2. **GIT COMMIT** (nur wenn Self-Test ✅)  
+3. **DEPLOYMENT** (60s warten)
+4. **CHROME LAUNCH** für User
+5. **CONFIRMATION**: "Version X.Y.Z - SELF-TESTED ✅"
+
+## 🚨 CRITICAL DEPLOYMENT & WORKFLOW RULES (SECONDARY PRIORITY!)
 
 ### 🔴 AUTO-DEPLOYMENT IST PFLICHT!
 - **NACH JEDER SESSION**: `git add . && git commit -m "message" && git push`
@@ -10,34 +47,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **BROWSER**: Chrome verwenden (NIEMALS Safari)
 - **NACH DEPLOYMENT SAGEN**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
 
-### 🚀 MANDATORY TESTING + AUTO-CHROME LAUNCH (CRITICAL!)
-**ABSOLUT KRITISCHE REGEL**: TESTING + CHROME ÖFFNEN IST PFLICHT!
+### 🚀 MANDATORY SELF-TESTING + AUTO-WORKFLOW (CRITICAL!)
+**ABSOLUT KRITISCHE REGEL**: CLAUDE TESTET IMMER SELBST BEVOR USER TESTEN DARF!
 
-**🔴 NEU: REGRESSION PREVENTION WORKFLOW**
+**🔴 SELF-TESTING FIRST WORKFLOW**
 
-#### VOR JEDEM COMMIT (KEINE AUSNAHME!):
+#### CLAUDE SELF-TESTING (PFLICHT!):
 ```bash
-1. python3 -m http.server 8001
-2. Chrome öffnen: http://localhost:8001
-3. F12 → Console → MUSS 0 ERRORS zeigen!
-4. 30 Sekunden spielen
-5. Checken: Kiwis spawnen? Brokkolis spawnen?
-6. Screenshot bei Errors
+1. PLAYWRIGHT/PUPPETEER AUTOMATED TEST:
+   - Console error check
+   - Feature functionality test
+   - Performance validation
+   - Screenshot bei Errors
+
+2. MANUAL VALIDATION (if automated fails):
+   - python3 -m http.server 8001
+   - curl/grep HTML content check
+   - Basic functionality verification
+
+3. NUR WENN SELF-TEST ERFOLGREICH → DEPLOYMENT
 ```
 
-#### DEPLOYMENT NUR WENN:
-- [ ] Console Errors = 0
-- [ ] Kiwis spawnen ✓
-- [ ] Brokkolis spawnen ✓
-- [ ] 30 Sekunden ohne Crash
-- [ ] KEINE "Module not found" Errors
+#### CLAUDE AUTO-DEPLOYMENT WORKFLOW:
+```bash
+1. SELF-TEST ✅ → Git commit + push
+2. WAIT 60 SECONDS (GitHub Actions)
+3. AUTO-LAUNCH CHROME für User
+4. CLAUDE CONFIRMS: "🌐 Version X.Y.Z jetzt live - getestet ✅"
+```
+
+#### VOR JEDEM COMMIT (KEINE AUSNAHME!):
+- [ ] **SELF-TEST**: Playwright/automated test erfolgreich
+- [ ] **Console Errors = 0**
+- [ ] **Core Features funktionieren**
+- [ ] **Performance OK**
+- [ ] **KEINE Module/Import Errors**
 
 #### NACH DEPLOYMENT:
 1. **60 Sekunden warten** (GitHub Actions)
 2. **CHROME AUTOMATISCH ÖFFNEN**: `open -a "Google Chrome" https://ki-revolution.at/`
-3. **F12 → Console checken**
-4. **Screenshot bei Errors**
-5. **Confirm**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Console Errors: 0**"
+3. **F12 → Console checken** (User macht das)
+4. **CLAUDE BESTÄTIGT**: "**🌐 Version X.Y.Z jetzt live - SELF-TESTED ✅**"
+
+**WARUM**: User soll NIEMALS ungetestete Versionen sehen müssen!
 
 **⚠️ MODULE-LOADING REGRESSION PREVENTION:**
 - NIEMALS separate .js Module Files!

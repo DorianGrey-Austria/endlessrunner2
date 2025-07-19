@@ -5927,7 +5927,10 @@
                 // ==================== NEW UNIVERSAL COLLECTIBLE SYSTEM ====================
                 // Update collectible manager and check for spawns
                 if (collectibleManager) {
-                    const spawnData = collectibleManager.update(gameState.gameTime - gameState.timeRemaining, player.position.z);
+                    // FIX: Correct elapsed time calculation
+                    const elapsedTime = gameState.gameTime - gameState.timeRemaining;
+                    console.log(`🕐 Collectible Manager: elapsed=${elapsedTime}s, queue items waiting...`);
+                    const spawnData = collectibleManager.update(elapsedTime, player.position.z);
                     
                     if (spawnData) {
                         // DYNAMIC SMART SAFE-ZONE ALGORITHM
@@ -6814,11 +6817,16 @@
                 
                 // Check if it's time to spawn a new item
                 for (const item of this.spawnQueue) {
-                    if (!item.spawned && gameTime >= item.time / 1000) {
+                    const requiredTime = item.time / 1000;
+                    if (!item.spawned && gameTime >= requiredTime) {
+                        console.log(`🚀 SPAWNING: ${item.type} at gameTime=${gameTime}s (required=${requiredTime}s)`);
                         const spawnData = this.trySpawnItem(item.type, currentTime, currentZ);
                         if (spawnData) {
                             item.spawned = true;
+                            console.log(`✅ SPAWNED: ${item.type} in lane ${spawnData.lane}`);
                             return spawnData;
+                        } else {
+                            console.log(`❌ SPAWN FAILED: ${item.type} - no safe lane`);
                         }
                     }
                 }
