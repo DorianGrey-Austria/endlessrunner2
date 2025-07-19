@@ -12,6 +12,19 @@
 
 ---
 
+## 🎮 **VISION: The Future is Gesture-Controlled**
+
+> **"We're building for a future where games are controlled by natural head movements and gestures."**
+
+Every design decision in this project is made with **MediaPipe Gesture Control** in mind. While we currently support traditional controls, our architecture, UI/UX, and gameplay mechanics are all optimized for the upcoming gesture-based gaming revolution.
+
+### 🚀 **Gesture-Ready Design Principles:**
+- **Forgiving Collision Detection** - Built for 300-500ms gesture latency
+- **Natural Movement Patterns** - Collectibles placed in gesture-friendly paths
+- **Smooth Transitions** - No pixel-perfect precision required
+- **Accessibility First** - Playable with various gesture styles
+- **Flow-Optimized Gameplay** - Movements that feel natural, not forced
+
 ## 🎯 **Core Philosophy: UI/UX First**
 
 > **"UI and UX is paramount - alongside gameplay, it's the most critical element of any modern app."**

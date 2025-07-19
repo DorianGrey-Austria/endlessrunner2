@@ -37,6 +37,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **SIEHE AUCH**: [CLAUDE_CODE_RULES.md](./CLAUDE_CODE_RULES.md) für vollständige Regeln!
 
+## 🎮 PROJECT VISION: GESTURE-CONTROLLED GAMING
+
+### 🚀 ULTIMATE GOAL: Full Gesture Control Integration
+**WICHTIG**: Alles was wir entwickeln ist Vorbereitung für **Gesture-basiertes Gaming**!
+- **Ziel**: MediaPipe Head Tracking als primäre Steuerung
+- **Jede Entscheidung** muss Gesture-Kompatibilität berücksichtigen
+- **UI/UX**: Optimiert für 300-500ms Gesture-Latenz
+- **Collectibles**: Gesture-freundliche Spawn-Patterns
+- **Level Design**: Natürliche Bewegungsflows
+
+### ⚡ GESTURE CONTROL PRINCIPLES:
+1. **Forgiving Hitboxes** - Keine Pixel-Präzision nötig
+2. **Predictive Patterns** - Collectibles in natürlichen Bewegungspfaden
+3. **Smooth Transitions** - Keine abrupten Richtungswechsel
+4. **Accessibility First** - Für alle Gesture-Stile spielbar
+5. **Flow Optimization** - Bewegungen sollen sich natürlich anfühlen
+
 ## Repository Overview
 
 This is a collection of endless runner game projects built with different technologies, following a UI/UX-first development philosophy where user experience drives all technical decisions.
@@ -48,6 +65,7 @@ This is a collection of endless runner game projects built with different techno
 - **godot-mcp**: Godot MCP server for AI integration
 
 **Primary Project**: SubwayRunner is the main production game with automated deployment to Hostinger.
+**Future Vision**: Full MediaPipe Gesture Control integration across all projects!
 
 ## 🚨 VERSIONING RULES (NEVER DELETE!)
 
