@@ -7114,40 +7114,73 @@
                     console.log(`🕐 Collectible Manager: elapsed=${elapsedTime}s, queue items waiting...`);
                     const spawnData = collectibleManager.update(elapsedTime, player.position.z);
                     
+                    // EMERGENCY DEBUG: Log every update call
+                    if (frameCount % 60 === 0) { // Every 60 frames = 1 second
+                        console.log(`🔍 COLLECTIBLE DEBUG: gameTime=${elapsedTime.toFixed(1)}s, spawnData=${spawnData ? 'YES' : 'NULL'}`);
+                        if (collectibleManager && collectibleManager.spawnQueue) {
+                            const pending = collectibleManager.spawnQueue.filter(item => !item.spawned);
+                            console.log(`📋 SPAWN QUEUE: ${pending.length} pending items, next=${pending[0] ? pending[0].type + '@' + (pending[0].time/1000).toFixed(1) + 's' : 'none'}`);
+                        }
+                    }
+                    
                     if (spawnData) {
-                        // DYNAMIC SMART SAFE-ZONE ALGORITHM
-                        const isLaneSafe = isSmartLaneSafe(spawnData.lane, spawnData.z);
+                        console.log(`🚀 SPAWN ATTEMPT: ${spawnData.type} in lane ${spawnData.lane} at z=${spawnData.z}`);
+                        
+                        // EMERGENCY: Temporarily disable safety checks for testing
+                        const EMERGENCY_BYPASS_SAFETY = true;
+                        const isLaneSafe = EMERGENCY_BYPASS_SAFETY ? true : isSmartLaneSafe(spawnData.lane, spawnData.z);
+                        
+                        console.log(`🛡️ SAFETY CHECK: Lane ${spawnData.lane} is ${isLaneSafe ? 'SAFE' : 'BLOCKED'} ${EMERGENCY_BYPASS_SAFETY ? '(BYPASSED)' : ''}`);
+                        
                         
                         if (isLaneSafe) {
+                            console.log(`✅ PROCEEDING WITH SPAWN: ${spawnData.type} in lane ${spawnData.lane}`);
+                            
                             // Spawn the collectible
                             if (spawnData.type === 'kiwi') {
-                                const kiwi = createSimpleKiwi(spawnData.lane, spawnData.z);
-                                gameState.kiwis.push(kiwi);
-                                console.log('🥝 Kiwi spawned in lane', spawnData.lane);
-                                
-                                // Track successful collectible spawn
-                                dashboardStats.collectibleCount++;
-                                dashboardStats.lastCollectibleSpawn = Date.now();
-                                trackSpawnAttempt(true);
+                                try {
+                                    const kiwi = createSimpleKiwi(spawnData.lane, spawnData.z);
+                                    gameState.kiwis.push(kiwi);
+                                    console.log(`🥝 SUCCESS: Kiwi spawned in lane ${spawnData.lane}, total kiwis: ${gameState.kiwis.length}`);
+                                    
+                                    // Track successful collectible spawn
+                                    dashboardStats.collectibleCount++;
+                                    dashboardStats.lastCollectibleSpawn = Date.now();
+                                    trackSpawnAttempt(true);
+                                } catch (error) {
+                                    console.error(`❌ KIWI SPAWN FAILED:`, error);
+                                }
                             } else if (spawnData.type === 'broccoli') {
-                                const broccoli = createBroccoli(spawnData.lane, spawnData.z, 'single');
-                                gameState.broccolis.push(broccoli);
-                                console.log('🥦 Broccoli spawned in lane', spawnData.lane);
-                                
-                                // Track successful collectible spawn
-                                dashboardStats.collectibleCount++;
-                                dashboardStats.lastCollectibleSpawn = Date.now();
-                                trackSpawnAttempt(true);
+                                try {
+                                    const broccoli = createBroccoli(spawnData.lane, spawnData.z, 'single');
+                                    gameState.broccolis.push(broccoli);
+                                    console.log(`🥦 SUCCESS: Broccoli spawned in lane ${spawnData.lane}, total broccolis: ${gameState.broccolis.length}`);
+                                    
+                                    // Track successful collectible spawn
+                                    dashboardStats.collectibleCount++;
+                                    dashboardStats.lastCollectibleSpawn = Date.now();
+                                    trackSpawnAttempt(true);
+                                } catch (error) {
+                                    console.error(`❌ BROCCOLI SPAWN FAILED:`, error);
+                                }
                             } else if (spawnData.type === 'star') {
-                                const star = createStar(spawnData.lane, spawnData.z);
-                                gameState.stars.push(star);
-                                console.log('⭐ Star spawned in lane', spawnData.lane);
-                                
-                                // Track successful collectible spawn
-                                dashboardStats.collectibleCount++;
-                                dashboardStats.lastCollectibleSpawn = Date.now();
-                                trackSpawnAttempt(true);
+                                try {
+                                    const star = createStar(spawnData.lane, spawnData.z);
+                                    gameState.stars.push(star);
+                                    console.log(`⭐ SUCCESS: Star spawned in lane ${spawnData.lane}, total stars: ${gameState.stars.length}`);
+                                    
+                                    // Track successful collectible spawn
+                                    dashboardStats.collectibleCount++;
+                                    dashboardStats.lastCollectibleSpawn = Date.now();
+                                    trackSpawnAttempt(true);
+                                } catch (error) {
+                                    console.error(`❌ STAR SPAWN FAILED:`, error);
+                                }
+                            } else {
+                                console.error(`❌ UNKNOWN COLLECTIBLE TYPE: ${spawnData.type}`);
                             }
+                        } else {
+                            console.log(`❌ SPAWN BLOCKED: Lane ${spawnData.lane} not safe`);
                         }
                     }
                 }
@@ -7993,9 +8026,11 @@
                 this.createSpawnSchedule(spawnInterval);
                 
                 this.initialized = true;
-                console.log('📦 Item bag created:', this.itemBag);
-                console.log('⏱️ Spawn schedule created:', this.spawnQueue.length, 'items');
-                console.log('🕐 First 10 spawn times:', this.spawnQueue.slice(0, 10).map(item => `${item.type}@${(item.time/1000).toFixed(1)}s`));
+                console.log('🔧 COLLECTIBLE MANAGER INIT COMPLETE:');
+                console.log(`   📦 Item bag: ${this.itemBag.length} items -`, this.itemBag);
+                console.log(`   ⏱️ Spawn schedule: ${this.spawnQueue.length} items over ${actualGameDuration}s`);
+                console.log(`   🕐 First 5 spawns:`, this.spawnQueue.slice(0, 5).map(item => `${item.type}@${(item.time/1000).toFixed(1)}s`));
+                console.log(`   🎯 Level config:`, this.levelConfig);
             }
             
             createItemBag(collectibles) {
