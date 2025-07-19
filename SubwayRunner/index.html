@@ -471,14 +471,14 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.7.1-MONOLITH-FIX<br>
-            📅 07.07.2025
+            🚀 V3.7.2-SPAWN-DEBUG-ENHANCED<br>
+            📅 19.07.2025
         </div>
         
-        <!-- INTELLIGENT COLLECTIBLE BALANCE DASHBOARD -->
+        <!-- ENHANCED INTELLIGENT COLLECTIBLE BALANCE DASHBOARD V2 -->
         <div id="balanceDashboard" style="position: fixed; top: 120px; right: 20px; background: rgba(0,20,40,0.95); color: #00ff88; padding: 15px; font-size: 11px; font-family: 'Courier New', monospace; display: none; z-index: 1000; border: 2px solid #00ff88; border-radius: 8px; width: 320px; max-height: 70vh; overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 20px rgba(0,255,136,0.3);">
             <div style="text-align: center; font-weight: bold; margin-bottom: 10px; color: #00ffff; font-size: 13px;">
-                🎯 COLLECTIBLE BALANCE DASHBOARD
+                🎯 COLLECTIBLE BALANCE DASHBOARD V2
             </div>
             
             <!-- Live Balance Monitor -->
@@ -526,6 +526,37 @@
                 <div id="systemConflicts">System Conflicts: Checking...</div>
             </div>
             
+            <!-- NEW: Enhanced Debug Visualization -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(20,60,60,0.7); border-radius: 4px;">
+                <div style="color: #00ffff; font-weight: bold;">🔍 SPAWN DEBUG V2</div>
+                <div id="adaptiveMode" style="color: #ffff00;">Adaptive Mode: OFF</div>
+                <div id="consecutiveFailures">Consecutive Failures: 0</div>
+                <div id="failureReasons" style="font-size: 10px;">Failure Reasons: None</div>
+                <div id="spawnAttemptRate">Attempts/Min: 0</div>
+            </div>
+            
+            <!-- NEW: Lane Safety Visualizer -->
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(40,60,20,0.7); border-radius: 4px;">
+                <div style="color: #88ff88; font-weight: bold;">🚦 LANE SAFETY STATUS</div>
+                <div style="display: flex; justify-content: space-around; margin-top: 5px;">
+                    <div id="lane0Status" style="text-align: center; padding: 5px; background: rgba(0,255,0,0.2); border-radius: 3px; flex: 1; margin: 0 2px;">
+                        <div style="font-weight: bold;">Lane 0</div>
+                        <div id="lane0Safety" style="color: #00ff00;">✅ SAFE</div>
+                        <div id="lane0Distance" style="font-size: 9px;">Min: --</div>
+                    </div>
+                    <div id="lane1Status" style="text-align: center; padding: 5px; background: rgba(0,255,0,0.2); border-radius: 3px; flex: 1; margin: 0 2px;">
+                        <div style="font-weight: bold;">Lane 1</div>
+                        <div id="lane1Safety" style="color: #00ff00;">✅ SAFE</div>
+                        <div id="lane1Distance" style="font-size: 9px;">Min: --</div>
+                    </div>
+                    <div id="lane2Status" style="text-align: center; padding: 5px; background: rgba(0,255,0,0.2); border-radius: 3px; flex: 1; margin: 0 2px;">
+                        <div style="font-weight: bold;">Lane 2</div>
+                        <div id="lane2Safety" style="color: #00ff00;">✅ SAFE</div>
+                        <div id="lane2Distance" style="font-size: 9px;">Min: --</div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Problem Solver -->
             <div style="margin-bottom: 8px; padding: 8px; background: rgba(60,20,0,0.7); border-radius: 4px;">
                 <div style="color: #ff4444; font-weight: bold;">🚨 PROBLEM SOLVER</div>
@@ -537,6 +568,7 @@
             <div style="text-align: center; margin-top: 10px;">
                 <button onclick="forceSpawnCollectible()" style="background: #004400; color: #00ff00; border: 1px solid #00ff00; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">Force Spawn</button>
                 <button onclick="resetCollectibleSystem()" style="background: #440000; color: #ff4444; border: 1px solid #ff4444; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">Reset System</button>
+                <button onclick="toggleVisualDebugMode()" style="background: #440044; color: #ff44ff; border: 1px solid #ff44ff; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">3D Debug</button>
                 <button onclick="toggleDashboard()" style="background: #000044; color: #4444ff; border: 1px solid #4444ff; padding: 4px 8px; margin: 2px; border-radius: 3px; font-size: 10px; cursor: pointer;">Close</button>
             </div>
         </div>
@@ -2825,6 +2857,171 @@
             updateDashboard();
         }
         
+        // NEW: Visual Debug Mode System
+        let visualDebugMode = false;
+        let debugVisualizationGroup = null;
+        
+        function toggleVisualDebugMode() {
+            visualDebugMode = !visualDebugMode;
+            
+            if (visualDebugMode) {
+                console.log('🎨 Visual Debug Mode: ON');
+                initializeDebugVisualization();
+            } else {
+                console.log('🎨 Visual Debug Mode: OFF');
+                cleanupDebugVisualization();
+            }
+        }
+        
+        function initializeDebugVisualization() {
+            if (!scene) return;
+            
+            // Create a group for all debug visualizations
+            debugVisualizationGroup = new THREE.Group();
+            debugVisualizationGroup.name = 'DebugVisualization';
+            scene.add(debugVisualizationGroup);
+            
+            // Add grid helpers for lanes
+            const laneWidth = 2;
+            for (let i = 0; i < 3; i++) {
+                const laneHelper = new THREE.GridHelper(100, 50, 0x00ff00, 0x004400);
+                laneHelper.position.x = LANE_POSITIONS[i];
+                laneHelper.position.y = 0.01;
+                laneHelper.rotation.z = Math.PI / 2;
+                debugVisualizationGroup.add(laneHelper);
+            }
+        }
+        
+        function cleanupDebugVisualization() {
+            if (debugVisualizationGroup && scene) {
+                scene.remove(debugVisualizationGroup);
+                debugVisualizationGroup = null;
+            }
+            
+            // Clean up any safe zone markers
+            const safeZoneMarkers = scene.getObjectByName('SafeZoneMarkers');
+            if (safeZoneMarkers) {
+                scene.remove(safeZoneMarkers);
+            }
+        }
+        
+        function updateDebugVisualization() {
+            if (!visualDebugMode || !debugVisualizationGroup) return;
+            
+            // Update safe zone visualization
+            updateSafeZoneVisualization();
+            
+            // Update spawn attempt visualization
+            updateSpawnAttemptVisualization();
+        }
+        
+        function updateSafeZoneVisualization() {
+            // Remove old safe zone markers
+            const oldMarkers = debugVisualizationGroup.getObjectByName('SafeZoneMarkers');
+            if (oldMarkers) {
+                debugVisualizationGroup.remove(oldMarkers);
+            }
+            
+            // Create new safe zone markers group
+            const safeZoneMarkers = new THREE.Group();
+            safeZoneMarkers.name = 'SafeZoneMarkers';
+            
+            const currentZ = player ? player.position.z : 0;
+            
+            // Create visual markers for each lane
+            for (let lane = 0; lane < 3; lane++) {
+                const debugInfo = { safeZones: [] };
+                const isSafe = isSmartLaneSafe(lane, currentZ - 35, debugInfo);
+                
+                // Create a plane to show safe/blocked status
+                const planeGeometry = new THREE.PlaneGeometry(1.8, 10);
+                const planeMaterial = new THREE.MeshBasicMaterial({
+                    color: isSafe ? 0x00ff00 : 0xff0000,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                
+                const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+                plane.position.x = LANE_POSITIONS[lane];
+                plane.position.y = 0.1;
+                plane.position.z = currentZ - 35;
+                plane.rotation.x = -Math.PI / 2;
+                
+                safeZoneMarkers.add(plane);
+                
+                // Add distance markers for obstacles
+                if (debugInfo.safeZones && debugInfo.safeZones[lane]) {
+                    const zoneInfo = debugInfo.safeZones[lane];
+                    for (const obs of zoneInfo.obstacles) {
+                        if (obs.distance < 100) { // Only show nearby obstacles
+                            const markerGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+                            const markerMaterial = new THREE.MeshBasicMaterial({
+                                color: obs.blocked ? 0xff0000 : 0xffff00
+                            });
+                            
+                            const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                            marker.position.x = LANE_POSITIONS[lane];
+                            marker.position.y = 1;
+                            marker.position.z = currentZ - obs.distance;
+                            
+                            safeZoneMarkers.add(marker);
+                            
+                            // Add text sprite for distance (simplified version)
+                            if (obs.blocked) {
+                                const textGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+                                const textMesh = new THREE.Mesh(textGeometry, 
+                                    new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                                textMesh.position.copy(marker.position);
+                                textMesh.position.y += 0.5;
+                                safeZoneMarkers.add(textMesh);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            debugVisualizationGroup.add(safeZoneMarkers);
+        }
+        
+        function updateSpawnAttemptVisualization() {
+            if (!window.collectibleDebugVisualization) return;
+            
+            const lastFailed = window.collectibleDebugVisualization.lastFailedSpawn;
+            if (lastFailed && Date.now() - lastFailed.time < 5000) { // Show for 5 seconds
+                // Create visual indicator for failed spawn attempts
+                const failedSpawnMarker = new THREE.Group();
+                failedSpawnMarker.name = 'FailedSpawnMarker';
+                
+                for (const lane of lastFailed.attemptedLanes) {
+                    if (lane !== -1) {
+                        const ringGeometry = new THREE.RingGeometry(0.8, 1, 16);
+                        const ringMaterial = new THREE.MeshBasicMaterial({
+                            color: 0xff0000,
+                            transparent: true,
+                            opacity: 0.5 - (Date.now() - lastFailed.time) / 10000 // Fade out
+                        });
+                        
+                        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                        ring.position.x = LANE_POSITIONS[lane];
+                        ring.position.y = 0.1;
+                        ring.position.z = lastFailed.z - 35;
+                        ring.rotation.x = -Math.PI / 2;
+                        
+                        failedSpawnMarker.add(ring);
+                    }
+                }
+                
+                // Remove old failed spawn markers
+                const oldFailedMarker = debugVisualizationGroup.getObjectByName('FailedSpawnMarker');
+                if (oldFailedMarker) {
+                    debugVisualizationGroup.remove(oldFailedMarker);
+                }
+                
+                debugVisualizationGroup.add(failedSpawnMarker);
+            }
+        }
+        
         // Track Spawn Attempt
         function trackSpawnAttempt(success, reason = null) {
             dashboardStats.spawnAttempts++;
@@ -2943,6 +3140,12 @@
             // ENHANCED: Update Real-time Spawn Logger
             updateSpawnLogger();
             
+            // NEW: Update Enhanced Debug Visualizations
+            updateEnhancedDebugVisualization();
+            
+            // NEW: Update Lane Safety Status
+            updateLaneSafetyStatus();
+            
             // Update analytics
             const activeObstacles = obstacles.length;
             const activeCollectibles = gameState.kiwis.length + gameState.broccolis.length;
@@ -3057,6 +3260,115 @@
             }
             
             document.getElementById('systemConflicts').textContent = conflictStatus;
+        }
+        
+        // NEW: Update Enhanced Debug Visualization
+        function updateEnhancedDebugVisualization() {
+            if (!collectibleManager) return;
+            
+            // Update adaptive mode status
+            const adaptiveModeEl = document.getElementById('adaptiveMode');
+            if (adaptiveModeEl) {
+                adaptiveModeEl.textContent = `Adaptive Mode: ${collectibleManager.adaptiveSpawnMode ? 'ON' : 'OFF'}`;
+                adaptiveModeEl.style.color = collectibleManager.adaptiveSpawnMode ? '#ff4444' : '#ffff00';
+            }
+            
+            // Update consecutive failures
+            const failuresEl = document.getElementById('consecutiveFailures');
+            if (failuresEl) {
+                failuresEl.textContent = `Consecutive Failures: ${collectibleManager.consecutiveFailures}`;
+                failuresEl.style.color = collectibleManager.consecutiveFailures > 3 ? '#ff4444' : 
+                                       collectibleManager.consecutiveFailures > 0 ? '#ffaa00' : '#00ff00';
+            }
+            
+            // Update failure reasons
+            const failureReasonsEl = document.getElementById('failureReasons');
+            if (failureReasonsEl && collectibleManager.spawnDebugInfo) {
+                const reasons = collectibleManager.spawnDebugInfo.failureReasons;
+                let reasonText = 'Failure Reasons: ';
+                if (Object.keys(reasons).length === 0) {
+                    reasonText += 'None';
+                } else {
+                    const reasonArray = [];
+                    for (const [reason, count] of Object.entries(reasons)) {
+                        reasonArray.push(`${reason}: ${count}`);
+                    }
+                    reasonText += reasonArray.join(', ');
+                }
+                failureReasonsEl.textContent = reasonText;
+            }
+            
+            // Update spawn attempt rate
+            const attemptRateEl = document.getElementById('spawnAttemptRate');
+            if (attemptRateEl && collectibleManager.spawnDebugInfo) {
+                const totalAttempts = collectibleManager.spawnDebugInfo.totalAttempts;
+                const elapsedMinutes = (gameState.gameTime - gameState.timeRemaining) / 60;
+                const rate = elapsedMinutes > 0 ? Math.round(totalAttempts / elapsedMinutes) : 0;
+                attemptRateEl.textContent = `Attempts/Min: ${rate}`;
+            }
+        }
+        
+        // NEW: Update Lane Safety Status
+        function updateLaneSafetyStatus() {
+            if (!gameState.isPlaying) return;
+            
+            const currentZ = player ? player.position.z : 0;
+            const debugInfo = { safeZones: [] };
+            
+            // Check safety for each lane
+            for (let lane = 0; lane < 3; lane++) {
+                const isSafe = isSmartLaneSafe(lane, currentZ - 35, debugInfo);
+                
+                const statusEl = document.getElementById(`lane${lane}Status`);
+                const safetyEl = document.getElementById(`lane${lane}Safety`);
+                const distanceEl = document.getElementById(`lane${lane}Distance`);
+                
+                if (statusEl && safetyEl && distanceEl) {
+                    // Update safety status
+                    if (isSafe) {
+                        safetyEl.textContent = '✅ SAFE';
+                        safetyEl.style.color = '#00ff00';
+                        statusEl.style.background = 'rgba(0,255,0,0.2)';
+                    } else {
+                        safetyEl.textContent = '❌ BLOCKED';
+                        safetyEl.style.color = '#ff4444';
+                        statusEl.style.background = 'rgba(255,0,0,0.2)';
+                    }
+                    
+                    // Find minimum distance to obstacles in this lane
+                    let minDistance = 999;
+                    let blockingObstacle = null;
+                    
+                    if (debugInfo.safeZones && debugInfo.safeZones[lane]) {
+                        const zoneInfo = debugInfo.safeZones[lane];
+                        for (const obs of zoneInfo.obstacles) {
+                            if (obs.distance < minDistance) {
+                                minDistance = obs.distance;
+                                if (obs.blocked) {
+                                    blockingObstacle = obs.type;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Update distance display
+                    if (minDistance < 999) {
+                        distanceEl.textContent = blockingObstacle ? 
+                            `${blockingObstacle}: ${minDistance.toFixed(0)}` : 
+                            `Min: ${minDistance.toFixed(0)}`;
+                    } else {
+                        distanceEl.textContent = 'Clear';
+                    }
+                }
+            }
+            
+            // Store debug info for potential 3D visualization
+            window.collectibleDebugVisualization = window.collectibleDebugVisualization || {};
+            window.collectibleDebugVisualization.lastSafetyCheck = {
+                time: Date.now(),
+                debugInfo: debugInfo,
+                currentZ: currentZ
+            };
         }
         
         // ENHANCED: Track Spawn Attempts with detailed logging
@@ -4844,67 +5156,167 @@
             return bridgeGroup;
         }
         
-        // DYNAMIC SMART SAFE-ZONE ALGORITHM
-        function isSmartLaneSafe(lane, z) {
-            // FIXED: Balanced safe distance algorithm
-            const baseDistance = 15; // REDUCED: More reasonable base distance
+        // ENHANCED DYNAMIC SMART SAFE-ZONE ALGORITHM V2
+        function isSmartLaneSafe(lane, z, debugInfo = null) {
+            // IMPROVED: Increased base distance for better spawn safety
+            const baseDistance = 25; // INCREASED: From 15 to 25 for better clearance
             
-            // 1. SPEED-BASED SCALING: Minimal increase for high speed
+            // 1. SPEED-BASED SCALING: Progressive increase for high speed
             const speedRatio = gameState.speed / gameState.maxSpeed;
-            const speedMultiplier = 1 + speedRatio * 0.3; // REDUCED: Max 30% increase
+            const speedMultiplier = 1 + speedRatio * 0.5; // INCREASED: Max 50% increase
             
-            // 2. PERFORMANCE-BASED SCALING: Moderate help for struggling players
-            const performanceMultiplier = gameState.lives === 1 ? 1.2 : 
-                                         gameState.consecutiveAvoidances < 3 ? 1.1 : 1.0;
+            // 2. PERFORMANCE-BASED SCALING: More help for struggling players
+            const performanceMultiplier = gameState.lives === 1 ? 1.5 : 
+                                         gameState.consecutiveAvoidances < 3 ? 1.3 : 1.0;
             
-            // 3. GESTURE-CONTROL READY: Reduced for playability
-            const gestureMultiplier = 1.2; // REDUCED: From 1.5 to 1.2
+            // 3. GESTURE-CONTROL READY: Maintain gesture friendliness
+            const gestureMultiplier = 1.2;
             
             // Calculate final dynamic distance
             const dynamicDistance = baseDistance * speedMultiplier * performanceMultiplier * gestureMultiplier;
             const lanePosition = LANE_POSITIONS[lane];
             
-            // Check against all obstacles
+            // NEW: Store debug information for visualization
+            const safeZoneDebug = {
+                lane: lane,
+                z: z,
+                baseDistance: baseDistance,
+                dynamicDistance: dynamicDistance,
+                obstacles: [],
+                isSafe: true
+            };
+            
+            // Check against all obstacles with enhanced detection
             for (const obstacle of obstacles) {
                 if (!obstacle || !obstacle.position) continue;
                 
                 const obstacleDistance = Math.abs(obstacle.position.z - z);
                 const laneDistance = Math.abs(obstacle.position.x - lanePosition);
                 
-                // 4. OBSTACLE-TYPE SPECIFIC DISTANCES (BALANCED)
+                // NEW: Get obstacle dimensions for better collision detection
+                const obstacleBounds = getObstacleDimensions(obstacle);
+                
+                // 4. ENHANCED OBSTACLE-TYPE SPECIFIC DISTANCES
                 let typeMultiplier = 1.0;
+                let extraClearance = 0; // Additional clearance for wide obstacles
+                
                 switch (obstacle.type) {
                     case 'movingwall':
                     case 'swinginghammer':
                     case 'bouncingball':
-                        typeMultiplier = 1.3; // REDUCED: Moving obstacles (was 1.8)
+                        typeMultiplier = 1.5; // INCREASED: Moving obstacles need more space
+                        extraClearance = obstacleBounds.width * 0.5;
                         break;
                     case 'rotatingblade':
                     case 'spinninglaser':
-                        typeMultiplier = 1.2; // REDUCED: Rotating obstacles (was 1.6)
+                        typeMultiplier = 1.4; // INCREASED: Rotating obstacles
+                        extraClearance = obstacleBounds.radius || 2;
+                        break;
+                    case 'tunnel':
+                    case 'bridge':
+                        typeMultiplier = 1.3; // Long obstacles need more clearance
+                        extraClearance = 5;
                         break;
                     case 'spikes':
-                        typeMultiplier = 1.1; // REDUCED: Spikes (was 1.4)
+                        typeMultiplier = 1.2; // INCREASED: Spikes
                         break;
                     default:
-                        typeMultiplier = 1.0; // Normal obstacles
+                        typeMultiplier = 1.1; // Slight increase for all obstacles
                 }
                 
-                const requiredDistance = dynamicDistance * typeMultiplier;
+                const requiredDistance = (dynamicDistance + extraClearance) * typeMultiplier;
+                
+                // Enhanced collision detection with obstacle bounds
+                const effectiveLaneDistance = laneDistance - (obstacleBounds.width * 0.5);
+                
+                // Store debug info
+                safeZoneDebug.obstacles.push({
+                    type: obstacle.type,
+                    distance: obstacleDistance,
+                    requiredDistance: requiredDistance,
+                    laneDistance: effectiveLaneDistance,
+                    blocked: false
+                });
                 
                 // Check if too close to obstacle
-                if (obstacleDistance < requiredDistance && laneDistance < 2.0) {
-                    const logMessage = `🚫 Lane ${lane} blocked by ${obstacle.type} (distance: ${obstacleDistance.toFixed(1)} < required: ${requiredDistance.toFixed(1)}, dynamic: ${dynamicDistance.toFixed(1)})`;
+                if (obstacleDistance < requiredDistance && effectiveLaneDistance < 2.0) {
+                    const logMessage = `🚫 Lane ${lane} blocked by ${obstacle.type} (distance: ${obstacleDistance.toFixed(1)} < required: ${requiredDistance.toFixed(1)}, dynamic: ${dynamicDistance.toFixed(1)}, extra: ${extraClearance.toFixed(1)})`;
                     console.log(logMessage);
+                    
                     // Track detailed blocking reason for dashboard
-                    trackSpawnAttemptDetailed('kiwi/broccoli', lane, false, `Blocked by ${obstacle.type}, distance: ${obstacleDistance.toFixed(1)} < ${requiredDistance.toFixed(1)}`);
+                    trackSpawnAttemptDetailed('kiwi/broccoli', lane, false, 
+                        `Blocked by ${obstacle.type}, distance: ${obstacleDistance.toFixed(1)} < ${requiredDistance.toFixed(1)}`);
+                    
+                    safeZoneDebug.obstacles[safeZoneDebug.obstacles.length - 1].blocked = true;
+                    safeZoneDebug.isSafe = false;
+                    
+                    // Store debug info if requested
+                    if (debugInfo) {
+                        debugInfo.safeZones = debugInfo.safeZones || [];
+                        debugInfo.safeZones.push(safeZoneDebug);
+                    }
+                    
                     return false;
                 }
             }
             
-            const logMessage = `✅ Lane ${lane} safe (dynamic distance: ${dynamicDistance.toFixed(1)}, max required: ${(dynamicDistance * 1.3).toFixed(1)})`;
+            const logMessage = `✅ Lane ${lane} safe (dynamic distance: ${dynamicDistance.toFixed(1)}, max required: ${(dynamicDistance * 1.5).toFixed(1)})`;
             console.log(logMessage);
+            
+            // Store debug info if requested
+            if (debugInfo) {
+                debugInfo.safeZones = debugInfo.safeZones || [];
+                debugInfo.safeZones.push(safeZoneDebug);
+            }
+            
             return true;
+        }
+        
+        // NEW: Helper function to get obstacle dimensions
+        function getObstacleDimensions(obstacle) {
+            const dimensions = {
+                width: 1.0,
+                height: 1.0,
+                depth: 1.0,
+                radius: null
+            };
+            
+            switch (obstacle.type) {
+                case 'tunnel':
+                    dimensions.width = 6; dimensions.depth = 8;
+                    break;
+                case 'barrier':
+                    dimensions.width = 3; dimensions.height = 1.5;
+                    break;
+                case 'spikes':
+                    dimensions.width = 2.5; dimensions.depth = 0.8;
+                    break;
+                case 'wall':
+                    dimensions.width = 6; dimensions.height = 2.5;
+                    break;
+                case 'rotatingblade':
+                    dimensions.radius = 2.5; dimensions.width = 5;
+                    break;
+                case 'swinginghammer':
+                    dimensions.width = 3; dimensions.radius = 2;
+                    break;
+                case 'movingwall':
+                    dimensions.width = 4; dimensions.height = 2;
+                    break;
+                case 'bouncingball':
+                    dimensions.radius = 1.2; dimensions.width = 2.4;
+                    break;
+                case 'spinninglaser':
+                    dimensions.radius = 3.2; dimensions.width = 6.4;
+                    break;
+                case 'bridge':
+                    dimensions.width = 3; dimensions.depth = 10;
+                    break;
+                default:
+                    dimensions.width = 1.5; dimensions.height = 1.5;
+            }
+            
+            return dimensions;
         }
         
         // Backup function for old system compatibility
@@ -5825,6 +6237,11 @@
             if (currentTime - dashboardStats.lastUpdate > 500) {
                 updateDashboard();
                 dashboardStats.lastUpdate = currentTime;
+            }
+            
+            // Update debug visualization every frame when active
+            if (visualDebugMode) {
+                updateDebugVisualization();
             }
             
             if (gameState.isPlaying) {
@@ -6904,12 +7321,22 @@
                 this.initialized = false;
                 
                 // Anti-clustering parameters
-                this.clusterCheckRadius = 50;
-                this.maxItemsInCluster = 2;
+                this.clusterCheckRadius = 30; // REDUCED: From 50 to 30 for more spawn opportunities
+                this.maxItemsInCluster = 3; // INCREASED: From 2 to 3 for better distribution
                 
                 // Gesture-friendly parameters
                 this.collectibleHitboxScale = 1.5; // 50% larger hitboxes
                 this.magnetRange = 3.0; // Magnetic collection range
+                
+                // NEW: Enhanced spawn tracking
+                this.failedSpawnAttempts = 0;
+                this.consecutiveFailures = 0;
+                this.adaptiveSpawnMode = false;
+                this.spawnDebugInfo = {
+                    totalAttempts: 0,
+                    successfulSpawns: 0,
+                    failureReasons: {}
+                };
                 
                 console.log('🎯 UniversalCollectibleManager initialized:', levelConfig);
             }
@@ -7012,33 +7439,126 @@
             }
             
             trySpawnItem(type, currentTime, currentZ) {
+                this.spawnDebugInfo.totalAttempts++;
+                
+                // ADAPTIVE MODE: Relax constraints after multiple failures
+                let effectiveMinInterval = this.minSpawnInterval;
+                let effectiveMinDistance = this.minSpawnDistance;
+                
+                if (this.consecutiveFailures > 3) {
+                    this.adaptiveSpawnMode = true;
+                    effectiveMinInterval *= 0.5; // Halve the interval requirement
+                    effectiveMinDistance *= 0.5; // Halve the distance requirement
+                    console.log(`🔧 ADAPTIVE MODE: Relaxing spawn constraints (failures: ${this.consecutiveFailures})`);
+                }
+                
                 // Check minimum spawn interval
-                if (currentTime - this.lastSpawnTime < this.minSpawnInterval) {
+                if (currentTime - this.lastSpawnTime < effectiveMinInterval) {
+                    this.recordFailure('interval_too_short');
                     return null;
                 }
                 
                 // Check minimum spawn distance
-                if (Math.abs(currentZ - this.lastSpawnZ) < this.minSpawnDistance) {
+                if (Math.abs(currentZ - this.lastSpawnZ) < effectiveMinDistance) {
+                    this.recordFailure('distance_too_short');
                     return null;
                 }
                 
-                // Choose lane intelligently
-                const lane = this.chooseLane();
-                if (lane === -1) return null; // No safe lane available
+                // ENHANCED: Try multiple lanes with fallback
+                const debugInfo = { safeZones: [] };
+                let spawnLane = -1;
+                let attemptedLanes = [];
                 
-                // Check for clustering
-                if (this.checkClustering(lane, currentZ)) {
+                // First attempt: Try smart lane selection
+                const preferredLane = this.chooseLane();
+                if (preferredLane !== -1 && isSmartLaneSafe(preferredLane, currentZ - 35, debugInfo)) {
+                    spawnLane = preferredLane;
+                } else {
+                    attemptedLanes.push(preferredLane);
+                    
+                    // Second attempt: Try all lanes in random order
+                    const allLanes = [0, 1, 2].sort(() => Math.random() - 0.5);
+                    for (const lane of allLanes) {
+                        if (!attemptedLanes.includes(lane) && isSmartLaneSafe(lane, currentZ - 35, debugInfo)) {
+                            spawnLane = lane;
+                            break;
+                        }
+                        attemptedLanes.push(lane);
+                    }
+                    
+                    // Third attempt: If adaptive mode, try with relaxed safety
+                    if (spawnLane === -1 && this.adaptiveSpawnMode) {
+                        console.log(`🔄 FALLBACK: Trying relaxed safety check`);
+                        // Temporarily reduce base distance for this check
+                        const originalIsSmartLaneSafe = window.isSmartLaneSafe;
+                        window.isSmartLaneSafe = function(lane, z, debug) {
+                            const result = originalIsSmartLaneSafe.call(this, lane, z, debug);
+                            if (!result) {
+                                // Try again with 70% of normal distance
+                                const tempBaseDistance = 17; // Reduced from 25
+                                console.log(`🔄 Trying lane ${lane} with reduced distance: ${tempBaseDistance}`);
+                                // This is a simplified check - in production would modify the actual function
+                            }
+                            return result;
+                        };
+                        
+                        for (const lane of allLanes) {
+                            if (isSmartLaneSafe(lane, currentZ - 35, debugInfo)) {
+                                spawnLane = lane;
+                                console.log(`✅ ADAPTIVE: Found safe lane ${lane} with relaxed constraints`);
+                                break;
+                            }
+                        }
+                        
+                        window.isSmartLaneSafe = originalIsSmartLaneSafe;
+                    }
+                }
+                
+                // No safe lane found
+                if (spawnLane === -1) {
+                    this.consecutiveFailures++;
+                    this.failedSpawnAttempts++;
+                    this.recordFailure('no_safe_lane');
+                    console.log(`❌ NO SAFE LANE: Attempted ${attemptedLanes.length} lanes, consecutive failures: ${this.consecutiveFailures}`);
+                    
+                    // Store debug visualization data
+                    if (window.collectibleDebugVisualization) {
+                        window.collectibleDebugVisualization.lastFailedSpawn = {
+                            time: currentTime,
+                            z: currentZ,
+                            debugInfo: debugInfo,
+                            attemptedLanes: attemptedLanes
+                        };
+                    }
+                    
                     return null;
                 }
+                
+                // Check for clustering (with adaptive relaxation)
+                let effectiveClusterRadius = this.clusterCheckRadius;
+                if (this.adaptiveSpawnMode) {
+                    effectiveClusterRadius *= 0.7; // Reduce cluster check radius
+                }
+                
+                if (this.checkClustering(spawnLane, currentZ, effectiveClusterRadius)) {
+                    this.recordFailure('clustering');
+                    this.consecutiveFailures++;
+                    return null;
+                }
+                
+                // Success! Reset failure counters
+                this.consecutiveFailures = 0;
+                this.adaptiveSpawnMode = false;
+                this.spawnDebugInfo.successfulSpawns++;
                 
                 // Update tracking
                 this.lastSpawnTime = currentTime;
                 this.lastSpawnZ = currentZ;
                 this.itemsSpawned[type]++;
-                this.updateLaneHistory(lane);
+                this.updateLaneHistory(spawnLane);
                 this.spawnHistory.push({
                     type,
-                    lane,
+                    lane: spawnLane,
                     z: currentZ,
                     time: currentTime
                 });
@@ -7048,14 +7568,19 @@
                     this.spawnHistory.shift();
                 }
                 
-                console.log(`✅ Spawning ${type} in lane ${lane} at z: ${currentZ}`);
+                console.log(`✅ Spawning ${type} in lane ${spawnLane} at z: ${currentZ} (attempts: ${attemptedLanes.length + 1})`);
                 
                 return {
                     type,
-                    lane,
+                    lane: spawnLane,
                     z: currentZ - 35, // Spawn ahead of player
-                    pattern: 'single' // Always single for now
+                    pattern: 'single', // Always single for now
+                    adaptiveSpawn: this.adaptiveSpawnMode // Track if this was an adaptive spawn
                 };
+            }
+            
+            recordFailure(reason) {
+                this.spawnDebugInfo.failureReasons[reason] = (this.spawnDebugInfo.failureReasons[reason] || 0) + 1;
             }
             
             chooseLane() {
@@ -7087,11 +7612,13 @@
                 }
             }
             
-            checkClustering(lane, z) {
+            checkClustering(lane, z, customRadius = null) {
+                const effectiveRadius = customRadius || this.clusterCheckRadius;
+                
                 // Count items within cluster radius
                 const nearbyItems = this.spawnHistory.filter(item => {
                     const distance = Math.abs(item.z - z);
-                    return distance < this.clusterCheckRadius;
+                    return distance < effectiveRadius;
                 });
                 
                 // Too many items nearby

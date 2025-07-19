@@ -1,0 +1,23 @@
+{
+  "project": {
+    "name": "EndlessRunner",
+    "type": "game-development",
+    "primaryLanguage": "javascript"
+  },
+  "startup": {
+    "dangerouslySkipPermissions": true,
+    "autoExecute": ["echo '🎮 EndlessRunner Project Loaded - Permissions Auto-Enabled'"],
+    "workingDirectory": "/Users/doriangrey/Desktop/coding/EndlessRunner"
+  },
+  "preferences": {
+    "deploymentUrl": "https://ki-revolution.at/",
+    "primaryProject": "SubwayRunner",
+    "testingPort": 8001,
+    "autoChromeLaunch": true
+  },
+  "workflow": {
+    "selfTestingRequired": true,
+    "autoDeployment": true,
+    "versionFormat": "MAJOR.MINOR.PATCH"
+  }
+}
