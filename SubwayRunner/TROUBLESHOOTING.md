@@ -1,5 +1,84 @@
 # 🚨 SUBWAY RUNNER - CRITICAL BUG TROUBLESHOOTING LOG
 
+## 🔴 REGRESSION PREVENTION RULES (PFLICHTLEKTÜRE!)
+
+### KRITISCHES PROBLEM: Module Loading Errors kommen IMMER WIEDER zurück!
+
+**CHRONOLOGIE DES SCHEITERNS:**
+- V3.6.1: Module Loading Errors → Fixed mit Monolith ✅
+- V3.6.2-MONOLITH-RESTORE: Funktionierende Version ✅
+- V3.7.0-UNIVERSAL-COLLECTIBLES: **MODULE ERRORS SIND ZURÜCK!** ❌
+
+### WARUM PASSIERT DAS IMMER WIEDER?
+
+1. **Entwickler (auch AI) vergessen den Kontext**
+2. **KEIN Testing vor Deployment**
+3. **Module werden "aus Versehen" wieder eingeführt**
+4. **Copy-Paste von altem modularen Code**
+
+### 🛡️ ABSOLUTE REGELN - KEINE AUSNAHMEN!
+
+#### 1. **MONOLITH-ONLY REGEL**
+```javascript
+// ❌ FALSCH - NIEMALS SO:
+<script src="./src/core/ModuleLoader.js"></script>
+class GameEngine { ... }
+window.GameEngine = GameEngine;
+
+// ✅ RICHTIG - IMMER SO:
+<script>
+class GameEngine { ... }
+// Alles inline in index.html!
+</script>
+```
+
+#### 2. **MANDATORY TESTING WORKFLOW**
+```bash
+# VOR JEDEM DEPLOYMENT - KEINE AUSNAHME!
+1. python3 -m http.server 8001
+2. Chrome öffnen: http://localhost:8001
+3. F12 → Console → MUSS 0 ERRORS zeigen!
+4. Mindestens 30 Sekunden spielen
+5. Prüfen: Spawnen Kiwis? Spawnen Brokkolis?
+6. Screenshot der Console machen
+```
+
+#### 3. **DEPLOYMENT CHECKLIST**
+- [ ] Local getestet? (python3 -m http.server)
+- [ ] Console Errors = 0?
+- [ ] Kiwis spawnen?
+- [ ] Brokkolis spawnen?
+- [ ] 30 Sekunden ohne Crash gespielt?
+- [ ] ERST DANN → git push!
+
+#### 4. **POST-DEPLOYMENT CHECK**
+```bash
+# NACH dem Deployment:
+1. 60 Sekunden warten (GitHub Actions braucht Zeit)
+2. Chrome: https://ki-revolution.at/
+3. F12 → Console öffnen
+4. Bei Errors → Screenshot!
+5. Bei Errors → SOFORT in TROUBLESHOOTING.md dokumentieren
+```
+
+### ⚠️ RED FLAGS - SOFORT STOPPEN WENN:
+- `Module GameEngine not found in global scope`
+- `Failed to load module`
+- `ModuleLoader is not defined`
+- `Cannot read property of undefined`
+- Rotes Error Popup erscheint
+
+**BEI DIESEN FEHLERN → SOFORTIGER ROLLBACK!**
+
+### 📸 SCREENSHOT-DOKUMENTATION
+Bei JEDEM Fehler:
+1. Screenshot machen
+2. Datum notieren
+3. Version notieren
+4. In TROUBLESHOOTING.md ablegen
+
+---
+
 ## 🚨 **KRITISCHER FEHLER: ENTERPRISE ARCHITECTURE FEHLGESCHLAGEN**
 
 ### **NEUE KRITISCHE PROBLEME (v6.0.0-ENTERPRISE)**

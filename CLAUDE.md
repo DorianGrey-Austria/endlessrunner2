@@ -13,20 +13,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 🚀 MANDATORY TESTING + AUTO-CHROME LAUNCH (CRITICAL!)
 **ABSOLUT KRITISCHE REGEL**: TESTING + CHROME ÖFFNEN IST PFLICHT!
 
-**WORKFLOW NACH JEDER ÄNDERUNG (PFLICHT):**
-1. **Playwright Testing**: `npx playwright test` - ALLE Tests müssen bestehen
-2. **Local Testing**: `python -m http.server 8001` - Lokale Funktionsprüfung
-3. **Error Check**: Browser-Konsole auf Fehler prüfen (0 Errors erlaubt!)
-4. **Deploy**: Nur wenn ALLE Tests bestehen: `git add . && git commit -m "message" && git push`
-5. **CHROME AUTOMATISCH ÖFFNEN**: `open -a "Google Chrome" https://ki-revolution.at/`
-6. **Confirm**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Chrome geöffnet zum Testen!**"
+**🔴 NEU: REGRESSION PREVENTION WORKFLOW**
 
-**🔴 WICHTIG**: CHROME MUSS IMMER AUTOMATISCH GEÖFFNET WERDEN!
-- Nach JEDEM Deployment
-- Nach JEDER größeren Änderung
-- OHNE dass der User danach fragen muss!
+#### VOR JEDEM COMMIT (KEINE AUSNAHME!):
+```bash
+1. python3 -m http.server 8001
+2. Chrome öffnen: http://localhost:8001
+3. F12 → Console → MUSS 0 ERRORS zeigen!
+4. 30 Sekunden spielen
+5. Checken: Kiwis spawnen? Brokkolis spawnen?
+6. Screenshot bei Errors
+```
 
-**WARUM**: User möchte SOFORT das Ergebnis sehen ohne extra fragen zu müssen!
+#### DEPLOYMENT NUR WENN:
+- [ ] Console Errors = 0
+- [ ] Kiwis spawnen ✓
+- [ ] Brokkolis spawnen ✓
+- [ ] 30 Sekunden ohne Crash
+- [ ] KEINE "Module not found" Errors
+
+#### NACH DEPLOYMENT:
+1. **60 Sekunden warten** (GitHub Actions)
+2. **CHROME AUTOMATISCH ÖFFNEN**: `open -a "Google Chrome" https://ki-revolution.at/`
+3. **F12 → Console checken**
+4. **Screenshot bei Errors**
+5. **Confirm**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/ - Console Errors: 0**"
+
+**⚠️ MODULE-LOADING REGRESSION PREVENTION:**
+- NIEMALS separate .js Module Files!
+- ALLES inline in index.html!
+- KEIN ModuleLoader!
+- KEIN import/export!
+
+**WARUM**: Module Loading Errors kommen IMMER WIEDER zurück wenn nicht getestet!
 
 ### 📋 WORKFLOW STANDARDS
 1. **Versionierung**: IMMER updaten (MAJOR.MINOR.PATCH)
