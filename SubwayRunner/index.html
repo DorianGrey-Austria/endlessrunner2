@@ -473,7 +473,7 @@
         </div>
         
         <!-- INTELLIGENT COLLECTIBLE BALANCE DASHBOARD -->
-        <div id="balanceDashboard" style="position: fixed; top: 120px; right: 20px; background: rgba(0,20,40,0.95); color: #00ff88; padding: 15px; font-size: 11px; font-family: 'Courier New', monospace; display: none; z-index: 1000; border: 2px solid #00ff88; border-radius: 8px; width: 320px; box-shadow: 0 0 20px rgba(0,255,136,0.3);">
+        <div id="balanceDashboard" style="position: fixed; top: 120px; right: 20px; background: rgba(0,20,40,0.95); color: #00ff88; padding: 15px; font-size: 11px; font-family: 'Courier New', monospace; display: none; z-index: 1000; border: 2px solid #00ff88; border-radius: 8px; width: 320px; max-height: 70vh; overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 20px rgba(0,255,136,0.3);">
             <div style="text-align: center; font-weight: bold; margin-bottom: 10px; color: #00ffff; font-size: 13px;">
                 🎯 COLLECTIBLE BALANCE DASHBOARD
             </div>
@@ -6898,10 +6898,10 @@
                     this.itemsCollected[type] = 0;
                 }
                 
-                // Calculate spawn distribution over game duration
+                // FIXED: Calculate spawn distribution over ACTUAL game duration
                 const totalItems = this.itemBag.length;
-                const gameDuration = this.levelConfig.duration || 120; // seconds
-                const spawnInterval = (gameDuration * 1000) / (totalItems * 1.5); // Add buffer
+                const actualGameDuration = 60; // CRITICAL FIX: Game actually runs 60s, not 120s!
+                const spawnInterval = (actualGameDuration * 1000) / (totalItems * 1.2); // Tighter packing
                 
                 // Create spawn schedule
                 this.createSpawnSchedule(spawnInterval);
@@ -6909,6 +6909,7 @@
                 this.initialized = true;
                 console.log('📦 Item bag created:', this.itemBag);
                 console.log('⏱️ Spawn schedule created:', this.spawnQueue.length, 'items');
+                console.log('🕐 First 10 spawn times:', this.spawnQueue.slice(0, 10).map(item => `${item.type}@${(item.time/1000).toFixed(1)}s`));
             }
             
             createItemBag(collectibles) {
@@ -6936,7 +6937,7 @@
             
             createSpawnSchedule(baseInterval) {
                 this.spawnQueue = [];
-                let currentTime = 5000; // Start spawning after 5 seconds
+                let currentTime = 1000; // FIXED: Start spawning after 1 second (was 5)
                 
                 for (let i = 0; i < this.itemBag.length; i++) {
                     // Add some randomness to prevent predictability
@@ -6961,7 +6962,7 @@
                 
                 const currentTime = Date.now();
                 
-                // Check if it's time to spawn a new item
+                // ENHANCED: Check if it's time to spawn a new item with detailed logging
                 for (const item of this.spawnQueue) {
                     const requiredTime = item.time / 1000;
                     if (!item.spawned && gameTime >= requiredTime) {
