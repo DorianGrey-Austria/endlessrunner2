@@ -468,8 +468,14 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.6.3-OFFLINE-RESILIENT<br>
+            🚀 V3.7.0-UNIVERSAL-COLLECTIBLES<br>
             📅 07.07.2025
+        </div>
+        
+        <!-- Collectible Debug Display -->
+        <div id="collectibleDebug" style="position: fixed; top: 150px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-size: 12px; font-family: monospace; display: none; z-index: 1000;">
+            <strong>Collectible Manager Debug</strong><br>
+            <div id="debugInfo">Loading...</div>
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -1419,6 +1425,10 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
+                // Initialize the collectible manager
+                collectibleManager = new UniversalCollectibleManager(LEVEL_CONFIGS.level1);
+                collectibleManager.init();
+                
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
@@ -2304,6 +2314,13 @@
             gameState.playerLane = 1;
             gameState.playerAction = 'running';
             gameState.playerY = 0;
+            
+            // Reset collectible manager
+            if (collectibleManager) {
+                collectibleManager.reset();
+                collectibleManager.init();
+                console.log('🔄 CollectibleManager reset for new game');
+            }
             gameState.jumpVelocity = 0;
             gameState.invulnerable = false;
             gameState.invulnerabilityTime = 0;
@@ -2650,6 +2667,16 @@
         };
 
         function handleKeyDown(event) {
+            // Debug key handling
+            if (event.code === 'KeyC') {
+                const debugDiv = document.getElementById('collectibleDebug');
+                if (debugDiv) {
+                    debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
+                    console.log('🔍 Collectible debug display toggled');
+                }
+                return;
+            }
+            
             if (!gameState.isPlaying) return;
             
             switch (event.code) {
@@ -3994,6 +4021,11 @@
             gameState.collectedKiwis++;
             gameState.totalKiwis++;
             
+            // Update collectible manager
+            if (collectibleManager) {
+                collectibleManager.onItemCollected('kiwi');
+            }
+            
             console.log(`🥝 COLLECTED KIWI - Session: ${gameState.collectedKiwis}, Total Lifetime: ${gameState.totalKiwis}`);
             
             // Handle combo system
@@ -4038,6 +4070,11 @@
             // Update broccoli count with debug logging
             gameState.collectedBroccolis++;
             gameState.totalBroccolis++;
+            
+            // Update collectible manager
+            if (collectibleManager) {
+                collectibleManager.onItemCollected('broccoli');
+            }
             
             console.log(`🥦 COLLECTED BROCCOLI - Session: ${gameState.collectedBroccolis}, Total Lifetime: ${gameState.totalBroccolis}`);
             
@@ -5338,6 +5375,22 @@
                 
                 player.position.y = gameState.playerY;
                 
+                // Update collectible debug display
+                if (collectibleManager && document.getElementById('collectibleDebug')) {
+                    const debugDiv = document.getElementById('debugInfo');
+                    const progress = collectibleManager.getProgress();
+                    let debugText = '';
+                    
+                    for (const [type, data] of Object.entries(progress)) {
+                        debugText += `${type}: ${data.collected}/${data.total} (spawned: ${data.spawned})<br>`;
+                    }
+                    
+                    debugText += `<br>Queue: ${collectibleManager.spawnQueue.filter(i => !i.spawned).length} items<br>`;
+                    debugText += `History: ${collectibleManager.spawnHistory.length} items`;
+                    
+                    debugDiv.innerHTML = debugText;
+                }
+                
                 // Handle invulnerability
                 if (gameState.invulnerable) {
                     gameState.invulnerabilityTime -= 16; // ~16ms per frame at 60fps
@@ -5523,22 +5576,35 @@
                     gameState.powerUps.push(powerUp);
                 }
                 
-                // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
-                // Helper function to check if lane is safe for collectible spawning
-                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
-                    return !obstacles.some(obs => 
-                        Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
-                        Math.abs(obs.position.z - zPosition) < safeDistance
-                    );
-                };
+                // ==================== NEW UNIVERSAL COLLECTIBLE SYSTEM ====================
+                // Update collectible manager and check for spawns
+                if (collectibleManager) {
+                    const spawnData = collectibleManager.update(gameState.gameTime - gameState.timeRemaining, player.position.z);
+                    
+                    if (spawnData) {
+                        // Check if lane is safe from obstacles
+                        const isLaneSafe = !obstacles.some(obs => 
+                            Math.abs(obs.position.x - LANE_POSITIONS[spawnData.lane]) < 1.5 && 
+                            Math.abs(obs.position.z - spawnData.z) < 15
+                        );
+                        
+                        if (isLaneSafe) {
+                            // Spawn the collectible
+                            if (spawnData.type === 'kiwi') {
+                                const kiwi = createSimpleKiwi(spawnData.lane, spawnData.z);
+                                gameState.kiwis.push(kiwi);
+                                console.log('🥝 Kiwi spawned in lane', spawnData.lane);
+                            } else if (spawnData.type === 'broccoli') {
+                                const broccoli = createBroccoli(spawnData.lane, spawnData.z, 'single');
+                                gameState.broccolis.push(broccoli);
+                                console.log('🥦 Broccoli spawned in lane', spawnData.lane);
+                            }
+                        }
+                    }
+                }
                 
-                // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.003; // Low starting rate
-                const maxCoinRate = 0.012; // Reduced max rate for better spacing
-                const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
-                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
-                
-                if (Math.random() < progressiveCoinRate) {
+                // OLD SYSTEM DISABLED - Keeping for reference
+                if (false) { // Disabled old system
                     // Progressive kiwi pattern complexity
                     let pattern;
                     const patternRand = Math.random();
@@ -6291,6 +6357,269 @@
             console.log('renderer:', renderer);
         };
 
+        // ==================== UNIVERSAL COLLECTIBLE MANAGER ====================
+        class UniversalCollectibleManager {
+            constructor(levelConfig) {
+                this.levelConfig = levelConfig;
+                this.itemBag = [];
+                this.spawnQueue = [];
+                this.spawnHistory = [];
+                this.lastSpawnTime = 0;
+                this.lastSpawnZ = 0;
+                this.minSpawnInterval = 1500; // Minimum 1.5 seconds between spawns
+                this.minSpawnDistance = 25; // Minimum distance between items
+                this.laneHistory = [null, null, null]; // Track last 3 lanes used
+                this.itemsSpawned = {};
+                this.itemsCollected = {};
+                this.initialized = false;
+                
+                // Anti-clustering parameters
+                this.clusterCheckRadius = 50;
+                this.maxItemsInCluster = 2;
+                
+                // Gesture-friendly parameters
+                this.collectibleHitboxScale = 1.5; // 50% larger hitboxes
+                this.magnetRange = 3.0; // Magnetic collection range
+                
+                console.log('🎯 UniversalCollectibleManager initialized:', levelConfig);
+            }
+            
+            init() {
+                // Create the item bag based on level config
+                this.itemBag = this.createItemBag(this.levelConfig.collectibles);
+                
+                // Initialize spawn tracking
+                for (const type in this.levelConfig.collectibles) {
+                    this.itemsSpawned[type] = 0;
+                    this.itemsCollected[type] = 0;
+                }
+                
+                // Calculate spawn distribution over game duration
+                const totalItems = this.itemBag.length;
+                const gameDuration = this.levelConfig.duration || 120; // seconds
+                const spawnInterval = (gameDuration * 1000) / (totalItems * 1.5); // Add buffer
+                
+                // Create spawn schedule
+                this.createSpawnSchedule(spawnInterval);
+                
+                this.initialized = true;
+                console.log('📦 Item bag created:', this.itemBag);
+                console.log('⏱️ Spawn schedule created:', this.spawnQueue.length, 'items');
+            }
+            
+            createItemBag(collectibles) {
+                const bag = [];
+                
+                // Add all items to the bag
+                for (const [type, count] of Object.entries(collectibles)) {
+                    for (let i = 0; i < count; i++) {
+                        bag.push(type);
+                    }
+                }
+                
+                // Shuffle the bag for randomness
+                return this.shuffle(bag);
+            }
+            
+            shuffle(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+            
+            createSpawnSchedule(baseInterval) {
+                this.spawnQueue = [];
+                let currentTime = 5000; // Start spawning after 5 seconds
+                
+                for (let i = 0; i < this.itemBag.length; i++) {
+                    // Add some randomness to prevent predictability
+                    const variance = (Math.random() - 0.5) * baseInterval * 0.4;
+                    const spawnTime = currentTime + variance;
+                    
+                    this.spawnQueue.push({
+                        time: spawnTime,
+                        type: this.itemBag[i],
+                        spawned: false
+                    });
+                    
+                    currentTime += baseInterval;
+                }
+                
+                // Sort by time
+                this.spawnQueue.sort((a, b) => a.time - b.time);
+            }
+            
+            update(gameTime, currentZ) {
+                if (!this.initialized) return null;
+                
+                const currentTime = Date.now();
+                
+                // Check if it's time to spawn a new item
+                for (const item of this.spawnQueue) {
+                    if (!item.spawned && gameTime >= item.time / 1000) {
+                        const spawnData = this.trySpawnItem(item.type, currentTime, currentZ);
+                        if (spawnData) {
+                            item.spawned = true;
+                            return spawnData;
+                        }
+                    }
+                }
+                
+                return null;
+            }
+            
+            trySpawnItem(type, currentTime, currentZ) {
+                // Check minimum spawn interval
+                if (currentTime - this.lastSpawnTime < this.minSpawnInterval) {
+                    return null;
+                }
+                
+                // Check minimum spawn distance
+                if (Math.abs(currentZ - this.lastSpawnZ) < this.minSpawnDistance) {
+                    return null;
+                }
+                
+                // Choose lane intelligently
+                const lane = this.chooseLane();
+                if (lane === -1) return null; // No safe lane available
+                
+                // Check for clustering
+                if (this.checkClustering(lane, currentZ)) {
+                    return null;
+                }
+                
+                // Update tracking
+                this.lastSpawnTime = currentTime;
+                this.lastSpawnZ = currentZ;
+                this.itemsSpawned[type]++;
+                this.updateLaneHistory(lane);
+                this.spawnHistory.push({
+                    type,
+                    lane,
+                    z: currentZ,
+                    time: currentTime
+                });
+                
+                // Keep spawn history size manageable
+                if (this.spawnHistory.length > 50) {
+                    this.spawnHistory.shift();
+                }
+                
+                console.log(`✅ Spawning ${type} in lane ${lane} at z: ${currentZ}`);
+                
+                return {
+                    type,
+                    lane,
+                    z: currentZ - 35, // Spawn ahead of player
+                    pattern: 'single' // Always single for now
+                };
+            }
+            
+            chooseLane() {
+                const availableLanes = [0, 1, 2];
+                
+                // Remove lanes that were used too recently
+                const recentLanes = this.laneHistory.slice(-2);
+                const filteredLanes = availableLanes.filter(lane => 
+                    recentLanes.filter(l => l === lane).length < 2
+                );
+                
+                if (filteredLanes.length === 0) {
+                    // All lanes were used recently, choose least recent
+                    return availableLanes[Math.floor(Math.random() * 3)];
+                }
+                
+                // Prefer center lane slightly for gesture control
+                if (filteredLanes.includes(1) && Math.random() < 0.4) {
+                    return 1;
+                }
+                
+                return filteredLanes[Math.floor(Math.random() * filteredLanes.length)];
+            }
+            
+            updateLaneHistory(lane) {
+                this.laneHistory.push(lane);
+                if (this.laneHistory.length > 3) {
+                    this.laneHistory.shift();
+                }
+            }
+            
+            checkClustering(lane, z) {
+                // Count items within cluster radius
+                const nearbyItems = this.spawnHistory.filter(item => {
+                    const distance = Math.abs(item.z - z);
+                    return distance < this.clusterCheckRadius;
+                });
+                
+                // Too many items nearby
+                if (nearbyItems.length >= this.maxItemsInCluster) {
+                    return true;
+                }
+                
+                // Check if same lane was used too much nearby
+                const sameLaneNearby = nearbyItems.filter(item => item.lane === lane);
+                if (sameLaneNearby.length >= 2) {
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            onItemCollected(type) {
+                if (this.itemsCollected[type] !== undefined) {
+                    this.itemsCollected[type]++;
+                    console.log(`📊 Collected ${type}: ${this.itemsCollected[type]}/${this.levelConfig.collectibles[type]}`);
+                }
+            }
+            
+            getProgress() {
+                const progress = {};
+                for (const type in this.levelConfig.collectibles) {
+                    progress[type] = {
+                        collected: this.itemsCollected[type],
+                        total: this.levelConfig.collectibles[type],
+                        spawned: this.itemsSpawned[type]
+                    };
+                }
+                return progress;
+            }
+            
+            reset() {
+                this.itemBag = [];
+                this.spawnQueue = [];
+                this.spawnHistory = [];
+                this.lastSpawnTime = 0;
+                this.lastSpawnZ = 0;
+                this.laneHistory = [null, null, null];
+                this.itemsSpawned = {};
+                this.itemsCollected = {};
+                this.initialized = false;
+            }
+        }
+        
+        // Create level configurations
+        const LEVEL_CONFIGS = {
+            level1: {
+                duration: 120, // 2 minutes
+                collectibles: { kiwi: 10, broccoli: 10 },
+                powerups: { star: 5 },
+                distribution: 'balanced'
+            },
+            level2: {
+                duration: 150,
+                collectibles: { kiwi: 8, broccoli: 8, banana: 5 },
+                powerups: { star: 5, magnet: 2 },
+                distribution: 'progressive'
+            },
+            // More levels can be added here
+        };
+        
+        // Create the collectible manager instance
+        let collectibleManager = null;
+        
         // Initialize game
         console.log('Starting game initialization...');
         init();
