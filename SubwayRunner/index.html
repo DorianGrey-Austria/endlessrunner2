@@ -468,8 +468,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.6.1-COLLECTIBLE-BUGFIX<br>
-            📅 07.07.2025
+            🚀 V3.7.0-COLLECTIBLE-PERFECTION<br>
+            📅 10.07.2025
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -1267,11 +1267,16 @@
             powerUps: [],              // Spawned power-ups in world
             kiwis: [],                 // Spawned kiwis in world
             broccolis: [],             // Spawned broccolis in world  
+            mysteryBoxes: [],          // Spawned mystery boxes in world
+            mysteryBoxesSpawned: 0,    // Track spawned mystery boxes (max 2)
             collectedKiwis: 0,         // Current session kiwis
             collectedBroccolis: 0,     // Current session broccolis
+            collectedMysteryBoxes: 0,  // Current session mystery boxes
             totalKiwis: 0,             // Lifetime kiwis
             totalBroccolis: 0,         // Lifetime broccolis
             totalCollectibles: 0,      // Total spawned this session
+            lastCollectibleSpawnTime: 0, // Track time since last collectible spawn
+            guaranteedSpawnInterval: 3000, // Force spawn if none in 3 seconds
             collectionGoal: 10,        // Target collectibles for bonus (80% of max ~12-15)
             collectionBonusAwarded: {      // Track tiered collection bonuses
                 fiveOfOne: false,               // 5+ of one type
@@ -2347,6 +2352,11 @@
             gameState.kiwis = [];
             gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
             gameState.broccolis = [];
+            gameState.mysteryBoxes.forEach(box => scene.remove(box.mesh));
+            gameState.mysteryBoxes = [];
+            gameState.mysteryBoxesSpawned = 0;
+            gameState.collectedMysteryBoxes = 0;
+            gameState.lastCollectibleSpawnTime = 0;
             
             // Start sound
             audioManager.play('powerup');
@@ -3423,6 +3433,61 @@
                     gameState.broccolis.splice(index, 1);
                 }
             });
+            
+            // ==================== MYSTERY BOX COLLISION DETECTION ====================
+            
+            gameState.mysteryBoxes.forEach((box, index) => {
+                const boxBBox = {
+                    min: {
+                        x: box.mesh.position.x - 0.6,
+                        y: box.mesh.position.y - 0.5,
+                        z: box.mesh.position.z - 0.6
+                    },
+                    max: {
+                        x: box.mesh.position.x + 0.6,
+                        y: box.mesh.position.y + 2.5, // Taller for fountain effect
+                        z: box.mesh.position.z + 0.6
+                    }
+                };
+                
+                // Check collision with player
+                if (isBoxesIntersecting(playerBBox, boxBBox) && !box.collected) {
+                    // Collect mystery box!
+                    box.collected = true;
+                    gameState.collectedMysteryBoxes++;
+                    
+                    // Big score bonus
+                    gameState.score += 500;
+                    
+                    // Golden particle explosion
+                    createGoldenExplosion(box.mesh.position.clone());
+                    
+                    // Play special sound
+                    audioManager.play('powerup');
+                    
+                    // Trigger special effect (random bonus)
+                    const bonusType = Math.random();
+                    if (bonusType < 0.33) {
+                        // Instant 1000 points
+                        gameState.score += 1000;
+                        showNotification('✨ MYSTERY BOX: +1500 POINTS!', 'gold');
+                    } else if (bonusType < 0.66) {
+                        // Double score for 10 seconds
+                        gameState.scoreMultiplier = 2;
+                        setTimeout(() => { gameState.scoreMultiplier = 1; }, 10000);
+                        showNotification('✨ MYSTERY BOX: 2X SCORE FOR 10s!', 'gold');
+                    } else {
+                        // Temporary invincibility
+                        gameState.invulnerable = true;
+                        gameState.invulnerabilityTime = 5000;
+                        showNotification('✨ MYSTERY BOX: 5s INVINCIBILITY!', 'gold');
+                    }
+                    
+                    // Remove from scene
+                    scene.remove(box.mesh);
+                    gameState.mysteryBoxes.splice(index, 1);
+                }
+            });
         }
         
         // Calculate precise player bounding box based on current action
@@ -4113,6 +4178,73 @@
             animateSplash();
         }
         
+        // Golden explosion effect for mystery boxes
+        function createGoldenExplosion(position) {
+            const particles = [];
+            const particleCount = 30;
+            
+            // Create golden sparkles
+            for (let i = 0; i < particleCount; i++) {
+                const sparkleSize = 0.1 + Math.random() * 0.15;
+                const sparkleGeometry = new THREE.SphereGeometry(sparkleSize, 6, 6);
+                const sparkleMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xFFD700,
+                    emissive: 0xFFD700,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 1
+                });
+                
+                const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
+                sparkle.position.copy(position);
+                
+                // Random velocity in all directions
+                sparkle.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.4,
+                    Math.random() * 0.5 + 0.2,
+                    (Math.random() - 0.5) * 0.4
+                );
+                
+                scene.add(sparkle);
+                particles.push(sparkle);
+            }
+            
+            // Create golden ring explosion
+            createExplosionRing(position, 0xFFD700);
+            
+            // Animate particles
+            const animateExplosion = () => {
+                let activeParticles = 0;
+                
+                particles.forEach((particle, index) => {
+                    // Update position
+                    particle.position.add(particle.velocity);
+                    particle.velocity.y -= 0.015; // Gravity
+                    
+                    // Fade out
+                    particle.material.opacity -= 0.02;
+                    particle.scale.multiplyScalar(0.98); // Shrink
+                    
+                    // Rotation for sparkle effect
+                    particle.rotation.x += 0.1;
+                    particle.rotation.y += 0.1;
+                    
+                    if (particle.material.opacity <= 0) {
+                        scene.remove(particle);
+                        particles.splice(index, 1);
+                    } else {
+                        activeParticles++;
+                    }
+                });
+                
+                if (activeParticles > 0) {
+                    requestAnimationFrame(animateExplosion);
+                }
+            };
+            
+            animateExplosion();
+        }
+        
         function updateComboUI() {
             const comboDisplay = document.getElementById('comboDisplay');
             const comboMultiplier = document.getElementById('comboMultiplier');
@@ -4409,6 +4541,77 @@
                 collected: false,
                 animationTime: 0,
                 baseY: 1.2
+            };
+        }
+        
+        function createMysteryBox(lane, z) {
+            const boxGroup = new THREE.Group();
+            
+            // Create golden sparkling fountain effect
+            const fountainHeight = 2.5;
+            
+            // Base platform (golden)
+            const baseGeometry = new THREE.CylinderGeometry(0.5, 0.6, 0.2, 8);
+            const baseMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFD700,
+                emissive: 0xFFD700,
+                emissiveIntensity: 0.4
+            });
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            boxGroup.add(base);
+            
+            // Golden fountain particles (sparkles)
+            const particleCount = 15;
+            for (let i = 0; i < particleCount; i++) {
+                const sparkleGeometry = new THREE.SphereGeometry(0.05 + Math.random() * 0.05, 4, 4);
+                const sparkleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFD700,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
+                
+                // Random position in fountain shape
+                const angle = (i / particleCount) * Math.PI * 2;
+                const radius = Math.random() * 0.3;
+                sparkle.position.x = Math.cos(angle) * radius;
+                sparkle.position.z = Math.sin(angle) * radius;
+                sparkle.position.y = Math.random() * fountainHeight;
+                
+                // Store animation data
+                sparkle.userData = {
+                    startY: sparkle.position.y,
+                    speed: 1 + Math.random() * 2,
+                    phase: Math.random() * Math.PI * 2
+                };
+                
+                boxGroup.add(sparkle);
+            }
+            
+            // Golden glow effect (larger transparent sphere)
+            const glowGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFD700,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.y = fountainHeight / 2;
+            boxGroup.add(glow);
+            
+            // Position the whole group
+            boxGroup.position.set(LANE_POSITIONS[lane], 1, z);
+            scene.add(boxGroup);
+            
+            return {
+                mesh: boxGroup,
+                type: 'mysteryBox',
+                lane: lane,
+                z: z,
+                collected: false,
+                animationTime: 0,
+                baseY: 1
             };
         }
         
@@ -5394,21 +5597,21 @@
                 let baseSpawnRate, maxSpawnRate;
                 
                 if (gameProgress < 0.2) {
-                    // Phase 1: Very gentle start (0-12s)
-                    baseSpawnRate = 0.003;
-                    maxSpawnRate = 0.008;
+                    // Phase 1: Very gentle start (0-12s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.015;  // Was 0.003
+                    maxSpawnRate = 0.026;   // Was 0.008
                 } else if (gameProgress < 0.5) {
-                    // Phase 2: Moderate challenge (12-30s)
-                    baseSpawnRate = 0.008;
-                    maxSpawnRate = 0.015;
+                    // Phase 2: Moderate challenge (12-30s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.040;  // Was 0.008
+                    maxSpawnRate = 0.050;   // Was 0.015
                 } else if (gameProgress < 0.8) {
-                    // Phase 3: Challenging (30-48s)
-                    baseSpawnRate = 0.012;
-                    maxSpawnRate = 0.020;
+                    // Phase 3: Challenging (30-48s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.060;  // Was 0.012
+                    maxSpawnRate = 0.066;   // Was 0.020
                 } else {
-                    // Phase 4: Extreme finale (48-60s)
-                    baseSpawnRate = 0.015;
-                    maxSpawnRate = 0.025;
+                    // Phase 4: Extreme finale (48-60s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.075;  // Was 0.015
+                    maxSpawnRate = 0.083;   // Was 0.025
                 }
                 
                 const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
@@ -5514,51 +5717,80 @@
                 
                 // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
                 // Helper function to check if lane is safe for collectible spawning
-                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 12) => {
+                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 25) => {
                     return !obstacles.some(obs => 
                         Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
                         Math.abs(obs.position.z - zPosition) < safeDistance
                     );
                 };
                 
-                // Dynamic spawn rate based on speed (reduce at high speeds)
-                const baseCoinRate = 0.003; // Low starting rate
-                const maxCoinRate = 0.012; // Reduced max rate for better spacing
-                const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
-                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
+                // CATCH-UP MECHANISM: Check if player is behind on collection goals
+                const elapsedTime = (currentTime - gameState.gameStartTime) / 1000; // seconds
+                const expectedCollectibles = Math.floor(elapsedTime * 1.0); // Expect ~1 per second (60 in 60s)
+                const actualCollected = gameState.collectedKiwis + gameState.collectedBroccolis;
+                const catchUpMultiplier = actualCollected < expectedCollectibles ? 1.5 : 1.0;
                 
-                if (Math.random() < progressiveCoinRate) {
+                // Dynamic spawn rate based on speed - INCREASED 5x/3.3x for better collectible spawning
+                const baseCoinRate = 0.015; // Was 0.003 - 5x increase
+                const maxCoinRate = 0.040; // Was 0.012 - 3.3x increase
+                const speedFactor = Math.max(0.7, 1 - (gameState.speed - 100) / 500); // Less reduction at high speeds (was 0.4)
+                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor * catchUpMultiplier;
+                
+                // GUARANTEED SPAWN TIMER: Force spawn if too long without collectibles
+                const timeSinceLastSpawn = currentTime - gameState.lastCollectibleSpawnTime;
+                const forceSpawn = timeSinceLastSpawn > gameState.guaranteedSpawnInterval;
+                
+                // Mystery Box spawning (rare, max 2 per game)
+                if (gameState.mysteryBoxesSpawned < 2 && Math.random() < 0.01) { // 1% chance
+                    const lane = Math.floor(Math.random() * 3);
+                    const spawnZ = -60 - (gameState.speed - 100) * 0.1; // Same distance as collectibles
+                    
+                    if (isLaneClearForCollectible(lane, spawnZ, 30)) { // Extra safe distance
+                        const mysteryBox = createMysteryBox(lane, spawnZ);
+                        gameState.mysteryBoxes.push(mysteryBox);
+                        gameState.mysteryBoxesSpawned++;
+                        console.log(`✨ MYSTERY BOX ${gameState.mysteryBoxesSpawned}/2 spawned in lane ${lane}!`);
+                    }
+                } else if (Math.random() < progressiveCoinRate || forceSpawn) {
                     // Progressive kiwi pattern complexity
                     let pattern;
                     const patternRand = Math.random();
                     
                     if (gameProgress < 0.3) {
-                        // Early game: mostly single kiwis
-                        pattern = patternRand < 0.8 ? 'single' : 'line';
+                        // Early game: mostly single kiwis, introduce line
+                        if (patternRand < 0.7) {
+                            pattern = 'single';
+                        } else {
+                            pattern = 'line';
+                        }
                     } else if (gameProgress < 0.6) {
                         // Mid game: introduce more patterns
-                        if (patternRand < 0.5) {
+                        if (patternRand < 0.4) {
                             pattern = 'single';
-                        } else if (patternRand < 0.8) {
+                        } else if (patternRand < 0.7) {
                             pattern = 'line';
-                        } else {
+                        } else if (patternRand < 0.9) {
                             pattern = 'arc';
+                        } else {
+                            pattern = 'diamond';
                         }
                     } else {
                         // Late game: more complex patterns, more rewards
-                        if (patternRand < 0.3) {
+                        if (patternRand < 0.2) {
                             pattern = 'single';
-                        } else if (patternRand < 0.6) {
+                        } else if (patternRand < 0.5) {
                             pattern = 'line';
-                        } else {
+                        } else if (patternRand < 0.8) {
                             pattern = 'arc';
+                        } else {
+                            pattern = 'diamond';
                         }
                     }
                     
-                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
-                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
+                    // ENHANCED: Higher collectible limits for better gameplay
+                    // Limit based on collected items: 55 Kiwis + 15 Broccolis = 70 total (was 37)
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 37) {
+                    if (collectedTotal >= 70) {
                         // Max collectibles collected, no more spawning
                         return;
                     }
@@ -5567,17 +5799,17 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 30:7 target ratio
+                    // Determine what to spawn based on 55:15 target ratio (was 30:7)
                     let isKiwi;
-                    if (kiwiCount >= 30) {
-                        isKiwi = false; // Force broccoli if we have 30 kiwis
-                    } else if (broccoliCount >= 7) {
-                        isKiwi = true; // Force kiwi if we have 7 broccolis
+                    if (kiwiCount >= 55) {
+                        isKiwi = false; // Force broccoli if we have 55 kiwis
+                    } else if (broccoliCount >= 15) {
+                        isKiwi = true; // Force kiwi if we have 15 broccolis
                     } else {
-                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
-                        const totalTarget = 37;
+                        // Weighted spawning for 55:15 ratio (~79% kiwi, 21% broccoli)
+                        const totalTarget = 70;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 30 / totalTarget; // ~0.81
+                        const targetRatio = 55 / totalTarget; // ~0.79
                         
                         // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
@@ -5592,7 +5824,7 @@
                     if (pattern === 'single') {
                         // ENHANCED: Find safe lanes for spawning
                         const safeLanes = [];
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05; // Further away at high speeds
+                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1; // Much further away at high speeds (was -35)
                         
                         for (let lane = 0; lane < 3; lane++) {
                             if (isLaneClearForCollectible(lane, baseSpawnZ)) {
@@ -5612,7 +5844,7 @@
                         }
                     } else if (pattern === 'line') {
                         // ENHANCED: Smart line spawning with obstacle avoidance
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1; // Much further away (was -35)
                         const safeLanes = [];
                         
                         for (let lane = 0; lane < 3; lane++) {
@@ -5621,13 +5853,13 @@
                             }
                         }
                         
-                        // FIXED: Maximum 2 collectibles per line, never all 3 simultaneously
+                        // ENHANCED: Allow all 3 lanes when safe for better collectible density
                         if (safeLanes.length >= 2) {
-                            // Randomly select max 2 lanes from safe lanes to prevent overwhelming patterns
-                            const maxLanes = Math.min(2, safeLanes.length);
+                            // Use all safe lanes for maximum collectible opportunities
+                            const maxLanes = safeLanes.length; // Use ALL safe lanes (was limited to 2)
                             const selectedLanes = [];
                             
-                            // Shuffle and select up to 2 lanes
+                            // Shuffle and select lanes
                             const shuffledLanes = [...safeLanes].sort(() => Math.random() - 0.5);
                             for (let i = 0; i < maxLanes; i++) {
                                 selectedLanes.push(shuffledLanes[i]);
@@ -5667,15 +5899,14 @@
                             }
                         }
                     } else if (pattern === 'arc') {
-                        // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
-                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
-                        const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
+                        // ENHANCED: Smart arc spawning - allow all safe lanes for better density
+                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1; // Much further away (was -35)
+                        const lanes = [0, 1, 2]; // Always check all lanes (was limited)
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
                         
                         if (safeLanes.length >= 2) {  // Only spawn arc if at least 2 safe lanes
-                            // FIXED: Limit to maximum 2 collectibles in arc pattern
-                            const maxArcCollectibles = Math.min(2, safeLanes.length);
-                            const selectedLanes = safeLanes.slice(0, maxArcCollectibles);
+                            // ENHANCED: Use all safe lanes for arc pattern
+                            const selectedLanes = safeLanes; // Use ALL safe lanes (was limited to 2)
                             
                             console.log(`🌀 ARC PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
@@ -5709,7 +5940,57 @@
                                 }
                             });
                         }
+                    } else if (pattern === 'diamond') {
+                        // NEW: Diamond pattern - center lane forward, side lanes back
+                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1;
+                        const centerLaneSafe = isLaneClearForCollectible(1, baseSpawnZ);
+                        const leftLaneSafe = isLaneClearForCollectible(0, baseSpawnZ - 6);
+                        const rightLaneSafe = isLaneClearForCollectible(2, baseSpawnZ - 6);
+                        
+                        const safeLaneCount = (centerLaneSafe ? 1 : 0) + (leftLaneSafe ? 1 : 0) + (rightLaneSafe ? 1 : 0);
+                        
+                        if (safeLaneCount >= 2) {  // Need at least 2 safe lanes for diamond
+                            console.log(`💎 DIAMOND PATTERN: ${safeLaneCount} safe lanes`);
+                            
+                            // Spawn center first if safe
+                            if (centerLaneSafe) {
+                                const isKiwi = gameState.collectedKiwis < 55 && (gameState.collectedBroccolis >= 15 || Math.random() < 0.8);
+                                if (isKiwi) {
+                                    const kiwi = createSimpleKiwi(1, baseSpawnZ);
+                                    gameState.kiwis.push(kiwi);
+                                } else {
+                                    const broccoli = createBroccoli(1, baseSpawnZ, 'diamond');
+                                    gameState.broccolis.push(broccoli);
+                                }
+                            }
+                            
+                            // Spawn sides if safe
+                            if (leftLaneSafe) {
+                                const isKiwi = gameState.collectedKiwis < 55 && (gameState.collectedBroccolis >= 15 || Math.random() < 0.8);
+                                if (isKiwi) {
+                                    const kiwi = createSimpleKiwi(0, baseSpawnZ - 6);
+                                    gameState.kiwis.push(kiwi);
+                                } else {
+                                    const broccoli = createBroccoli(0, baseSpawnZ - 6, 'diamond');
+                                    gameState.broccolis.push(broccoli);
+                                }
+                            }
+                            
+                            if (rightLaneSafe) {
+                                const isKiwi = gameState.collectedKiwis < 55 && (gameState.collectedBroccolis >= 15 || Math.random() < 0.8);
+                                if (isKiwi) {
+                                    const kiwi = createSimpleKiwi(2, baseSpawnZ - 6);
+                                    gameState.kiwis.push(kiwi);
+                                } else {
+                                    const broccoli = createBroccoli(2, baseSpawnZ - 6, 'diamond');
+                                    gameState.broccolis.push(broccoli);
+                                }
+                            }
+                        }
                     }
+                    
+                    // Update last spawn time for guaranteed spawn timer
+                    gameState.lastCollectibleSpawnTime = currentTime;
                 }
                 
                 // Update Power-Ups
@@ -5797,6 +6078,32 @@
                     // Slight vertical movement
                     const baseY = 1.0;
                     broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
+                });
+                
+                // Update Mystery Boxes
+                gameState.mysteryBoxes.forEach((box, index) => {
+                    box.mesh.position.z += visualSpeed;
+                    box.z = box.mesh.position.z;
+                    
+                    // Remove if passed player
+                    if (box.z > 10) {
+                        scene.remove(box.mesh);
+                        gameState.mysteryBoxes.splice(index, 1);
+                    }
+                    
+                    // Animate mystery box - golden fountain sparkles
+                    box.animationTime += deltaTime * 0.001;
+                    box.mesh.rotation.y += 0.02; // Slow rotation
+                    
+                    // Animate fountain particles
+                    box.mesh.children.forEach((child, i) => {
+                        if (child.userData && child.userData.startY !== undefined) {
+                            // Fountain particle animation
+                            const time = box.animationTime * child.userData.speed + child.userData.phase;
+                            child.position.y = child.userData.startY + Math.sin(time) * 0.5;
+                            child.material.opacity = 0.4 + Math.sin(time * 2) * 0.4;
+                        }
+                    });
                 });
                 
                 // Handle Power-Up Time Remaining
