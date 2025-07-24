@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; report-uri https://umvrurelsxpxmyzcvrcd.supabase.co/functions/v1/csp-report;">
+    <meta http-equiv="Report-To" content='{"group":"default","max_age":10886400,"endpoints":[{"url":"https://umvrurelsxpxmyzcvrcd.supabase.co/functions/v1/csp-report"}]}'>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
@@ -468,7 +469,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.7.1-HOTFIX<br>
+            🚀 V3.7.2-ERROR-LOGGING<br>
             📅 10.07.2025
         </div>
         
@@ -1092,6 +1093,9 @@
                 console.log('✅ Supabase initialized successfully');
                 console.log('🔗 Database URL:', SUPABASE_URL);
                 console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+                
+                // Initialize error logging
+                initializeErrorLogging();
             } else {
                 throw new Error('Supabase library not loaded');
             }
@@ -6586,6 +6590,119 @@
             console.log('camera:', camera);
             console.log('renderer:', renderer);
         };
+        
+        // Initialize error logging system
+        function initializeErrorLogging() {
+            if (!supabase) return;
+            
+            // Generate session ID for this game session
+            const sessionId = crypto.randomUUID();
+            sessionStorage.setItem('errorSessionId', sessionId);
+            
+            // Global error handler for JavaScript errors
+            window.addEventListener('error', async (event) => {
+                await logError({
+                    type: 'javascript',
+                    message: event.message,
+                    stack: event.error?.stack,
+                    sourceUrl: event.filename,
+                    lineNumber: event.lineno,
+                    columnNumber: event.colno
+                });
+            });
+            
+            // Unhandled promise rejections
+            window.addEventListener('unhandledrejection', async (event) => {
+                await logError({
+                    type: 'promise',
+                    message: event.reason?.message || String(event.reason),
+                    stack: event.reason?.stack
+                });
+            });
+            
+            // CSP violations
+            document.addEventListener('securitypolicyviolation', async (event) => {
+                await logError({
+                    type: 'csp',
+                    message: `CSP violation: ${event.violatedDirective}`,
+                    sourceUrl: event.blockedURI,
+                    lineNumber: event.lineNumber,
+                    columnNumber: event.columnNumber
+                });
+            });
+            
+            // Resource loading failures (images, scripts, etc)
+            window.addEventListener('error', async (event) => {
+                if (event.target !== window && (event.target.src || event.target.href)) {
+                    await logError({
+                        type: 'resource',
+                        message: `Failed to load: ${event.target.src || event.target.href}`,
+                        sourceUrl: event.target.src || event.target.href
+                    });
+                }
+            }, true);
+            
+            console.log('✅ Error logging system initialized');
+        }
+        
+        // GDPR-compliant error logging function
+        async function logError(errorData) {
+            if (!supabase) return;
+            
+            try {
+                const sessionId = sessionStorage.getItem('errorSessionId');
+                const gameVersion = document.getElementById('versionInfo')?.textContent?.match(/V[\d.]+[^\s]*/)?.[0] || 'unknown';
+                
+                const errorEntry = {
+                    error_type: errorData.type,
+                    message: errorData.message?.substring(0, 1000) || 'Unknown error',
+                    stack: errorData.stack?.substring(0, 5000),
+                    source_url: errorData.sourceUrl?.substring(0, 500),
+                    line_number: errorData.lineNumber,
+                    column_number: errorData.columnNumber,
+                    user_agent: navigator.userAgent.substring(0, 500),
+                    game_version: gameVersion,
+                    session_id: sessionId,
+                    browser_info: {
+                        language: navigator.language,
+                        platform: navigator.platform,
+                        screen: `${screen.width}x${screen.height}`,
+                        viewport: `${window.innerWidth}x${window.innerHeight}`,
+                        pixelRatio: window.devicePixelRatio
+                    },
+                    game_state: {
+                        score: gameState?.score || 0,
+                        timeRemaining: gameState?.timeRemaining || 0,
+                        speed: gameState?.speed || 0,
+                        isPlaying: gameState?.isPlaying || false,
+                        collectibles: {
+                            kiwis: gameState?.collectedKiwis || 0,
+                            broccolis: gameState?.collectedBroccolis || 0
+                        }
+                    },
+                    performance_metrics: {
+                        memory: performance.memory?.usedJSHeapSize,
+                        loadTime: performance.timing?.loadEventEnd - performance.timing?.navigationStart,
+                        fps: gameState?.currentFPS || 0
+                    }
+                };
+                
+                // Send to Supabase with timeout
+                const { error } = await Promise.race([
+                    supabase.from('subway_runner_errors').insert([errorEntry]),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+                ]);
+                
+                if (error) {
+                    console.warn('Error logging failed:', error);
+                } else {
+                    console.log(`📊 Error logged: ${errorData.type} - ${errorData.message?.substring(0, 50)}...`);
+                }
+            } catch (e) {
+                // Silently fail to avoid error loops
+                console.warn('Error logging exception:', e);
+            }
+        }
 
         // Initialize game
         console.log('Starting game initialization...');
