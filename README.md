@@ -1,5 +1,21 @@
 # 🏃‍♂️ Endless Runner MVP
 
+## 🚨 **CRITICAL DISCOVERY - 20. Juli 2025**
+
+### **Browser zeigen verschiedene Spiele-Versionen!**
+
+**Phänomen**: 
+- **Chrome**: Zeigt aktuelle Version mit Fehlern
+- **Brave**: Zeigt komplett andere, ältere Version:
+  - Hindernisse kommen von der falschen Seite
+  - Mega-hohe Sprünge möglich
+  - Andere Musik
+  - Komplett anderes Gameplay!
+
+**Ursache**: Browser-Cache-Konflikt mit verschiedenen Entwicklungsversionen
+
+**Lösung**: Erstelle neuen stabilen Branch `stable-game-v8` basierend auf `working-monolithic-baseline`
+
 ## 🎯 **Core Philosophy: UI/UX First**
 
 > **"UI and UX is paramount - alongside gameplay, it's the most critical element of any modern app."**
