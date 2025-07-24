@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; report-uri https://umvrurelsxpxmyzcvrcd.supabase.co/functions/v1/csp-report;">
-    <meta http-equiv="Report-To" content='{"group":"default","max_age":10886400,"endpoints":[{"url":"https://umvrurelsxpxmyzcvrcd.supabase.co/functions/v1/csp-report"}]}'>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://cquahsbgcycdmslcmmdz.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; report-uri https://cquahsbgcycdmslcmmdz.supabase.co/functions/v1/csp-report;">
+    <meta http-equiv="Report-To" content='{"group":"default","max_age":10886400,"endpoints":[{"url":"https://cquahsbgcycdmslcmmdz.supabase.co/functions/v1/csp-report"}]}'>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- MediaPipe CDN for Gesture Control -->
@@ -1077,8 +1077,8 @@
         let ambientStarted = false;
 
         // Supabase Configuration - Using working credentials
-        const SUPABASE_URL = 'https://umvrurelsxpxmyzcvrcd.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdnJ1cmVsc3hweG15emN2cmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ5OTYsImV4cCI6MjA1MDkxMDk5Nn0.xpBgJ0BQN86JqhNtKzKNl1kchO1IU_oXI7SYpgfLBJU'
+        const SUPABASE_URL = 'https://cquahsbgcycdmslcmmdz.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdWFoc2JnY3ljZG1zbGNtbWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzOTE3MDgsImV4cCI6MjA2ODk2NzcwOH0.1iBIMxzrvQpksIT2LNYr99DopyUVUl7XnasJ8aO3-Vw'
         
         // Initialize Supabase client
         let supabase = null;

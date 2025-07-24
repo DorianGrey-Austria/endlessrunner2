@@ -56,3 +56,7 @@ $$ LANGUAGE plpgsql;
 -- Schedule the cleanup function (requires pg_cron extension)
 -- Note: You may need to enable pg_cron in Supabase dashboard
 -- SELECT cron.schedule('delete-old-errors', '0 3 * * *', 'SELECT delete_old_errors();');
+
+-- Test insert to verify table works
+-- INSERT INTO subway_runner_errors (error_type, message, game_version) 
+-- VALUES ('test', 'Test error logging', 'V3.7.2-ERROR-LOGGING');
