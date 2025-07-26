@@ -42,8 +42,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels with Cyberpunk Theme)
-- **Previous**: 4.5.9-UNPKG-CSP-FIX (Switched back to unpkg.com due to CSP)
+- **Latest**: 4.6.0-LEVEL-SYSTEM (Level 2 "Neon Night Run" integrated and functional)
+- **Previous**: 4.5.11-HOTFIX (Fixed critical JavaScript errors)
+- **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels with Cyberpunk Theme)
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 - **Before**: 4.4.0-VISUAL-OVERHAUL (Massive Visual Enhancement for All 10 Levels)
 - **Before**: 4.3.0-MEGA-LEVELS (10 Epic Levels with Unique Mechanics)

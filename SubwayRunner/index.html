@@ -269,6 +269,17 @@
             60% { transform: translateY(-10px); }
         }
         
+        @keyframes notificationPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        @keyframes notificationFade {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+        
         /* Near Miss and Milestone displays positioning */
         #nearMissDisplay {
             position: absolute;
@@ -469,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.5.11-HOTFIX<br>
+            🚀 V4.6.0-LEVEL-SYSTEM<br>
             📅 10.07.2025
         </div>
         
@@ -1070,6 +1081,9 @@
                 gameState.lastScoreUpdate = currentTime;
                 
                 console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
+                
+                // Check for level progression
+                checkLevelProgression();
             }
         }
         
@@ -1361,6 +1375,176 @@
         // Create gameInstance alias for test compatibility
         window.gameInstance = gameState;
         window.gameState = gameState; // Also expose gameState globally
+        
+        // ==================== LEVEL SYSTEM ====================
+        window.currentLevel = 1;
+        const levels = {};
+        
+        // Level 2: Neon Night Run
+        const Level2 = {
+            name: "Neon Night Run",
+            description: "Cyberpunk city with neon lights",
+            id: 2,
+            objects: {
+                cyberpunkBuildings: [],
+                neonLights: [],
+                particles: []
+            },
+            
+            load: function(scene, renderer) {
+                console.log('🌃 Loading Level 2: Neon Night Run');
+                this.scene = scene;
+                this.renderer = renderer;
+                this.cleanup();
+                
+                // Update environment
+                scene.fog = new THREE.FogExp2(0x001133, 0.025);
+                renderer.setClearColor(0x001133);
+                
+                // Create neon environment
+                this.createEnvironment();
+            },
+            
+            createEnvironment: function() {
+                // Create neon grid floor
+                const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
+                gridHelper.position.y = -0.95;
+                gridHelper.userData = { type: 'level2Grid' };
+                this.scene.add(gridHelper);
+                this.objects.neonLights.push(gridHelper);
+                
+                // Create cyberpunk buildings
+                for (let i = 0; i < 20; i++) {
+                    const buildingGroup = new THREE.Group();
+                    const width = 6 + Math.random() * 4;
+                    const height = 20 + Math.random() * 30;
+                    const depth = 6 + Math.random() * 4;
+                    
+                    // Building body
+                    const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+                    const buildingMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x111122,
+                        emissive: 0x000011
+                    });
+                    const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                    building.position.y = height / 2;
+                    buildingGroup.add(building);
+                    
+                    // Neon edges
+                    const edgeGeometry = new THREE.BoxGeometry(width + 0.1, height + 0.1, depth + 0.1);
+                    const edgeMaterial = new THREE.MeshBasicMaterial({ 
+                        color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                        wireframe: true
+                    });
+                    const edges = new THREE.Mesh(edgeGeometry, edgeMaterial);
+                    edges.position.y = height / 2;
+                    buildingGroup.add(edges);
+                    
+                    const side = i % 2 === 0 ? -1 : 1;
+                    buildingGroup.position.set(
+                        side * (20 + Math.random() * 15),
+                        0,
+                        -i * 8
+                    );
+                    buildingGroup.userData = { type: 'cyberpunkBuilding' };
+                    
+                    this.scene.add(buildingGroup);
+                    this.objects.cyberpunkBuildings.push(buildingGroup);
+                }
+            },
+            
+            update: function(deltaTime) {
+                // Animate neon lights
+                this.objects.neonLights.forEach(light => {
+                    if (light.material && light.material.opacity) {
+                        light.material.opacity = 0.5 + Math.sin(Date.now() * 0.002) * 0.3;
+                    }
+                });
+            },
+            
+            cleanup: function() {
+                // Remove all level objects
+                Object.values(this.objects).forEach(objArray => {
+                    if (Array.isArray(objArray)) {
+                        objArray.forEach(obj => {
+                            if (obj.parent) obj.parent.remove(obj);
+                        });
+                    }
+                });
+                
+                // Reset arrays
+                this.objects = {
+                    cyberpunkBuildings: [],
+                    neonLights: [],
+                    particles: []
+                };
+            }
+        };
+        
+        // Register levels
+        levels[2] = Level2;
+        
+        // Expose for testing
+        window.levels = levels;
+        window.currentLevel = currentLevel;
+        
+        // Level management functions
+        window.checkLevelProgression = function checkLevelProgression() {
+            const levelThreshold = window.currentLevel * 1000; // Every 1000 points
+            
+            if (gameState.score >= levelThreshold && window.currentLevel < 2) {
+                window.currentLevel++;
+                loadLevel(window.currentLevel);
+                
+                // Show level transition
+                showNotification(`🎮 LEVEL ${window.currentLevel} UNLOCKED!`, 'level');
+            }
+        }
+        
+        function loadLevel(levelId) {
+            if (levels[levelId]) {
+                console.log(`Loading level ${levelId}`);
+                levels[levelId].load(scene, renderer);
+                gameState.currentLevel = levelId;
+            }
+        }
+        
+        function showNotification(message, type = 'default') {
+            const notification = document.createElement('div');
+            notification.className = 'game-notification';
+            notification.textContent = message;
+            
+            const colors = {
+                level: '#FFD700',
+                gold: '#FFD700',
+                warning: '#FF6B6B',
+                success: '#4ECDC4',
+                default: '#FFFFFF'
+            };
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 20px 40px;
+                background: rgba(0, 0, 0, 0.8);
+                color: ${colors[type] || colors.default};
+                font-size: 24px;
+                font-weight: bold;
+                border-radius: 10px;
+                border: 2px solid ${colors[type] || colors.default};
+                z-index: 1000;
+                animation: notificationPulse 0.5s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'notificationFade 0.5s ease-out';
+                setTimeout(() => notification.remove(), 500);
+            }, 2000);
+        }
 
         // Three.js setup
         let scene, camera, renderer, player, track, obstacles = [];
@@ -1429,6 +1613,7 @@
                 
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
+                window.scene = scene; // Expose for testing
                 scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
 
             // Camera (Subway Surfers perspective)
@@ -5495,6 +5680,11 @@
             lastFrameTime = currentTime;
             
             if (gameState.isPlaying) {
+                // Update current level
+                if (levels[window.currentLevel] && levels[window.currentLevel].update) {
+                    levels[window.currentLevel].update(deltaTime);
+                }
+                
                 // Update player position
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
