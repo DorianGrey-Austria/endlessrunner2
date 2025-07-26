@@ -1,6 +1,70 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: 🔴 **CRITICAL** - Three.js CDN Loading Failure
+## **Aktueller Status**: ✅ **ROLLBACK TO STABLE** - V3.6.1-COLLECTIBLE-BUGFIX
+
+---
+
+## 🚨 **RECENT ISSUES SUMMARY** - 10. Juli 2025
+
+### **Problem-Chronologie der letzten Tage**:
+
+1. **V4.5.10-LEVEL-PROGRESSION** - Module Loading Fehler
+   - Versuch: Modular Level System
+   - Problem: GitHub Actions deployed nur index.html, nicht die Module
+   - Folge: 404 Fehler für GameCore.js, LevelManager.js, etc.
+
+2. **V3.6.3-MERGED** - Schwere Grafik-Korruption  
+   - Versuch: Merge von v4.x Features zurück in v3.x
+   - Problem: Overlay-Rendering komplett kaputt
+   - Folge: Spiel startet, aber unspielbar
+
+3. **V4.5.x Series** - Three.js CDN Issues
+   - V4.5.5-V4.5.9: Verschiedene CDN und CSP Probleme
+   - Hauptproblem: Wechsel zwischen unpkg und cdnjs
+   - CSP blockiert cdnjs auf Hostinger Server
+   - Syntax Errors durch Code außerhalb von Funktionen
+
+### **Lessons Learned**:
+- ❗ Incremental Changes sind kritisch
+- ❗ Version Compatibility beachten
+- ❗ Module System funktioniert nicht mit current deployment
+- ❗ CSP auf Hostinger erlaubt nur unpkg.com
+- ❗ Immer lokal testen vor deployment
+
+---
+
+## 🎯 **COLLECTIBLE SYSTEM PROBLEMS** - 10. Juli 2025
+
+### **Hauptprobleme mit dem aktuellen System**:
+
+1. **Zu niedrige Spawn-Rate**
+   - Base rate: 0.003 (0.3% pro Frame)
+   - Max rate: 0.012 (1.2% pro Frame)
+   - Bei 60 FPS = nur 11-43 Spawn-Versuche in 60 Sekunden!
+
+2. **Spawn-Distanz zu Hindernissen**
+   - Nur 12 units safe distance
+   - Collectibles spawnen bei -35 units
+   - Oft zu nahe an Hindernissen → nicht sammelbar
+
+3. **Pattern-Limitierungen**
+   - Max 2 Collectibles pro Pattern (niemals alle 3 Lanes)
+   - Reduziert künstlich die Anzahl möglicher Collectibles
+
+4. **Fehlende Mystery Boxes**
+   - Code für Mystery Box Spawning fehlt komplett
+   - User will "goldene funkelnde Springbrunnen" (max 2)
+
+5. **Kein Catch-up Mechanismus**
+   - Wenn früh verpasst → keine Chance mehr aufzuholen
+   - Speed-Reduktion macht es bei hoher Geschwindigkeit noch schlimmer
+
+### **Ziel für V3.7.0**:
+- ✅ Garantiert: 20+ Kiwis, 7+ Broccolis sammelbar
+- ✅ Ideal: 30 Kiwis, 10 Broccolis
+- ✅ 2 Mystery Boxes pro Spiel
+- ✅ Faire Verteilung über gesamtes Spiel
+- ✅ Alle Collectibles müssen erreichbar sein
 
 ---
 

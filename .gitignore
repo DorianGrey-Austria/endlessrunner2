@@ -16,6 +16,10 @@ npm-debug.log*
 # Environment variables
 .env
 .env.local
+.env.production
+# Service Role Keys - NIEMALS committen!
+*service_role*
+*SERVICE_ROLE*
 
 # Build outputs
 dist/

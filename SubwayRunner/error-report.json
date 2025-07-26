@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-07-26T15:17:31.471Z",
+  "url": "http://localhost:8001",
+  "gameState": {
+    "hasGameInstance": true,
+    "hasGameState": true,
+    "hasRenderer": true,
+    "hasScene": true,
+    "hasCamera": false,
+    "documentReady": "complete",
+    "startButton": false
+  },
+  "errors": [
+    {
+      "text": "The Content Security Policy directive 'report-uri' is ignored when delivered via a <meta> element.",
+      "location": {
+        "url": "http://localhost:8001/",
+        "lineNumber": 7,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T15:17:24.562Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "location": {
+        "url": "http://localhost:8001/sounds/background/background.mp3",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T15:17:25.776Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "location": {
+        "url": "http://localhost:8001/favicon.ico",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T15:17:25.887Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_scores?select=*&order=score.desc&limit=10",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T15:17:26.103Z"
+    }
+  ],
+  "errorSummary": [
+    {
+      "message": "The Content Security Policy directive 'report-uri' is ignored when delivered via a <meta> element.",
+      "count": 1,
+      "firstOccurrence": "2025-07-26T15:17:24.562Z",
+      "location": {
+        "url": "http://localhost:8001/",
+        "lineNumber": 7,
+        "columnNumber": 0
+      }
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "count": 2,
+      "firstOccurrence": "2025-07-26T15:17:25.776Z",
+      "location": {
+        "url": "http://localhost:8001/sounds/background/background.mp3",
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "count": 1,
+      "firstOccurrence": "2025-07-26T15:17:26.103Z",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_scores?select=*&order=score.desc&limit=10",
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "totalErrors": 4
+}

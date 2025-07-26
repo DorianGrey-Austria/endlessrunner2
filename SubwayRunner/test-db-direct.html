@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Database Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Direct Supabase Error Test</h1>
+    <button onclick="testErrorLogging()">Test Error Logging</button>
+    <button onclick="fetchErrors()">Fetch Errors</button>
+    
+    <pre id="output"></pre>
+    
+    <script>
+        const SUPABASE_URL = 'https://cquahsbgcycdmslcmmdz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdWFoc2JnY3ljZG1zbGNtbWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1MzU2NDUsImV4cCI6MjA1MjExMTY0NX0.7icZ7GGer0DAM2gxHpeXCOS6K-xLziVX9w0nwPmA0_k';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        function log(msg) {
+            document.getElementById('output').textContent += msg + '\n';
+            console.log(msg);
+        }
+        
+        async function testErrorLogging() {
+            log('📝 Testing error logging...\n');
+            
+            try {
+                const errorData = {
+                    error_type: 'test_error',
+                    message: 'Direct test from test-db-direct.html',
+                    stack: 'Test stack trace',
+                    source_url: window.location.href,
+                    line_number: 42,
+                    column_number: 13,
+                    user_agent: navigator.userAgent,
+                    game_version: 'V4.5.10-TEST',
+                    session_id: 'test-session-' + Date.now(),
+                    context: JSON.stringify({ test: true, timestamp: new Date().toISOString() })
+                };
+                
+                const { data, error } = await supabase
+                    .from('subway_runner_errors')
+                    .insert([errorData]);
+                
+                if (error) {
+                    log('❌ Error inserting: ' + JSON.stringify(error, null, 2));
+                } else {
+                    log('✅ Error logged successfully!');
+                    log('Response: ' + JSON.stringify(data, null, 2));
+                }
+            } catch (e) {
+                log('❌ Exception: ' + e.message);
+            }
+        }
+        
+        async function fetchErrors() {
+            log('\n📊 Fetching errors from database...\n');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('subway_runner_errors')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) {
+                    log('❌ Error fetching: ' + JSON.stringify(error, null, 2));
+                } else {
+                    log(`✅ Found ${data.length} errors:\n`);
+                    data.forEach((err, i) => {
+                        log(`${i+1}. [${err.error_type}] ${err.message}`);
+                        log(`   Version: ${err.game_version}, Time: ${new Date(err.created_at).toLocaleString()}`);
+                        log('');
+                    });
+                }
+            } catch (e) {
+                log('❌ Exception: ' + e.message);
+            }
+        }
+        
+        // Auto-fetch on load
+        window.addEventListener('load', () => {
+            log('🚀 Supabase client initialized\n');
+            fetchErrors();
+        });
+    </script>
+</body>
+</html>
