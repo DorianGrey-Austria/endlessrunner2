@@ -42,17 +42,23 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.0-LEVEL-SYSTEM (Level 2 "Neon Night Run" integrated and functional)
-- **Previous**: 4.5.11-HOTFIX (Fixed critical JavaScript errors)
-- **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels with Cyberpunk Theme)
+- **Latest**: 4.6.4-BALANCED-RELAXED (Perfect speed balance, realistic collectibles)
+- **Previous**: 4.6.3-GAMEPLAY-IMPROVED (Better game balance)
+- **Before**: 4.6.2-STABILIZED (Critical fixes & test system)
+- **Before**: 4.6.1-CRITICAL-FIX (Fixed kiwiRadius undefined)
+- **Before**: 4.6.0-LEVEL-SYSTEM (Level 2 "Neon Night Run" integrated)
+- **Before**: 4.5.11-HOTFIX (Fixed critical JavaScript errors)
+- **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels)
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
-- **Before**: 4.4.0-VISUAL-OVERHAUL (Massive Visual Enhancement for All 10 Levels)
-- **Before**: 4.3.0-MEGA-LEVELS (10 Epic Levels with Unique Mechanics)
-- **Before**: 4.2.0-GHOST-MODE (Daily Ghost Racing with Seeded Levels)
-- **Before**: 4.1.0-LEVELS (Level System - 2 Levels with Neon Night Run)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.5.10-LEVEL-PROGRESSION. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.6.4-BALANCED-RELAXED. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+
+### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
+- **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)
+- **Hindernisse**: Spawn-Raten sind gut balanciert (Start: 0.004, Ende: 0.035)
+- **Collectibles**: 20 Kiwis + 5 Broccolis - nicht zu viel Clutter
+- **Visuals**: Realistische braune Kiwis, bodennahe grüne Broccolis
 
 ### **VERSION UPDATE PROCESS**
 1. Update version in `SubwayRunner/index.html` (search for "version:" string)
