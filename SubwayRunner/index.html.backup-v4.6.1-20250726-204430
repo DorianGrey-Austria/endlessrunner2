@@ -480,8 +480,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.2-STABILIZED<br>
-            📅 26.07.2025
+            🚀 V4.6.1-CRITICAL-FIX<br>
+            📅 10.07.2025
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -1083,8 +1083,7 @@
                 console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
                 
                 // Check for level progression
-                // TEMPORARILY DISABLED: Level 2 causes instability
-                // checkLevelProgression();
+                checkLevelProgression();
             }
         }
         
@@ -3669,7 +3668,7 @@
                 };
                 
                 // Check collision with player
-                if (boundingBoxIntersection(playerBBox, boxBBox) && !box.collected) {
+                if (isBoxesIntersecting(playerBBox, boxBBox) && !box.collected) {
                     // Collect mystery box!
                     box.collected = true;
                     gameState.collectedMysteryBoxes++;

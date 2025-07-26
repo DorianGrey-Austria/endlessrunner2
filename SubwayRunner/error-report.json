@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-07-26T18:28:53.914Z",
+  "timestamp": "2025-07-26T18:45:53.673Z",
   "url": "http://localhost:8001",
   "gameState": {
     "hasGameInstance": true,
@@ -18,7 +18,7 @@
         "lineNumber": 0,
         "columnNumber": 0
       },
-      "timestamp": "2025-07-26T18:28:50.622Z"
+      "timestamp": "2025-07-26T18:45:32.069Z"
     },
     {
       "text": "Failed to load resource: the server responded with a status of 404 (File not found)",
@@ -27,7 +27,7 @@
         "lineNumber": 0,
         "columnNumber": 0
       },
-      "timestamp": "2025-07-26T18:28:50.820Z"
+      "timestamp": "2025-07-26T18:45:32.141Z"
     },
     {
       "text": "Failed to load resource: the server responded with a status of 404 ()",
@@ -36,14 +36,2223 @@
         "lineNumber": 0,
         "columnNumber": 0
       },
-      "timestamp": "2025-07-26T18:28:50.970Z"
+      "timestamp": "2025-07-26T18:45:32.708Z"
+    },
+    {
+      "text": "Request failed: http://localhost:8001/sounds/background/background.wav",
+      "error": "net::ERR_ABORTED",
+      "timestamp": "2025-07-26T18:45:47.165Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.003Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.025Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.031Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.052Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.066Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.082Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.098Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.115Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.132Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.149Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.164Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.183Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.189Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.190Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.194Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.194Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.195Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.197Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.203Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.214Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.218Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.224Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.224Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.231Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.247Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.263Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.264Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.271Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.285Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.285Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.288Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.300Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.313Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.321Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.322Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.322Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.332Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.347Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.351Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.364Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.381Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.383Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.390Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.398Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.399Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.415Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.418Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.421Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.432Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.447Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.448Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.458Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.466Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.466Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.484Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.490Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.498Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.512Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.513Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.516Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.531Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.533Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.550Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.551Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.564Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.580Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.582Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.583Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.598Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.607Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.621Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.621Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.631Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.646Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.648Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.664Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.667Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.667Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.685Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.686Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.703Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.710Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.713Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.716Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.733Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.739Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.747Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.747Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.764Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.767Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.780Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.784Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.796Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.814Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.830Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.836Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.837Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.839Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.851Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.860Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.865Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.894Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.899Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.901Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.902Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.902Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.914Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.922Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.935Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.938Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.947Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.955Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.963Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:51.978Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.981Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:51.997Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.004Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.010Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.017Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.023Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.031Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.038Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.049Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.049Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.065Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.082Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.083Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.094Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.100Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.115Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.132Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.132Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.133Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.134Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.170Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.174Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.175Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.175Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.183Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.203Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.204Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.211Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.218Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.239Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.248Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.249Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.253Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.253Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.264Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.278Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.280Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.299Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.302Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.314Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.334Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.335Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.335Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.353Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.355Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.366Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.369Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.383Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.389Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.398Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.401Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.414Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.422Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.422Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.428Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.431Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.450Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.470Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.470Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.480Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.493Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.504Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.510Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.511Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.514Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.528Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.530Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.538Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.548Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.559Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.565Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.586Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.594Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.594Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.598Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.604Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.614Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.621Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.633Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.635Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.648Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.648Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.664Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.668Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.680Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.684Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.698Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.702Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.712Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.714Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.729Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.736Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.747Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.762Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.763Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.773Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.785Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.786Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.803Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.838Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.838Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.839Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.839Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.840Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.852Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.866Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.866Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.870Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.880Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.897Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.902Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.902Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.941Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.942Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.942Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.949Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.961Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.961Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:52.967Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:52.967Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.047Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.048Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.051Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.052Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.053Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.054Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.055Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.055Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.058Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.069Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.080Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.095Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.095Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.096Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.105Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.106Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.119Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.119Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.132Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.145Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.148Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.162Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.174Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.174Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.190Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.190Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.197Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.197Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.216Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.225Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.232Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.237Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.247Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.248Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.269Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.270Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.280Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.283Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.299Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.299Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.316Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.321Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.330Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.354Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.355Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.355Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.366Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.366Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.375Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.381Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.397Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.402Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.416Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.417Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.427Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.433Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.448Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.450Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.460Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.465Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.484Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.490Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.498Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.508Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.514Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.518Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.562Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.565Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.569Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.569Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.575Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.576Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.583Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.584Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.611Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.620Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.623Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.625Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.642Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.644Z"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "location": {
+        "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_errors?columns=%22error_type%22%2C%22message%22%2C%22stack%22%2C%22source_url%22%2C%22line_number%22%2C%22column_number%22%2C%22user_agent%22%2C%22game_version%22%2C%22session_id%22%2C%22browser_info%22%2C%22game_state%22%2C%22performance_metrics%22",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "timestamp": "2025-07-26T18:45:53.646Z"
+    },
+    {
+      "text": "ReferenceError: isBoxesIntersecting is not defined",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)",
+      "timestamp": "2025-07-26T18:45:53.648Z"
     }
   ],
   "errorSummary": [
     {
       "message": "Failed to load resource: the server responded with a status of 404 (File not found)",
       "count": 2,
-      "firstOccurrence": "2025-07-26T18:28:50.622Z",
+      "firstOccurrence": "2025-07-26T18:45:32.069Z",
       "location": {
         "url": "http://localhost:8001/sounds/background/background.mp3",
         "lineNumber": 0,
@@ -52,14 +2261,25 @@
     },
     {
       "message": "Failed to load resource: the server responded with a status of 404 ()",
-      "count": 1,
-      "firstOccurrence": "2025-07-26T18:28:50.970Z",
+      "count": 157,
+      "firstOccurrence": "2025-07-26T18:45:32.708Z",
       "location": {
         "url": "https://cquahsbgcycdmslcmmdz.supabase.co/rest/v1/subway_runner_scores?select=*&order=score.desc&limit=10",
         "lineNumber": 0,
         "columnNumber": 0
       }
+    },
+    {
+      "message": "Request failed: http://localhost:8001/sounds/background/background.wav",
+      "count": 1,
+      "firstOccurrence": "2025-07-26T18:45:47.165Z"
+    },
+    {
+      "message": "ReferenceError: isBoxesIntersecting is not defined",
+      "count": 160,
+      "firstOccurrence": "2025-07-26T18:45:51.003Z",
+      "stack": "ReferenceError: isBoxesIntersecting is not defined\n    at http://localhost:8001/:3671:17\n    at Array.forEach (<anonymous>)\n    at checkCollisions (http://localhost:8001/:3656:36)\n    at animate (http://localhost:8001/:6419:17)"
     }
   ],
-  "totalErrors": 3
+  "totalErrors": 320
 }
