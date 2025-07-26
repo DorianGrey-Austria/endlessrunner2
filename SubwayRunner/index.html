@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.8-REALISTIC-FRUITS<br>
+            🚀 V4.6.9-BROCCOLI-FIXED<br>
             📅 27.07.2025
         </div>
         
@@ -4123,7 +4123,7 @@
                 emissive: 0x1A241A
             });
             const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 0.5;  // Mitte des Stiels auf halber Höhe
+            broccoliStem.position.y = 0.2;  // Stiel näher am Boden
             broccoliStem.castShadow = true;
             broccoliGroup.add(broccoliStem);
             
@@ -4142,7 +4142,7 @@
                 const radius = 0.2 + Math.random() * 0.15;
                 floret.position.set(
                     Math.cos(angle) * radius,
-                    0.7 + Math.random() * 0.2,  // Kopf oben drauf
+                    0.35 + Math.random() * 0.15,  // Kopf niedriger positioniert
                     Math.sin(angle) * radius
                 );
                 floret.castShadow = true;
@@ -4150,7 +4150,7 @@
             }
             
             // Position and add to scene - auf Spielerhöhe für einfaches Einsammeln
-            broccoliGroup.position.set(LANE_POSITIONS[lane], 0.3, z);  // ÜBER dem Boden wie Player
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);  // EXAKT wie Player auf Bodenhöhe
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
