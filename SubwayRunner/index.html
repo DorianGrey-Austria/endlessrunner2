@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.7-COLLECTIBLES-ALIGNED<br>
+            🚀 V4.6.8-REALISTIC-FRUITS<br>
             📅 27.07.2025
         </div>
         
@@ -4123,7 +4123,7 @@
                 emissive: 0x1A241A
             });
             const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 0.2;  // Stiel startet leicht über Boden
+            broccoliStem.position.y = 0.5;  // Mitte des Stiels auf halber Höhe
             broccoliStem.castShadow = true;
             broccoliGroup.add(broccoliStem);
             
@@ -4142,7 +4142,7 @@
                 const radius = 0.2 + Math.random() * 0.15;
                 floret.position.set(
                     Math.cos(angle) * radius,
-                    0.4 + Math.random() * 0.2,  // Kopf in erreichbarer Höhe
+                    0.7 + Math.random() * 0.2,  // Kopf oben drauf
                     Math.sin(angle) * radius
                 );
                 floret.castShadow = true;
@@ -4150,7 +4150,7 @@
             }
             
             // Position and add to scene - auf Spielerhöhe für einfaches Einsammeln
-            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);  // FIXED: Bodenhöhe wie Player (Y=0)
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0.3, z);  // ÜBER dem Boden wie Player
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
@@ -4161,7 +4161,8 @@
                 z: z,
                 pattern: pattern,
                 animationTime: 0,
-                collected: false
+                collected: false,
+                baseY: 0.3  // FIXED: baseY für Animation
             };
             
             broccolis.push(broccoliData);
@@ -4703,43 +4704,68 @@
         function createSimpleKiwi(lane, z) {
             const kiwiGroup = new THREE.Group();
             
-            // REALISTIC KIWI: Smaller, oval shape like real kiwi fruit
-            const kiwiRadiusX = 0.25;   // Kiwi width
-            const kiwiRadiusY = 0.3;    // Kiwi height (slightly taller than wide)
-            const kiwiRadiusZ = 0.25;   // Kiwi depth
+            // HALF KIWI: Realistische halbierte Kiwi
+            const kiwiRadius = 0.3;
             
-            // Oval kiwi body
-            const kiwiGeometry = new THREE.SphereGeometry(1, 16, 12);
-            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);
+            // Halbkreis für halbe Kiwi (flache Seite unten)
+            const halfKiwiShape = new THREE.Shape();
+            halfKiwiShape.absarc(0, 0, kiwiRadius, 0, Math.PI, false);
+            halfKiwiShape.lineTo(-kiwiRadius, 0);
             
-            // Brown fuzzy skin texture
-            const kiwiMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x8B6B47,      // Light brown kiwi skin
-                roughness: 0.85
+            const extrudeSettings = {
+                depth: kiwiRadius * 0.6,
+                bevelEnabled: true,
+                bevelThickness: 0.02,
+                bevelSize: 0.02,
+                bevelSegments: 8
+            };
+            
+            // Braune Außenhaut
+            const skinGeometry = new THREE.ExtrudeGeometry(halfKiwiShape, extrudeSettings);
+            const skinMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xA0826D,  // Braune Kiwi-Haut
+                roughness: 0.9
             });
+            const skin = new THREE.Mesh(skinGeometry, skinMaterial);
+            skin.rotation.x = -Math.PI / 2;
+            kiwiGroup.add(skin);
             
-            const kiwiBody = new THREE.Mesh(kiwiGeometry, kiwiMaterial);
-            kiwiGroup.add(kiwiBody);
-            
-            // Green flesh on top (visible part)
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.8, 16);
-            const fleshMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x90EE90,  // Light green kiwi flesh
-                transparent: true,
-                opacity: 0.9
+            // Grünes Fruchtfleisch (flache Seite)
+            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.95, 32);
+            const fleshMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x9ACD32,  // Hellgrünes Kiwi-Fruchtfleisch
+                emissive: 0x4B6F16,
+                emissiveIntensity: 0.1
             });
             const flesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
-            flesh.rotation.x = -Math.PI / 2;
-            flesh.position.y = kiwiRadiusY + 0.01;
+            flesh.rotation.x = Math.PI / 2;
+            flesh.position.y = 0.01;
             kiwiGroup.add(flesh);
             
-            // White center dot
-            const centerGeometry = new THREE.CircleGeometry(0.05, 8);
-            const centerMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFF0 });
-            const center = new THREE.Mesh(centerGeometry, centerMaterial);
-            center.rotation.x = -Math.PI / 2;
-            center.position.y = kiwiRadiusY + 0.02;
-            kiwiGroup.add(center);
+            // Weißer Kern in der Mitte
+            const coreGeometry = new THREE.CircleGeometry(0.08, 16);
+            const coreMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFF0 });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.rotation.x = Math.PI / 2;
+            core.position.y = 0.02;
+            kiwiGroup.add(core);
+            
+            // Kleine Kerne (Seeds)
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const seedRadius = 0.15;
+                const seed = new THREE.Mesh(
+                    new THREE.CircleGeometry(0.01, 6),
+                    new THREE.MeshBasicMaterial({ color: 0x2F4F2F })
+                );
+                seed.position.set(
+                    Math.cos(angle) * seedRadius,
+                    0.02,
+                    Math.sin(angle) * seedRadius
+                );
+                seed.rotation.x = Math.PI / 2;
+                kiwiGroup.add(seed);
+            }
             
             // Position kiwi at ground level
             const LANE_POSITIONS = [-2, 0, 2];
