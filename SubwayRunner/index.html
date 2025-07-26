@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.0-LEVEL-SYSTEM<br>
+            🚀 V4.6.1-CRITICAL-FIX<br>
             📅 10.07.2025
         </div>
         
@@ -4085,7 +4085,7 @@
             });
             const glint = new THREE.Mesh(glintGeometry, glintMaterial);
             glint.rotation.x = -Math.PI / 2;
-            glint.position.set(kiwiRadius * 0.4, 1.203, kiwiRadius * 0.3);
+            glint.position.set(kiwiRadiusX * 0.4, 1.203, kiwiRadiusZ * 0.3);
             kiwiGroup.add(glint);
             
             kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
@@ -4734,7 +4734,7 @@
             kiwiGroup.add(flesh);
             
             // Simple white core
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.3, 6);
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 6);
             const coreMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xF5F5DC
             });
@@ -5940,10 +5940,11 @@
                 // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
                 // Helper function to check if lane is safe for collectible spawning
                 const isLaneClearForCollectible = (lane, zPosition, safeDistance = 25) => {
-                    return !obstacles.some(obs => 
-                        Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
-                        Math.abs(obs.position.z - zPosition) < safeDistance
-                    );
+                    return !obstacles.some(obs => {
+                        if (!obs || !obs.position) return false;
+                        return Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
+                               Math.abs(obs.position.z - zPosition) < safeDistance;
+                    });
                 };
                 
                 // CATCH-UP MECHANISM: Check if player is behind on collection goals
