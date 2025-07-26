@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.5-REALISTIC-COLLECTIBLES<br>
+            🚀 V4.6.6-COLLECTIBLES-FIXED<br>
             📅 27.07.2025
         </div>
         
@@ -4123,7 +4123,7 @@
                 emissive: 0x1A241A
             });
             const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 0.2;  // FIXED: Bodennah statt in der Luft
+            broccoliStem.position.y = 0.7;  // FIXED: Auf Spielerhöhe (Player ist bei Y=0)
             broccoliStem.castShadow = true;
             broccoliGroup.add(broccoliStem);
             
@@ -4142,15 +4142,15 @@
                 const radius = 0.2 + Math.random() * 0.15;
                 floret.position.set(
                     Math.cos(angle) * radius,
-                    0.45 + Math.random() * 0.2,  // FIXED: Bodennah statt hoch oben
+                    0.95 + Math.random() * 0.2,  // FIXED: Auf Spielerhöhe angepasst
                     Math.sin(angle) * radius
                 );
                 floret.castShadow = true;
                 broccoliGroup.add(floret);
             }
             
-            // Position and add to scene - am Boden für einfaches Einsammeln
-            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);  // FIXED: Auf Bodenhöhe, nicht darunter
+            // Position and add to scene - auf Spielerhöhe für einfaches Einsammeln
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0.5, z);  // FIXED: Leicht über Boden wie Player
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
