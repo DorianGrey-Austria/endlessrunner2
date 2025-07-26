@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.3-GAMEPLAY-IMPROVED<br>
+            🚀 V4.6.2-STABILIZED<br>
             📅 26.07.2025
         </div>
         
@@ -1262,8 +1262,8 @@
             isGameOver: false,
             isVictory: false,
             score: 0,
-            speed: 0.12, // Schnellerer Start für mehr Action
-            baseSpeed: 0.12,
+            speed: 0.08, // Langsamerer Start
+            baseSpeed: 0.08,
             maxSpeed: 0.45, // Sehr schnell am Ende!
             lives: 3,
             gameTime: 60, // 60 Sekunden
@@ -4149,8 +4149,8 @@
                 broccoliGroup.add(floret);
             }
             
-            // Position and add to scene - am Boden für einfaches Einsammeln
-            broccoliGroup.position.set(LANE_POSITIONS[lane], -0.5, z);
+            // Position and add to scene
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
@@ -5820,21 +5820,21 @@
                 let baseSpawnRate, maxSpawnRate;
                 
                 if (gameProgress < 0.2) {
-                    // Phase 1: Very gentle start (0-12s) - REDUCED for easier start
-                    baseSpawnRate = 0.008;  // Was 0.015
-                    maxSpawnRate = 0.012;   // Was 0.026
+                    // Phase 1: Very gentle start (0-12s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.015;  // Was 0.003
+                    maxSpawnRate = 0.026;   // Was 0.008
                 } else if (gameProgress < 0.5) {
-                    // Phase 2: Moderate challenge (12-30s) - REDUCED
-                    baseSpawnRate = 0.020;  // Was 0.040
-                    maxSpawnRate = 0.030;   // Was 0.050
+                    // Phase 2: Moderate challenge (12-30s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.040;  // Was 0.008
+                    maxSpawnRate = 0.050;   // Was 0.015
                 } else if (gameProgress < 0.8) {
-                    // Phase 3: Challenging (30-48s) - REDUCED
-                    baseSpawnRate = 0.035;  // Was 0.060
-                    maxSpawnRate = 0.045;   // Was 0.066
+                    // Phase 3: Challenging (30-48s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.060;  // Was 0.012
+                    maxSpawnRate = 0.066;   // Was 0.020
                 } else {
-                    // Phase 4: Extreme finale (48-60s) - REDUCED
-                    baseSpawnRate = 0.050;  // Was 0.075
-                    maxSpawnRate = 0.060;   // Was 0.083
+                    // Phase 4: Extreme finale (48-60s) - INCREASED 5x/3.3x
+                    baseSpawnRate = 0.075;  // Was 0.015
+                    maxSpawnRate = 0.083;   // Was 0.025
                 }
                 
                 const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
@@ -6299,9 +6299,9 @@
                     // Gentle swaying motion for broccoli
                     broccoli.mesh.rotation.y = Math.sin(broccoli.animationTime * 2) * 0.1;
                     broccoli.mesh.rotation.z = Math.cos(broccoli.animationTime * 1.5) * 0.05;
-                    // Slight vertical movement - reduziert für bodennahe Position
-                    const baseY = -0.5;
-                    broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.05;
+                    // Slight vertical movement
+                    const baseY = 1.0;
+                    broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
                 });
                 
                 // Update Mystery Boxes
