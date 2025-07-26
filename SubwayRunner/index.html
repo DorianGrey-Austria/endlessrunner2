@@ -480,8 +480,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.3-GAMEPLAY-IMPROVED<br>
-            📅 26.07.2025
+            🚀 V4.6.4-BALANCED-RELAXED<br>
+            📅 27.07.2025
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -4123,7 +4123,7 @@
                 emissive: 0x1A241A
             });
             const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 1.0;
+            broccoliStem.position.y = 0.2;  // FIXED: Bodennah statt in der Luft
             broccoliStem.castShadow = true;
             broccoliGroup.add(broccoliStem);
             
@@ -4142,7 +4142,7 @@
                 const radius = 0.2 + Math.random() * 0.15;
                 floret.position.set(
                     Math.cos(angle) * radius,
-                    1.25 + Math.random() * 0.2,
+                    0.45 + Math.random() * 0.2,  // FIXED: Bodennah statt hoch oben
                     Math.sin(angle) * radius
                 );
                 floret.castShadow = true;
@@ -5821,20 +5821,20 @@
                 
                 if (gameProgress < 0.2) {
                     // Phase 1: Very gentle start (0-12s) - REDUCED for easier start
-                    baseSpawnRate = 0.008;  // Was 0.015
-                    maxSpawnRate = 0.012;   // Was 0.026
+                    baseSpawnRate = 0.004;  // Was 0.008 - noch weniger für relaxteres Gameplay
+                    maxSpawnRate = 0.008;   // Was 0.012 - sanftere Kurve
                 } else if (gameProgress < 0.5) {
                     // Phase 2: Moderate challenge (12-30s) - REDUCED
-                    baseSpawnRate = 0.020;  // Was 0.040
-                    maxSpawnRate = 0.030;   // Was 0.050
+                    baseSpawnRate = 0.010;  // Was 0.020 - moderater Anstieg
+                    maxSpawnRate = 0.015;   // Was 0.030 - entspannter
                 } else if (gameProgress < 0.8) {
                     // Phase 3: Challenging (30-48s) - REDUCED
-                    baseSpawnRate = 0.035;  // Was 0.060
-                    maxSpawnRate = 0.045;   // Was 0.066
+                    baseSpawnRate = 0.018;  // War 0.035 - herausfordernder aber fair
+                    maxSpawnRate = 0.025;   // War 0.045 - nicht zu überwältigend
                 } else {
                     // Phase 4: Extreme finale (48-60s) - REDUCED
-                    baseSpawnRate = 0.050;  // Was 0.075
-                    maxSpawnRate = 0.060;   // Was 0.083
+                    baseSpawnRate = 0.025;  // War 0.050 - intensiv aber machbar
+                    maxSpawnRate = 0.035;   // War 0.060 - faire Endphase
                 }
                 
                 const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
@@ -5954,9 +5954,9 @@
                 const actualCollected = gameState.collectedKiwis + gameState.collectedBroccolis;
                 const catchUpMultiplier = actualCollected < expectedCollectibles ? 1.5 : 1.0;
                 
-                // Dynamic spawn rate based on speed - INCREASED 5x/3.3x for better collectible spawning
-                const baseCoinRate = 0.015; // Was 0.003 - 5x increase
-                const maxCoinRate = 0.040; // Was 0.012 - 3.3x increase
+                // Dynamic spawn rate based on speed - REDUCED for less clutter
+                const baseCoinRate = 0.008; // War 0.015 - weniger Collectibles
+                const maxCoinRate = 0.020; // War 0.040 - entspannteres Sammeln
                 const speedFactor = Math.max(0.7, 1 - (gameState.speed - 100) / 500); // Less reduction at high speeds (was 0.4)
                 const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor * catchUpMultiplier;
                 
@@ -5964,8 +5964,8 @@
                 const timeSinceLastSpawn = performance.now() - gameState.lastCollectibleSpawnTime;
                 const forceSpawn = timeSinceLastSpawn > gameState.guaranteedSpawnInterval;
                 
-                // Mystery Box spawning (rare, max 2 per game)
-                if (gameState.mysteryBoxesSpawned < 2 && Math.random() < 0.01) { // 1% chance
+                // Mystery Box spawning (rare, max 1 per game)
+                if (gameState.mysteryBoxesSpawned < 1 && Math.random() < 0.005) { // 0.5% chance - seltener
                     const lane = Math.floor(Math.random() * 3);
                     const spawnZ = -60 - (gameState.speed - 100) * 0.1; // Same distance as collectibles
                     
@@ -6011,10 +6011,10 @@
                         }
                     }
                     
-                    // ENHANCED: Higher collectible limits for better gameplay
-                    // Limit based on collected items: 55 Kiwis + 15 Broccolis = 70 total (was 37)
+                    // ENHANCED: Lower collectible limits for cleaner gameplay
+                    // Limit based on collected items: 20 Kiwis + 5 Broccolis = 25 total
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 70) {
+                    if (collectedTotal >= 25) {
                         // Max collectibles collected, no more spawning
                         return;
                     }
@@ -6023,17 +6023,17 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Determine what to spawn based on 55:15 target ratio (was 30:7)
+                    // Determine what to spawn based on 20:5 target ratio
                     let isKiwi;
-                    if (kiwiCount >= 55) {
-                        isKiwi = false; // Force broccoli if we have 55 kiwis
-                    } else if (broccoliCount >= 15) {
-                        isKiwi = true; // Force kiwi if we have 15 broccolis
+                    if (kiwiCount >= 20) {
+                        isKiwi = false; // Force broccoli if we have 20 kiwis
+                    } else if (broccoliCount >= 5) {
+                        isKiwi = true; // Force kiwi if we have 5 broccolis
                     } else {
-                        // Weighted spawning for 55:15 ratio (~79% kiwi, 21% broccoli)
-                        const totalTarget = 70;
+                        // Weighted spawning for 20:5 ratio (80% kiwi, 20% broccoli)
+                        const totalTarget = 25;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 55 / totalTarget; // ~0.79
+                        const targetRatio = 20 / totalTarget; // 0.80
                         
                         // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
@@ -6178,7 +6178,7 @@
                             
                             // Spawn center first if safe
                             if (centerLaneSafe) {
-                                const isKiwi = gameState.collectedKiwis < 55 && (gameState.collectedBroccolis >= 15 || Math.random() < 0.8);
+                                const isKiwi = gameState.collectedKiwis < 20 && (gameState.collectedBroccolis >= 5 || Math.random() < 0.8);
                                 if (isKiwi) {
                                     const kiwi = createSimpleKiwi(1, baseSpawnZ);
                                     gameState.kiwis.push(kiwi);
@@ -6190,7 +6190,7 @@
                             
                             // Spawn sides if safe
                             if (leftLaneSafe) {
-                                const isKiwi = gameState.collectedKiwis < 55 && (gameState.collectedBroccolis >= 15 || Math.random() < 0.8);
+                                const isKiwi = gameState.collectedKiwis < 20 && (gameState.collectedBroccolis >= 5 || Math.random() < 0.8);
                                 if (isKiwi) {
                                     const kiwi = createSimpleKiwi(0, baseSpawnZ - 6);
                                     gameState.kiwis.push(kiwi);
@@ -6201,7 +6201,7 @@
                             }
                             
                             if (rightLaneSafe) {
-                                const isKiwi = gameState.collectedKiwis < 55 && (gameState.collectedBroccolis >= 15 || Math.random() < 0.8);
+                                const isKiwi = gameState.collectedKiwis < 20 && (gameState.collectedBroccolis >= 5 || Math.random() < 0.8);
                                 if (isKiwi) {
                                     const kiwi = createSimpleKiwi(2, baseSpawnZ - 6);
                                     gameState.kiwis.push(kiwi);

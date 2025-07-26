@@ -1,6 +1,108 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **STABLE** - V4.6.1-CRITICAL-FIX
+## **Aktueller Status**: ✅ **STABLE** - V4.6.2-STABILIZED
+
+---
+
+## 🚨 **CRITICAL FIX ERFOLG - 26. Juli 2025: SPIEL WIEDER SPIELBAR!**
+
+### **DIE RETTUNG: Von unspielbar zu stabil in 30 Minuten**
+
+Nach tagelangen Problemen (seit ~24. Juli) war das Spiel komplett unspielbar. Hier die komplette Dokumentation der erfolgreichen Stabilisierung:
+
+#### **AUSGANGSLAGE (Katastrophal):**
+- 🔴 **160+ Fehler pro Minute**: `ReferenceError: isBoxesIntersecting is not defined`
+- 🔴 **Level 2 Integration fehlgeschlagen**: Spiel startete nicht mehr
+- 🔴 **Deployment ohne Tests**: Fehler erst auf Live-Server entdeckt
+- 🔴 **Spieler-Feedback**: "Programm lässt sich nicht starten"
+
+#### **SCHRITT 1: Fehleranalyse mit automated-error-capture.js**
+```bash
+node automated-error-capture.js
+# Ergebnis: 357 Fehler gefunden!
+# Hauptfehler: isBoxesIntersecting is not defined (160x)
+```
+
+#### **SCHRITT 2: Kritischen Fehler gefunden und behoben**
+```javascript
+// ZEILE 3671 - FEHLER:
+if (isBoxesIntersecting(playerBBox, boxBBox) && !box.collected) {
+
+// LÖSUNG:
+if (boundingBoxIntersection(playerBBox, boxBBox) && !box.collected) {
+```
+- Funktion `isBoxesIntersecting` existierte nicht im Code
+- Korrekte Funktion war `boundingBoxIntersection` (Zeile 3835)
+- Ein einziger Buchstabe Unterschied = Spiel komplett unspielbar!
+
+#### **SCHRITT 3: Level 2 temporär deaktiviert**
+```javascript
+// ZEILE 1086 - DEAKTIVIERT:
+// TEMPORARILY DISABLED: Level 2 causes instability
+// checkLevelProgression();
+```
+
+#### **SCHRITT 4: Test-System etabliert**
+1. **pre-deployment-test.js** - Automatisierte Pre-Deployment Tests
+2. **quick-critical-test.js** - Schneller Critical Error Check
+3. **REGEL**: Kein Deployment ohne Exit Code 0!
+
+#### **ERGEBNIS:**
+```bash
+node quick-critical-test.js
+# ✅ Test complete: 0 critical errors found
+```
+
+### **NEUE STABILITÄTS-REGELN:**
+
+1. **VOR JEDEM DEPLOYMENT:**
+   ```bash
+   node pre-deployment-test.js
+   # NUR wenn Exit Code 0 → deployen!
+   ```
+
+2. **BEI NEUEN FEATURES:**
+   - Immer in separatem Branch entwickeln
+   - Lokale Tests PFLICHT
+   - Staging-Test vor Live
+
+3. **DOKUMENTATION:**
+   - STABILIZATION_LOG.md für alle Fixes
+   - Version IMMER updaten
+   - Änderungen genau dokumentieren
+
+### **WAS NOCH GEÄNDERT WURDE (V4.6.3-GAMEPLAY-IMPROVED):**
+
+Nach der Stabilisierung wurden folgende Gameplay-Verbesserungen vorgenommen:
+
+1. **Weniger Hindernisse am Anfang:**
+   ```javascript
+   // VORHER: baseSpawnRate = 0.015; maxSpawnRate = 0.026;
+   // NACHHER: baseSpawnRate = 0.008; maxSpawnRate = 0.012;
+   ```
+   - 47% weniger Hindernisse in Phase 1 (0-12s)
+   - Progressivere Schwierigkeitskurve
+
+2. **Schnellere Grundgeschwindigkeit:**
+   ```javascript
+   // VORHER: speed: 0.08, baseSpeed: 0.08
+   // NACHHER: speed: 0.12, baseSpeed: 0.12
+   ```
+   - 50% schnellerer Start für mehr Action
+
+3. **Broccoli am Boden positioniert:**
+   ```javascript
+   // VORHER: position.y = 0 bzw. baseY = 1.0
+   // NACHHER: position.y = -0.5 bzw. baseY = -0.5
+   ```
+   - Broccoli jetzt bodennah und einfach einzusammeln
+   - Keine Sprünge mehr nötig
+
+### **WICHTIG: Diese Änderungen sind SICHER!**
+- Keine strukturellen Änderungen
+- Nur Parameter-Anpassungen
+- Alle Tests bestanden
+- Spiel bleibt stabil
 
 ---
 
@@ -1216,3 +1318,89 @@ because it violates the following Content Security Policy directive:
 
 ---
 EOF < /dev/null
+
+---
+
+## 🔥 **CLAUDE CODE HOOKS DISASTER - Komplette Tool-Blockade** - 27. Juli 2025
+
+### **Problem**: Fehlkonfigurierte Hooks blockierten ALLE Claude Code Tools
+
+#### **Was ist passiert?**
+- Claude Code Hooks waren konfiguriert aber die Python-Skripte existierten nicht
+- **JEDER Tool-Aufruf** wurde mit Fehler blockiert:
+  ```
+  error: Failed to spawn: `.claude/hooks/stop.py`
+  Caused by: No such file or directory (os error 2)
+  ```
+- Endlos-Loop von Hook-Fehlern machte Claude Code komplett unbenutzbar
+
+#### **Betroffene Hooks**:
+1. `stop.py` - Wurde bei JEDER Antwort getriggert (hunderte Male)
+2. `pre_tool_use.py` - Blockierte ALLE Tool-Verwendungen
+3. `post_tool_use.py` - Fehlte auch, aber weniger kritisch
+
+#### **🔴 FATALER DESIGN-FEHLER**:
+- Hook-System prüft NICHT ob Dateien existieren bevor es sie ausführt
+- Keine Fallback-Mechanismen wenn Hooks fehlen
+- Keine Möglichkeit Hooks zu deaktivieren wenn sie Tools blockieren
+- Claude kann sich nicht selbst helfen weil Tools blockiert sind
+
+### **✅ LÖSUNG: Manuelle Hook-Erstellung**
+
+#### **Schritt 1: Leere Hook-Dateien erstellen**
+```bash
+mkdir -p .claude/hooks
+echo '#!/usr/bin/env python3' > .claude/hooks/stop.py
+echo '#!/usr/bin/env python3' > .claude/hooks/pre_tool_use.py
+echo '#!/usr/bin/env python3' > .claude/hooks/post_tool_use.py
+chmod +x .claude/hooks/*.py
+```
+
+#### **Schritt 2: Oder Hooks komplett deaktivieren**
+- In Claude Code Settings die Hook-Konfiguration entfernen
+- Oder `/hooks` Command nutzen um Hooks zu löschen
+
+### **📚 LESSONS LEARNED für Hook-Implementierung**:
+
+1. **IMMER Existenz-Checks**:
+   ```python
+   if os.path.exists(hook_path):
+       run_hook(hook_path)
+   else:
+       log_warning(f"Hook {hook_path} not found, skipping")
+   ```
+
+2. **Graceful Degradation**:
+   - Fehlende Hooks sollten geloggt aber ignoriert werden
+   - Tools sollten NIEMALS blockiert werden durch Hook-Fehler
+
+3. **Test vor Aktivierung**:
+   - Hooks erst im Test-Modus laufen lassen
+   - Dry-run Option für neue Hook-Konfigurationen
+
+4. **Recovery-Mechanismus**:
+   - `--no-hooks` Flag für Notfälle
+   - Automatische Hook-Deaktivierung nach X Fehlern
+
+5. **Hook-Template Generator**:
+   ```bash
+   claude hooks init  # Sollte Standard-Hooks erstellen
+   ```
+
+### **⚠️ WARNUNG für zukünftige Hook-Nutzung**:
+- NIEMALS Hooks konfigurieren ohne die Dateien anzulegen
+- IMMER mit minimalen Dummy-Hooks starten
+- Bei Hook-Errors sofort `/hooks` ausführen und aufräumen
+- Hook-Pfade relativ zum Projekt-Root definieren
+
+### **🛠️ Empfohlene Hook-Struktur**:
+```
+.claude/
+├── hooks/
+│   ├── pre_tool_use.py   # Optional: Tool-Verwendung kontrollieren
+│   ├── post_tool_use.py  # Optional: Nach Tool-Ausführung
+│   └── stop.py           # Optional: Bei Session-Ende
+└── settings.json         # Hook-Konfiguration
+```
+
+---

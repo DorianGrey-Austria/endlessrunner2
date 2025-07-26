@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [],
+    "PreToolUse": [],
+    "PostToolUse": [],
+    "Notification": [],
+    "Stop": [],
+    "SubagentStop": [],
+    "PreCompact": []
+  }
+} 
