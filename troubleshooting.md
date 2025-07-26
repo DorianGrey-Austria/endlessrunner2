@@ -1,6 +1,39 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **ROLLBACK TO STABLE** - V3.6.1-COLLECTIBLE-BUGFIX
+## **Aktueller Status**: ✅ **STABLE** - V4.6.1-CRITICAL-FIX
+
+---
+
+## 🚨 **RECENT ISSUES SUMMARY** - 26. Juli 2025
+
+### **KRITISCHER FEHLER: Game startet nicht - Level 2 Integration fehlgeschlagen**
+
+**Problem-Chronologie am 26. Juli**:
+
+1. **Level 2 Integration** - "Neon Night Run" als zweites Level
+   - Initial erfolgreich implementiert mit Cyberpunk-Theme
+   - Automatische Level-Progression bei 1000 Punkten
+
+2. **Critical JavaScript Errors nach Deployment**:
+   - `Uncaught ReferenceError: kiwiRadius is not defined`
+   - `Cannot read properties of undefined (reading 'x')`
+   - Spiel startet nicht mehr auf Live-Server
+
+3. **Root Cause**:
+   - Variable `kiwiRadius` existierte nicht (sollte `kiwiRadiusX/Z` sein)
+   - Fehlende null checks für obstacle.position
+   - Fehler verhinderten komplette Initialisierung
+
+4. **Fixes in V4.6.1-CRITICAL-FIX**:
+   - ✅ kiwiRadius → kiwiRadiusX/kiwiRadiusZ korrigiert
+   - ✅ Null checks für obstacle.position hinzugefügt
+   - ✅ Sofort deployed ohne weitere Tests
+
+### **Lessons Learned**:
+- ❗ IMMER automated-error-capture.js vor Deployment nutzen
+- ❗ Variablen-Namen konsistent prüfen (kiwiRadius vs kiwiRadiusX)
+- ❗ Null checks für alle position-Zugriffe
+- ❗ Level-Integration kann versteckte Abhängigkeiten haben
 
 ---
 
