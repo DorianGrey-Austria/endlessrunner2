@@ -42,7 +42,8 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.7.0-PERFECT-COLLECTIBLES (✅ FINALE LÖSUNG: Perfekte Objektpositionierung und Invulnerability-Sterne)
+- **Latest**: 4.7.1-CRITICAL-FIXES (🚨 SENIOR DEV SOLUTION: Fixed game freeze, collectible positioning, invulnerability timing)
+- **Previous**: 4.7.0-PERFECT-COLLECTIBLES (✅ FINALE LÖSUNG: Perfekte Objektpositionierung und Invulnerability-Sterne)
 - **Previous**: 4.6.12-UNIVERSAL-POSITIONING (Endgültige Lösung für Collectible-Positionierung mit universeller Regel)
 - **Before**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
 - **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
@@ -57,7 +58,14 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.7.0-PERFECT-COLLECTIBLES. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.7.1-CRITICAL-FIXES. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+
+### **V4.7.1 CRITICAL FIXES SUMMARY**
+- **Game Freeze Fix**: Removed invalid 'roughness' and 'metalness' properties from MeshLambertMaterial
+- **Kiwi Positioning**: Fixed Y-position calculation with proper height offset (COLLECTIBLE_BASE_Y + height/2)  
+- **Star Positioning**: Corrected star placement to avoid ground clipping
+- **Invulnerability Duration**: Fixed to exactly 4 seconds (was 3-5 seconds random)
+- **Material Optimization**: Prevented repeated material creation causing memory leaks
 
 ### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
 - **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)
