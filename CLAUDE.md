@@ -42,8 +42,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
-- **Previous**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
+- **Latest**: 4.6.12-UNIVERSAL-POSITIONING (Endgültige Lösung für Collectible-Positionierung mit universeller Regel)
+- **Previous**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
+- **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
 - **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
 - **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
 - **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
@@ -55,7 +56,7 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.6.11-PERFORMANCE-FIXED. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.6.12-UNIVERSAL-POSITIONING. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
 
 ### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
 - **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)
@@ -325,3 +326,10 @@ npm run inspector    # Run MCP inspector
 ## Development Philosophy
 
 **UI/UX First**: User experience is paramount. Every technical decision should prioritize the player's experience, ensuring intuitive controls, smooth performance, and engaging visual feedback across all devices.
+
+## 🚨 WICHTIGER HINWEIS: Projekt-Trennung
+
+**ACHTUNG**: Dieses Repository ist NUR für das EndlessRunner Spiel!
+- Wenn der User über "Zeichnen", "Canvas", "Zeichenfläche" oder "Drawing App" spricht → Das ist ein ANDERES Projekt!
+- In diesem Fall: Höflich darauf hinweisen, dass das der falsche Terminal/Projekt ist
+- Wir arbeiten hier ausschließlich am EndlessRunner Game (SubwayRunner)

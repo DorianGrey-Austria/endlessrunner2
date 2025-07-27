@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.11-PERFORMANCE-FIXED<br>
+            🚀 V4.6.12-UNIVERSAL-POSITIONING<br>
             📅 27.07.2025
         </div>
         
@@ -1551,10 +1551,49 @@
         let scene, camera, renderer, player, track, obstacles = [];
         const LANE_POSITIONS = [-2, 0, 2];
         
+        // ==================== UNIVERSAL POSITIONING CONSTANTS ====================
+        const PLAYER_HEIGHT = 1.5;
+        const PLAYER_BASE_Y = 0;  // Player stands on ground
+        const COLLECTIBLE_BASE_Y = 0.5;  // All collectibles at same height (1/3 of player height)
+        const OBSTACLE_BASE_Y = 0;  // Obstacles on ground
+        
         // Power-Up and Collectible arrays for tracking
         let powerUps = [];
         let kiwis = [];
         let broccolis = [];  // NEW: Brokkoli tracking
+        
+        // ==================== UNIVERSAL POSITIONING FUNCTIONS ====================
+        function positionObjectOnGround(object, desiredGroundLevel = 0) {
+            // Calculate the bounding box of the object
+            const box = new THREE.Box3().setFromObject(object);
+            
+            // Find the lowest Y position (min.y)
+            const lowestPoint = box.min.y;
+            
+            // Shift object so its lowest edge is at desired level
+            object.position.y += (desiredGroundLevel - lowestPoint);
+            
+            return object;
+        }
+        
+        function calculateAccurateBoundingBox(object) {
+            // Temporarily set to origin for correct calculation
+            const originalPosition = object.position.clone();
+            object.position.set(0, 0, 0);
+            object.updateMatrixWorld(true);
+            
+            // Calculate box
+            const box = new THREE.Box3().setFromObject(object);
+            
+            // Restore position
+            object.position.copy(originalPosition);
+            object.updateMatrixWorld(true);
+            
+            // Translate box to current position
+            box.translate(object.position);
+            
+            return box;
+        }
         
         // Power-Up configuration
         const POWER_UP_TYPES = {
@@ -3556,18 +3595,8 @@
             // ==================== KIWI COLLISION DETECTION ====================
             
             gameState.kiwis.forEach((kiwi, index) => {
-                const kiwiBBox = {
-                    min: {
-                        x: kiwi.mesh.position.x - 0.35,
-                        y: kiwi.mesh.position.y - 0.35,
-                        z: kiwi.mesh.position.z - 0.35
-                    },
-                    max: {
-                        x: kiwi.mesh.position.x + 0.35,
-                        y: kiwi.mesh.position.y + 0.35,
-                        z: kiwi.mesh.position.z + 0.35
-                    }
-                };
+                // Use accurate bounding box calculation
+                const kiwiBBox = calculateAccurateBoundingBox(kiwi.mesh);
                 
                 // Magnet Power-Up Effect
                 if (gameState.magnetActive) {
@@ -3610,18 +3639,8 @@
             // ==================== BROCCOLI COLLISION DETECTION ====================
             
             gameState.broccolis.forEach((broccoli, index) => {
-                const broccoliBBox = {
-                    min: {
-                        x: broccoli.mesh.position.x - 0.4,
-                        y: broccoli.mesh.position.y - 0.4,
-                        z: broccoli.mesh.position.z - 0.4
-                    },
-                    max: {
-                        x: broccoli.mesh.position.x + 0.4,
-                        y: broccoli.mesh.position.y + 0.4,
-                        z: broccoli.mesh.position.z + 0.4
-                    }
-                };
+                // Use accurate bounding box calculation
+                const broccoliBBox = calculateAccurateBoundingBox(broccoli.mesh);
                 
                 // Magnet Power-Up Effect (same as kiwis)
                 if (gameState.magnetActive) {
@@ -4104,7 +4123,9 @@
             }
             kiwiGroup.add(glint);
             
-            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.1, z);  // Slightly above ground
+            // Use universal positioning function
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            positionObjectOnGround(kiwiGroup, COLLECTIBLE_BASE_Y);
             scene.add(kiwiGroup);
             
             // Store kiwi data
@@ -4114,7 +4135,8 @@
                 z: z,
                 pattern: pattern,
                 animationTime: 0,
-                collected: false
+                collected: false,
+                baseY: COLLECTIBLE_BASE_Y  // Store base Y for animation
             };
             
             kiwis.push(kiwiData);
@@ -4138,7 +4160,7 @@
                 emissive: 0x1A241A
             });
             const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 0.2;  // Stiel näher am Boden
+            broccoliStem.position.y = stemHeight / 2;  // Center of cylinder
             broccoliStem.castShadow = true;
             broccoliGroup.add(broccoliStem);
             
@@ -4157,15 +4179,16 @@
                 const radius = 0.2 + Math.random() * 0.15;
                 floret.position.set(
                     Math.cos(angle) * radius,
-                    0.35 + Math.random() * 0.15,  // Kopf niedriger positioniert
+                    stemHeight + 0.1 + Math.random() * 0.15,  // Above stem
                     Math.sin(angle) * radius
                 );
                 floret.castShadow = true;
                 broccoliGroup.add(floret);
             }
             
-            // Position and add to scene - auf Spielerhöhe für einfaches Einsammeln
-            broccoliGroup.position.set(LANE_POSITIONS[lane], 0.3, z);  // Proper collectible height
+            // Use universal positioning function
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            positionObjectOnGround(broccoliGroup, COLLECTIBLE_BASE_Y);
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
@@ -4177,7 +4200,7 @@
                 pattern: pattern,
                 animationTime: 0,
                 collected: false,
-                baseY: 0.5  // Collectible hover height
+                baseY: COLLECTIBLE_BASE_Y  // Use consistent collectible height
             };
             
             broccolis.push(broccoliData);
@@ -6373,9 +6396,8 @@
                     // Wobble rotation instead of spin
                     kiwi.mesh.rotation.z = Math.sin(kiwi.animationTime * 3) * 0.15;
                     kiwi.mesh.rotation.x = Math.cos(kiwi.animationTime * 2) * 0.1;
-                    // Subtle bounce
-                    const baseY = 1.2;
-                    kiwi.mesh.position.y = baseY + Math.sin(kiwi.animationTime * 4) * 0.1;
+                    // Subtle bounce using stored baseY
+                    kiwi.mesh.position.y = kiwi.baseY + Math.sin(kiwi.animationTime * 4) * 0.05;
                 });
                 
                 // Update Broccolis (similar to kiwis)
@@ -6407,9 +6429,8 @@
                     // Gentle swaying motion for broccoli
                     broccoli.mesh.rotation.y = Math.sin(broccoli.animationTime * 2) * 0.1;
                     broccoli.mesh.rotation.z = Math.cos(broccoli.animationTime * 1.5) * 0.05;
-                    // Slight vertical movement - reduziert für bodennahe Position
-                    const baseY = -0.5;
-                    broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.05;
+                    // Slight vertical movement using stored baseY
+                    broccoli.mesh.position.y = broccoli.baseY + Math.sin(broccoli.animationTime * 3) * 0.05;
                 });
                 
                 // Update Mystery Boxes
