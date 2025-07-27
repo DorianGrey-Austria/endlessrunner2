@@ -42,22 +42,25 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.4-BALANCED-RELAXED (Perfect speed balance, realistic collectibles)
-- **Previous**: 4.6.3-GAMEPLAY-IMPROVED (Better game balance)
-- **Before**: 4.6.2-STABILIZED (Critical fixes & test system)
-- **Before**: 4.6.1-CRITICAL-FIX (Fixed kiwiRadius undefined)
-- **Before**: 4.6.0-LEVEL-SYSTEM (Level 2 "Neon Night Run" integrated)
+- **Latest**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
+- **Previous**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
+- **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
+- **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
+- **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
+- **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
+- **Before**: 4.6.5-REALISTIC-COLLECTIBLES (Realistische braune Kiwis)
+- **Before**: 4.6.4-BALANCED-RELAXED (Perfect speed balance)
 - **Before**: 4.5.11-HOTFIX (Fixed critical JavaScript errors)
 - **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels)
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.6.4-BALANCED-RELAXED. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.6.11-PERFORMANCE-FIXED. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
 
 ### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
 - **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)
 - **Hindernisse**: Spawn-Raten sind gut balanciert (Start: 0.004, Ende: 0.035)
-- **Collectibles**: 20 Kiwis + 5 Broccolis - nicht zu viel Clutter
+- **Collectibles**: 10 Kiwis + 5 Broccolis - reduziert für besseres Gameplay
 - **Visuals**: Realistische braune Kiwis, bodennahe grüne Broccolis
 
 ### **VERSION UPDATE PROCESS**
@@ -274,7 +277,7 @@ npm run inspector    # Run MCP inspector
 - **Development Port**: 8001 (python -m http.server)
 - **Production**: Single HTML file deployment (index.html)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 4.5.10-LEVEL-PROGRESSION
+- **Current Version**: 4.6.11-PERFORMANCE-FIXED
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 - **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
 - **Key Features**: 10 levels, 5 characters, gesture control, ghost racing, visual effects
