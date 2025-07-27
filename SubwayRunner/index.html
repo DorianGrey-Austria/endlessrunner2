@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.7.2-SPAWN-OVERHAUL<br>
+            🚀 V4.7.3-STABILITY-FIX<br>
             📅 27.07.2025
         </div>
         
@@ -1553,10 +1553,9 @@
         let scene, camera, renderer, player, track, obstacles = [];
         const LANE_POSITIONS = [-2, 0, 2];
         
-        // ==================== UNIVERSAL POSITIONING CONSTANTS ====================
+        // ==================== POSITIONING CONSTANTS ====================
         const PLAYER_HEIGHT = 1.5;
         const PLAYER_BASE_Y = 0;  // Player stands on ground
-        const COLLECTIBLE_BASE_Y = 0.5;  // All collectibles at same height (1/3 of player height)
         const OBSTACLE_BASE_Y = 0;  // Obstacles on ground
         
         // Power-Up and Collectible arrays for tracking
@@ -4135,7 +4134,7 @@
             kiwiGroup.add(glint);
             
             // Position kiwi - already structured with bottom at 0
-            kiwiGroup.position.set(LANE_POSITIONS[lane], COLLECTIBLE_BASE_Y, z);
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.3, z);
             kiwiGroup.userData = { type: 'kiwi', lane: lane };
             scene.add(kiwiGroup);
             
@@ -4147,7 +4146,7 @@
                 pattern: pattern,
                 animationTime: 0,
                 collected: false,
-                baseY: COLLECTIBLE_BASE_Y  // Store base Y for animation
+                baseY: 0.3  // Store base Y for animation
             };
             
             kiwis.push(kiwiData);
@@ -4197,7 +4196,7 @@
             }
             
             // Position broccoli at collectible height
-            broccoliGroup.position.set(LANE_POSITIONS[lane], COLLECTIBLE_BASE_Y, z);
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0.3, z);
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
@@ -4209,7 +4208,7 @@
                 pattern: pattern,
                 animationTime: 0,
                 collected: false,
-                baseY: COLLECTIBLE_BASE_Y  // Use consistent collectible height
+                baseY: 0.3  // Use consistent collectible height
             };
             
             broccolis.push(broccoliData);
@@ -4853,7 +4852,7 @@
             }
             
             // Position kiwi - properly structured with bottom at ground level
-            kiwiGroup.position.set(LANE_POSITIONS[lane], COLLECTIBLE_BASE_Y, z);
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.3, z);
             kiwiGroup.userData = { type: 'kiwi', lane: lane };
             scene.add(kiwiGroup);
             
@@ -4864,7 +4863,7 @@
                 z: z,
                 collected: false,
                 animationTime: 0,
-                baseY: COLLECTIBLE_BASE_Y
+                baseY: 0.3
             };
         }
         
@@ -4938,7 +4937,7 @@
                 z: z,
                 collected: false,
                 animationTime: 0,
-                baseY: COLLECTIBLE_BASE_Y
+                baseY: 0.3
             };
         }
         
