@@ -1676,3 +1676,80 @@ broccoliGroup.position.y = 0; // EXAKT wie Player
 ```
 
 ---
+
+## ✅ **BROKKOLI POSITIONIERUNG ERFOLGREICH** - 27. Juli 2025
+
+### **Erfolg**: Die universelle Positionierungsregel funktioniert perfekt für Brokkolis!
+
+Nach der Implementierung der universellen Positionierungsregel in V4.6.12 sind die Brokkolis endlich korrekt positioniert:
+- ✅ Brokkolis schweben auf einheitlicher Höhe (Y=0.5)
+- ✅ Keine Teile mehr im Boden vergraben
+- ✅ Kollisionserkennung funktioniert einwandfrei
+- ✅ Dynamische Bounding Box Berechnung passt zur visuellen Größe
+
+Die `positionObjectOnGround()` Funktion berechnet automatisch die korrekte Position basierend auf der Geometrie des Objekts.
+
+---
+
+## 🐛 **KIWI POSITIONIERUNG PROBLEM** - 27. Juli 2025
+
+### **Problem**: Kiwis verschwinden nach V4.6.12 fast komplett im Boden
+
+#### **Root Cause**: 
+Die Kiwi-Geometrie ist eine Halbkugel (Hemisphere) mit manuellen Y-Offsets für verschiedene Teile. Die universelle Positionierungsfunktion funktioniert nicht korrekt mit dieser speziellen Geometrie-Struktur.
+
+#### **Technische Details**:
+- Kiwi besteht aus einer umgedrehten Halbkugel (`rotation.x = Math.PI`)
+- Verschiedene Teile (Flesh, Core, Seeds) haben manuelle Y-Offsets
+- Die Bounding Box Berechnung erfasst die tatsächliche visuelle Position nicht korrekt
+
+#### **Fix in V4.6.13**:
+- Alle manuellen Y-Offsets auf relative Positionen umgestellt
+- Kiwi-Teile relativ zum Boden der Halbkugel positioniert
+- Debug-Logging für Positionierungsberechnungen hinzugefügt
+
+---
+
+## 🔊 **SOUND FILES MISSING** - 27. Juli 2025
+
+### **Problem**: 404 Errors für alle Background-Musik-Dateien
+
+Die folgenden Sound-Dateien existieren nicht im Repository:
+- `/sounds/background/background.mp3`
+- `/sounds/background/background.wav`
+- `/sounds/background/game-music.mp3`
+- `/sounds/background/game-music.wav`
+- `/sounds/background/subway-theme.mp3`
+- `/sounds/background/subway-theme.wav`
+
+#### **Temporäre Lösung**:
+Sound-Loading Code auskommentiert um 404 Errors zu vermeiden. Das Spiel funktioniert auch ohne Hintergrundmusik.
+
+#### **TODO**:
+- Sound-Dateien zum Repository hinzufügen
+- Oder: Sound-System komplett entfernen wenn nicht benötigt
+
+---
+
+## 🔒 **CSP GOOGLE FONTS BLOCKING** - 27. Juli 2025
+
+### **Problem**: Content Security Policy blockiert Google Fonts
+
+```
+Refused to load the stylesheet 'https://fonts.googleapis.com/...' 
+because it violates the following Content Security Policy directive: 
+"style-src 'self' 'unsafe-inline'"
+```
+
+#### **Ursache**:
+Server-seitige CSP erlaubt keine externen Stylesheets. Dies ist wahrscheinlich eine Hostinger-Einstellung.
+
+#### **Auswirkung**:
+Nur kosmetisch - Schriftarten werden nicht geladen, Spiel funktioniert trotzdem.
+
+#### **Mögliche Lösungen**:
+1. `.htaccess` anpassen: `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
+2. Google Fonts lokal hosten
+3. Google Fonts komplett entfernen und System-Fonts nutzen
+
+---

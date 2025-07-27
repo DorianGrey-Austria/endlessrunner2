@@ -42,8 +42,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.12-UNIVERSAL-POSITIONING (Endgültige Lösung für Collectible-Positionierung mit universeller Regel)
-- **Previous**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
+- **Latest**: 4.7.0-PERFECT-COLLECTIBLES (✅ FINALE LÖSUNG: Perfekte Objektpositionierung und Invulnerability-Sterne)
+- **Previous**: 4.6.12-UNIVERSAL-POSITIONING (Endgültige Lösung für Collectible-Positionierung mit universeller Regel)
+- **Before**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
 - **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
 - **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
 - **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
@@ -56,7 +57,7 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.6.12-UNIVERSAL-POSITIONING. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.7.0-PERFECT-COLLECTIBLES. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
 
 ### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
 - **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)
@@ -216,9 +217,9 @@ npm run inspector    # Run MCP inspector
 
 ### **Collectible System Rules**
 **RULE 1**: ONLY these collectibles allowed:
-- ✅ **Kiwis** (large, realistic brown fruit) 
-- ✅ **Broccolis** (green vegetables)
-- ✅ **Mystery Boxes** (max 2 per game) - golden sparkly fountains
+- ✅ **Kiwis** (large, realistic brown fruit with seeds - perfect positioning at Y=0.5) 
+- ✅ **Broccolis** (green vegetables with stem and florettes - perfect positioning at Y=0.5)
+- ✅ **Invulnerability Stars** (max 2 per game) - golden 3D stars with 3-5s invulnerability
 
 **RULE 2**: NO rectangular/box collectibles:
 - ❌ **NO** Power-ups (magnets, shields, speed boosts)  
@@ -237,6 +238,21 @@ npm run inspector    # Run MCP inspector
 - **Total limit**: 40 collectibles max for good gameplay
 - **Bias**: 85% kiwi spawning, 15% broccoli spawning
 - **Pattern limits**: Max 2 collectibles per pattern (never all 3 lanes)
+
+### **🎯 FINALE OBJEKTPOSITIONIERUNG LÖSUNG** (V4.7.0)
+**Das Problem endgültig gelöst!** 
+
+1. **Kiwis**: Strukturiert mit Bottom-at-Zero Prinzip, dann direkt auf COLLECTIBLE_BASE_Y (0.5) positioniert
+2. **Broccolis**: Stem auf Y=0, Florettes relativ darüber, dann Gruppe auf COLLECTIBLE_BASE_Y positioniert  
+3. **Sterne**: 3D-Extrusion mit korrekter Y-Position, dann auf COLLECTIBLE_BASE_Y positioniert
+4. **Universeller Standard**: Alle Collectibles auf einheitlicher Höhe Y=0.5 (1/3 der Spielerhöhe)
+
+**Warum diese Lösung perfekt ist:**
+- Keine komplexe Bounding-Box-Berechnung nötig
+- Jedes Objekt wird intern korrekt strukturiert (Bottom = 0)
+- Einheitliche Positionierung auf COLLECTIBLE_BASE_Y
+- Funktioniert mit jeder Objektgeometrie
+- Wartbar und erweiterbar für zukünftige Collectibles
 
 ## Development Guidelines
 
