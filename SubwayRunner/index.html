@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.7.3-STABILITY-FIX<br>
+            🚀 V4.7.4-PERFORMANCE-CRITICAL<br>
             📅 27.07.2025
         </div>
         
@@ -1587,24 +1587,6 @@
             return object;
         }
         
-        function calculateAccurateBoundingBox(object) {
-            // Temporarily set to origin for correct calculation
-            const originalPosition = object.position.clone();
-            object.position.set(0, 0, 0);
-            object.updateMatrixWorld(true);
-            
-            // Calculate box
-            const box = new THREE.Box3().setFromObject(object);
-            
-            // Restore position
-            object.position.copy(originalPosition);
-            object.updateMatrixWorld(true);
-            
-            // Translate box to current position
-            box.translate(object.position);
-            
-            return box;
-        }
         
         // Power-Up configuration
         const POWER_UP_TYPES = {
@@ -3606,8 +3588,19 @@
             // ==================== KIWI COLLISION DETECTION ====================
             
             gameState.kiwis.forEach((kiwi, index) => {
-                // Use accurate bounding box calculation
-                const kiwiBBox = calculateAccurateBoundingBox(kiwi.mesh);
+                // Simple, performant bounding box calculation (from stable V4.6.11)
+                const kiwiBBox = {
+                    min: {
+                        x: kiwi.mesh.position.x - 0.35,
+                        y: kiwi.mesh.position.y - 0.35,
+                        z: kiwi.mesh.position.z - 0.35
+                    },
+                    max: {
+                        x: kiwi.mesh.position.x + 0.35,
+                        y: kiwi.mesh.position.y + 0.35,
+                        z: kiwi.mesh.position.z + 0.35
+                    }
+                };
                 
                 // Magnet Power-Up Effect
                 if (gameState.magnetActive) {
@@ -3650,8 +3643,19 @@
             // ==================== BROCCOLI COLLISION DETECTION ====================
             
             gameState.broccolis.forEach((broccoli, index) => {
-                // Use accurate bounding box calculation
-                const broccoliBBox = calculateAccurateBoundingBox(broccoli.mesh);
+                // Simple, performant bounding box calculation (from stable V4.6.11)
+                const broccoliBBox = {
+                    min: {
+                        x: broccoli.mesh.position.x - 0.4,
+                        y: broccoli.mesh.position.y - 0.4,
+                        z: broccoli.mesh.position.z - 0.4
+                    },
+                    max: {
+                        x: broccoli.mesh.position.x + 0.4,
+                        y: broccoli.mesh.position.y + 0.4,
+                        z: broccoli.mesh.position.z + 0.4
+                    }
+                };
                 
                 // Magnet Power-Up Effect (same as kiwis)
                 if (gameState.magnetActive) {
