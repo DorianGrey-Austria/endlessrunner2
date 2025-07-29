@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.7.4-PERFORMANCE-CRITICAL<br>
+            🚀 V4.7.5-POSITIONING-PERFECT<br>
             📅 27.07.2025
         </div>
         
@@ -4047,8 +4047,8 @@
             });
             const kiwiSkin = new THREE.Mesh(halfDomeGeometry, skinMaterial);
             kiwiSkin.rotation.x = Math.PI;  // Flip to have dome on top
-            // Position skin so bottom is at 0
-            kiwiSkin.position.y = kiwiRadius;
+            // Position skin so bottom is at 0 (no offset needed)
+            kiwiSkin.position.y = 0;
             kiwiSkin.castShadow = true;
             kiwiGroup.add(kiwiSkin);
             
@@ -4802,8 +4802,8 @@
             });
             const kiwiSkin = new THREE.Mesh(halfDomeGeometry, skinMaterial);
             kiwiSkin.rotation.x = Math.PI;  // Flip to have dome on top
-            // Position skin so bottom is at 0
-            kiwiSkin.position.y = kiwiRadius;
+            // Position skin so bottom is at 0 (no offset needed)
+            kiwiSkin.position.y = 0;
             kiwiSkin.castShadow = true;
             kiwiGroup.add(kiwiSkin);
             
@@ -4816,7 +4816,7 @@
             });
             const kiwiFlesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
             kiwiFlesh.rotation.x = Math.PI / 2;  // Face upward
-            kiwiFlesh.position.y = 0.01;  // Slightly above ground
+            kiwiFlesh.position.y = -kiwiRadius + 0.01;  // At bottom of kiwi
             kiwiFlesh.receiveShadow = true;
             kiwiGroup.add(kiwiFlesh);
             
@@ -4829,7 +4829,7 @@
             });
             const kiwiCore = new THREE.Mesh(coreGeometry, coreMaterial);
             kiwiCore.rotation.x = Math.PI / 2;
-            kiwiCore.position.y = 0.02;  // Above flesh
+            kiwiCore.position.y = -kiwiRadius + 0.02;  // At bottom with flesh
             kiwiGroup.add(kiwiCore);
             
             // Black seeds in realistic pattern - 2 rings

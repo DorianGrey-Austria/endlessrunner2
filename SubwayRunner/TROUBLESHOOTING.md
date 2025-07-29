@@ -304,3 +304,56 @@ setInterval(() => {
 **Last Updated**: 10.07.2025 01:45 CET  
 **Status**: ❌ **CRITICAL GRAPHICS FAILURE** - Rolling back to stable version
 **Next Action**: Revert to last known working version
+
+---
+
+## 🚨 **27.07.2025 - 29/31-SEKUNDEN CRASH PROBLEM**
+
+### **PROBLEM BESCHREIBUNG**:
+- **Symptom**: Spiel stürzt nach exakt 29-31 Sekunden ab
+- **Erstmals aufgetreten**: Version 4.7.x (nach Broccoli-Positionierung)
+- **Konsistenz**: Tritt bei jedem Spielstart auf
+
+### **BISHERIGE ANALYSE & VERSUCHE**:
+
+#### **ATTEMPT 1: COLLECTIBLE_BASE_Y Removal** ❌ **FAILED**
+- **Version**: V4.7.3-STABILITY-FIX
+- **Hypothese**: COLLECTIBLE_BASE_Y Konstante verursacht Crash
+- **Aktion**: Entfernte Konstante, verwendete hardcoded Y = 0.3
+- **Resultat**: Crash bei 29 Sekunden
+
+#### **ATTEMPT 2: calculateAccurateBoundingBox Removal** ❌ **FAILED**
+- **Version**: V4.7.4-PERFORMANCE-CRITICAL
+- **Hypothese**: Heavy bounding box calculation causes performance death
+- **Aktion**: Entfernte calculateAccurateBoundingBox, nutzte simple BBox
+- **Resultat**: Crash bei 31 Sekunden (2 Sekunden später, aber immer noch Crash)
+
+### **ROOT CAUSE**: 🔍 **NOCH UNBEKANNT**
+- Nicht die Bounding Box Berechnung
+- Nicht die COLLECTIBLE_BASE_Y Konstante
+- Möglicherweise:
+  - Memory Leak in Animation Loop
+  - Array-Größen-Problem (30-40 Collectibles nach 30 Sek)
+  - Timer/Counter Overflow
+  - Three.js Scene-Objekte nicht korrekt disposed
+
+### ✅ **FUNKTIONIERENDE ELEMENTE**:
+- **Broccoli Position Y = 0.3**: PERFEKT! Diese Position muss FÜR IMMER so bleiben!
+- Spawn-Limits funktionieren (max 5 Broccolis)
+- Visuelle Qualität der Collectibles ist gut
+
+### ❌ **OFFENE PROBLEME**:
+- **31-Sekunden Crash**: Root cause unbekannt
+- **Kiwis im Boden**: Müssen auf gleiche Höhe wie Broccolis (Y = 0.3)
+
+### **NÄCHSTE SCHRITTE**:
+1. Console logging für detailliertes Crash-Timing
+2. Memory profiling während des 30-Sekunden-Fensters
+3. Vergleich mit V4.6.11 (letzte stabile Version ohne Crash)
+4. Kiwi Y-Position auf 0.3 setzen (wie Broccolis)
+
+---
+
+**Last Updated**: 27.07.2025 21:30 CET
+**Status**: 🔍 **INVESTIGATING 31-SECOND CRASH** - Root cause unknown
+**Next Action**: Deep memory profiling and comparison with stable V4.6.11
