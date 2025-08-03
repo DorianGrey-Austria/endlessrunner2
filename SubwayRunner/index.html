@@ -668,6 +668,7 @@
             obstacles: [],
             invulnerable: false,
             kiwisCollected: 0,
+            broccolisCollected: 0,
             invulnerabilityTime: 0,
             timeScale: 1.0,
             cameraShakeIntensity: 0,
@@ -758,6 +759,9 @@
 
             // Handle window resize
             window.addEventListener('resize', onWindowResize);
+            
+            // Initialize collectibles system
+            initCollectiblesSystem();
             
                 // Start render loop
                 animate();
@@ -1558,6 +1562,267 @@
             obstacles.push(obstacleData);
         }
 
+        // RESIZE HANDLER - Critical for stability
+        function onWindowResize() {
+            // Update camera aspect ratio
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            
+            // Update renderer size
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Preserve collectibles state during resize
+            preserveCollectiblesState();
+            
+            console.log('Window resized, aspect ratio updated:', camera.aspect);
+        }
+        
+        // COLLECTIBLES STATE PRESERVATION
+        function preserveCollectiblesState() {
+            // Ensure collectibles arrays survive resize
+            if (window.collectibles) {
+                console.log('Preserving collectibles:', 
+                    window.collectibles.kiwis.length + ' kiwis, ' + 
+                    window.collectibles.broccolis.length + ' broccolis');
+                
+                // Reattach to scene if needed
+                window.collectibles.kiwis.forEach(kiwi => {
+                    if (!kiwi.parent) {
+                        scene.add(kiwi);
+                    }
+                });
+                
+                window.collectibles.broccolis.forEach(broccoli => {
+                    if (!broccoli.parent) {
+                        scene.add(broccoli);
+                    }
+                });
+            }
+        }
+        
+        // COLLECTIBLES SYSTEM INITIALIZATION
+        function initCollectiblesSystem() {
+            // Initialize global collectibles state
+            if (!window.collectibles) {
+                window.collectibles = { 
+                    kiwis: [], 
+                    broccolis: [],
+                    spawned: 0,
+                    collected: 0
+                };
+                console.log('Collectibles system initialized');
+            }
+            
+            // Add collectibles counter to gameState if missing
+            if (typeof gameState.kiwisCollected === 'undefined') {
+                gameState.kiwisCollected = 0;
+                gameState.broccolisCollected = 0;
+            }
+        }
+
+        // COLLECTIBLES SYSTEM - Kiwis und Broccolis
+        function createKiwi(lane, z) {
+            const kiwiGroup = new THREE.Group();
+            
+            // Realistische braune Kiwi (ellipsoid)
+            const geometry = new THREE.SphereGeometry(0.4, 16, 12);
+            geometry.scale(1, 1.2, 0.8); // Elliptische Form
+            
+            const material = new THREE.MeshLambertMaterial({ 
+                color: 0x8B4513, // Saddle Brown
+                roughness: 0.9
+            });
+            
+            const kiwi = new THREE.Mesh(geometry, material);
+            kiwi.position.y = 0.5; // Über dem Boden schweben
+            kiwi.castShadow = true;
+            kiwiGroup.add(kiwi);
+            
+            // Position im Lane
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            kiwiGroup.userData = { 
+                type: 'kiwi',
+                collected: false,
+                baseY: 0.5
+            };
+            
+            // Robuste Collectibles-Initialisierung
+            initCollectiblesSystem();
+            
+            window.collectibles.kiwis.push(kiwiGroup);
+            window.collectibles.spawned++;
+            scene.add(kiwiGroup);
+            
+            console.log(`Kiwi spawned at lane ${lane}, z=${z}. Total kiwis: ${window.collectibles.kiwis.length}`);
+            return kiwiGroup;
+        }
+        
+        function createBroccoli(lane, z) {
+            const broccoliGroup = new THREE.Group();
+            
+            // Stiel (Zylinder)
+            const stemGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.8, 8);
+            const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+            const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+            stem.position.y = 0.4;
+            stem.castShadow = true;
+            broccoliGroup.add(stem);
+            
+            // Röschen (mehrere kleine Kugeln)
+            const floretGeometry = new THREE.SphereGeometry(0.15, 6, 6);
+            const floretMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
+            
+            // Zentrale Röschen
+            for (let i = 0; i < 7; i++) {
+                const floret = new THREE.Mesh(floretGeometry, floretMaterial);
+                const angle = (i / 7) * Math.PI * 2;
+                floret.position.set(
+                    Math.cos(angle) * 0.2,
+                    0.8 + Math.random() * 0.1,
+                    Math.sin(angle) * 0.2
+                );
+                floret.castShadow = true;
+                broccoliGroup.add(floret);
+            }
+            
+            // Top-Rösche
+            const topFloret = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2, 8, 8),
+                floretMaterial
+            );
+            topFloret.position.y = 0.9;
+            topFloret.castShadow = true;
+            broccoliGroup.add(topFloret);
+            
+            // Position und Eigenschaften
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            broccoliGroup.userData = {
+                type: 'broccoli',
+                collected: false,
+                baseY: 0
+            };
+            
+            // Robuste Collectibles-Initialisierung
+            initCollectiblesSystem();
+            
+            window.collectibles.broccolis.push(broccoliGroup);
+            window.collectibles.spawned++;
+            scene.add(broccoliGroup);
+            
+            console.log(`Broccoli spawned at lane ${lane}, z=${z}. Total broccolis: ${window.collectibles.broccolis.length}`);
+            return broccoliGroup;
+        }
+        
+        function checkCollectibles() {
+            if (!window.collectibles || !player) return;
+            
+            const playerPos = player.position;
+            const collectRadius = 1.5; // Großzügiger Sammelradius
+            
+            // Kiwis prüfen
+            for (let i = window.collectibles.kiwis.length - 1; i >= 0; i--) {
+                const kiwi = window.collectibles.kiwis[i];
+                if (kiwi.userData.collected) continue;
+                
+                const distance = Math.sqrt(
+                    Math.pow(playerPos.x - kiwi.position.x, 2) +
+                    Math.pow(playerPos.z - kiwi.position.z, 2)
+                );
+                
+                if (distance < collectRadius && Math.abs(playerPos.y - kiwi.userData.baseY) < 1.5) {
+                    // Kiwi eingesammelt!
+                    kiwi.userData.collected = true;
+                    gameState.score += 100;
+                    gameState.kiwisCollected++;
+                    window.collectibles.collected++;
+                    
+                    console.log(`KIWI COLLECTED! Score +100. Total kiwis: ${gameState.kiwisCollected}`);
+                    
+                    // Audio feedback
+                    if (window.audioManager) {
+                        audioManager.play('coin');
+                    }
+                    
+                    // Animation
+                    animateCollection(kiwi);
+                    
+                    // Nach Animation entfernen
+                    setTimeout(() => {
+                        scene.remove(kiwi);
+                        window.collectibles.kiwis.splice(i, 1);
+                    }, 500);
+                }
+            }
+            
+            // Broccolis prüfen
+            for (let i = window.collectibles.broccolis.length - 1; i >= 0; i--) {
+                const broccoli = window.collectibles.broccolis[i];
+                if (broccoli.userData.collected) continue;
+                
+                const distance = Math.sqrt(
+                    Math.pow(playerPos.x - broccoli.position.x, 2) +
+                    Math.pow(playerPos.z - broccoli.position.z, 2)
+                );
+                
+                if (distance < collectRadius && Math.abs(playerPos.y - broccoli.userData.baseY) < 1.5) {
+                    // Broccoli eingesammelt!
+                    broccoli.userData.collected = true;
+                    gameState.score += 200;
+                    gameState.broccolisCollected++;
+                    window.collectibles.collected++;
+                    
+                    console.log(`BROCCOLI COLLECTED! Score +200. Total broccolis: ${gameState.broccolisCollected}`);
+                    
+                    // Audio feedback
+                    if (window.audioManager) {
+                        audioManager.play('powerup');
+                    }
+                    
+                    // Animation
+                    animateCollection(broccoli);
+                    
+                    // Nach Animation entfernen  
+                    setTimeout(() => {
+                        scene.remove(broccoli);
+                        window.collectibles.broccolis.splice(i, 1);
+                    }, 500);
+                }
+            }
+        }
+        
+        function animateCollection(collectible) {
+            // Scale up und fade out Animation
+            const startScale = collectible.scale.x;
+            const duration = 500;
+            const startTime = Date.now();
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Scale up
+                const scale = startScale * (1 + progress);
+                collectible.scale.set(scale, scale, scale);
+                
+                // Move up
+                collectible.position.y += 0.05;
+                
+                // Fade out (opacity)
+                collectible.traverse((child) => {
+                    if (child.material) {
+                        child.material.opacity = 1 - progress;
+                        child.material.transparent = true;
+                    }
+                });
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            
+            animate();
+        }
+
         function startGameInternal() {
             // Resume audio context
             audioManager.resume();
@@ -1589,6 +1854,25 @@
             // Clear obstacles
             obstacles.forEach(obs => scene.remove(obs.mesh));
             obstacles = [];
+            
+            // Clear und reset collectibles
+            if (window.collectibles) {
+                window.collectibles.kiwis.forEach(kiwi => scene.remove(kiwi));
+                window.collectibles.broccolis.forEach(broccoli => scene.remove(broccoli));
+                window.collectibles.kiwis = [];
+                window.collectibles.broccolis = [];
+                window.collectibles.spawned = 0;
+                window.collectibles.collected = 0;
+            }
+            
+            // Reset collectibles counters
+            gameState.kiwisCollected = 0;
+            gameState.broccolisCollected = 0;
+            
+            // Initialize collectibles system
+            initCollectiblesSystem();
+            
+            console.log('Game started, collectibles system reset');
             
             // Start sound
             audioManager.play('powerup');
@@ -2807,6 +3091,70 @@
                     
                     const lane = Math.floor(Math.random() * 3);
                     createObstacle(type, lane, -30);
+                }
+                
+                // COLLECTIBLES SPAWN SYSTEM
+                if (Math.random() < 0.04) { // 4% Chance pro Frame
+                    const collectibleLane = Math.floor(Math.random() * 3);
+                    const spawnZ = -60; // Weit hinter Hindernissen
+                    
+                    // Prüfe ob Lane frei ist
+                    let laneFree = true;
+                    for (let obstacle of obstacles) {
+                        if (Math.abs(obstacle.z - spawnZ) < 30) {
+                            const obstacleLane = Math.round((obstacle.mesh.position.x + 2) / 2);
+                            if (obstacleLane === collectibleLane) {
+                                laneFree = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (laneFree) {
+                        // 85% Kiwis, 15% Broccolis
+                        if (Math.random() < 0.85) {
+                            createKiwi(collectibleLane, spawnZ);
+                        } else {
+                            createBroccoli(collectibleLane, spawnZ);
+                        }
+                    }
+                }
+                
+                // Move und animiere Collectibles
+                if (window.collectibles) {
+                    // Kiwis bewegen
+                    for (let i = window.collectibles.kiwis.length - 1; i >= 0; i--) {
+                        const kiwi = window.collectibles.kiwis[i];
+                        kiwi.position.z += visualSpeed;
+                        
+                        // Schwebe-Animation
+                        kiwi.position.y = 0.5 + Math.sin(Date.now() * 0.003 + i) * 0.1;
+                        kiwi.rotation.y += 0.02;
+                        
+                        // Entferne wenn außerhalb
+                        if (kiwi.position.z > 10) {
+                            scene.remove(kiwi);
+                            window.collectibles.kiwis.splice(i, 1);
+                        }
+                    }
+                    
+                    // Broccolis bewegen
+                    for (let i = window.collectibles.broccolis.length - 1; i >= 0; i--) {
+                        const broccoli = window.collectibles.broccolis[i];
+                        broccoli.position.z += visualSpeed;
+                        
+                        // Leichte Rotation
+                        broccoli.rotation.y += 0.01;
+                        
+                        // Entferne wenn außerhalb
+                        if (broccoli.position.z > 10) {
+                            scene.remove(broccoli);
+                            window.collectibles.broccolis.splice(i, 1);
+                        }
+                    }
+                    
+                    // Kollisionen prüfen
+                    checkCollectibles();
                 }
                 
                 // Update camera with shake effect
