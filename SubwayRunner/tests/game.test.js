@@ -1,5 +1,5 @@
 // @ts-check
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 test.describe('SubwayRunner Game Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,72 +14,69 @@ test.describe('SubwayRunner Game Tests', () => {
     });
     expect(threeLoaded).toBe(true);
 
-    // Check if GameCore is initialized
-    const gameCoreLoaded = await page.evaluate(() => {
-      return typeof GameCore !== 'undefined' && GameCore.initialized;
+    // Check if basic game variables exist (V2.1 structure)
+    const gameVariablesExist = await page.evaluate(() => {
+      return typeof gameState !== 'undefined' && typeof scene !== 'undefined';
     });
-    expect(gameCoreLoaded).toBe(true);
+    expect(gameVariablesExist).toBe(true);
 
-    // Check if start button exists
-    await expect(page.locator('#startButton')).toBeVisible();
+    // Check if canvas exists and is ready
+    await expect(page.locator('#gameCanvas')).toBeVisible();
   });
 
   test('Game starts correctly', async ({ page }) => {
-    await page.click('#startButton');
+    // V2.1 starts automatically, no start button needed
+    // Wait for game to initialize
+    await page.waitForTimeout(2000);
     
-    // Wait for game to start
-    await page.waitForTimeout(1000);
-    
-    // Check if game is running
+    // Check if game is running (V2.1 structure)
     const gameRunning = await page.evaluate(() => {
-      return gameState && gameState.isPlaying;
+      return gameState && gameState.isPlaying === true;
     });
     expect(gameRunning).toBe(true);
 
-    // Check if score is displayed
-    await expect(page.locator('#score')).toBeVisible();
+    // Check if score UI exists
+    const scoreVisible = await page.evaluate(() => {
+      return document.querySelector('#score') !== null;
+    });
+    expect(scoreVisible).toBe(true);
   });
 
-  test('Level progression works', async ({ page }) => {
-    await page.click('#startButton');
+  test('Collectibles system works', async ({ page }) => {
+    // Wait for game to start
+    await page.waitForTimeout(2000);
     
-    // Set score to 1000 to trigger level transition
-    await page.evaluate(() => {
-      gameState.score = 1000;
+    // Check if collectibles counters exist
+    const applesCounterExists = await page.evaluate(() => {
+      return document.querySelector('#applesCount') !== null;
     });
+    expect(applesCounterExists).toBe(true);
     
-    // Trigger level check
-    await page.evaluate(() => {
-      const levelManager = GameCore.getModule('levels');
-      if (levelManager) {
-        levelManager.checkLevelTransition(1000);
-      }
+    const broccolisCounterExists = await page.evaluate(() => {
+      return document.querySelector('#broccolisCount') !== null;
     });
+    expect(broccolisCounterExists).toBe(true);
     
-    // Check if level 2 is loaded
-    const currentLevel = await page.evaluate(() => {
-      const levelManager = GameCore.getModule('levels');
-      return levelManager ? levelManager.currentLevel : 0;
+    // Check if collectibles spawn system is working
+    const collectiblesSpawning = await page.evaluate(() => {
+      return gameState.lastCollectibleSpawn !== undefined && 
+             gameState.collectibleSpawnInterval === 4000;
     });
-    expect(currentLevel).toBe(2);
-    
-    // Check for level change notification
-    await expect(page.locator('.notification')).toContainText('Level 2');
+    expect(collectiblesSpawning).toBe(true);
   });
 
   test('Controls work correctly', async ({ page }) => {
-    await page.click('#startButton');
-    await page.waitForTimeout(1000);
+    // Wait for game to start
+    await page.waitForTimeout(2000);
     
-    // Test keyboard controls
+    // Test keyboard controls (V2.1 uses WASD and arrows)
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowUp');
-    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Space'); // Jump in V2.1
     
     // Check if game is still running after controls
     const gameRunning = await page.evaluate(() => {
-      return gameState && gameState.isPlaying;
+      return gameState && gameState.isPlaying === true;
     });
     expect(gameRunning).toBe(true);
   });

@@ -196,7 +196,6 @@
             <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
-            <div>🍎 Äpfel: <span id="applesCount">0</span>/10 | 🥦 Brokkoli: <span id="broccolisCount">0</span>/5</div>
         </div>
         
         <div id="instructions">
@@ -672,12 +671,7 @@
             timeScale: 1.0,
             cameraShakeIntensity: 0,
             cameraZoom: 1.0,
-            slowMotionActive: false,
-            // Collectibles System (15 items in 60s = all 4s)
-            applesCollected: 0,
-            broccolisCollected: 0,
-            lastCollectibleSpawn: 0,
-            collectibleSpawnInterval: 4000 // 4 seconds
+            slowMotionActive: false
         };
 
         // Three.js setup
@@ -1562,71 +1556,6 @@
             obstacles.push(obstacleData);
         }
 
-        // Collectible Creation Functions
-        function createCollectible(type, lane, z, yPosition) {
-            const collectibleGroup = new THREE.Group();
-            collectibleGroup.position.set(LANE_POSITIONS[lane], yPosition, z);
-            
-            if (type === 'apple') {
-                // Apple creation
-                const appleGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-                appleGeometry.scale(1, 0.85, 1); // Slightly flattened
-                const appleMaterial = new THREE.MeshPhongMaterial({ 
-                    color: 0xCC0000,      // Deep red
-                    emissive: 0x440000,   // Dark red emissive
-                    emissiveIntensity: 0.1,
-                    shininess: 100
-                });
-                const apple = new THREE.Mesh(appleGeometry, appleMaterial);
-                apple.castShadow = true;
-                collectibleGroup.add(apple);
-                
-                // Apple stem
-                const stemGeometry = new THREE.CylinderGeometry(0.02, 0.03, 0.1, 6);
-                const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
-                const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-                stem.position.y = 0.25;
-                collectibleGroup.add(stem);
-                
-            } else if (type === 'broccoli') {
-                // Broccoli creation
-                const stemGeometry = new THREE.CylinderGeometry(0.1, 0.15, 0.4, 8);
-                const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x90EE90 });
-                const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-                stem.position.y = 0.2;
-                collectibleGroup.add(stem);
-                
-                // Broccoli florets
-                for (let i = 0; i < 8; i++) {
-                    const floretGeometry = new THREE.SphereGeometry(0.08 + Math.random() * 0.04, 8, 8);
-                    const floretMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
-                    const floret = new THREE.Mesh(floretGeometry, floretMaterial);
-                    
-                    const angle = (i / 8) * Math.PI * 2;
-                    const radius = 0.15 + Math.random() * 0.1;
-                    floret.position.x = Math.cos(angle) * radius;
-                    floret.position.y = 0.35 + Math.random() * 0.15;
-                    floret.position.z = Math.sin(angle) * radius;
-                    collectibleGroup.add(floret);
-                }
-            }
-            
-            scene.add(collectibleGroup);
-            
-            // Add to obstacles array as collectible
-            const collectibleData = {
-                mesh: collectibleGroup,
-                type: type,
-                lane: lane,
-                z: z,
-                baseY: yPosition,
-                animationTime: 0,
-                isCollectible: true
-            };
-            
-            obstacles.push(collectibleData);
-        }
-
         function startGameInternal() {
             // Resume audio context
             audioManager.resume();
@@ -1654,11 +1583,6 @@
             gameState.timeScale = 1.0;
             gameState.cameraShakeIntensity = 0;
             gameState.slowMotionActive = false;
-            
-            // Reset collectibles
-            gameState.applesCollected = 0;
-            gameState.broccolisCollected = 0;
-            gameState.lastCollectibleSpawn = Date.now();
             
             // Clear obstacles
             obstacles.forEach(obs => scene.remove(obs.mesh));
@@ -2084,12 +2008,6 @@
             animateRing();
         }
 
-        // Update collectibles UI
-        function updateCollectiblesUI() {
-            document.getElementById('applesCount').textContent = gameState.applesCollected;
-            document.getElementById('broccolisCount').textContent = gameState.broccolisCollected;
-        }
-
         // Enhanced collision detection with precise bounding boxes and near-miss system
         function checkCollisions() {
             if (gameState.invulnerable) return;
@@ -2098,34 +2016,6 @@
             const playerBBox = calculatePlayerBoundingBox();
             
             obstacles.forEach((obstacle, index) => {
-                // Handle collectibles separately
-                if (obstacle.isCollectible) {
-                    const obstacleBBox = calculateObstacleBoundingBox(obstacle);
-                    const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
-                    
-                    if (isColliding) {
-                        // Collect the item
-                        if (obstacle.type === 'apple') {
-                            gameState.applesCollected++;
-                            gameState.score += 50;
-                        } else if (obstacle.type === 'broccoli') {
-                            gameState.broccolisCollected++;
-                            gameState.score += 100;
-                        }
-                        
-                        // Remove collectible
-                        scene.remove(obstacle.mesh);
-                        obstacles.splice(index, 1);
-                        
-                        // Update UI
-                        updateCollectiblesUI();
-                        
-                        // Play collection sound
-                        audioManager.play('coin');
-                    }
-                    return; // Skip normal obstacle collision logic
-                }
-                
                 // Calculate obstacle bounding box
                 const obstacleBBox = calculateObstacleBoundingBox(obstacle);
                 
@@ -2874,30 +2764,10 @@
                     obstacle.mesh.position.z += visualSpeed;
                     obstacle.z = obstacle.mesh.position.z;
                     
-                    // Animate collectibles
-                    if (obstacle.isCollectible) {
-                        obstacle.animationTime += deltaTime * 0.001;
-                        
-                        if (obstacle.type === 'apple') {
-                            // Apple wobble animation
-                            obstacle.mesh.rotation.z = Math.sin(obstacle.animationTime * 3) * 0.15;
-                            obstacle.mesh.rotation.x = Math.cos(obstacle.animationTime * 2) * 0.1;
-                            obstacle.mesh.position.y = obstacle.baseY + Math.sin(obstacle.animationTime * 4) * 0.1;
-                        } else if (obstacle.type === 'broccoli') {
-                            // Broccoli gentle sway animation
-                            obstacle.mesh.rotation.y = Math.sin(obstacle.animationTime * 2) * 0.1;
-                            obstacle.mesh.rotation.z = Math.cos(obstacle.animationTime * 1.5) * 0.05;
-                            obstacle.mesh.position.y = obstacle.baseY + Math.sin(obstacle.animationTime * 3) * 0.05;
-                        }
-                    }
-                    
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        // Don't give score for collectibles passing by
-                        if (!obstacle.isCollectible) {
-                            gameState.score += 10;
-                        }
+                        gameState.score += 10;
                     }
                 });
                 
@@ -2935,39 +2805,6 @@
                     
                     const lane = Math.floor(Math.random() * 3);
                     createObstacle(type, lane, -30);
-                }
-                
-                // Collectibles spawning (separate from obstacles)
-                const currentTime = performance.now();
-                const timeSinceLastCollectible = currentTime - gameState.lastCollectibleSpawn;
-                
-                if (timeSinceLastCollectible >= gameState.collectibleSpawnInterval) {
-                    const totalCollected = gameState.applesCollected + gameState.broccolisCollected;
-                    
-                    if (totalCollected < 15) { // Max 15 collectibles
-                        // Find safe lane (away from recent obstacles)
-                        const safeLanes = [];
-                        for (let lane = 0; lane < 3; lane++) {
-                            let isSafe = true;
-                            for (let obstacle of obstacles) {
-                                if (!obstacle.isCollectible && obstacle.lane === lane && obstacle.z > -70 && obstacle.z < -50) {
-                                    isSafe = false;
-                                    break;
-                                }
-                            }
-                            if (isSafe) safeLanes.push(lane);
-                        }
-                        
-                        if (safeLanes.length > 0) {
-                            const lane = safeLanes[Math.floor(Math.random() * safeLanes.length)];
-                            const isFlying = Math.random() < 0.1; // 10% flying, 90% ground
-                            const yPosition = isFlying ? 1.5 : 0.5;
-                            const type = (gameState.applesCollected < 10) ? 'apple' : 'broccoli';
-                            
-                            createCollectible(type, lane, -60, yPosition);
-                            gameState.lastCollectibleSpawn = currentTime;
-                        }
-                    }
                 }
                 
                 // Update camera with shake effect
