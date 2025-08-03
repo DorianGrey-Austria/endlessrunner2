@@ -5,12 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - Challenge</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
-    <!-- CSP Headers moved to .htaccess for proper implementation -->
-    <meta http-equiv="Report-To" content='{"group":"default","max_age":10886400,"endpoints":[{"url":"https://cquahsbgcycdmslcmmdz.supabase.co/functions/v1/csp-report"}]}'>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://*.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- MediaPipe temporarily disabled due to module loading issues -->
-    <!-- Will be re-enabled once main game errors are fixed -->
+    <!-- MediaPipe temporarily disabled due to CSP issues
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    -->
+    
+    <!-- Modular Game System (Embedded due to deployment issues) -->
+    <script>
+    // GameCore.js - Central game management system
+    const GameCore = {
+        version: "4.0.0-modular",
+        modules: {},
+        initialized: false,
+        
+        registerModule: function(name, module) {
+            if (this.modules[name]) {
+                console.warn(`Module ${name} already registered, overwriting...`);
+            }
+            this.modules[name] = module;
+            console.log(`✅ Module registered: ${name}`);
+            
+            if (this.initialized && module.init) {
+                module.init();
+            }
+        },
+        
+        getModule: function(name) {
+            if (!this.modules[name]) {
+                console.error(`Module ${name} not found!`);
+                return null;
+            }
+            return this.modules[name];
+        },
+        
+        init: function() {
+            console.log('🚀 Initializing GameCore v' + this.version);
+            
+            const initOrder = ['utils', 'levels', 'characters', 'ui', 'effects'];
+            
+            initOrder.forEach(moduleName => {
+                const module = this.modules[moduleName];
+                if (module && module.init) {
+                    console.log(`Initializing ${moduleName}...`);
+                    module.init();
+                }
+            });
+            
+            Object.entries(this.modules).forEach(([name, module]) => {
+                if (!initOrder.includes(name) && module.init) {
+                    console.log(`Initializing ${name}...`);
+                    module.init();
+                }
+            });
+            
+            this.initialized = true;
+            console.log('✅ GameCore initialization complete');
+        },
+        
+        update: function(deltaTime) {
+            Object.values(this.modules).forEach(module => {
+                if (module.update) {
+                    module.update(deltaTime);
+                }
+            });
+        },
+        
+        cleanup: function() {
+            Object.values(this.modules).forEach(module => {
+                if (module.cleanup) {
+                    module.cleanup();
+                }
+            });
+            this.modules = {};
+            this.initialized = false;
+        }
+    };
+    
+    window.GameCore = GameCore;
+    
+    // LevelManager.js - Manages all game levels
+    const LevelManager = {
+        levels: {},
+        currentLevel: 1,
+        scene: null,
+        renderer: null,
+        
+        init: function() {
+            console.log('🎮 LevelManager initialized');
+            
+            this.registerLevel(1, {
+                name: "Classic Subway",
+                description: "The original subway tunnel",
+                load: function(scene) {
+                    console.log('Loading Level 1: Classic Subway');
+                },
+                update: function(deltaTime) {},
+                cleanup: function() {}
+            });
+        },
+        
+        registerLevel: function(id, levelModule) {
+            this.levels[id] = levelModule;
+            console.log(`✅ Level ${id} registered: ${levelModule.name}`);
+        },
+        
+        loadLevel: function(id, scene, renderer) {
+            const level = this.levels[id];
+            if (!level) {
+                console.error(`Level ${id} not found!`);
+                return false;
+            }
+            
+            if (this.currentLevel && this.levels[this.currentLevel] && this.levels[this.currentLevel].cleanup) {
+                this.levels[this.currentLevel].cleanup();
+            }
+            
+            console.log(`🌟 Loading Level ${id}: ${level.name}`);
+            
+            this.scene = scene;
+            this.renderer = renderer;
+            this.currentLevel = id;
+            
+            if (level.load) {
+                level.load(scene, renderer);
+            }
+            
+            if (window.gameState) {
+                window.gameState.currentLevel = id;
+            }
+            
+            return true;
+        },
+        
+        getCurrentLevel: function() {
+            return this.levels[this.currentLevel];
+        },
+        
+        getAvailableLevels: function() {
+            return Object.entries(this.levels).map(([id, level]) => ({
+                id: parseInt(id),
+                name: level.name,
+                description: level.description || ''
+            }));
+        },
+        
+        update: function(deltaTime) {
+            const currentLevel = this.levels[this.currentLevel];
+            if (currentLevel && currentLevel.update) {
+                currentLevel.update(deltaTime);
+            }
+        },
+        
+        checkLevelTransition: function(score) {
+            const nextLevelScore = this.currentLevel * 1000;
+            if (score >= nextLevelScore && this.levels[this.currentLevel + 1]) {
+                console.log(`🎉 Level transition triggered! Moving to level ${this.currentLevel + 1}`);
+                this.loadLevel(this.currentLevel + 1, this.scene, this.renderer);
+                return true;
+            }
+            return false;
+        },
+        
+        reset: function() {
+            this.loadLevel(1, this.scene, this.renderer);
+        }
+    };
+    
+    GameCore.registerModule('levels', LevelManager);
+    
+    // Level2 - Neon Night Run (Simplified)
+    const Level2 = {
+        name: "Neon Night Run",
+        description: "Cyberpunk city with neon lights",
+        id: 2,
+        
+        load: function(scene, renderer) {
+            console.log('🌃 Loading Level 2: Neon Night Run');
+            
+            // Hide base game elements
+            scene.children.forEach(child => {
+                if (child.userData && (child.userData.type === 'streetLine' || 
+                    child.userData.type === 'sidewalk')) {
+                    child.visible = false;
+                }
+            });
+            
+            // Neon grid floor
+            const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
+            gridHelper.position.y = -0.95;
+            scene.add(gridHelper);
+            
+            // Cyberpunk fog
+            scene.fog = new THREE.FogExp2(0x001133, 0.025);
+            renderer.setClearColor(0x001133);
+            
+            // Update ambient lighting
+            const ambientLight = scene.children.find(child => child.type === 'AmbientLight');
+            if (ambientLight) {
+                ambientLight.color = new THREE.Color(0x221155);
+                ambientLight.intensity = 0.5;
+            }
+            
+            // Add neon lights
+            for (let i = 0; i < 20; i++) {
+                const lightColor = Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF;
+                const light = new THREE.PointLight(lightColor, 1, 10);
+                light.position.set(
+                    (Math.random() - 0.5) * 40,
+                    5 + Math.random() * 10,
+                    -i * 10
+                );
+                scene.add(light);
+            }
+            
+            console.log('✅ Level 2 loaded successfully!');
+        },
+        
+        update: function(deltaTime) {},
+        cleanup: function() {}
+    };
+    
+    // Register Level 2
+    if (window.GameCore && window.GameCore.getModule('levels')) {
+        window.GameCore.getModule('levels').registerLevel(2, Level2);
+    }
+    </script>
     <style>
         * {
             margin: 0;
@@ -41,15 +262,158 @@
             border-radius: 8px;
         }
         
+        /* Minimal UI System from v4.x */
         #ui {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             z-index: 100;
+        }
+        
+        .ui-element {
+            position: absolute;
+            color: white;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+            opacity: 0.9;
+        }
+        
+        /* Top HUD - Minimal stats */
+        #minimalHUD {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            align-items: center;
+        }
+        
+        .hud-left {
+            display: flex;
+            gap: 25px;
+            font-size: 20px;
+        }
+        
+        .hud-center {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        
+        .hud-right {
+            display: flex;
+            gap: 25px;
+            font-size: 20px;
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Temporary notifications */
+        #notifications {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .notification {
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 30px;
+            font-size: 18px;
+            animation: fadeInOut 2s ease-out;
+            backdrop-filter: blur(15px);
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        
+        /* Power-up indicator */
+        #powerUpIndicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            background: rgba(139, 195, 74, 0.3);
+            border: 2px solid rgba(139, 195, 74, 0.8);
+            border-radius: 30px;
+            font-size: 20px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Game over overlay - minimal style */
+        #gameOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            backdrop-filter: blur(5px);
+        }
+        
+        .overlay-content {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        
+        .overlay-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+        
+        .overlay-stats {
+            font-size: 24px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        
+        .restart-button {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: rgba(139, 195, 74, 0.8);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        
+        .restart-button:hover {
+            background: rgba(139, 195, 74, 1);
+            transform: scale(1.05);
         }
         
         #versionInfo {
@@ -269,17 +633,6 @@
             60% { transform: translateY(-10px); }
         }
         
-        @keyframes notificationPulse {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-        
-        @keyframes notificationFade {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-        }
-        
         /* Near Miss and Milestone displays positioning */
         #nearMissDisplay {
             position: absolute;
@@ -480,8 +833,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.13-SCORE-FIX<br>
-            📅 03.08.2025
+            🚀 V3.6.1-COLLECTIBLE-BUGFIX<br>
+            📅 07.07.2025
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -506,67 +859,55 @@
         <canvas id="gestureCanvas"></canvas>
         
         <div id="ui">
-            <div>Score: <span id="score">0</span></div>
-            <div>Speed: <span id="speed">100</span></div>
-            <div>❤️ Leben: <span id="lives">3</span></div>
-            <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
-            
-            <!-- NEW: Power-Up & Coins UI -->
-            <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
-                🥝 <span id="kiwiCount">0</span>/10 | 🥦 <span id="broccoliCount">0</span>/5
-                <div style="font-size: 12px; margin-top: 2px;">
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 60px; height: 8px; overflow: hidden;">
-                            <div id="kiwiProgress" style="background: #FFD700; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 40px; height: 8px; overflow: hidden;">
-                            <div id="broccoliProgress" style="background: #8BC34A; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                        </div>
-                    </div>
+            <!-- Minimal HUD from v4.x -->
+            <div id="minimalHUD">
+                <div class="hud-left">
+                    <div class="status-indicator">❤️ <span id="lives">3</span></div>
+                    <div class="status-indicator">⏱️ <span id="timeRemaining">60</span>s</div>
+                </div>
+                <div class="hud-center">
+                    <span id="score">0</span>
+                </div>
+                <div class="hud-right">
+                    <div class="status-indicator">🥝 <span id="kiwiCount">0</span>/30</div>
+                    <div class="status-indicator">🥦 <span id="broccoliCount">0</span>/7</div>
                 </div>
             </div>
-            <div id="comboDisplay" style="color: #FF6B35; display: none; font-size: 20px; animation: pulse 0.5s infinite;">
-                COMBO x<span id="comboMultiplier">1</span>!
-            </div>
             
-            <!-- NEW: Near Miss Display -->
-            <div id="nearMissDisplay" style="color: #FFD700; display: none; font-size: 18px; font-weight: bold;">
-                NEAR MISS! x<span id="nearMissCount">1</span>
-                <div style="font-size: 14px;">+<span id="nearMissBonus">50</span> Bonus!</div>
-            </div>
+            <!-- Notifications container -->
+            <div id="notifications"></div>
             
-            <!-- NEW: Milestone Display -->
-            <div id="milestoneDisplay" style="color: #00FF00; display: none; font-size: 24px; font-weight: bold; animation: bounce 1s;">
-                <span id="milestoneIcon">🏁</span> <span id="milestoneText">500m!</span>
-                <div style="font-size: 16px;">+<span id="milestoneBonus">500</span> Punkte!</div>
-            </div>
+            <!-- Power-up indicator (shows only when active) -->
+            <div id="powerUpIndicator"></div>
             
-            <!-- NEW: Score Multiplier Display -->
-            <div id="multiplierDisplay" style="color: #FF1493; font-size: 16px; font-weight: bold; margin-top: 5px;">
-                Multiplikator: x<span id="currentMultiplier">1.0</span>
-            </div>
-            <div id="powerUpDisplay" style="color: #4ECDC4; display: none; font-weight: bold;">
-                <span id="powerUpIcon">⚡</span> <span id="powerUpName">Speed</span>: <span id="powerUpTime">8</span>s
-            </div>
-            
-            <!-- NEW: Skill Combo UI -->
-            <div id="skillComboDisplay" style="color: #FF4500; display: none; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <span id="skillComboIcon">🔥</span> SKILL COMBO x<span id="skillComboCount">1</span>! 
-                <div style="font-size: 14px; color: #FFD700;"><span id="skillComboBonus">+100</span> Punkte!</div>
-            </div>
-            
-            <!-- NEW: Environment Display -->
-            <div id="environmentDisplay" style="color: #87CEEB; font-weight: bold; margin-top: 10px;">
-                🏙️ <span id="currentEnvironment">Straße</span>
-            </div>
-            
-            <!-- NEW: Difficulty Progress Display -->
-            <div id="difficultyDisplay" style="color: #FFB347; font-weight: bold; margin-top: 5px; font-size: 14px;">
-                📈 Schwierigkeit: <span id="difficultyLevel">Leicht</span>
+            <!-- Game overlay for game over/pause -->
+            <div id="gameOverlay">
+                <div class="overlay-content">
+                    <h1 class="overlay-title">GAME OVER</h1>
+                    <div class="overlay-stats">
+                        <div>Score: <span id="finalScore">0</span></div>
+                        <div>🥝 Kiwis: <span id="finalKiwis">0</span>/30</div>
+                        <div>🥦 Broccolis: <span id="finalBroccolis">0</span>/7</div>
+                    </div>
+                    <button class="restart-button" onclick="restartGame()">NOCHMAL SPIELEN</button>
+                </div>
+        </div>
+        
+        
+        <!-- Start screen overlay -->
+        <div id="startScreen" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 300;">
+            <div style="text-align: center; color: white; padding: 40px;">
+                <h1 style="font-size: 64px; font-weight: 700; margin-bottom: 20px; letter-spacing: 5px;">SUBWAY RUNNER</h1>
+                <p style="font-size: 24px; margin-bottom: 40px; opacity: 0.8;">Sammle 30 Kiwis und 7 Broccolis!</p>
+                <button class="restart-button" onclick="startGame()" style="font-size: 28px; padding: 20px 60px;">START</button>
+                <div style="margin-top: 40px; font-size: 18px; opacity: 0.7;">
+                    <p>← → Seitlich bewegen</p>
+                    <p>↑ Springen | ↓ Ducken</p>
+                </div>
             </div>
         </div>
         
-        <div id="instructions">
+        <div id="instructions" style="display: none;">
             <div><strong>🎮 Steuerung:</strong></div>
             <div>A/D: Spurwechsel</div>
             <div>Leertaste/W: Springen 🦘</div>
@@ -1055,30 +1396,41 @@
         
         // CRITICAL FIX: Centralized score management to prevent explosion
         function addScore(amount, source = 'unknown') {
-            // Safety checks
-            if (!amount || amount < 0) return;
-            if (amount > 1000) {
-                console.warn(`Suspicious score amount: ${amount} from ${source}`);
-                amount = 1000; // Cap at 1000 per addition
-            }
+            // Add to queue instead of directly to score
+            gameState.scoreQueue += Math.max(0, Math.floor(amount));
             
-            // Direct score update (no queue)
-            gameState.score += Math.floor(amount);
-            
-            // Cap total score at reasonable limit
-            if (gameState.score > 999999) {
-                gameState.score = 999999;
+            // Debug logging for score tracking
+            if (amount > 0) {
+                console.log(`🎯 Score queued: +${amount} from ${source} (queue: ${gameState.scoreQueue})`);
             }
         }
         
-        // REMOVED: processScoreQueue - using direct score updates now
+        function processScoreQueue() {
+            const currentTime = performance.now();
+            
+            // Only process queue every scoreUpdateInterval
+            if (currentTime - gameState.lastScoreUpdate < gameState.scoreUpdateInterval) {
+                return;
+            }
+            
+            if (gameState.scoreQueue > 0) {
+                // Apply limited amount from queue
+                const scoreToAdd = Math.min(gameState.scoreQueue, gameState.maxScorePerUpdate);
+                gameState.score += scoreToAdd;
+                gameState.scoreQueue -= scoreToAdd;
+                
+                gameState.lastScoreUpdate = currentTime;
+                
+                console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
+            }
+        }
         
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
 
         // Supabase Configuration - Using working credentials
-        const SUPABASE_URL = 'https://cquahsbgcycdmslcmmdz.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdWFoc2JnY3ljZG1zbGNtbWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzOTE3MDgsImV4cCI6MjA2ODk2NzcwOH0.1iBIMxzrvQpksIT2LNYr99DopyUVUl7XnasJ8aO3-Vw'
+        const SUPABASE_URL = 'https://umvrurelsxpxmyzcvrcd.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdnJ1cmVsc3hweG15emN2cmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ5OTYsImV4cCI6MjA1MDkxMDk5Nn0.xpBgJ0BQN86JqhNtKzKNl1kchO1IU_oXI7SYpgfLBJU'
         
         // Initialize Supabase client
         let supabase = null;
@@ -1093,9 +1445,6 @@
                 console.log('✅ Supabase initialized successfully');
                 console.log('🔗 Database URL:', SUPABASE_URL);
                 console.log('🔑 Using API Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
-                
-                // Initialize error logging
-                initializeErrorLogging();
             } else {
                 throw new Error('Supabase library not loaded');
             }
@@ -1243,12 +1592,11 @@
         // Game state
         let gameState = {
             isPlaying: false,
-            isRunning: false, // Add isRunning for test compatibility
             isGameOver: false,
             isVictory: false,
             score: 0,
-            speed: 0.12, // Schnellerer Start für mehr Action
-            baseSpeed: 0.12,
+            speed: 0.08, // Langsamerer Start
+            baseSpeed: 0.08,
             maxSpeed: 0.45, // Sehr schnell am Ende!
             lives: 3,
             gameTime: 60, // 60 Sekunden
@@ -1272,23 +1620,18 @@
             powerUps: [],              // Spawned power-ups in world
             kiwis: [],                 // Spawned kiwis in world
             broccolis: [],             // Spawned broccolis in world  
-            mysteryBoxes: [],          // Spawned mystery boxes in world
-            mysteryBoxesSpawned: 0,    // Track spawned mystery boxes (max 2)
             collectedKiwis: 0,         // Current session kiwis
             collectedBroccolis: 0,     // Current session broccolis
-            collectedMysteryBoxes: 0,  // Current session mystery boxes
             totalKiwis: 0,             // Lifetime kiwis
             totalBroccolis: 0,         // Lifetime broccolis
             totalCollectibles: 0,      // Total spawned this session
-            lastCollectibleSpawnTime: 0, // Track time since last collectible spawn
-            guaranteedSpawnInterval: 3000, // Force spawn if none in 3 seconds
             collectionGoal: 10,        // Target collectibles for bonus (80% of max ~12-15)
             collectionBonusAwarded: {      // Track tiered collection bonuses
                 fiveOfOne: false,               // 5+ of one type
-                allOfOne: false,                // All 10 kiwis OR all 5 broccolis  
-                allThirtySeven: false,          // All 15 collectibles (10 kiwis + 5 broccolis)
+                allOfOne: false,                // All 30 kiwis OR all 7 broccolis  
+                allThirtySeven: false,          // All 37 collectibles (30 kiwis + 7 broccolis)
                 broccoliMaster: false,          // 5 broccolis (+200 points)
-                veggieChampion: false           // 5 broccolis (+500 points)
+                veggieChampion: false           // 7 broccolis (+500 points)
             },
             activePowerUp: null,       // Currently active power-up
             powerUpTimeRemaining: 0,   // Time left for active power-up
@@ -1353,182 +1696,10 @@
             lastScoreUpdate: 0,
             scoreUpdateInterval: 100, // Update score every 100ms (10 times per second)
             
-            // REMOVED: Score queue variables - using direct updates
+            // Centralized score queue for throttling ALL score additions
+            scoreQueue: 0,
+            maxScorePerUpdate: 100 // Maximum score increase per throttled update
         };
-
-        // Create gameInstance alias for test compatibility
-        window.gameInstance = gameState;
-        window.gameState = gameState; // Also expose gameState globally
-        
-        // ==================== LEVEL SYSTEM ====================
-        window.currentLevel = 1;
-        const levels = {};
-        
-        // Level 2: Neon Night Run
-        const Level2 = {
-            name: "Neon Night Run",
-            description: "Cyberpunk city with neon lights",
-            id: 2,
-            objects: {
-                cyberpunkBuildings: [],
-                neonLights: [],
-                particles: []
-            },
-            
-            load: function(scene, renderer) {
-                console.log('🌃 Loading Level 2: Neon Night Run');
-                this.scene = scene;
-                this.renderer = renderer;
-                this.cleanup();
-                
-                // Update environment
-                scene.fog = new THREE.FogExp2(0x001133, 0.025);
-                renderer.setClearColor(0x001133);
-                
-                // Create neon environment
-                this.createEnvironment();
-            },
-            
-            createEnvironment: function() {
-                // Create neon grid floor
-                const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
-                gridHelper.position.y = -0.95;
-                gridHelper.userData = { type: 'level2Grid' };
-                this.scene.add(gridHelper);
-                this.objects.neonLights.push(gridHelper);
-                
-                // Create cyberpunk buildings
-                for (let i = 0; i < 20; i++) {
-                    const buildingGroup = new THREE.Group();
-                    const width = 6 + Math.random() * 4;
-                    const height = 20 + Math.random() * 30;
-                    const depth = 6 + Math.random() * 4;
-                    
-                    // Building body
-                    const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
-                    const buildingMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x111122,
-                        emissive: 0x000011
-                    });
-                    const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-                    building.position.y = height / 2;
-                    buildingGroup.add(building);
-                    
-                    // Neon edges
-                    const edgeGeometry = new THREE.BoxGeometry(width + 0.1, height + 0.1, depth + 0.1);
-                    const edgeMaterial = new THREE.MeshBasicMaterial({ 
-                        color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
-                        wireframe: true
-                    });
-                    const edges = new THREE.Mesh(edgeGeometry, edgeMaterial);
-                    edges.position.y = height / 2;
-                    buildingGroup.add(edges);
-                    
-                    const side = i % 2 === 0 ? -1 : 1;
-                    buildingGroup.position.set(
-                        side * (20 + Math.random() * 15),
-                        0,
-                        -i * 8
-                    );
-                    buildingGroup.userData = { type: 'cyberpunkBuilding' };
-                    
-                    this.scene.add(buildingGroup);
-                    this.objects.cyberpunkBuildings.push(buildingGroup);
-                }
-            },
-            
-            update: function(deltaTime) {
-                // Animate neon lights
-                this.objects.neonLights.forEach(light => {
-                    if (light.material && light.material.opacity) {
-                        light.material.opacity = 0.5 + Math.sin(Date.now() * 0.002) * 0.3;
-                    }
-                });
-            },
-            
-            cleanup: function() {
-                // Remove all level objects
-                Object.values(this.objects).forEach(objArray => {
-                    if (Array.isArray(objArray)) {
-                        objArray.forEach(obj => {
-                            if (obj.parent) obj.parent.remove(obj);
-                        });
-                    }
-                });
-                
-                // Reset arrays
-                this.objects = {
-                    cyberpunkBuildings: [],
-                    neonLights: [],
-                    particles: []
-                };
-            }
-        };
-        
-        // Register levels
-        levels[2] = Level2;
-        
-        // Expose for testing
-        window.levels = levels;
-        window.currentLevel = currentLevel;
-        
-        // Level management functions
-        window.checkLevelProgression = function checkLevelProgression() {
-            const levelThreshold = window.currentLevel * 1000; // Every 1000 points
-            
-            if (gameState.score >= levelThreshold && window.currentLevel < 2) {
-                window.currentLevel++;
-                loadLevel(window.currentLevel);
-                
-                // Show level transition
-                showNotification(`🎮 LEVEL ${window.currentLevel} UNLOCKED!`, 'level');
-            }
-        }
-        
-        function loadLevel(levelId) {
-            if (levels[levelId]) {
-                console.log(`Loading level ${levelId}`);
-                levels[levelId].load(scene, renderer);
-                gameState.currentLevel = levelId;
-            }
-        }
-        
-        function showNotification(message, type = 'default') {
-            const notification = document.createElement('div');
-            notification.className = 'game-notification';
-            notification.textContent = message;
-            
-            const colors = {
-                level: '#FFD700',
-                gold: '#FFD700',
-                warning: '#FF6B6B',
-                success: '#4ECDC4',
-                default: '#FFFFFF'
-            };
-            
-            notification.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                padding: 20px 40px;
-                background: rgba(0, 0, 0, 0.8);
-                color: ${colors[type] || colors.default};
-                font-size: 24px;
-                font-weight: bold;
-                border-radius: 10px;
-                border: 2px solid ${colors[type] || colors.default};
-                z-index: 1000;
-                animation: notificationPulse 0.5s ease-out;
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'notificationFade 0.5s ease-out';
-                setTimeout(() => notification.remove(), 500);
-            }, 2000);
-        }
 
         // Three.js setup
         let scene, camera, renderer, player, track, obstacles = [];
@@ -1590,14 +1761,11 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
-                // Check if THREE.js is loaded
-                if (typeof THREE === 'undefined') {
-                    throw new Error('THREE.js library not loaded');
-                }
+                // Initialize GameCore system
+                GameCore.init();
                 
                 // Scene with enhanced fog
                 scene = new THREE.Scene();
-                window.scene = scene; // Expose for testing
                 scene.fog = new THREE.FogExp2(0x87CEEB, gameState.currentFogDensity);
 
             // Camera (Subway Surfers perspective)
@@ -1611,10 +1779,6 @@
             renderer.setClearColor(0x87CEEB);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            
-            // Make renderer and scene globally accessible for tests
-            window.gameInstance.renderer = renderer;
-            window.gameInstance.scene = scene;
 
             // Modern lighting system
             // Ambient light for overall illumination
@@ -1666,18 +1830,11 @@
                 animate();
                 console.log('Three.js initialization complete');
                 
-                // Mark initialization as successful
-                window.gameInstance.initialized = true;
+                // Show start screen
+                gameState.isPlaying = false;
+                document.getElementById('startScreen').style.display = 'flex';
             } catch (error) {
                 console.error('Error initializing Three.js:', error);
-                // Show error to user
-                const errorDiv = document.createElement('div');
-                errorDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: red; color: white; padding: 20px; z-index: 9999;';
-                errorDiv.textContent = 'Game initialization failed: ' + error.message;
-                document.body.appendChild(errorDiv);
-                
-                // Report error for testing
-                window.gameInstance.initError = error;
             }
         }
 
@@ -2486,7 +2643,6 @@
             }
             
             gameState.isPlaying = true;
-            gameState.isRunning = true; // Set isRunning for test compatibility
             gameState.isGameOver = false;
             gameState.isVictory = false;
             gameState.score = 0;
@@ -2509,7 +2665,9 @@
             gameState.milestoneReached = 0;
             gameState.totalDistance = 0;
             
-            // Initialize score timing
+            // BUGFIX: Initialize centralized score system
+            gameState.lastScoreUpdate = performance.now();
+            gameState.scoreQueue = 0;
             gameState.lastDistanceScore = performance.now();
             
             // Reset all multipliers and combos
@@ -2549,11 +2707,6 @@
             gameState.kiwis = [];
             gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
             gameState.broccolis = [];
-            gameState.mysteryBoxes.forEach(box => scene.remove(box.mesh));
-            gameState.mysteryBoxes = [];
-            gameState.mysteryBoxesSpawned = 0;
-            gameState.collectedMysteryBoxes = 0;
-            gameState.lastCollectibleSpawnTime = 0;
             
             // Start sound
             audioManager.play('powerup');
@@ -2570,7 +2723,6 @@
 
         function endGame() {
             gameState.isPlaying = false;
-            gameState.isRunning = false; // Stop running for test compatibility
             gameState.isGameOver = true;
             
             // Stop background music and ambient sounds
@@ -2593,7 +2745,6 @@
 
         function victoryGame() {
             gameState.isPlaying = false;
-            gameState.isRunning = false; // Stop running for test compatibility
             gameState.isVictory = true;
             
             // Stop ambient sounds
@@ -2621,7 +2772,143 @@
             showNameInputDialog(true);
         }
 
+        function showNotification(message, duration = 2000) {
+            const notifications = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            
+            notifications.appendChild(notification);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                notification.remove();
+            }, duration);
+        }
+        
+        function loseLife() {
+            gameState.lives--;
+            updateUI();
+            
+            if (gameState.lives <= 0) {
+                gameOver();
+            } else {
+                showNotification(`Leben verloren! ${gameState.lives} übrig`, 1500);
+            }
+        }
+        
+        function gameOver() {
+            gameState.isPlaying = false;
+            gameState.isGameOver = true;
+            
+            // Update final stats
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalKiwis').textContent = gameState.collectedKiwis;
+            document.getElementById('finalBroccolis').textContent = gameState.collectedBroccolis;
+            
+            // Show game over overlay
+            document.getElementById('gameOverlay').style.display = 'flex';
+            
+            // Hide start screen if visible
+            document.getElementById('startScreen').style.display = 'none';
+        }
+        
+        function restartGame() {
+            // Reset game state
+            gameState = {
+                isPlaying: true,
+                isGameOver: false,
+                isVictory: false,
+                score: 0,
+                speed: 100,
+                playerLane: 1,
+                playerAction: null,
+                jumpProgress: 0,
+                kiwis: [],
+                broccolis: [],
+                totalKiwis: 0,
+                totalBroccolis: 0,
+                collectedKiwis: 0,
+                collectedBroccolis: 0,
+                currentEnvironment: 'street',
+                environmentProgress: 0,
+                cameraShakeIntensity: 0,
+                lives: 3,
+                timeRemaining: 60,
+                powerUps: [],
+                activePowerUp: null,
+                powerUpTimeRemaining: 0,
+                magnetActive: false,
+                shieldActive: false,
+                speedBoostActive: false,
+                kiwiCombo: 0,
+                comboMultiplier: 1,
+                lastKiwiTime: 0,
+                nearMissCount: 0,
+                lastNearMissTime: 0,
+                lastMilestone: 0,
+                maxCombo: 0,
+                totalNearMisses: 0,
+                skillCombo: 0,
+                lastSkillTime: 0,
+                ambientLightIntensity: 1.0,
+                spawnCooldown: 0,
+                lastSpawnZ: -50,
+                obstaclesSinceLastCollectible: 0,
+                lastPattern: '',
+                maxKiwis: 30,
+                maxBroccolis: 7,
+                totalCollectiblesSpawned: 0,
+                collectibleSpawnHistory: []
+            };
+            
+            // Clear scene
+            obstacles.forEach(obstacle => scene.remove(obstacle.mesh));
+            obstacles = [];
+            
+            gameState.kiwis.forEach(kiwi => scene.remove(kiwi.mesh));
+            gameState.kiwis = [];
+            
+            gameState.broccolis.forEach(broccoli => scene.remove(broccoli.mesh));
+            gameState.broccolis = [];
+            
+            gameState.powerUps.forEach(powerUp => scene.remove(powerUp.mesh));
+            gameState.powerUps = [];
+            
+            // Reset player position
+            player.position.set(0, 0, 0);
+            
+            // Hide overlay
+            document.getElementById('gameOverlay').style.display = 'none';
+            
+            // Update UI
+            updateUI();
+            
+            // Reset timer
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            startTimer();
+        }
+        
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            restartGame();
+        }
+        
         function updateUI() {
+            // Check for level progression
+            if (window.GameCore && gameState.isPlaying) {
+                const levelManager = GameCore.getModule('levels');
+                if (levelManager && levelManager.checkLevelTransition(gameState.score)) {
+                    // Level changed!
+                    const newLevel = levelManager.getCurrentLevel();
+                    if (newLevel) {
+                        showNotification(`Level ${levelManager.currentLevel}: ${newLevel.name}!`);
+                    }
+                }
+            }
+            
             // Animate score changes
             const scoreElement = document.getElementById('score');
             const currentDisplayScore = parseInt(scoreElement.textContent) || 0;
@@ -3632,61 +3919,6 @@
                     gameState.broccolis.splice(index, 1);
                 }
             });
-            
-            // ==================== MYSTERY BOX COLLISION DETECTION ====================
-            
-            gameState.mysteryBoxes.forEach((box, index) => {
-                const boxBBox = {
-                    min: {
-                        x: box.mesh.position.x - 0.6,
-                        y: box.mesh.position.y - 0.5,
-                        z: box.mesh.position.z - 0.6
-                    },
-                    max: {
-                        x: box.mesh.position.x + 0.6,
-                        y: box.mesh.position.y + 2.5, // Taller for fountain effect
-                        z: box.mesh.position.z + 0.6
-                    }
-                };
-                
-                // Check collision with player
-                if (boundingBoxIntersection(playerBBox, boxBBox) && !box.collected) {
-                    // Collect mystery box!
-                    box.collected = true;
-                    gameState.collectedMysteryBoxes++;
-                    
-                    // Big score bonus
-                    gameState.score += 500;
-                    
-                    // Golden particle explosion
-                    createGoldenExplosion(box.mesh.position.clone());
-                    
-                    // Play special sound
-                    audioManager.play('powerup');
-                    
-                    // Trigger special effect (random bonus)
-                    const bonusType = Math.random();
-                    if (bonusType < 0.33) {
-                        // Instant 1000 points
-                        gameState.score += 1000;
-                        showNotification('✨ MYSTERY BOX: +1500 POINTS!', 'gold');
-                    } else if (bonusType < 0.66) {
-                        // Double score for 10 seconds
-                        gameState.scoreMultiplier = 2;
-                        setTimeout(() => { gameState.scoreMultiplier = 1; }, 10000);
-                        showNotification('✨ MYSTERY BOX: 2X SCORE FOR 10s!', 'gold');
-                    } else {
-                        // Temporary invincibility
-                        gameState.invulnerable = true;
-                        gameState.invulnerabilityTime = 5000;
-                        showNotification('✨ MYSTERY BOX: 5s INVINCIBILITY!', 'gold');
-                    }
-                    
-                    // Remove from scene
-                    scene.remove(box.mesh);
-                    gameState.mysteryBoxes.splice(index, 1);
-                }
-            });
         }
         
         // Calculate precise player bounding box based on current action
@@ -3974,118 +4206,103 @@
         function createKiwi(lane, z, pattern = 'single') {
             const kiwiGroup = new THREE.Group();
             
-            // REALISTIC HALF KIWI: Like a real sliced kiwi fruit
-            const kiwiRadius = 0.4;  // Slightly larger for better visibility
+            // REDESIGNED: Elongated Kiwi Geometrie (oval shape, less coin-like)
+            const kiwiRadiusX = 0.3;   // Smaller width
+            const kiwiRadiusY = 0.5;   // Taller height 
+            const kiwiRadiusZ = 0.3;   // Smaller depth
             
-            // Create half-dome shape for realistic kiwi body
-            const halfDomeGeometry = new THREE.SphereGeometry(
-                kiwiRadius, 
-                16, 
-                8, 
-                0, 
-                Math.PI * 2, 
-                Math.PI / 2, 
-                Math.PI / 2
-            );
+            // ENHANCED: Elongated ellipsoid shape for realistic kiwi appearance
+            const kiwiGeometry = new THREE.SphereGeometry(1, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.8);
+            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
             
-            // Brown fuzzy skin with realistic texture
+            // ENHANCED: Verbesserte Braune Außenhaut mit Glow-Effekt
             const skinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x8B4513,      // Saddle brown - realistic kiwi skin color
-                emissive: 0x654321,   // Darker brown emissive
-                emissiveIntensity: 0.1,
-                roughness: 0.9        // Very rough for fuzzy appearance
+                color: 0xB8860B,  // Noch heller für bessere Sichtbarkeit
+                emissive: 0x3A2A0A,  // Leichtes Glühen
+                roughness: 0.6
             });
-            const kiwiSkin = new THREE.Mesh(halfDomeGeometry, skinMaterial);
-            kiwiSkin.rotation.x = Math.PI;  // Flip to have dome on top
-            kiwiSkin.position.y = 0.2;
+            const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
+            kiwiSkin.rotation.x = -Math.PI / 2;
+            kiwiSkin.position.y = 1.2;
             kiwiSkin.castShadow = true;
             kiwiGroup.add(kiwiSkin);
             
-            // Green kiwi flesh (the cut side) - more realistic
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.98, 32);
+            // ENHANCED: Zusätzliche braune Textur-Ringe für bessere Kiwi-Optik (angepasst für oval)
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(kiwiRadiusX * 0.7 + i * 0.04, kiwiRadiusX * 0.75 + i * 0.04, 16);
+                const ringMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x8B4513,  // Dunklere braune Streifen
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 1.21 + i * 0.001;
+                kiwiGroup.add(ring);
+            }
+            
+            // Grünes Fruchtfleisch (elliptische Unterseite)
+            const fleshGeometry = new THREE.EllipseGeometry ? 
+                new THREE.EllipseGeometry(kiwiRadiusX * 0.95, kiwiRadiusZ * 0.95) :
+                new THREE.CircleGeometry(kiwiRadiusX * 0.95, 32);
             const fleshMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x9ACD32,      // Yellow-green like real kiwi flesh
-                emissive: 0x556B2F,   // Dark olive green emissive
+                color: 0x8FBC8F,
+                emissive: 0x2F5F2F,
                 emissiveIntensity: 0.2
             });
             const kiwiFlesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
-            kiwiFlesh.rotation.x = -Math.PI / 2;  // Face upward
-            kiwiFlesh.position.y = 0.01;  // Just above ground
+            kiwiFlesh.rotation.x = -Math.PI / 2;
+            kiwiFlesh.position.y = 1.2;
             kiwiGroup.add(kiwiFlesh);
             
-            // Light ring where flesh meets skin
-            const ringGeometry = new THREE.RingGeometry(kiwiRadius * 0.9, kiwiRadius * 0.98, 32);
-            const ringMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xF0E68C,  // Khaki - lighter edge
-                emissive: 0xF0E68C,
-                emissiveIntensity: 0.1
-            });
-            const fleshRing = new THREE.Mesh(ringGeometry, ringMaterial);
-            fleshRing.rotation.x = -Math.PI / 2;
-            fleshRing.position.y = 0.015;
-            kiwiGroup.add(fleshRing);
-            
-            // White center core (smaller and more subtle)
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.2, 16);
+            // Weißer Kern in der Mitte (angepasst für oval)
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 16);
             const coreMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFFAF0,  // Floral white
-                emissive: 0xFFFFE0,
-                emissiveIntensity: 0.05
+                color: 0xF5F5DC,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.1
             });
             const kiwiCore = new THREE.Mesh(coreGeometry, coreMaterial);
             kiwiCore.rotation.x = -Math.PI / 2;
-            kiwiCore.position.y = 0.02;
+            kiwiCore.position.y = 1.201;
             kiwiGroup.add(kiwiCore);
             
-            // Black seeds in realistic radial pattern
-            const seedRings = 2;  // Two rings of seeds
-            for (let ring = 0; ring < seedRings; ring++) {
-                const seedsInRing = ring === 0 ? 6 : 10;
-                const ringRadius = kiwiRadius * (0.35 + ring * 0.25);
+            // Schwarze Kerne/Samen (elliptisch verteilt)
+            const seedCount = 12;
+            for (let i = 0; i < seedCount; i++) {
+                const angle = (i / seedCount) * Math.PI * 2;
+                const distanceX = kiwiRadiusX * 0.5 + Math.random() * kiwiRadiusX * 0.2;
+                const distanceZ = kiwiRadiusZ * 0.5 + Math.random() * kiwiRadiusZ * 0.2;
                 
-                for (let i = 0; i < seedsInRing; i++) {
-                    const angle = (i / seedsInRing) * Math.PI * 2 + (ring * Math.PI / seedsInRing);
-                    const seedSize = 0.015 + Math.random() * 0.005;
-                    
-                    // Elongated seed shape
-                    const seedGeometry = new THREE.SphereGeometry(seedSize, 4, 2);
-                    seedGeometry.scale(1.5, 1, 1);  // Elongate the seed
-                    
-                    const seedMaterial = new THREE.MeshBasicMaterial({ 
-                        color: 0x000000
-                    });
-                    const seed = new THREE.Mesh(seedGeometry, seedMaterial);
-                    seed.position.set(
-                        Math.cos(angle) * ringRadius,
-                        0.025,
-                        Math.sin(angle) * ringRadius
-                    );
-                    seed.rotation.z = angle;  // Orient seeds radially
-                    kiwiGroup.add(seed);
-                }
+                const seedGeometry = new THREE.CircleGeometry(0.02, 4);
+                const seedMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x000000
+                });
+                const seed = new THREE.Mesh(seedGeometry, seedMaterial);
+                seed.rotation.x = -Math.PI / 2;
+                seed.position.set(
+                    Math.cos(angle) * distanceX,  // Use elliptical X coordinate
+                    1.202,
+                    Math.sin(angle) * distanceZ   // Use elliptical Z coordinate
+                );
+                kiwiGroup.add(seed);
             }
             
-            // Subtle shine spots for freshness (multiple small ones)
-            for (let i = 0; i < 3; i++) {
-                const glintSize = 0.03 + Math.random() * 0.02;
-                const glintGeometry = new THREE.CircleGeometry(glintSize, 6);
-                const glintMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0xFFFFFF,
-                    transparent: true,
-                    opacity: 0.3 + Math.random() * 0.2
-                });
-                const glint = new THREE.Mesh(glintGeometry, glintMaterial);
-                glint.rotation.x = -Math.PI / 2;
-                glint.position.set(
-                    (Math.random() - 0.5) * kiwiRadius * 0.6,
-                    0.03,
-                    (Math.random() - 0.5) * kiwiRadius * 0.6
-                );
-                kiwiGroup.add(glint);
-            }
+            // Glanz-Effekt für Frische
+            const glintGeometry = new THREE.CircleGeometry(0.08, 8);
+            const glintMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.7
+            });
+            const glint = new THREE.Mesh(glintGeometry, glintMaterial);
+            glint.rotation.x = -Math.PI / 2;
+            glint.position.set(kiwiRadius * 0.4, 1.203, kiwiRadius * 0.3);
             kiwiGroup.add(glint);
             
-            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.1, z);  // Slightly above ground
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
             scene.add(kiwiGroup);
             
             // Store kiwi data
@@ -4119,7 +4336,7 @@
                 emissive: 0x1A241A
             });
             const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 0.2;  // Stiel näher am Boden
+            broccoliStem.position.y = 1.0;
             broccoliStem.castShadow = true;
             broccoliGroup.add(broccoliStem);
             
@@ -4138,15 +4355,15 @@
                 const radius = 0.2 + Math.random() * 0.15;
                 floret.position.set(
                     Math.cos(angle) * radius,
-                    0.35 + Math.random() * 0.15,  // Kopf niedriger positioniert
+                    1.25 + Math.random() * 0.2,
                     Math.sin(angle) * radius
                 );
                 floret.castShadow = true;
                 broccoliGroup.add(floret);
             }
             
-            // Position and add to scene - auf Spielerhöhe für einfaches Einsammeln
-            broccoliGroup.position.set(LANE_POSITIONS[lane], 0.3, z);  // Proper collectible height
+            // Position and add to scene
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
             broccoliGroup.userData = { type: 'broccoli', lane: lane };
             scene.add(broccoliGroup);
             
@@ -4157,8 +4374,7 @@
                 z: z,
                 pattern: pattern,
                 animationTime: 0,
-                collected: false,
-                baseY: 0.3  // Same height as kiwi
+                collected: false
             };
             
             broccolis.push(broccoliData);
@@ -4237,19 +4453,24 @@
         }
         
         function updatePowerUpUI() {
-            const powerUpDisplay = document.getElementById('powerUpDisplay');
-            const powerUpIcon = document.getElementById('powerUpIcon');
-            const powerUpName = document.getElementById('powerUpName');
-            const powerUpTime = document.getElementById('powerUpTime');
+            const powerUpIndicator = document.getElementById('powerUpIndicator');
             
             if (gameState.activePowerUp) {
                 const config = POWER_UP_TYPES[gameState.activePowerUp];
-                powerUpDisplay.style.display = 'block';
-                powerUpIcon.textContent = config.icon;
-                powerUpName.textContent = config.name;
-                powerUpTime.textContent = Math.ceil(gameState.powerUpTimeRemaining / 1000);
+                const timeLeft = Math.ceil(gameState.powerUpTimeRemaining / 1000);
+                powerUpIndicator.innerHTML = `${config.icon} ${config.name}: ${timeLeft}s`;
+                powerUpIndicator.style.display = 'block';
+                
+                // Update style based on power-up type
+                if (gameState.activePowerUp === 'magnet' || gameState.activePowerUp === 'largeMagnet') {
+                    powerUpIndicator.style.background = 'rgba(255, 215, 0, 0.3)';
+                    powerUpIndicator.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+                } else {
+                    powerUpIndicator.style.background = 'rgba(139, 195, 74, 0.3)';
+                    powerUpIndicator.style.borderColor = 'rgba(139, 195, 74, 0.8)';
+                }
             } else {
-                powerUpDisplay.style.display = 'none';
+                powerUpIndicator.style.display = 'none';
             }
         }
         
@@ -4257,27 +4478,13 @@
             if (kiwiData.collected) return;
             
             kiwiData.collected = true;
-            
-            // Dispose of mesh resources to prevent memory leak
-            if (kiwiData.mesh) {
-                kiwiData.mesh.traverse((child) => {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose());
-                        } else {
-                            child.material.dispose();
-                        }
-                    }
-                });
-                scene.remove(kiwiData.mesh);
-            }
+            scene.remove(kiwiData.mesh);
             
             // Update kiwi count with debug logging
             gameState.collectedKiwis++;
             gameState.totalKiwis++;
             
-            // Removed console.log for performance
+            console.log(`🥝 COLLECTED KIWI - Session: ${gameState.collectedKiwis}, Total Lifetime: ${gameState.totalKiwis}`);
             
             // Handle combo system
             const currentTime = performance.now();
@@ -4308,7 +4515,7 @@
             // Update UI
             updateKiwiUI();
             
-            // Removed console.log for performance
+            console.log(`Collected kiwi! Combo: ${gameState.kiwiCombo}, Score: +${totalScore}`);
         }
         
         // NEW: Brokkoli collection function
@@ -4316,27 +4523,13 @@
             if (broccoliData.collected) return;
             
             broccoliData.collected = true;
-            
-            // Dispose of mesh resources to prevent memory leak
-            if (broccoliData.mesh) {
-                broccoliData.mesh.traverse((child) => {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose());
-                        } else {
-                            child.material.dispose();
-                        }
-                    }
-                });
-                scene.remove(broccoliData.mesh);
-            }
+            scene.remove(broccoliData.mesh);
             
             // Update broccoli count with debug logging
             gameState.collectedBroccolis++;
             gameState.totalBroccolis++;
             
-            // Removed console.log for performance
+            console.log(`🥦 COLLECTED BROCCOLI - Session: ${gameState.collectedBroccolis}, Total Lifetime: ${gameState.totalBroccolis}`);
             
             // Broccolis give slightly more points than kiwis (health food bonus!)
             const baseScore = 15;
@@ -4421,73 +4614,6 @@
             animateSplash();
         }
         
-        // Golden explosion effect for mystery boxes
-        function createGoldenExplosion(position) {
-            const particles = [];
-            const particleCount = 30;
-            
-            // Create golden sparkles
-            for (let i = 0; i < particleCount; i++) {
-                const sparkleSize = 0.1 + Math.random() * 0.15;
-                const sparkleGeometry = new THREE.SphereGeometry(sparkleSize, 6, 6);
-                const sparkleMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xFFD700,
-                    emissive: 0xFFD700,
-                    emissiveIntensity: 0.5,
-                    transparent: true,
-                    opacity: 1
-                });
-                
-                const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
-                sparkle.position.copy(position);
-                
-                // Random velocity in all directions
-                sparkle.velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.4,
-                    Math.random() * 0.5 + 0.2,
-                    (Math.random() - 0.5) * 0.4
-                );
-                
-                scene.add(sparkle);
-                particles.push(sparkle);
-            }
-            
-            // Create golden ring explosion
-            createExplosionRing(position, 0xFFD700);
-            
-            // Animate particles
-            const animateExplosion = () => {
-                let activeParticles = 0;
-                
-                particles.forEach((particle, index) => {
-                    // Update position
-                    particle.position.add(particle.velocity);
-                    particle.velocity.y -= 0.015; // Gravity
-                    
-                    // Fade out
-                    particle.material.opacity -= 0.02;
-                    particle.scale.multiplyScalar(0.98); // Shrink
-                    
-                    // Rotation for sparkle effect
-                    particle.rotation.x += 0.1;
-                    particle.rotation.y += 0.1;
-                    
-                    if (particle.material.opacity <= 0) {
-                        scene.remove(particle);
-                        particles.splice(index, 1);
-                    } else {
-                        activeParticles++;
-                    }
-                });
-                
-                if (activeParticles > 0) {
-                    requestAnimationFrame(animateExplosion);
-                }
-            };
-            
-            animateExplosion();
-        }
-        
         function updateComboUI() {
             const comboDisplay = document.getElementById('comboDisplay');
             const comboMultiplier = document.getElementById('comboMultiplier');
@@ -4511,8 +4637,8 @@
             const kiwiProgress = document.getElementById('kiwiProgress');
             const broccoliProgress = document.getElementById('broccoliProgress');
             
-            // Debug logging disabled for performance
-            // console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            // Debug logging
+            console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
             
             if (kiwiCount) {
                 kiwiCount.textContent = gameState.collectedKiwis || 0;
@@ -4537,11 +4663,9 @@
                 broccoliProgress.style.width = broccoliPercent + '%';
             }
             
-            // Calculate percentage based on expected totals (30 kiwis + 7 broccolis = 37)
+            // Also update the total for percentage calculation
             const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-            const totalPossible = 30 + 7; // 30 kiwis + 7 broccolis
-            const percentage = totalPossible > 0 ? Math.round((collectedTotal / totalPossible) * 100) : 0;
-            // console.log(`📊 Total collected: ${collectedTotal}/${totalPossible} (${percentage}%)`);
+            console.log(`📊 Total collected: ${collectedTotal}/${gameState.totalCollectibles} (${gameState.totalCollectibles > 0 ? (collectedTotal/gameState.totalCollectibles*100).toFixed(0) : 0}%)`);
         }
         
         function updateEnvironmentUI() {
@@ -4730,84 +4854,51 @@
         function createSimpleKiwi(lane, z) {
             const kiwiGroup = new THREE.Group();
             
-            // HALF KIWI: Realistische halbierte Kiwi
-            const kiwiRadius = 0.3;
+            // Simplified elongated kiwi for performance (less detailed than createKiwi)
+            const kiwiRadiusX = 0.2;   // Smaller width
+            const kiwiRadiusY = 0.35;  // Taller height 
+            const kiwiRadiusZ = 0.2;   // Smaller depth
             
-            // Halbkreis für halbe Kiwi (flache Seite unten)
-            const halfKiwiShape = new THREE.Shape();
-            halfKiwiShape.absarc(0, 0, kiwiRadius, 0, Math.PI, false);
-            halfKiwiShape.lineTo(-kiwiRadius, 0);
-            
-            const extrudeSettings = {
-                depth: kiwiRadius * 0.6,
-                bevelEnabled: true,
-                bevelThickness: 0.02,
-                bevelSize: 0.02,
-                bevelSegments: 8
-            };
-            
-            // Braune Außenhaut - realistischer
-            const skinGeometry = new THREE.ExtrudeGeometry(halfKiwiShape, extrudeSettings);
-            const skinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x8B4513,  // Saddle brown - matches createKiwi
-                emissive: 0x654321,
-                emissiveIntensity: 0.1,
-                roughness: 0.9
+            // Half ellipsoid for kiwi body
+            const kiwiGeometry = new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2);
+            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
+            const kiwiMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x8B6914,
+                transparent: true,
+                opacity: 0.9
             });
-            const skin = new THREE.Mesh(skinGeometry, skinMaterial);
-            skin.rotation.x = -Math.PI / 2;
-            kiwiGroup.add(skin);
             
-            // Grünes Fruchtfleisch (flache Seite) - realistischer
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadius * 0.95, 32);
-            const fleshMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x9ACD32,  // Yellow-green - matches createKiwi
-                emissive: 0x556B2F,
-                emissiveIntensity: 0.2
+            const kiwiBody = new THREE.Mesh(kiwiGeometry, kiwiMaterial);
+            kiwiBody.rotation.x = -Math.PI / 2;
+            kiwiGroup.add(kiwiBody);
+            
+            // Simple flesh ellipse
+            const fleshGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.9, 8);
+            const fleshMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x90EE90,
+                transparent: true,
+                opacity: 0.95
             });
+            
             const flesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
-            flesh.rotation.x = Math.PI / 2;
+            flesh.rotation.x = -Math.PI / 2;
             flesh.position.y = 0.01;
             kiwiGroup.add(flesh);
             
-            // Weißer Kern in der Mitte - realistischer
-            const coreGeometry = new THREE.CircleGeometry(kiwiRadius * 0.2, 16);
-            const coreMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFFAF0,
-                emissive: 0xFFFFE0,
-                emissiveIntensity: 0.05
+            // Simple white core
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 6);
+            const coreMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xF5F5DC
             });
+            
             const core = new THREE.Mesh(coreGeometry, coreMaterial);
-            core.rotation.x = Math.PI / 2;
+            core.rotation.x = -Math.PI / 2;
             core.position.y = 0.02;
             kiwiGroup.add(core);
             
-            // Realistische Kerne in radialen Mustern
-            for (let ring = 0; ring < 2; ring++) {
-                const seedsInRing = ring === 0 ? 6 : 10;
-                const ringRadius = kiwiRadius * (0.35 + ring * 0.25);
-                
-                for (let i = 0; i < seedsInRing; i++) {
-                    const angle = (i / seedsInRing) * Math.PI * 2 + (ring * Math.PI / seedsInRing);
-                    const seedSize = 0.01 + Math.random() * 0.005;
-                    
-                    const seed = new THREE.Mesh(
-                        new THREE.CircleGeometry(seedSize, 4),
-                        new THREE.MeshBasicMaterial({ color: 0x000000 })
-                    );
-                    seed.position.set(
-                        Math.cos(angle) * ringRadius,
-                        0.02,
-                        Math.sin(angle) * ringRadius
-                    );
-                    seed.rotation.x = Math.PI / 2;
-                    kiwiGroup.add(seed);
-                }
-            }
-            
-            // Position kiwi at ground level
+            // Position
             const LANE_POSITIONS = [-2, 0, 2];
-            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.3, z);  // Same height as broccoli
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 1.2, z);
             
             scene.add(kiwiGroup);
             
@@ -4818,78 +4909,7 @@
                 z: z,
                 collected: false,
                 animationTime: 0,
-                baseY: 0.3
-            };
-        }
-        
-        function createMysteryBox(lane, z) {
-            const boxGroup = new THREE.Group();
-            
-            // Create golden sparkling fountain effect
-            const fountainHeight = 2.5;
-            
-            // Base platform (golden)
-            const baseGeometry = new THREE.CylinderGeometry(0.5, 0.6, 0.2, 8);
-            const baseMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFD700,
-                emissive: 0xFFD700,
-                emissiveIntensity: 0.4
-            });
-            const base = new THREE.Mesh(baseGeometry, baseMaterial);
-            boxGroup.add(base);
-            
-            // Golden fountain particles (sparkles)
-            const particleCount = 15;
-            for (let i = 0; i < particleCount; i++) {
-                const sparkleGeometry = new THREE.SphereGeometry(0.05 + Math.random() * 0.05, 4, 4);
-                const sparkleMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0xFFD700,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
-                
-                // Random position in fountain shape
-                const angle = (i / particleCount) * Math.PI * 2;
-                const radius = Math.random() * 0.3;
-                sparkle.position.x = Math.cos(angle) * radius;
-                sparkle.position.z = Math.sin(angle) * radius;
-                sparkle.position.y = Math.random() * fountainHeight;
-                
-                // Store animation data
-                sparkle.userData = {
-                    startY: sparkle.position.y,
-                    speed: 1 + Math.random() * 2,
-                    phase: Math.random() * Math.PI * 2
-                };
-                
-                boxGroup.add(sparkle);
-            }
-            
-            // Golden glow effect (larger transparent sphere)
-            const glowGeometry = new THREE.SphereGeometry(1, 16, 16);
-            const glowMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xFFD700,
-                transparent: true,
-                opacity: 0.2,
-                side: THREE.DoubleSide
-            });
-            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-            glow.position.y = fountainHeight / 2;
-            boxGroup.add(glow);
-            
-            // Position the whole group
-            boxGroup.position.set(LANE_POSITIONS[lane], 1, z);
-            scene.add(boxGroup);
-            
-            return {
-                mesh: boxGroup,
-                type: 'mysteryBox',
-                lane: lane,
-                z: z,
-                collected: false,
-                animationTime: 0,
-                baseY: 1
+                baseY: 1.2
             };
         }
         
@@ -5278,14 +5298,14 @@
                 awardTieredBonus('fiveOfOne', 250, `5+ ${kiwis >= 5 ? 'Kiwis' : 'Broccolis'}`);
             }
             
-            // Tier 2: All 10 kiwis OR all 5 broccolis (500 points)
-            if ((kiwis >= 10 || broccolis >= 5) && !gameState.collectionBonusAwarded.allOfOne) {
-                awardTieredBonus('allOfOne', 500, `All ${kiwis >= 10 ? '10 Kiwis' : '5 Broccolis'}`);
+            // Tier 2: All 30 kiwis OR all 7 broccolis (500 points)
+            if ((kiwis >= 30 || broccolis >= 7) && !gameState.collectionBonusAwarded.allOfOne) {
+                awardTieredBonus('allOfOne', 500, `All ${kiwis >= 30 ? '30 Kiwis' : '7 Broccolis'}`);
             }
             
-            // Tier 3: All 15 collectibles (1000 points)
-            if (total >= 15 && !gameState.collectionBonusAwarded.allThirtySeven) {
-                awardTieredBonus('allThirtySeven', 1000, 'Perfect Collection - All 15!');
+            // Tier 3: All 37 collectibles (1000 points)
+            if (total >= 37 && !gameState.collectionBonusAwarded.allThirtySeven) {
+                awardTieredBonus('allThirtySeven', 1000, 'Perfect Collection - All 37!');
             }
             
             // NEW: Broccoli specific bonuses
@@ -5294,8 +5314,8 @@
                 awardTieredBonus('broccoliMaster', 200, 'BROCCOLI MASTER! 🥦');
             }
             
-            // Tier B2: 5 broccolis (500 points)
-            if (broccolis >= 5 && !gameState.collectionBonusAwarded.veggieChampion) {
+            // Tier B2: 7 broccolis (500 points)
+            if (broccolis >= 7 && !gameState.collectionBonusAwarded.veggieChampion) {
                 awardTieredBonus('veggieChampion', 500, 'VEGGIE CHAMPION! 🏆');
             }
         }
@@ -5732,20 +5752,28 @@
             }
         }
         
+        // Helper function to check if lane is safe for collectible spawning
+        function isLaneClearForCollectible(lane, zPosition, safeDistance = 12) {
+            return !obstacles.some(obs => 
+                Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
+                Math.abs(obs.position.z - zPosition) < safeDistance
+            );
+        }
+        
         function animate() {
             requestAnimationFrame(animate);
             
             // Calculate delta time for smooth movement
             const currentTime = performance.now();
             const deltaTime = currentTime - lastFrameTime;
+            
+            // Update GameCore modules
+            if (window.GameCore) {
+                GameCore.update(deltaTime);
+            }
             lastFrameTime = currentTime;
             
             if (gameState.isPlaying) {
-                // Update current level
-                if (levels[window.currentLevel] && levels[window.currentLevel].update) {
-                    levels[window.currentLevel].update(deltaTime);
-                }
-                
                 // Update player position
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
@@ -5862,7 +5890,7 @@
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        // REMOVED: Buggy score addition that gave points for every obstacle leaving screen
+                        addScore(10, 'shield_collision');
                     }
                 });
                 
@@ -5880,21 +5908,21 @@
                 let baseSpawnRate, maxSpawnRate;
                 
                 if (gameProgress < 0.2) {
-                    // Phase 1: Very gentle start (0-12s) - REDUCED for easier start
-                    baseSpawnRate = 0.004;  // Was 0.008 - noch weniger für relaxteres Gameplay
-                    maxSpawnRate = 0.008;   // Was 0.012 - sanftere Kurve
+                    // Phase 1: Very gentle start (0-12s)
+                    baseSpawnRate = 0.003;
+                    maxSpawnRate = 0.008;
                 } else if (gameProgress < 0.5) {
-                    // Phase 2: Moderate challenge (12-30s) - REDUCED
-                    baseSpawnRate = 0.010;  // Was 0.020 - moderater Anstieg
-                    maxSpawnRate = 0.015;   // Was 0.030 - entspannter
+                    // Phase 2: Moderate challenge (12-30s)
+                    baseSpawnRate = 0.008;
+                    maxSpawnRate = 0.015;
                 } else if (gameProgress < 0.8) {
-                    // Phase 3: Challenging (30-48s) - REDUCED
-                    baseSpawnRate = 0.018;  // War 0.035 - herausfordernder aber fair
-                    maxSpawnRate = 0.025;   // War 0.045 - nicht zu überwältigend
+                    // Phase 3: Challenging (30-48s)
+                    baseSpawnRate = 0.012;
+                    maxSpawnRate = 0.020;
                 } else {
-                    // Phase 4: Extreme finale (48-60s) - REDUCED
-                    baseSpawnRate = 0.025;  // War 0.050 - intensiv aber machbar
-                    maxSpawnRate = 0.035;   // War 0.060 - faire Endphase
+                    // Phase 4: Extreme finale (48-60s)
+                    baseSpawnRate = 0.015;
+                    maxSpawnRate = 0.025;
                 }
                 
                 const phaseProgress = gameProgress < 0.2 ? gameProgress / 0.2 :
@@ -5999,82 +6027,45 @@
                 }
                 
                 // ENHANCED: Smart Collectible Spawning with Obstacle Avoidance
-                // Helper function to check if lane is safe for collectible spawning
-                const isLaneClearForCollectible = (lane, zPosition, safeDistance = 25) => {
-                    return !obstacles.some(obs => {
-                        if (!obs || !obs.position) return false;
-                        return Math.abs(obs.position.x - LANE_POSITIONS[lane]) < 1.5 && 
-                               Math.abs(obs.position.z - zPosition) < safeDistance;
-                    });
-                };
                 
-                // CATCH-UP MECHANISM: Check if player is behind on collection goals
-                const elapsedTime = (performance.now() - gameState.gameStartTime) / 1000; // seconds
-                const expectedCollectibles = Math.floor(elapsedTime * 1.0); // Expect ~1 per second (60 in 60s)
-                const actualCollected = gameState.collectedKiwis + gameState.collectedBroccolis;
-                const catchUpMultiplier = actualCollected < expectedCollectibles ? 1.5 : 1.0;
+                // Dynamic spawn rate based on speed (reduce at high speeds)
+                const baseCoinRate = 0.003; // Low starting rate
+                const maxCoinRate = 0.012; // Reduced max rate for better spacing
+                const speedFactor = Math.max(0.4, 1 - (gameState.speed - 100) / 300); // Reduce spawn at high speeds
+                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor;
                 
-                // Dynamic spawn rate based on speed - REDUCED for less clutter
-                const baseCoinRate = 0.008; // War 0.015 - weniger Collectibles
-                const maxCoinRate = 0.020; // War 0.040 - entspannteres Sammeln
-                const speedFactor = Math.max(0.7, 1 - (gameState.speed - 100) / 500); // Less reduction at high speeds (was 0.4)
-                const progressiveCoinRate = (baseCoinRate + (maxCoinRate - baseCoinRate) * Math.pow(gameProgress, 1.1)) * speedFactor * catchUpMultiplier;
-                
-                // GUARANTEED SPAWN TIMER: Force spawn if too long without collectibles
-                const timeSinceLastSpawn = performance.now() - gameState.lastCollectibleSpawnTime;
-                const forceSpawn = timeSinceLastSpawn > gameState.guaranteedSpawnInterval;
-                
-                // Mystery Box spawning (rare, max 1 per game)
-                if (gameState.mysteryBoxesSpawned < 1 && Math.random() < 0.005) { // 0.5% chance - seltener
-                    const lane = Math.floor(Math.random() * 3);
-                    const spawnZ = -60 - (gameState.speed - 100) * 0.1; // Same distance as collectibles
-                    
-                    if (isLaneClearForCollectible(lane, spawnZ, 30)) { // Extra safe distance
-                        const mysteryBox = createMysteryBox(lane, spawnZ);
-                        gameState.mysteryBoxes.push(mysteryBox);
-                        gameState.mysteryBoxesSpawned++;
-                        console.log(`✨ MYSTERY BOX ${gameState.mysteryBoxesSpawned}/2 spawned in lane ${lane}!`);
-                    }
-                } else if (Math.random() < progressiveCoinRate || forceSpawn) {
+                if (Math.random() < progressiveCoinRate) {
                     // Progressive kiwi pattern complexity
                     let pattern;
                     const patternRand = Math.random();
                     
                     if (gameProgress < 0.3) {
-                        // Early game: mostly single kiwis, introduce line
-                        if (patternRand < 0.7) {
-                            pattern = 'single';
-                        } else {
-                            pattern = 'line';
-                        }
+                        // Early game: mostly single kiwis
+                        pattern = patternRand < 0.8 ? 'single' : 'line';
                     } else if (gameProgress < 0.6) {
                         // Mid game: introduce more patterns
-                        if (patternRand < 0.4) {
+                        if (patternRand < 0.5) {
                             pattern = 'single';
-                        } else if (patternRand < 0.7) {
+                        } else if (patternRand < 0.8) {
                             pattern = 'line';
-                        } else if (patternRand < 0.9) {
-                            pattern = 'arc';
                         } else {
-                            pattern = 'diamond';
+                            pattern = 'arc';
                         }
                     } else {
                         // Late game: more complex patterns, more rewards
-                        if (patternRand < 0.2) {
+                        if (patternRand < 0.3) {
                             pattern = 'single';
-                        } else if (patternRand < 0.5) {
+                        } else if (patternRand < 0.6) {
                             pattern = 'line';
-                        } else if (patternRand < 0.8) {
-                            pattern = 'arc';
                         } else {
-                            pattern = 'diamond';
+                            pattern = 'arc';
                         }
                     }
                     
-                    // ENHANCED: Lower collectible limits for cleaner gameplay
-                    // Limit based on collected items: 10 Kiwis + 5 Broccolis = 15 total
+                    // BUGFIX: Check COLLECTED collectibles, not spawned ones!
+                    // Limit based on collected items: 30 Kiwis + 7 Broccolis = 37 total
                     const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-                    if (collectedTotal >= 15) {
+                    if (collectedTotal >= 37) {
                         // Max collectibles collected, no more spawning
                         return;
                     }
@@ -6083,22 +6074,17 @@
                     const kiwiCount = gameState.collectedKiwis;
                     const broccoliCount = gameState.collectedBroccolis;
                     
-                    // Additional hard limits to prevent over-spawning
-                    if (kiwiCount >= 10 || broccoliCount >= 5) {
-                        return;  // Stop spawning when either limit is reached
-                    }
-                    
-                    // Determine what to spawn based on 20:5 target ratio
+                    // Determine what to spawn based on 30:7 target ratio
                     let isKiwi;
-                    if (kiwiCount >= 20) {
-                        isKiwi = false; // Force broccoli if we have 20 kiwis
-                    } else if (broccoliCount >= 5) {
-                        isKiwi = true; // Force kiwi if we have 5 broccolis
+                    if (kiwiCount >= 30) {
+                        isKiwi = false; // Force broccoli if we have 30 kiwis
+                    } else if (broccoliCount >= 7) {
+                        isKiwi = true; // Force kiwi if we have 7 broccolis
                     } else {
-                        // Weighted spawning for 20:5 ratio (80% kiwi, 20% broccoli)
-                        const totalTarget = 25;
+                        // Weighted spawning for 30:7 ratio (81% kiwi, 19% broccoli)
+                        const totalTarget = 37;
                         const currentRatio = kiwiCount / (kiwiCount + broccoliCount + 1);
-                        const targetRatio = 20 / totalTarget; // 0.80
+                        const targetRatio = 30 / totalTarget; // ~0.81
                         
                         // Bias towards kiwis if we're below target ratio
                         if (currentRatio < targetRatio) {
@@ -6113,7 +6099,7 @@
                     if (pattern === 'single') {
                         // ENHANCED: Find safe lanes for spawning
                         const safeLanes = [];
-                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1; // Much further away at high speeds (was -35)
+                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05; // Further away at high speeds
                         
                         for (let lane = 0; lane < 3; lane++) {
                             if (isLaneClearForCollectible(lane, baseSpawnZ)) {
@@ -6133,7 +6119,7 @@
                         }
                     } else if (pattern === 'line') {
                         // ENHANCED: Smart line spawning with obstacle avoidance
-                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1; // Much further away (was -35)
+                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
                         const safeLanes = [];
                         
                         for (let lane = 0; lane < 3; lane++) {
@@ -6142,13 +6128,13 @@
                             }
                         }
                         
-                        // ENHANCED: Allow all 3 lanes when safe for better collectible density
+                        // FIXED: Maximum 2 collectibles per line, never all 3 simultaneously
                         if (safeLanes.length >= 2) {
-                            // Use all safe lanes for maximum collectible opportunities
-                            const maxLanes = safeLanes.length; // Use ALL safe lanes (was limited to 2)
+                            // Randomly select max 2 lanes from safe lanes to prevent overwhelming patterns
+                            const maxLanes = Math.min(2, safeLanes.length);
                             const selectedLanes = [];
                             
-                            // Shuffle and select lanes
+                            // Shuffle and select up to 2 lanes
                             const shuffledLanes = [...safeLanes].sort(() => Math.random() - 0.5);
                             for (let i = 0; i < maxLanes; i++) {
                                 selectedLanes.push(shuffledLanes[i]);
@@ -6166,9 +6152,9 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 10) {
-                                    spawnKiwi = false; // Force broccoli if we have 10 kiwis
-                                } else if (currentBroccoliCount >= 5) {
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
+                                } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
                                     spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
@@ -6188,14 +6174,15 @@
                             }
                         }
                     } else if (pattern === 'arc') {
-                        // ENHANCED: Smart arc spawning - allow all safe lanes for better density
-                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1; // Much further away (was -35)
-                        const lanes = [0, 1, 2]; // Always check all lanes (was limited)
+                        // FIXED: Smart arc spawning - maximum 2 collectibles, never all 3
+                        const baseSpawnZ = -35 - (gameState.speed - 100) * 0.05;
+                        const lanes = gameProgress > 0.5 ? [0, 1, 2] : [Math.floor(Math.random() * 2), Math.floor(Math.random() * 2) + 1];
                         const safeLanes = lanes.filter(lane => isLaneClearForCollectible(lane, baseSpawnZ));
                         
                         if (safeLanes.length >= 2) {  // Only spawn arc if at least 2 safe lanes
-                            // ENHANCED: Use all safe lanes for arc pattern
-                            const selectedLanes = safeLanes; // Use ALL safe lanes (was limited to 2)
+                            // FIXED: Limit to maximum 2 collectibles in arc pattern
+                            const maxArcCollectibles = Math.min(2, safeLanes.length);
+                            const selectedLanes = safeLanes.slice(0, maxArcCollectibles);
                             
                             console.log(`🌀 ARC PATTERN: Spawning in ${selectedLanes.length} lanes (${selectedLanes.join(',')}) out of ${safeLanes.length} safe lanes`);
                             
@@ -6209,9 +6196,9 @@
                                 const currentBroccoliCount = gameState.collectedBroccolis;
                                 
                                 let spawnKiwi;
-                                if (currentKiwiCount >= 10) {
-                                    spawnKiwi = false; // Force broccoli if we have 10 kiwis
-                                } else if (currentBroccoliCount >= 5) {
+                                if (currentKiwiCount >= 30) {
+                                    spawnKiwi = false; // Force broccoli if we have 30 kiwis
+                                } else if (currentBroccoliCount >= 7) {
                                     spawnKiwi = true; // Force kiwi if we have 7 broccolis
                                 } else {
                                     spawnKiwi = Math.random() < 0.5; // 50/50 if both below limits
@@ -6229,57 +6216,7 @@
                                 }
                             });
                         }
-                    } else if (pattern === 'diamond') {
-                        // NEW: Diamond pattern - center lane forward, side lanes back
-                        const baseSpawnZ = -60 - (gameState.speed - 100) * 0.1;
-                        const centerLaneSafe = isLaneClearForCollectible(1, baseSpawnZ);
-                        const leftLaneSafe = isLaneClearForCollectible(0, baseSpawnZ - 6);
-                        const rightLaneSafe = isLaneClearForCollectible(2, baseSpawnZ - 6);
-                        
-                        const safeLaneCount = (centerLaneSafe ? 1 : 0) + (leftLaneSafe ? 1 : 0) + (rightLaneSafe ? 1 : 0);
-                        
-                        if (safeLaneCount >= 2) {  // Need at least 2 safe lanes for diamond
-                            console.log(`💎 DIAMOND PATTERN: ${safeLaneCount} safe lanes`);
-                            
-                            // Spawn center first if safe
-                            if (centerLaneSafe) {
-                                const isKiwi = gameState.collectedKiwis < 10 && gameState.collectedBroccolis < 5 && Math.random() < 0.7;
-                                if (isKiwi) {
-                                    const kiwi = createSimpleKiwi(1, baseSpawnZ);
-                                    gameState.kiwis.push(kiwi);
-                                } else {
-                                    const broccoli = createBroccoli(1, baseSpawnZ, 'diamond');
-                                    gameState.broccolis.push(broccoli);
-                                }
-                            }
-                            
-                            // Spawn sides if safe
-                            if (leftLaneSafe) {
-                                const isKiwi = gameState.collectedKiwis < 10 && gameState.collectedBroccolis < 5 && Math.random() < 0.7;
-                                if (isKiwi) {
-                                    const kiwi = createSimpleKiwi(0, baseSpawnZ - 6);
-                                    gameState.kiwis.push(kiwi);
-                                } else {
-                                    const broccoli = createBroccoli(0, baseSpawnZ - 6, 'diamond');
-                                    gameState.broccolis.push(broccoli);
-                                }
-                            }
-                            
-                            if (rightLaneSafe) {
-                                const isKiwi = gameState.collectedKiwis < 10 && gameState.collectedBroccolis < 5 && Math.random() < 0.7;
-                                if (isKiwi) {
-                                    const kiwi = createSimpleKiwi(2, baseSpawnZ - 6);
-                                    gameState.kiwis.push(kiwi);
-                                } else {
-                                    const broccoli = createBroccoli(2, baseSpawnZ - 6, 'diamond');
-                                    gameState.broccolis.push(broccoli);
-                                }
-                            }
-                        }
                     }
-                    
-                    // Update last spawn time for guaranteed spawn timer
-                    gameState.lastCollectibleSpawnTime = performance.now();
                 }
                 
                 // Update Power-Ups
@@ -6334,20 +6271,7 @@
                     
                     // Remove if passed player
                     if (kiwi.z > 10) {
-                        // Dispose of mesh resources
-                        if (kiwi.mesh) {
-                            kiwi.mesh.traverse((child) => {
-                                if (child.geometry) child.geometry.dispose();
-                                if (child.material) {
-                                    if (Array.isArray(child.material)) {
-                                        child.material.forEach(mat => mat.dispose());
-                                    } else {
-                                        child.material.dispose();
-                                    }
-                                }
-                            });
-                            scene.remove(kiwi.mesh);
-                        }
+                        scene.remove(kiwi.mesh);
                         gameState.kiwis.splice(index, 1);
                     }
                     
@@ -6368,20 +6292,7 @@
                     
                     // Remove if passed player
                     if (broccoli.z > 10) {
-                        // Dispose of mesh resources
-                        if (broccoli.mesh) {
-                            broccoli.mesh.traverse((child) => {
-                                if (child.geometry) child.geometry.dispose();
-                                if (child.material) {
-                                    if (Array.isArray(child.material)) {
-                                        child.material.forEach(mat => mat.dispose());
-                                    } else {
-                                        child.material.dispose();
-                                    }
-                                }
-                            });
-                            scene.remove(broccoli.mesh);
-                        }
+                        scene.remove(broccoli.mesh);
                         gameState.broccolis.splice(index, 1);
                     }
                     
@@ -6390,35 +6301,9 @@
                     // Gentle swaying motion for broccoli
                     broccoli.mesh.rotation.y = Math.sin(broccoli.animationTime * 2) * 0.1;
                     broccoli.mesh.rotation.z = Math.cos(broccoli.animationTime * 1.5) * 0.05;
-                    // Slight vertical movement - reduziert für bodennahe Position
-                    const baseY = -0.5;
-                    broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.05;
-                });
-                
-                // Update Mystery Boxes
-                gameState.mysteryBoxes.forEach((box, index) => {
-                    box.mesh.position.z += visualSpeed;
-                    box.z = box.mesh.position.z;
-                    
-                    // Remove if passed player
-                    if (box.z > 10) {
-                        scene.remove(box.mesh);
-                        gameState.mysteryBoxes.splice(index, 1);
-                    }
-                    
-                    // Animate mystery box - golden fountain sparkles
-                    box.animationTime += deltaTime * 0.001;
-                    box.mesh.rotation.y += 0.02; // Slow rotation
-                    
-                    // Animate fountain particles
-                    box.mesh.children.forEach((child, i) => {
-                        if (child.userData && child.userData.startY !== undefined) {
-                            // Fountain particle animation
-                            const time = box.animationTime * child.userData.speed + child.userData.phase;
-                            child.position.y = child.userData.startY + Math.sin(time) * 0.5;
-                            child.material.opacity = 0.4 + Math.sin(time * 2) * 0.4;
-                        }
-                    });
+                    // Slight vertical movement
+                    const baseY = 1.0;
+                    broccoli.mesh.position.y = baseY + Math.sin(broccoli.animationTime * 3) * 0.08;
                 });
                 
                 // Handle Power-Up Time Remaining
@@ -6456,8 +6341,8 @@
                 
                 // Update game timer
                 const currentTime = Date.now();
-                const gameElapsedTime = (currentTime - gameState.gameStartTime) / 1000;
-                gameState.timeRemaining = Math.max(0, gameState.gameTime - gameElapsedTime);
+                const elapsedTime = (currentTime - gameState.gameStartTime) / 1000;
+                gameState.timeRemaining = Math.max(0, gameState.gameTime - elapsedTime);
                 
                 // Check for victory (survived 60 seconds!)
                 if (gameState.timeRemaining <= 0 && !gameState.isVictory) {
@@ -6513,7 +6398,8 @@
                 // Check for milestones
                 checkMilestones();
                 
-                // REMOVED: processScoreQueue call - using direct score updates
+                // CRITICAL FIX: Process centralized score queue instead of individual updates
+                processScoreQueue();
                 
                 // Keep distance-based scoring (converted to use addScore)
                 const timeSinceLastUpdate = (currentTime - (gameState.lastDistanceScore || 0)) / 1000;
@@ -6523,12 +6409,7 @@
                     gameState.lastDistanceScore = currentTime;
                 }
                 
-                // Throttle UI updates to 10 FPS (100ms)
-                const now = Date.now();
-                if (!gameState.lastUIUpdate || now - gameState.lastUIUpdate > 100) {
-                    updateUI();
-                    gameState.lastUIUpdate = now;
-                }
+                updateUI();
             }
             
             renderer.render(scene, camera);
@@ -6905,135 +6786,10 @@
             console.log('camera:', camera);
             console.log('renderer:', renderer);
         };
-        
-        // Initialize error logging system
-        function initializeErrorLogging() {
-            if (!supabase) return;
-            
-            // Generate session ID for this game session
-            const sessionId = crypto.randomUUID();
-            sessionStorage.setItem('errorSessionId', sessionId);
-            
-            // Global error handler for JavaScript errors
-            window.addEventListener('error', async (event) => {
-                await logError({
-                    type: 'javascript',
-                    message: event.message,
-                    stack: event.error?.stack,
-                    sourceUrl: event.filename,
-                    lineNumber: event.lineno,
-                    columnNumber: event.colno
-                });
-            });
-            
-            // Unhandled promise rejections
-            window.addEventListener('unhandledrejection', async (event) => {
-                await logError({
-                    type: 'promise',
-                    message: event.reason?.message || String(event.reason),
-                    stack: event.reason?.stack
-                });
-            });
-            
-            // CSP violations
-            document.addEventListener('securitypolicyviolation', async (event) => {
-                await logError({
-                    type: 'csp',
-                    message: `CSP violation: ${event.violatedDirective}`,
-                    sourceUrl: event.blockedURI,
-                    lineNumber: event.lineNumber,
-                    columnNumber: event.columnNumber
-                });
-            });
-            
-            // Resource loading failures (images, scripts, etc)
-            window.addEventListener('error', async (event) => {
-                if (event.target !== window && (event.target.src || event.target.href)) {
-                    await logError({
-                        type: 'resource',
-                        message: `Failed to load: ${event.target.src || event.target.href}`,
-                        sourceUrl: event.target.src || event.target.href
-                    });
-                }
-            }, true);
-            
-            console.log('✅ Error logging system initialized');
-            
-            // Make logError globally available for testing
-            window.logError = logError;
-        }
-        
-        // GDPR-compliant error logging function
-        async function logError(errorData) {
-            if (!supabase) return;
-            
-            try {
-                const sessionId = sessionStorage.getItem('errorSessionId');
-                const gameVersion = document.getElementById('versionInfo')?.textContent?.match(/V[\d.]+[^\s]*/)?.[0] || 'unknown';
-                
-                const errorEntry = {
-                    error_type: errorData.type,
-                    message: errorData.message?.substring(0, 1000) || 'Unknown error',
-                    stack: errorData.stack?.substring(0, 5000),
-                    source_url: errorData.sourceUrl?.substring(0, 500),
-                    line_number: errorData.lineNumber,
-                    column_number: errorData.columnNumber,
-                    user_agent: navigator.userAgent.substring(0, 500),
-                    game_version: gameVersion,
-                    session_id: sessionId,
-                    browser_info: {
-                        language: navigator.language,
-                        platform: navigator.platform,
-                        screen: `${screen.width}x${screen.height}`,
-                        viewport: `${window.innerWidth}x${window.innerHeight}`,
-                        pixelRatio: window.devicePixelRatio
-                    },
-                    game_state: {
-                        score: gameState?.score || 0,
-                        timeRemaining: gameState?.timeRemaining || 0,
-                        speed: gameState?.speed || 0,
-                        isPlaying: gameState?.isPlaying || false,
-                        collectibles: {
-                            kiwis: gameState?.collectedKiwis || 0,
-                            broccolis: gameState?.collectedBroccolis || 0
-                        }
-                    },
-                    performance_metrics: {
-                        memory: performance.memory?.usedJSHeapSize,
-                        loadTime: performance.timing?.loadEventEnd - performance.timing?.navigationStart,
-                        fps: gameState?.currentFPS || 0
-                    }
-                };
-                
-                // Send to Supabase with timeout
-                const { error } = await Promise.race([
-                    supabase.from('subway_runner_errors').insert([errorEntry]),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-                ]);
-                
-                if (error) {
-                    console.warn('Error logging failed:', error);
-                } else {
-                    console.log(`📊 Error logged: ${errorData.type} - ${errorData.message?.substring(0, 50)}...`);
-                }
-            } catch (e) {
-                // Silently fail to avoid error loops
-                console.warn('Error logging exception:', e);
-            }
-        }
 
-        // Initialize game when DOM is ready
-        console.log('Waiting for DOM to be ready...');
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                console.log('DOM ready, starting game initialization...');
-                init();
-            });
-        } else {
-            // DOM is already loaded
-            console.log('DOM already loaded, starting game initialization...');
-            init();
-        }
+        // Initialize game
+        console.log('Starting game initialization...');
+        init();
         
         // ==================== GESTURE CONTROL SYSTEM ====================
         
@@ -7384,9 +7140,12 @@
         
         // Initialize gesture controller
         function initGestureController() {
-            // MediaPipe temporarily disabled
-            console.log('Gesture control temporarily disabled while fixing core game issues');
-            return;
+            // Wait for MediaPipe to load
+            if (!window.mediapipe || !window.mediapipe.tasks || !window.mediapipe.tasks.vision) {
+                console.warn('MediaPipe not loaded yet, waiting...');
+                setTimeout(initGestureController, 500);
+                return;
+            }
             
             gestureController = new GestureController({
                 videoElement: document.getElementById('gestureVideo'),
