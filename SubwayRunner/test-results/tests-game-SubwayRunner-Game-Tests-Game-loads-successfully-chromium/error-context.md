@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- text: "Score: 0 Speed: 100 ❤️ Leben: 3 ⏱️ Zeit: 60s 🍎 Äpfel: 0/10 | 🥦 Brokkoli: 0/5"
+- text: "Score: 0 Speed: 100 ❤️ Leben: 3 ⏱️ Zeit: 60s"
 - strong: "🎮 Steuerung:"
 - text: "A/D: Spurwechsel Leertaste/W: Springen 🦘 S: Ducken 🦆"
 - strong: "💡 Tipps:"
@@ -19,5 +19,5 @@
   - strong: "🎮 Steuerung:"
 - paragraph: "A/D: Spurwechsel | W/Space: Springen | S: Ducken"
 - button "🎮 Challenge starten!"
-- text: 🏆 TOP 10 Lade Bestenliste...
+- text: 🏆 TOP 10 Keine Scores vorhanden
 ```

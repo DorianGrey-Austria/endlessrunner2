@@ -19,6 +19,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **SIEHE AUCH**: [CLAUDE_CODE_RULES.md](./CLAUDE_CODE_RULES.md) für vollständige Regeln!
 
+## Quick Task Reference
+
+### Adding a New Obstacle Type
+1. Add to obstacle spawning logic in `index.html` (~line 1500-2000)
+2. Create geometry and material with Three.js
+3. Add collision detection case
+4. Test spawn patterns and difficulty balance
+
+### Modifying Game Speed
+- Base speed: Search for `baseSpeed = 0.12` in index.html
+- Speed scaling: Look for `speedMultiplier` calculations
+- Max speed cap: Find `Math.min(baseSpeed * multiplier, 0.35)`
+
+### Fixing Collision Issues
+1. Find `checkCollisions()` function
+2. Adjust `tolerance` values (0.2-0.3 typical)
+3. Debug with console.log bounding boxes
+4. Test with different obstacle types
+
+### Updating Score Display
+- Score element: `document.getElementById('score')`
+- Update throttled to 10 FPS (performance optimization)
+- Score cap at 999,999 to prevent overflow
+
+### Emergency Rollback
+```bash
+# Find backup version
+ls SubwayRunner/*.backup
+# Restore specific version
+cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html
+# Deploy immediately
+git add . && git commit -m "🚨 ROLLBACK to V4.6.11" && git push
+```
+
 ## Repository Overview
 
 This is a collection of endless runner game projects built with different technologies, following a UI/UX-first development philosophy where user experience drives all technical decisions.
@@ -81,16 +115,30 @@ The game is currently at version 4.6.13-SCORE-FIX. The SubwayRunner/index.html i
 - **Visuals**: Realistische braune Kiwis, bodennahe grüne Broccolis
 
 ### **VERSION UPDATE PROCESS**
-1. Update version in `SubwayRunner/index.html` (search for "version:" string)
-2. Update this CLAUDE.md file with new version info
-3. Always mention new version when saying "test it online"
-4. Format: "🌐 Version X.Y.Z available at https://ki-revolution.at/"
+1. **Find version location**: Search for `V4.6.13-SCORE-FIX` in `SubwayRunner/index.html`
+2. **Update version string**: Replace with new version (e.g., `V4.6.14-NEW-FEATURE`)
+3. **Update CLAUDE.md**: Add new version to "CURRENT VERSION TRACKING" section
+4. **Update commit message**: Use format `🎮 Version X.Y.Z: [feature description]`
+5. **User notification format**: "🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/"
+6. **Version locations to update**:
+   - `SubwayRunner/index.html`: Main version display
+   - `CLAUDE.md`: Version tracking section
+   - Git commit message: Version reference
 
 ### **DEBUGGING & TROUBLESHOOTING**
-- **Debug Files**: `SubwayRunner/DEBUG_GUIDE.md`, `SubwayRunner/TROUBLESHOOTING.md`
-- **Syntax Validation**: `SubwayRunner/syntax_validator.html`, `SubwayRunner/find_syntax_error.js`
-- **Function Testing**: `SubwayRunner/function_test.html`, `SubwayRunner/quick_test.html`
-- **Development Backups**: Multiple .backup files in SubwayRunner/ for version rollbacks
+- **Test Files**:
+  - `SubwayRunner/test-runner.js`: Custom test suite (syntax, structure, performance, logic)
+  - `SubwayRunner/tests/game.test.js`: Playwright browser tests
+  - `SubwayRunner/test-gamestate.html`: Manual game state testing
+- **Debug Utilities**:
+  - `SubwayRunner/syntax_validator.html`: Check JavaScript syntax errors
+  - `SubwayRunner/find_syntax_error.js`: Locate syntax issues
+  - `SubwayRunner/function_test.html`, `quick_test.html`: Isolated function testing
+- **Troubleshooting Docs**:
+  - `SubwayRunner/DEBUG_GUIDE.md`: Common issues and solutions
+  - `SubwayRunner/TROUBLESHOOTING.md`: Performance and bug fixes
+  - `troubleshooting.md`: Repository-wide issues
+- **Version Rollback**: Multiple `.backup` files for emergency restoration
 
 ### **KEY FEATURES IMPLEMENTED**
 - **10 Unique Levels**: Each with distinct themes, obstacles, and mechanics
@@ -114,20 +162,30 @@ The game is currently at version 4.6.13-SCORE-FIX. The SubwayRunner/index.html i
 ### SubwayRunner (Vanilla JS/Three.js) - Primary Project
 ```bash
 cd SubwayRunner
-# Main game file: index.html (single file with embedded CSS/JS)
-python -m http.server 8001
-# Navigate to localhost:8001
 
-# React version (development)
-npm install          # Install dependencies
-npm run dev          # Start Vite dev server
-npm run build        # Build for production
-npm run lint         # Run ESLint
-npm run preview      # Preview production build
+# Local Development
+python -m http.server 8001      # Serve index.html locally
+npm run serve                   # Alternative: live-server with auto-reload
 
-# Deployment (automatic via GitHub Actions)
-git add . && git commit -m "message" && git push
-# Deploys to https://ki-revolution.at/ via Hostinger FTP
+# Testing Commands
+npm run test                    # Run custom test-runner.js (syntax, structure, performance, logic tests)
+npm run test:watch             # Run tests in watch mode with nodemon
+python -m http.server 8001 &   # Start server for Playwright tests
+npx playwright test            # Run Playwright browser tests
+npx playwright test --ui       # Run with interactive UI
+npx playwright test --debug    # Debug mode
+
+# React Development (src/ folder)
+npm install                     # Install dependencies
+npm run dev                     # Start Vite dev server (port 5173)
+npm run build                   # Build for production
+npm run lint                    # Run ESLint (max 0 warnings)
+npm run preview                 # Preview production build
+
+# Deployment
+npm run predeploy              # Pre-deployment validation (runs tests)
+git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
+# Automatic deployment via GitHub Actions to https://ki-revolution.at/
 ```
 
 ### Endless3D (Vanilla JS/Three.js)
@@ -172,15 +230,19 @@ npm run inspector    # Run MCP inspector
 
 ### SubwayRunner Architecture (Primary Project)
 - **Dual Architecture**: 
-  - **Production**: Single HTML file (index.html) with embedded CSS/JS
-  - **Development**: React + TypeScript version with Vite build system
-- **Three.js Integration**: Direct Three.js usage (vanilla) or React Three Fiber (React version)
-- **Game Loop**: RequestAnimationFrame-based game loop with delta time
-- **Obstacle System**: 7+ obstacle types including tunnels, barriers, spikes, walls
-- **Audio System**: Background music with WAV format support
-- **Deployment**: GitHub Actions automatic deployment to Hostinger via FTP
-- **Version Display**: UI shows current version and deployment date
-- **Gesture Control**: MediaPipe integration for head tracking controls
+  - **Production**: Single `index.html` file with embedded JavaScript modules (~5000+ lines)
+  - **Development**: React + TypeScript in `src/` folder (Vite, React Three Fiber)
+- **Core Game Systems** (embedded in index.html):
+  - **Game State**: Menu, Playing, GameOver, Win states
+  - **Scene Management**: Three.js scene, camera, lighting setup
+  - **Track System**: 3-lane track with dynamic segment spawning
+  - **Collision Detection**: 3D bounding box collision with tolerance settings
+  - **Spawn System**: Distance-based spawning with speed scaling
+  - **Score System**: Direct updates (queue system removed in v4.6.13)
+- **Obstacle Types**: Tunnels, barriers, spikes, walls, moving obstacles, trains
+- **Collectibles**: Kiwis (brown spheres), Broccolis (green), Mystery Boxes (golden fountains)
+- **Controls**: Keyboard (WASD/Arrows) and planned MediaPipe gesture support
+- **Performance**: Object pooling, frustum culling, 60 FPS target
 
 ### Endless3D Architecture
 - **Modular World System**: JSON-configurable environments and themes
@@ -228,6 +290,45 @@ npm run inspector    # Run MCP inspector
 - **2D Godot**: Physics body collision layers for precise detection
 - **Performance**: Spatial partitioning and early exit optimizations
 
+## Core Implementation Details
+
+### SubwayRunner Game Loop Structure
+```javascript
+// Main game loop pattern (in index.html)
+function animate() {
+    requestAnimationFrame(animate);
+    
+    // 1. Update game state
+    if (gameState === 'playing') {
+        updatePlayer();          // Handle input, jumping, lane switching
+        updateObstacles();       // Move and spawn obstacles
+        updateCollectibles();    // Move and spawn collectibles
+        checkCollisions();       // Bounding box collision detection
+        updateScore();          // Direct score updates (no queue)
+        updateSpeed();          // Progressive difficulty
+    }
+    
+    // 2. Render scene
+    renderer.render(scene, camera);
+}
+```
+
+### Key Game Constants & Configuration
+- **Base Speed**: 0.12 (perfect balance, don't change)
+- **Max Speed**: ~0.35 (after collecting many items)
+- **Lane Positions**: [-2, 0, 2] (left, center, right)
+- **Jump Height**: 2.5 units
+- **Jump Duration**: ~600ms
+- **Collision Tolerance**: 0.2-0.3 units
+- **Spawn Distance**: 30-50 units ahead
+- **Score Cap**: 999,999 (prevents overflow)
+- **Win Condition**: 30 kiwis collected
+
+### Critical Bug Fixes History
+- **V4.6.13**: Fixed 2 billion score bug (removed score queue system)
+- **V4.6.12**: Fixed collectible Y-positioning (Y=0.3 for ground items)
+- **V4.7.x**: FAILED - Aggressive spawning caused crashes (rolled back)
+
 ## 🚨 **CRITICAL GAME DESIGN RULES** (Never delete!)
 
 ### **Collectible System Rules**
@@ -258,30 +359,46 @@ npm run inspector    # Run MCP inspector
 
 ### Code Style
 - Follow existing patterns in each project
-- Maintain consistent naming conventions per project type
-- Prefer composition over inheritance where applicable
+- NO COMMENTS in code unless explicitly requested
+- Maintain consistent naming conventions
 
-### Performance Considerations
-- Always consider object pooling for frequently created/destroyed objects
-- Use adaptive quality systems for cross-device compatibility
-- Implement proper cleanup in component lifecycle methods
+### Performance Priorities
+- Object pooling for all spawned objects (obstacles, collectibles)
+- 60 FPS target on all devices
+- Cleanup destroyed objects to prevent memory leaks
 
 ### Testing Strategy
-- **SubwayRunner**: Custom test runner (`test-runner.js`) + Playwright tests (`npm run test`)
-- **Test Commands**: `npm run test` for full suite, `npm run test:watch` for development
-- **Godot projects**: Test in Godot editor and exported builds
-- **MCP server**: Test with MCP inspector tool
+- **SubwayRunner Testing Stack**:
+  - **test-runner.js**: Validates syntax, HTML structure, performance metrics, game logic
+  - **Playwright Tests**: Browser automation tests for gameplay, UI, collision detection
+  - **Test Reports**: HTML reports in `tests/playwright-report/`
+  - **Error Artifacts**: Screenshots and traces saved in `test-results/`
+- **Test Execution**:
+  ```bash
+  npm run test          # Run all tests (test-runner.js)
+  npx playwright test   # Run Playwright tests
+  npm run test:watch    # Watch mode for development
+  ```
+- **Pre-deployment**: `npm run predeploy` runs tests before allowing deployment
+- **Test Coverage**: Syntax validation, game initialization, collision detection, UI updates
 
 ## Deployment & CI/CD
 
 ### GitHub Actions Workflow
+- **Workflow File**: `.github/workflows/hostinger-deploy.yml`
 - **Trigger**: Push to main branch or manual workflow_dispatch
-- **Process**: Copies SubwayRunner/index.html to root, creates deployment package
-- **Target**: Hostinger FTP deployment to root directory (server-dir: /)
-- **Secrets Required**: FTP_SERVER (use IP address), FTP_USERNAME, FTP_PASSWORD
+- **Process**: 
+  1. Copies `SubwayRunner/index.html` to `deploy/index.html`
+  2. Creates production `.htaccess` with security headers, HTTPS redirect, compression
+  3. Deploys via FTP-Deploy-Action@v4.3.4
+- **Target**: Hostinger FTP root directory (server-dir: /)
+- **Secrets Required** (set in GitHub repo settings):
+  - `FTP_SERVER`: Hostinger server IP address (not domain)
+  - `FTP_USERNAME`: FTP username from Hostinger panel
+  - `FTP_PASSWORD`: FTP password
 - **Live URL**: https://ki-revolution.at/
+- **Deployment Time**: ~2-3 minutes after push
 - **Important**: GitHub Secrets are repository-specific - must be reconfigured when switching repos
-- **Production**: Includes .htaccess with HTTPS enforcement, compression, caching, and security headers
 
 ### Known Issues & Current Focus
 - **Next Phase**: Gesture control integration from GestureRunnerPro into SubwayRunner
@@ -294,7 +411,7 @@ npm run inspector    # Run MCP inspector
 - **Development Port**: 8001 (python -m http.server)
 - **Production**: Single HTML file deployment (index.html)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 4.6.11-PERFORMANCE-FIXED
+- **Current Version**: 4.6.13-SCORE-FIX
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 - **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
 - **Key Features**: 10 levels, 5 characters, gesture control, ghost racing, visual effects
@@ -322,23 +439,57 @@ npm run inspector    # Run MCP inspector
 - TypeScript source compiled to JavaScript for distribution
 - Provides tools for scene management, script editing, and project operations
 
-## Additional Resources
+## Important Documentation Files
 
-- **DEPLOYMENT.md**: German-language deployment guide with head tracking setup
-- **ROADMAP.md**: Detailed development roadmap for GestureRunnerPro
-- **github.hostinger.connection.md**: Troubleshooting guide for GitHub Actions deployment
-- **CLAUDE_CODE_RULES.md**: Universal rules for all Claude Code projects
-- **MCP-TROUBLESHOOTING.md**: Model Context Protocol troubleshooting guide
-- **HEAD_TRACKING_README.md**: MediaPipe head tracking integration guide
+- **CLAUDE_CODE_RULES.md**: Universal rules for all Claude Code projects (MUST READ)
+- **github.hostinger.connection.md**: Fix deployment issues with GitHub Actions
+- **SubwayRunner/DEBUG_GUIDE.md**: Common game bugs and solutions
+- **HEAD_TRACKING_README.md**: MediaPipe gesture control setup
 
-## File Structure Patterns
-- **index.html**: Main production files with embedded CSS/JS
-- **src/**: React/TypeScript development versions
-- **features/**: Extracted modular features from v4.x
-- **backup files**: Version rollback support (.backup extensions)
-- **sounds/**: Audio assets (background music, effects)
-- **web_export/**: Godot web export directories
+## File Structure
+- **SubwayRunner/index.html**: Main production game (5000+ lines, embedded JS)
+- **SubwayRunner/src/**: React development version (not deployed)
+- **SubwayRunner/*.backup**: Emergency rollback files
+- **SubwayRunner/tests/**: Playwright tests and reports
+- **.github/workflows/**: GitHub Actions deployment scripts
 
-## Development Philosophy
+## 🚨 MANDATORY DEVELOPMENT WORKFLOW (NEVER SKIP!)
 
-**UI/UX First**: User experience is paramount. Every technical decision should prioritize the player's experience, ensuring intuitive controls, smooth performance, and engaging visual feedback across all devices.
+### **TESTING → DEPLOYMENT → REPORT WORKFLOW**
+
+Für JEDE größere Änderung MUSS dieser Workflow befolgt werden:
+
+#### **SCHRITT 1: PLAYWRIGHT TESTING** 
+```bash
+# PFLICHT: Tests ausführen vor JEDEM Deployment
+npm run test
+```
+
+#### **SCHRITT 2: FEHLER BEHEBEN**
+- ❌ **BEI FEHLERN**: Sofort alle Errors beheben
+- ❌ **NIEMALS deployen** wenn Tests fehlschlagen
+- ✅ **ERST wenn alle Tests grün**: Weiter zu Schritt 3
+
+#### **SCHRITT 3: DEPLOYMENT (nur bei erfolgreichen Tests)**
+```bash
+# NUR wenn Tests erfolgreich:
+git add . && git commit -m "message" && git push
+```
+
+#### **SCHRITT 4: USER BENACHRICHTIGUNG**
+```
+✅ [Feature] erfolgreich implementiert und deployed!
+🧪 Alle Tests erfolgreich durchgelaufen
+🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/
+```
+
+### **NIEMALS WIEDER:**
+- ❌ Deployment ohne Testing
+- ❌ Deployment mit bekannten Fehlern  
+- ❌ User Benachrichtigung ohne Verifikation
+- ❌ "Sollte funktionieren" Aussagen
+
+### **IMMER:**
+- ✅ Testing vor JEDEM Deployment
+- ✅ Error-free Status vor Online-Stellung
+- ✅ Verifikation vor User-Report

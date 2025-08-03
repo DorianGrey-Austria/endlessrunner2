@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test.describe('SubwayRunner Game Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:8001');
-    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000); // Just wait 3 seconds instead of networkidle
   });
 
   test('Game loads successfully', async ({ page }) => {

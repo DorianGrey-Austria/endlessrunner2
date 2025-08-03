@@ -649,7 +649,7 @@
         };
 
         // Game state
-        let gameState = {
+        let gameState = window.gameState = {
             isPlaying: false,
             isGameOver: false,
             isVictory: false,
@@ -667,6 +667,7 @@
             jumpVelocity: 0,
             obstacles: [],
             invulnerable: false,
+            kiwisCollected: 0,
             invulnerabilityTime: 0,
             timeScale: 1.0,
             cameraShakeIntensity: 0,
@@ -697,6 +698,7 @@
             try {
                 // Scene
                 scene = new THREE.Scene();
+                window.scene = scene; // Make scene globally accessible for tests
                 scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
 
             // Camera (Subway Surfers perspective)

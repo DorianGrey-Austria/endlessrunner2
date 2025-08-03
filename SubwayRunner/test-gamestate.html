@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GameState Test</title>
+</head>
+<body>
+    <h1>Testing gameState with kiwisCollected</h1>
+    <div id="result"></div>
+    
+    <script>
+        // Test by loading the game in an iframe and checking gameState
+        const iframe = document.createElement('iframe');
+        iframe.src = 'index.html';
+        iframe.style.width = '100%';
+        iframe.style.height = '600px';
+        
+        iframe.onload = function() {
+            setTimeout(() => {
+                const result = document.getElementById('result');
+                try {
+                    const gameState = iframe.contentWindow.gameState;
+                    if (gameState) {
+                        result.innerHTML = `
+                            <h2 style="color: green;">✅ gameState exists!</h2>
+                            <p>kiwisCollected: ${gameState.kiwisCollected}</p>
+                            <p>Full gameState: <pre>${JSON.stringify(gameState, null, 2)}</pre></p>
+                        `;
+                    } else {
+                        result.innerHTML = '<h2 style="color: red;">❌ gameState is undefined</h2>';
+                    }
+                } catch (e) {
+                    result.innerHTML = `<h2 style="color: red;">❌ Error: ${e.message}</h2>`;
+                }
+            }, 2000); // Wait 2 seconds for game to load
+        };
+        
+        document.body.appendChild(iframe);
+    </script>
+</body>
+</html>
