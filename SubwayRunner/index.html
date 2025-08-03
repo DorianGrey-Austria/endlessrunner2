@@ -1624,8 +1624,8 @@
         function createKiwi(lane, z) {
             const kiwiGroup = new THREE.Group();
             
-            // GROßE sichtbare Kiwi (ellipsoid) - für Testing vergrößert
-            const geometry = new THREE.SphereGeometry(0.8, 16, 12);
+            // Normale Kiwi-Größe (ellipsoid)
+            const geometry = new THREE.SphereGeometry(0.4, 16, 12);
             geometry.scale(1, 1.2, 0.8); // Elliptische Form
             
             const material = new THREE.MeshLambertMaterial({ 
@@ -1634,7 +1634,7 @@
             });
             
             const kiwi = new THREE.Mesh(geometry, material);
-            kiwi.position.y = 1.0; // HOCH über dem Boden - gut sichtbar
+            kiwi.position.y = 0.5; // Normale Höhe über dem Boden
             kiwi.castShadow = true;
             kiwiGroup.add(kiwi);
             
@@ -1643,7 +1643,7 @@
             kiwiGroup.userData = { 
                 type: 'kiwi',
                 collected: false,
-                baseY: 1.0  // Angepasst an neue Position
+                baseY: 0.5  // Normale Position
             };
             
             // Robuste Collectibles-Initialisierung
@@ -1660,16 +1660,16 @@
         function createBroccoli(lane, z) {
             const broccoliGroup = new THREE.Group();
             
-            // GROSSER Stiel (Zylinder) - für Testing vergrößert
-            const stemGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1.6, 8);
+            // Normaler Stiel (Zylinder)
+            const stemGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.8, 8);
             const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
             const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-            stem.position.y = 0.8; // Höher für bessere Sichtbarkeit
+            stem.position.y = 0.4; // Normale Höhe
             stem.castShadow = true;
             broccoliGroup.add(stem);
             
-            // GROßE Röschen (mehrere Kugeln) - für Testing vergrößert
-            const floretGeometry = new THREE.SphereGeometry(0.3, 6, 6);
+            // Normale Röschen (mehrere Kugeln)
+            const floretGeometry = new THREE.SphereGeometry(0.15, 6, 6);
             const floretMaterial = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
             
             // Zentrale Röschen
@@ -1677,9 +1677,9 @@
                 const floret = new THREE.Mesh(floretGeometry, floretMaterial);
                 const angle = (i / 7) * Math.PI * 2;
                 floret.position.set(
-                    Math.cos(angle) * 0.4,
-                    1.6 + Math.random() * 0.2,  // Viel höher
-                    Math.sin(angle) * 0.4
+                    Math.cos(angle) * 0.2,
+                    0.8 + Math.random() * 0.1,
+                    Math.sin(angle) * 0.2
                 );
                 floret.castShadow = true;
                 broccoliGroup.add(floret);
@@ -3093,8 +3093,8 @@
                     createObstacle(type, lane, -30);
                 }
                 
-                // COLLECTIBLES SPAWN SYSTEM - ERHÖHTE RATE FÜR TESTING
-                if (Math.random() < 0.3) { // 30% Chance - VIEL höher für sofortige Sichtbarkeit
+                // COLLECTIBLES SPAWN SYSTEM - NORMALE RATE
+                if (Math.random() < 0.02) { // 2% Chance - Normale Gameplay-Balance
                     const collectibleLane = Math.floor(Math.random() * 3);
                     const spawnZ = -60; // Weit hinter Hindernissen
                     
@@ -3110,11 +3110,21 @@
                         }
                     }
                     
+                    // LIMITS: Max 10 Kiwis, Max 5 Broccolis
+                    const kiwiCount = window.collectibles.kiwis.length;
+                    const broccoliCount = window.collectibles.broccolis.length;
+                    const totalCount = kiwiCount + broccoliCount;
+                    
+                    // Nicht spawnen wenn Limits erreicht
+                    if (totalCount >= 15) continue;
+                    
                     if (laneFree) {
-                        // 85% Kiwis, 15% Broccolis
-                        if (Math.random() < 0.85) {
+                        // 85% Kiwis (max 10), 15% Broccolis (max 5)
+                        const spawnKiwi = Math.random() < 0.85;
+                        
+                        if (spawnKiwi && kiwiCount < 10) {
                             createKiwi(collectibleLane, spawnZ);
-                        } else {
+                        } else if (!spawnKiwi && broccoliCount < 5) {
                             createBroccoli(collectibleLane, spawnZ);
                         }
                     }

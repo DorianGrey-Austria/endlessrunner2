@@ -1519,6 +1519,108 @@ broccoliGroup.position.y = 0; // EXAKT wie Player
 
 ---
 
+## 🚨 **CRITICAL: V4.6.14-COLLECTIBLES-ENHANCED DISASTER** - 03. August 2025
+
+### **Das Problem**: Hunderte riesen Kiwis + versteckte Broccolis
+
+#### **Screenshots zeigen das Chaos**:
+- 🔴 **Screenshot 1**: Tausende braune "riesen Blasen" (Kiwis) überall
+- 🔴 **Screenshot 2**: Broccolis verstecken sich IN den Kiwis
+- 🔴 **Gameplay unspielbar**: Collectibles-Flut überwältigt das Spiel
+
+#### **Root Cause Analysis (Senior Developer)**:
+
+**1. SPAWN-RATE KATASTROPHE:**
+```javascript
+// AKTUELL (V4.6.14): 30% Spawn-Rate!!!
+if (Math.random() < 0.3) { // 30% Chance - VIEL zu hoch!
+    // Spawnt bei 60 FPS = 18 Collectibles pro Sekunde!
+    // Nach 10 Sekunden = 180+ Collectibles gleichzeitig!
+}
+```
+
+**2. KIWIs ALS "RIESEN BLASEN":**
+```javascript
+// PROBLEM: Kiwi-Größe verdoppelt für "Sichtbarkeit"
+const geometry = new THREE.SphereGeometry(0.8, 16, 12); // WAR 0.4!
+// Ergebnis: Massive braune Kugeln überall
+```
+
+**3. BROCCOLIS VERSTECKT IN KIWIs:**
+- Spawn-Logic spawnt beide Typen am gleichen Ort
+- Riesen-Kiwis verdecken alle Broccolis visuell
+- Player sieht nur noch braune "Blasen-Flut"
+
+**4. FEHLENDE LIMITS:**
+```javascript
+// MISSING: Keine Begrenzung der aktiven Collectibles!
+// Sollte max 10-15 gleichzeitig sein
+// Ist: Hunderte gleichzeitig aktiv
+```
+
+#### **WAS ICH FALSCH GEMACHT HABE:**
+
+1. **"Testing Visibility" Ansatz war falsch**:
+   - 30% Spawn-Rate für "sofortige Sichtbarkeit"
+   - Übersehen: 60 FPS × 0.3 = 18 Spawns/Sekunde!
+   - Mathematik ignoriert: 18 × 10 Sekunden = 180+ Collectibles
+
+2. **Größen-Verdopplung backfired**:
+   - Kiwis von 0.4 auf 0.8 = 8x Volumen!
+   - Broccolis auch verdoppelt
+   - Alles wird zu "riesen Blasen"
+
+3. **Keine Array-Limits implementiert**:
+   - User wollte "max 10 Kiwis, max 5 Broccolis"
+   - Ich implementierte unbegrenzte Arrays
+   - Keine Cleanup-Mechanismen
+
+4. **Testing ohne Realitäts-Check**:
+   - Deployed ohne zu verstehen: 30% × 60 FPS = Chaos
+   - Keine praktische Gameplay-Überlegung
+   - Pure "Sichtbarkeits-Optimierung" ohne Balance
+
+#### **✅ SOFORT-FIX PLAN**:
+
+**1. SPAWN-RATE NOTFALL-REDUKTION:**
+```javascript
+// VON: Math.random() < 0.3 (30%)
+// ZU:  Math.random() < 0.02 (2%)
+```
+
+**2. GRÖßE ZURÜCK AUF NORMAL:**
+```javascript
+// Kiwis: 0.8 → 0.4 (Original-Größe)
+// Broccolis: Alle Größen halbieren
+```
+
+**3. ARRAY-LIMITS IMPLEMENTIEREN:**
+```javascript
+// Max 10 Kiwis total im Spiel
+if (window.collectibles.kiwis.length >= 10) return;
+// Max 5 Broccolis total im Spiel  
+if (window.collectibles.broccolis.length >= 5) return;
+```
+
+**4. CLEANUP-MECHANISMUS:**
+```javascript
+// Entferne älteste wenn Limit erreicht
+if (kiwis.length > 10) {
+    const oldest = kiwis.shift();
+    scene.remove(oldest);
+}
+```
+
+#### **Lessons Learned für die Zukunft:**
+
+1. **NIEMALS "Testing Settings" deployen** ohne Mathematik-Check
+2. **Spawn-Rate Formel verstehen**: Rate × FPS × Zeit = Total Spawns
+3. **User Requirements ernst nehmen**: "Max 10" bedeutet MAX 10!
+4. **Gameplay vor Technik**: Balance > Sichtbarkeit
+5. **Kleine Increments**: 4% → 6% → 8%, nicht 4% → 30%!
+
+---
+
 ## 🟠 **OPEN ISSUES – Pending Investigation (Stand: Rollback auf Stable-Version)**
 
 | ID | Bug / Thema | Status | Symptome | Vermutete Ursache(n) | Bisherige Erkenntnisse | Next Steps |
