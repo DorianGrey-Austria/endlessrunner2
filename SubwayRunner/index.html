@@ -480,8 +480,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.12-MINIMAL-FIX<br>
-            📅 27.07.2025
+            🚀 V4.6.13-SCORE-FIX<br>
+            📅 03.08.2025
         </div>
         
         <!-- Visual Effects Overlays -->
@@ -1055,38 +1055,23 @@
         
         // CRITICAL FIX: Centralized score management to prevent explosion
         function addScore(amount, source = 'unknown') {
-            // Add to queue instead of directly to score
-            gameState.scoreQueue += Math.max(0, Math.floor(amount));
+            // Safety checks
+            if (!amount || amount < 0) return;
+            if (amount > 1000) {
+                console.warn(`Suspicious score amount: ${amount} from ${source}`);
+                amount = 1000; // Cap at 1000 per addition
+            }
             
-            // Debug logging for score tracking
-            if (amount > 0) {
-                console.log(`🎯 Score queued: +${amount} from ${source} (queue: ${gameState.scoreQueue})`);
+            // Direct score update (no queue)
+            gameState.score += Math.floor(amount);
+            
+            // Cap total score at reasonable limit
+            if (gameState.score > 999999) {
+                gameState.score = 999999;
             }
         }
         
-        function processScoreQueue() {
-            const currentTime = performance.now();
-            
-            // Only process queue every scoreUpdateInterval
-            if (currentTime - gameState.lastScoreUpdate < gameState.scoreUpdateInterval) {
-                return;
-            }
-            
-            if (gameState.scoreQueue > 0) {
-                // Apply limited amount from queue
-                const scoreToAdd = Math.min(gameState.scoreQueue, gameState.maxScorePerUpdate);
-                gameState.score += scoreToAdd;
-                gameState.scoreQueue -= scoreToAdd;
-                
-                gameState.lastScoreUpdate = currentTime;
-                
-                console.log(`📊 Score processed: +${scoreToAdd} (total: ${gameState.score}, remaining queue: ${gameState.scoreQueue})`);
-                
-                // Check for level progression
-                // TEMPORARILY DISABLED: Level 2 causes instability
-                // checkLevelProgression();
-            }
-        }
+        // REMOVED: processScoreQueue - using direct score updates now
         
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
@@ -1368,9 +1353,7 @@
             lastScoreUpdate: 0,
             scoreUpdateInterval: 100, // Update score every 100ms (10 times per second)
             
-            // Centralized score queue for throttling ALL score additions
-            scoreQueue: 0,
-            maxScorePerUpdate: 100 // Maximum score increase per throttled update
+            // REMOVED: Score queue variables - using direct updates
         };
 
         // Create gameInstance alias for test compatibility
@@ -2526,9 +2509,7 @@
             gameState.milestoneReached = 0;
             gameState.totalDistance = 0;
             
-            // BUGFIX: Initialize centralized score system
-            gameState.lastScoreUpdate = performance.now();
-            gameState.scoreQueue = 0;
+            // Initialize score timing
             gameState.lastDistanceScore = performance.now();
             
             // Reset all multipliers and combos
@@ -4530,8 +4511,8 @@
             const kiwiProgress = document.getElementById('kiwiProgress');
             const broccoliProgress = document.getElementById('broccoliProgress');
             
-            // Debug logging
-            console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
+            // Debug logging disabled for performance
+            // console.log(`🔍 updateKiwiUI called - Kiwis: ${gameState.collectedKiwis}, Broccolis: ${gameState.collectedBroccolis}`);
             
             if (kiwiCount) {
                 kiwiCount.textContent = gameState.collectedKiwis || 0;
@@ -4556,9 +4537,11 @@
                 broccoliProgress.style.width = broccoliPercent + '%';
             }
             
-            // Also update the total for percentage calculation
+            // Calculate percentage based on expected totals (30 kiwis + 7 broccolis = 37)
             const collectedTotal = gameState.collectedKiwis + gameState.collectedBroccolis;
-            console.log(`📊 Total collected: ${collectedTotal}/${gameState.totalCollectibles} (${gameState.totalCollectibles > 0 ? (collectedTotal/gameState.totalCollectibles*100).toFixed(0) : 0}%)`);
+            const totalPossible = 30 + 7; // 30 kiwis + 7 broccolis
+            const percentage = totalPossible > 0 ? Math.round((collectedTotal / totalPossible) * 100) : 0;
+            // console.log(`📊 Total collected: ${collectedTotal}/${totalPossible} (${percentage}%)`);
         }
         
         function updateEnvironmentUI() {
@@ -5879,7 +5862,7 @@
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        addScore(10, 'shield_collision');
+                        // REMOVED: Buggy score addition that gave points for every obstacle leaving screen
                     }
                 });
                 
@@ -6530,8 +6513,7 @@
                 // Check for milestones
                 checkMilestones();
                 
-                // CRITICAL FIX: Process centralized score queue instead of individual updates
-                processScoreQueue();
+                // REMOVED: processScoreQueue call - using direct score updates
                 
                 // Keep distance-based scoring (converted to use addScore)
                 const timeSinceLastUpdate = (currentTime - (gameState.lastDistanceScore || 0)) / 1000;
@@ -6541,7 +6523,12 @@
                     gameState.lastDistanceScore = currentTime;
                 }
                 
-                updateUI();
+                // Throttle UI updates to 10 FPS (100ms)
+                const now = Date.now();
+                if (!gameState.lastUIUpdate || now - gameState.lastUIUpdate > 100) {
+                    updateUI();
+                    gameState.lastUIUpdate = now;
+                }
             }
             
             renderer.render(scene, camera);

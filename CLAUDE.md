@@ -42,19 +42,29 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
-- **Previous**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
+- **Latest**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
+- **Previous**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
+- **Before**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
 - **Before**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
 - **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
 - **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
 - **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
 - **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
 - **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
-- **Before**: 4.6.5-REALISTIC-COLLECTIBLES (Realistische braune Kiwis)
-- **Before**: 4.6.4-BALANCED-RELAXED (Perfect speed balance)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.6.12-MINIMAL-FIX. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.6.13-SCORE-FIX. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+
+### **V4.6.13 SCORE-FIX DETAILS**
+- **CRITICAL BUG FIXED**: Score explosion to 2+ billion points
+- **Root Cause**: Every obstacle leaving screen gave +10 "shield_collision" points
+- **Solution**: 
+  - Removed buggy addScore line
+  - Removed entire score queue system
+  - Direct score updates only
+  - UI update throttling (10 FPS)
+  - Score cap at 999,999
+- **NO new features added**
 
 ### **V4.6.12 MINIMAL FIX DETAILS**
 - **Changes**: ONLY Y-position adjustments

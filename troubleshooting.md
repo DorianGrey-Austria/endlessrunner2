@@ -1518,3 +1518,17 @@ broccoliGroup.position.y = 0; // EXAKT wie Player
 ```
 
 ---
+
+## 🟠 **OPEN ISSUES – Pending Investigation (Stand: Rollback auf Stable-Version)**
+
+| ID | Bug / Thema | Status | Symptome | Vermutete Ursache(n) | Bisherige Erkenntnisse | Next Steps |
+|----|-------------|--------|----------|----------------------|------------------------|------------|
+| 01 | **Collectible Position** (Kiwis & Broccolis schweben / halb im Boden) | 🟠 OPEN | - Einige Kiwis/Broccolis spawnen zu hoch oder zu tief <br>- Spieler kann sie nicht einsammeln oder sie clippen in Boden | Höhenberechnung in `spawnCollectible()` nutzt falsches Ground-Offset (evtl. Level-abhängig) | - In Level 1 tritt Fehler sporadisch auf, in Level 2 konstant <br>- Y-Werte variieren zwischen −0.5 und +0.8 (<0 = unter Boden) | 1. BoundingBox-Debug aktivieren und reale Y-Koordinate loggen <br>2. Bodenhöhe pro Level erfassen (Terrain vs. Plane) <br>3. Einheitlichen GroundOffset-Konstante einführen |
+| 02 | **Collectible Frequency** (zu viele Kiwis/Broccolis) | 🟠 OPEN | - Teilweise 60+ Collectibles in <30 s <br>- Spieler überflutet, Performance drop | Spawn-Rate Formel nach Performance-Overhaul (v4.1.2) zu aggressiv (`baseSpawnRate 0.015`, `maxSpawnRate 0.025`) | - Spielbar aber unbalanced <br>- FPS-Einbruch bei >40 gleichzeitigen Meshes | 1. Temporär Spawn-Rate halbieren <br>2. Frame-basierte Cap (max N activeCollectibles) <br>3. A/B-Test mit 0.008 / 0.015 |
+| 03 | **Random Crash / Freeze** | 🟠 OPEN | - Spiel friert ohne Fehlermeldung nach ~2-3 min <br>- Browser meldet „Tab nicht mehr reagiert“ | Speicher-Leak im Particle-System oder Endlosschleife in `update()` | - Heap-Snapshot zeigt stetigen Anstieg von `THREE.BufferGeometry` Instanzen <br>- ParticlePool nicht vollständig umgesetzt | 1. Objekt-Pooling vervollständigen <br>2. `dispose()` für nicht mehr genutzte Geometrien/Materialien <br>3. Chrome Performance-Profiler 30 s – reproduzieren |
+| 04 | **Level 2 Integration** (Neon Night Run) | ⏸ DEFERRED | - Level 2 deaktiviert wegen massiver Fehler <br>- Ziel: saubere Re-Integration | Shader-Inkompatibilität + Asset-Pfade | - Crashs bei `THREE.WebGLProgram` Compilation <br>- Pfadfehler für custom neon shaders | 1. Lokal isoliert laden, Shader-Version angleichen (WebGL 2) <br>2. Asset-Paths relativ machen <br>3. Erst nach Fix wieder aktivieren |
+| 05 | **Gesture Controller (MediaPipe)** | 🟠 OPEN | - Fehler `null is not an object (evaluating 'gestureController.start')` <br>- Gesten-Steuerung inaktiv | Initialisierung zu früh + CSP Block | - DOMContentLoaded-Wrapper hilft nicht vollständig <br>- CSP whitelists angepasst, aber Lib immer noch 404 im Offline-Build | 1. Lib lokal bundeln (kein CDN) <br>2. Lazy-Load nach Spielstart <br>3. Fallback auf Keyboard steer |
+
+> Diese Liste wird fortlaufend aktualisiert. Neue Erkenntnisse **hier** ergänzen, bevor ein Fix implementiert wird.
+
+---
