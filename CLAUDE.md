@@ -42,20 +42,27 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.11-PERFORMANCE-FIXED (Limited collectibles 10+5, realistic kiwis, memory leak fix)
-- **Previous**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
+- **Latest**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
+- **Previous**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
+- **Before**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
+- **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
 - **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
 - **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
 - **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
 - **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
 - **Before**: 4.6.5-REALISTIC-COLLECTIBLES (Realistische braune Kiwis)
 - **Before**: 4.6.4-BALANCED-RELAXED (Perfect speed balance)
-- **Before**: 4.5.11-HOTFIX (Fixed critical JavaScript errors)
-- **Before**: 4.5.10-LEVEL-PROGRESSION (Two Functional Levels)
-- **Before**: 4.5.0-CHARACTER-SYSTEM (5 Unique Playable Characters)
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.6.11-PERFORMANCE-FIXED. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version 4.6.12-MINIMAL-FIX. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+
+### **V4.6.12 MINIMAL FIX DETAILS**
+- **Changes**: ONLY Y-position adjustments
+- **Broccoli**: Y=0.3 (confirmed working)
+- **Kiwi**: Y=0.3 (same height as broccoli)
+- **NO spawn algorithm changes**
+- **NO new features**
+- **NO performance "optimizations"**
 
 ### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
 - **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)

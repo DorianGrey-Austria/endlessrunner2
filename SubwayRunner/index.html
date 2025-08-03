@@ -480,7 +480,7 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V4.6.11-PERFORMANCE-FIXED<br>
+            🚀 V4.6.12-MINIMAL-FIX<br>
             📅 27.07.2025
         </div>
         
@@ -4177,7 +4177,7 @@
                 pattern: pattern,
                 animationTime: 0,
                 collected: false,
-                baseY: 0.5  // Collectible hover height
+                baseY: 0.3  // Same height as kiwi
             };
             
             broccolis.push(broccoliData);
@@ -4824,7 +4824,7 @@
             
             // Position kiwi at ground level
             const LANE_POSITIONS = [-2, 0, 2];
-            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.5, z);  // Proper collectible height
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0.3, z);  // Same height as broccoli
             
             scene.add(kiwiGroup);
             
@@ -4835,7 +4835,7 @@
                 z: z,
                 collected: false,
                 animationTime: 0,
-                baseY: 0.5
+                baseY: 0.3
             };
         }
         
