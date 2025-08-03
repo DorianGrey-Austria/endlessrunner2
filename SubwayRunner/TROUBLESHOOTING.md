@@ -304,3 +304,145 @@ setInterval(() => {
 **Last Updated**: 10.07.2025 01:45 CET  
 **Status**: ❌ **CRITICAL GRAPHICS FAILURE** - Rolling back to stable version
 **Next Action**: Revert to last known working version
+
+---
+
+## 🚨 **ATTEMPT 6: V4.7.1-SPAWN-FIXED COLLECTIBLES SYSTEM** ❌ **STARTUP FAILURE**
+
+### **DATE**: 03.08.2025 14:30 CET
+### **GOAL**: Implement new collectibles system with 10 Apples, 5 Broccolis, 1 Magnet, 1 Star
+
+### **TECHNICAL IMPLEMENTATION**:
+1. **✅ UI System Updated**: 
+   ```html
+   🍎 <span id="appleCount">0</span>/10 | 🥦 <span id="broccoliCount">0</span>/5 | 
+   🧲 <span id="magnetCount">0</span>/1 | ⭐ <span id="starCount">0</span>/1
+   ```
+
+2. **✅ Y-Position Constants**:
+   ```javascript
+   const COLLECTIBLE_Y_POSITIONS = {
+       GROUND: 0.5,  // Normal collection height
+       FLYING: 1.5   // Jump required to collect
+   };
+   ```
+
+3. **✅ Spawn System Fixed**:
+   - CRITICAL BUG FOUND & FIXED: Spawn logic was checking `totalCollected` instead of `totalSpawned`
+   - Fixed spawn counting: `spawnedApples = gameState.apples.length + gameState.collectedApples`
+   - Added proper spawn timer initialization in `startGameInternal()`
+
+4. **✅ Animation System Updated**:
+   - Replaced kiwi/mystery box animation loops with apple/magnet/star animations
+   - Each collectible type has unique animation patterns
+   - Proper baseY positioning maintained during animation
+
+### **CRITICAL PROBLEMS DISCOVERED**:
+
+#### **1. GAME WON'T START** 🚨 **CRITICAL**
+- **Symptom**: Game fails to initialize after V4.7.x changes
+- **User Report**: "Das Spiel lässt sich noch immer nicht starten"
+- **Investigation Status**: ONGOING
+
+#### **2. TESTING INFRASTRUCTURE BROKEN** ⚠️ **HIGH**
+- **Playwright Tests Failing**:
+  ```
+  ReferenceError: require is not defined in ES module scope
+  ```
+- **Root Cause**: Package.json has `"type": "module"` but tests use CommonJS
+- **Impact**: Cannot run automated tests to diagnose issues
+
+#### **3. POTENTIAL INITIALIZATION RACE CONDITIONS** ⚠️ **MEDIUM**
+- **Multiple DOMContentLoaded listeners** (lines 2815, 7057)
+- **Complex initialization chain**: DOM → init() → Three.js → startGame()
+- **Potential async timing issues** with audio/gesture controllers
+
+### **DETAILED TECHNICAL ANALYSIS**:
+
+#### **STARTUP SEQUENCE ANALYSIS**:
+1. **✅ DOM Loading**: Multiple DOMContentLoaded listeners properly set up
+2. **✅ Three.js Check**: `typeof THREE === 'undefined'` validation exists
+3. **✅ Canvas Element**: `<canvas id="gameCanvas">` present in HTML
+4. **✅ Error Handling**: Try/catch blocks around initialization
+5. **❓ UNKNOWN**: Actual runtime errors not visible without browser testing
+
+#### **COLLECTIBLES SYSTEM STATUS**:
+- **✅ Game State**: All new collectible arrays properly initialized
+- **✅ Spawn Logic**: Fixed to count total spawned vs collected
+- **✅ Creation Functions**: createApple(), createBroccoli(), createMagnet(), createStar()
+- **✅ Animation Loops**: Updated for all new collectible types
+- **✅ Y-Positioning**: GROUND (0.5) and FLYING (1.5) constants implemented
+
+#### **TESTING GAPS IDENTIFIED**:
+1. **No Browser Console Error Logs**: Can't see runtime JavaScript errors
+2. **No Performance Monitoring**: FPS/rendering issues not tracked
+3. **No Network Error Checking**: CDN resources (Three.js) load failures
+4. **No Mobile Compatibility Testing**: Touch controls, viewport issues
+
+### **SUSPECTED ROOT CAUSES**:
+
+#### **THEORY 1: THREE.JS LOADING FAILURE**
+- **Possibility**: CDN failure or version conflict
+- **Evidence**: init() checks for `typeof THREE === 'undefined'`
+- **Test**: Verify Three.js loads from CDN
+
+#### **THEORY 2: COLLECTIBLES SPAWN INFINITE LOOP**
+- **Possibility**: New spawn logic causes infinite creation
+- **Evidence**: Complex spawn counting with multiple arrays
+- **Test**: Monitor gameState.apples.length growth
+
+#### **THEORY 3: ANIMATION FRAME CONFLICTS**
+- **Possibility**: New animation loops conflict with main game loop
+- **Evidence**: requestAnimationFrame calls in multiple places
+- **Test**: Check for duplicate animation frame requests
+
+#### **THEORY 4: MEMORY/PERFORMANCE OVERLOAD**
+- **Possibility**: Too many collectibles created, browser crashes
+- **Evidence**: Complex 3D objects with particles and materials
+- **Test**: Monitor memory usage and object creation
+
+### **DEBUGGING STRATEGY**:
+
+#### **PHASE 1: EMERGENCY DIAGNOSTICS**
+1. **Browser Console Testing**:
+   ```javascript
+   // Test basic startup
+   console.log('THREE.js loaded:', typeof THREE !== 'undefined');
+   console.log('Canvas element:', document.getElementById('gameCanvas'));
+   console.log('GameState initialized:', typeof gameState !== 'undefined');
+   ```
+
+2. **Incremental Feature Removal**:
+   - Temporarily disable new collectibles spawning
+   - Test with empty spawn arrays
+   - Verify basic game starts without collectibles
+
+3. **Error Logging Enhancement**:
+   ```javascript
+   window.onerror = function(msg, url, line, col, error) {
+       console.error('STARTUP ERROR:', msg, 'at', url + ':' + line);
+   };
+   ```
+
+#### **PHASE 2: SYSTEMATIC TESTING**
+1. **Rollback Testing**: Test V4.6.13 (last working version)
+2. **Progressive Integration**: Add one collectible type at a time
+3. **Performance Monitoring**: Track memory and FPS during startup
+
+### **LESSONS LEARNED**:
+1. **Never deploy without local testing**: Should test changes locally first
+2. **Fix test infrastructure**: ES modules vs CommonJS conflicts
+3. **Add comprehensive error logging**: Runtime errors not visible
+4. **Implement graceful degradation**: Game should start even if collectibles fail
+
+### **IMMEDIATE NEXT STEPS**:
+1. 🚨 **EMERGENCY**: Get browser console errors from live site
+2. 🔧 **FIX**: Resolve testing infrastructure (ES modules)
+3. 🧪 **TEST**: Create minimal reproduction case
+4. 📊 **MONITOR**: Add runtime error reporting to game
+
+---
+
+**Status**: ❌ **GAME STARTUP COMPLETELY BROKEN**  
+**Priority**: 🚨 **CRITICAL - PRODUCTION DOWN**  
+**Next Action**: Emergency diagnostics and potential rollback to V4.6.13
