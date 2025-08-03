@@ -4,9 +4,13 @@
  * Automated testing before deployment
  */
 
-const fs = require('fs');
-const { spawn } = require('child_process');
-const path = require('path');
+import fs from 'fs';
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class TestRunner {
     constructor() {
@@ -193,12 +197,10 @@ class TestRunner {
     }
 }
 
-// Run tests if called directly
-if (require.main === module) {
-    const runner = new TestRunner();
-    runner.runAllTests().then(success => {
-        process.exit(success ? 0 : 1);
-    });
-}
+// Run tests if called directly  
+const runner = new TestRunner();
+runner.runAllTests().then(success => {
+    process.exit(success ? 0 : 1);
+});
 
-module.exports = TestRunner;
+export default TestRunner;
