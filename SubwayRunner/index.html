@@ -116,12 +116,12 @@
     <div id="ui">
         <div>Score: <span id="score">0</span></div>
         <div>Kiwis: <span id="kiwis">0</span>/30</div>
-        <div>Broccolis: <span id="broccolis">0</span>/10</div>
+        <div>Broccolis: <span id="broccolis">0</span>/7</div>
     </div>
     
     <div id="gameInfo">
-        <div>Version: 4.6.20-SIMPLE-BROCCOLI</div>
-        <div>Status: ONLY 10 BROCCOLIS</div>
+        <div>Version: BASISVERSION 3</div>
+        <div>Status: STABLE</div>
     </div>
     
     <div id="instructions">
@@ -130,8 +130,8 @@
     
     <div id="menu">
         <h1>🎮 Subway Runner 3D</h1>
-        <p>V4.6.21-SIMPLE-BROCCOLI - Back to Basics</p>
-        <p style="color: lightgreen;">✅ Nur 10 einfache Broccolis implementiert</p>
+        <p>BASISVERSION 3 - Stabile Grundlage</p>
+        <p style="color: yellow;">⚠️ Collectibles noch nicht implementiert</p>
         <button onclick="startGame()">Start Game</button>
     </div>
     
@@ -161,8 +161,7 @@
             playerY: 0,
             jumping: false,
             ducking: false,
-            jumpVelocity: 0,
-            broccolisSpawned: 0  // Track total broccolis spawned
+            jumpVelocity: 0
         };
         
         const LANE_POSITIONS = [-2, 0, 2];
@@ -291,21 +290,13 @@
             console.log("TODO: Kiwi spawn at lane", lane, "z", z);
         }
         
-        // EINFACHER Broccoli (grüner Zylinder, Y=0.5)
+        // TODO: Implementiere Broccoli-Spawn-Funktion  
         function createBroccoli(lane, z) {
-            const geometry = new THREE.CylinderGeometry(0.2, 0.3, 0.6, 8);
-            const material = new THREE.MeshLambertMaterial({ color: 0x228B22 });
-            const broccoli = new THREE.Mesh(geometry, material);
-            
-            broccoli.position.set(LANE_POSITIONS[lane], 0.5, z);  // Y = 0.5 (über Boden!)
-            broccoli.castShadow = true;
-            broccoli.collectibleType = 'broccoli';
-            
-            collectibles.broccolis.push(broccoli);
-            scene.add(broccoli);
-            
-            gameState.broccolisSpawned++;
-            console.log(`Broccoli spawned! Total: ${gameState.broccolisSpawned}/10`);
+            // NOCH ZU IMPLEMENTIEREN
+            // - Grüner Zylinder + Spheres
+            // - Farbe: 0x228B22
+            // - Position Y = 0.3
+            console.log("TODO: Broccoli spawn at lane", lane, "z", z);
         }
         
         function handleKeyDown(event) {
@@ -362,25 +353,8 @@
                 }
             }
             
-            // EINFACHE Broccoli Collision Detection
-            const checkDistance = 1.5;
-            
-            // Check Broccolis  
-            for (let i = collectibles.broccolis.length - 1; i >= 0; i--) {
-                const broccoli = collectibles.broccolis[i];
-                const distance = player.position.distanceTo(broccoli.position);
-                
-                if (distance < checkDistance) {
-                    // Broccoli collected!
-                    gameState.broccolisCollected++;
-                    document.getElementById('broccolis').textContent = gameState.broccolisCollected;
-                    
-                    scene.remove(broccoli);
-                    collectibles.broccolis.splice(i, 1);
-                    
-                    console.log(`Broccoli collected! Total: ${gameState.broccolisCollected}/10`);
-                }
-            }
+            // TODO: Check collectible collisions
+            // Hier müssen Kiwi/Broccoli Kollisionen geprüft werden
         }
         
         function updateGame(deltaTime) {
@@ -445,18 +419,13 @@
                 createObstacle(type, lane, -50);
             }
             
-            // EINFACHES Broccoli Spawning (nur 10 max, 1% rate)
-            if (Math.random() < 0.01 && gameState.broccolisSpawned < 10) {
+            // TODO: Spawn collectibles
+            if (Math.random() < 0.03) {
                 const lane = Math.floor(Math.random() * 3);
-                createBroccoli(lane, -50);
-            }
-            
-            // Move broccolis
-            for (let i = collectibles.broccolis.length - 1; i >= 0; i--) {
-                collectibles.broccolis[i].position.z += gameState.speed;
-                if (collectibles.broccolis[i].position.z > 10) {
-                    scene.remove(collectibles.broccolis[i]);
-                    collectibles.broccolis.splice(i, 1);
+                if (Math.random() < 0.85) {
+                    createKiwi(lane, -50);
+                } else {
+                    createBroccoli(lane, -50);
                 }
             }
             
@@ -492,8 +461,7 @@
                 playerY: 0,
                 jumping: false,
                 ducking: false,
-                jumpVelocity: 0,
-                broccolisSpawned: 0  // Reset counter
+                jumpVelocity: 0
             };
             
             // Clear obstacles
