@@ -2517,6 +2517,7 @@
             gameState.lives = 3;
             gameState.timeRemaining = gameState.gameTime;
             gameState.gameStartTime = Date.now();
+            gameState.lastCollectibleSpawnTime = performance.now(); // Initialize spawn timer
             gameState.playerLane = 1;
             gameState.playerAction = 'running';
             gameState.playerY = 0;
@@ -6221,22 +6222,28 @@
                 const timeSinceLastSpawn = performance.now() - gameState.lastCollectibleSpawnTime;
                 const shouldSpawn = timeSinceLastSpawn >= 3000; // Exactly 3 seconds
                 
-                // Calculate total collected and determine next type to spawn
-                const totalCollected = gameState.collectedApples + gameState.collectedBroccolis + 
-                                     gameState.collectedMagnets + gameState.collectedStars;
+                // Calculate total spawned and determine next type to spawn
+                const totalSpawned = gameState.apples.length + gameState.broccolis.length + 
+                                   gameState.magnets.length + gameState.stars.length + 
+                                   gameState.collectedApples + gameState.collectedBroccolis + 
+                                   gameState.collectedMagnets + gameState.collectedStars;
                 
                 // NEW: Simple deterministic spawning system
-                if (shouldSpawn && totalCollected < 17) { // Max 17 total collectibles
-                    // Determine what to spawn based on collected counts
+                if (shouldSpawn && totalSpawned < 17) { // Max 17 total collectibles
+                    // Determine what to spawn based on spawned counts (active + collected)
                     let collectibleType = null;
+                    const spawnedApples = gameState.apples.length + gameState.collectedApples;
+                    const spawnedBroccolis = gameState.broccolis.length + gameState.collectedBroccolis;
+                    const spawnedMagnets = gameState.magnets.length + gameState.collectedMagnets;
+                    const spawnedStars = gameState.stars.length + gameState.collectedStars;
                     
-                    if (gameState.collectedApples < COLLECTIBLE_LIMITS.apples) {
+                    if (spawnedApples < COLLECTIBLE_LIMITS.apples) {
                         collectibleType = 'apple';
-                    } else if (gameState.collectedBroccolis < COLLECTIBLE_LIMITS.broccolis) {
+                    } else if (spawnedBroccolis < COLLECTIBLE_LIMITS.broccolis) {
                         collectibleType = 'broccoli';
-                    } else if (gameState.collectedMagnets < COLLECTIBLE_LIMITS.magnets) {
+                    } else if (spawnedMagnets < COLLECTIBLE_LIMITS.magnets) {
                         collectibleType = 'magnet';
-                    } else if (gameState.collectedStars < COLLECTIBLE_LIMITS.stars) {
+                    } else if (spawnedStars < COLLECTIBLE_LIMITS.stars) {
                         collectibleType = 'star';
                     }
                     
@@ -6262,25 +6269,25 @@
                                 case 'apple':
                                     const apple = createApple(lane, baseSpawnZ, isFlying);
                                     gameState.apples.push(apple);
-                                    console.log(`🍎 Spawned apple ${gameState.collectedApples + 1}/10 in lane ${lane} (${isFlying ? 'FLYING' : 'GROUND'})`);
+                                    console.log(`🍎 Spawned apple ${spawnedApples + 1}/10 in lane ${lane} (${isFlying ? 'FLYING' : 'GROUND'})`);
                                     break;
                                     
                                 case 'broccoli':
                                     const broccoli = createBroccoli(lane, baseSpawnZ, isFlying);
                                     gameState.broccolis.push(broccoli);
-                                    console.log(`🥦 Spawned broccoli ${gameState.collectedBroccolis + 1}/5 in lane ${lane} (${isFlying ? 'FLYING' : 'GROUND'})`);
+                                    console.log(`🥦 Spawned broccoli ${spawnedBroccolis + 1}/5 in lane ${lane} (${isFlying ? 'FLYING' : 'GROUND'})`);
                                     break;
                                     
                                 case 'magnet':
                                     const magnet = createMagnet(lane, baseSpawnZ);
                                     gameState.magnets.push(magnet);
-                                    console.log(`🧲 Spawned magnet 1/1 in lane ${lane} (FLYING)`);
+                                    console.log(`🧲 Spawned magnet ${spawnedMagnets + 1}/1 in lane ${lane} (FLYING)`);
                                     break;
                                     
                                 case 'star':
                                     const star = createStar(lane, baseSpawnZ);
                                     gameState.stars.push(star);
-                                    console.log(`⭐ Spawned star 1/1 in lane ${lane} (FLYING)`);
+                                    console.log(`⭐ Spawned star ${spawnedStars + 1}/1 in lane ${lane} (FLYING)`);
                                     break;
                             }
                             
