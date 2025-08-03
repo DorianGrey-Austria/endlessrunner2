@@ -120,8 +120,8 @@
     </div>
     
     <div id="gameInfo">
-        <div>Version: 4.6.16-SIMPLE-FIX</div>
-        <div>Status: BACK TO BASICS</div>
+        <div>Version: 4.6.18-REALISTIC-COLLECTIBLES</div>
+        <div>Status: REALISTIC KIWIS & BROCCOLIS</div>
     </div>
     
     <div id="instructions">
@@ -130,8 +130,8 @@
     
     <div id="menu">
         <h1>🎮 Subway Runner 3D</h1>
-        <p>V4.6.17-SIMPLE-FIX - Back to Basics</p>
-        <p style="color: lightgreen;">✅ Einfache Collectibles implementiert</p>
+        <p>V4.6.19-REALISTIC-COLLECTIBLES - Working Puzzle Pieces</p>
+        <p style="color: lightgreen;">✅ Realistische Kiwis & Broccolis implementiert</p>
         <button onclick="startGame()">Start Game</button>
     </div>
     
@@ -281,32 +281,161 @@
             scene.add(obstacle);
         }
         
-        // EINFACHE Kiwi-Implementierung (wie V1)
+        // REALISTISCHE Kiwi-Implementierung (aus V3.6.2-working)
         function createKiwi(lane, z) {
-            const geometry = new THREE.SphereGeometry(0.3, 8, 8);
-            const material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-            const kiwi = new THREE.Mesh(geometry, material);
+            const kiwiGroup = new THREE.Group();
             
-            kiwi.position.set(LANE_POSITIONS[lane], 0.5, z);
-            kiwi.castShadow = true;
-            kiwi.collectibleType = 'kiwi';
+            // REDESIGNED: Elongated Kiwi Geometrie (oval shape, less coin-like)
+            const kiwiRadiusX = 0.3;   // Smaller width
+            const kiwiRadiusY = 0.5;   // Taller height 
+            const kiwiRadiusZ = 0.3;   // Smaller depth
             
-            collectibles.kiwis.push(kiwi);
-            scene.add(kiwi);
+            // ENHANCED: Elongated ellipsoid shape for realistic kiwi appearance
+            const kiwiGeometry = new THREE.SphereGeometry(1, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.8);
+            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);  // Create oval/ellipsoid
+            
+            // ENHANCED: Verbesserte Braune Außenhaut mit Glow-Effekt
+            const skinMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xB8860B,  // Noch heller für bessere Sichtbarkeit
+                emissive: 0x3A2A0A,  // Leichtes Glühen
+                roughness: 0.6
+            });
+            const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
+            kiwiSkin.rotation.x = -Math.PI / 2;
+            kiwiSkin.position.y = 1.2;
+            kiwiSkin.castShadow = true;
+            kiwiGroup.add(kiwiSkin);
+            
+            // ENHANCED: Zusätzliche braune Textur-Ringe für bessere Kiwi-Optik (angepasst für oval)
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(kiwiRadiusX * 0.7 + i * 0.04, kiwiRadiusX * 0.75 + i * 0.04, 16);
+                const ringMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x8B4513,  // Dunklere braune Streifen
+                    transparent: true,
+                    opacity: 0.4
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 1.21 + i * 0.001;
+                kiwiGroup.add(ring);
+            }
+            
+            // Grünes Fruchtfleisch (elliptische Unterseite)
+            const fleshGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.95, 32);
+            const fleshMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8FBC8F,
+                emissive: 0x2F5F2F,
+                emissiveIntensity: 0.2
+            });
+            const kiwiFlesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
+            kiwiFlesh.rotation.x = -Math.PI / 2;
+            kiwiFlesh.position.y = 1.2;
+            kiwiGroup.add(kiwiFlesh);
+            
+            // Weißer Kern in der Mitte (angepasst für oval)
+            const coreGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.3, 16);
+            const coreMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xF5F5DC,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.1
+            });
+            const kiwiCore = new THREE.Mesh(coreGeometry, coreMaterial);
+            kiwiCore.rotation.x = -Math.PI / 2;
+            kiwiCore.position.y = 1.201;
+            kiwiGroup.add(kiwiCore);
+            
+            // Schwarze Kerne/Samen (elliptisch verteilt)
+            const seedCount = 12;
+            for (let i = 0; i < seedCount; i++) {
+                const angle = (i / seedCount) * Math.PI * 2;
+                const distanceX = kiwiRadiusX * 0.5 + Math.random() * kiwiRadiusX * 0.2;
+                const distanceZ = kiwiRadiusZ * 0.5 + Math.random() * kiwiRadiusZ * 0.2;
+                
+                const seedGeometry = new THREE.CircleGeometry(0.02, 4);
+                const seedMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x000000
+                });
+                const seed = new THREE.Mesh(seedGeometry, seedMaterial);
+                seed.rotation.x = -Math.PI / 2;
+                seed.position.set(
+                    Math.cos(angle) * distanceX,  // Use elliptical X coordinate
+                    1.202,
+                    Math.sin(angle) * distanceZ   // Use elliptical Z coordinate
+                );
+                kiwiGroup.add(seed);
+            }
+            
+            // Glanz-Effekt für Frische
+            const glintGeometry = new THREE.CircleGeometry(0.08, 8);
+            const glintMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.7
+            });
+            const glint = new THREE.Mesh(glintGeometry, glintMaterial);
+            glint.rotation.x = -Math.PI / 2;
+            glint.position.set(kiwiRadiusX * 0.4, 1.203, kiwiRadiusX * 0.3);
+            kiwiGroup.add(glint);
+            
+            kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            kiwiGroup.collectibleType = 'kiwi';
+            kiwiGroup.castShadow = true;
+            
+            collectibles.kiwis.push(kiwiGroup);
+            scene.add(kiwiGroup);
         }
         
-        // EINFACHER Broccoli (wie V1)
+        // REALISTISCHER Broccoli (aus V3.6.2-working)
         function createBroccoli(lane, z) {
-            const geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.8, 8);
-            const material = new THREE.MeshLambertMaterial({ color: 0x228B22 });
-            const broccoli = new THREE.Mesh(geometry, material);
+            const broccoliGroup = new THREE.Group();
             
-            broccoli.position.set(LANE_POSITIONS[lane], 0.4, z);
-            broccoli.castShadow = true;
-            broccoli.collectibleType = 'broccoli';
+            // Brokkoli Geometrie - Baum-ähnliche Form
+            const stemRadius = 0.15;
+            const stemHeight = 0.4;
+            const headRadius = 0.4;
             
-            collectibles.broccolis.push(broccoli);
-            scene.add(broccoli);
+            // Stiel (Stamm)
+            const stemGeometry = new THREE.CylinderGeometry(stemRadius, stemRadius * 1.2, stemHeight, 8);
+            const stemMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4A6741,  // Dunkles Grün für Stiel
+                emissive: 0x1A241A
+            });
+            const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
+            broccoliStem.position.y = 1.0;
+            broccoliStem.castShadow = true;
+            broccoliGroup.add(broccoliStem);
+            
+            // Kopf (florettes) - mehrere kleine Kugeln
+            for (let i = 0; i < 8; i++) {
+                const floretGeometry = new THREE.SphereGeometry(0.12 + Math.random() * 0.08, 8, 6);
+                const floretMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x228B22,  // Helleres Grün für Florettes
+                    emissive: 0x0F3F0F,  // Grünes Glühen
+                    roughness: 0.7
+                });
+                const floret = new THREE.Mesh(floretGeometry, floretMaterial);
+                
+                // Zufällige Position um den Kopf
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 0.2 + Math.random() * 0.15;
+                floret.position.set(
+                    Math.cos(angle) * radius,
+                    1.25 + Math.random() * 0.2,
+                    Math.sin(angle) * radius
+                );
+                floret.castShadow = true;
+                broccoliGroup.add(floret);
+            }
+            
+            // Position and add to scene
+            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            broccoliGroup.collectibleType = 'broccoli';
+            broccoliGroup.castShadow = true;
+            
+            collectibles.broccolis.push(broccoliGroup);
+            scene.add(broccoliGroup);
         }
         
         function handleKeyDown(event) {
