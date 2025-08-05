@@ -120,8 +120,8 @@
     </div>
     
     <div id="gameInfo">
-        <div>Version: BASISVERSION 3</div>
-        <div>Status: STABLE</div>
+        <div>Version: 4.7.0-ULTRA-SIMPLE</div>
+        <div>Status: LOW HANGING FRUIT</div>
     </div>
     
     <div id="instructions">
@@ -130,8 +130,8 @@
     
     <div id="menu">
         <h1>🎮 Subway Runner 3D</h1>
-        <p>BASISVERSION 3 - Stabile Grundlage</p>
-        <p style="color: yellow;">⚠️ Collectibles noch nicht implementiert</p>
+        <p>V4.7.1-ULTRA-SIMPLE - Minimale Implementation</p>
+        <p style="color: lightgreen;">✅ Einfachste Kiwis & Broccolis</p>
         <button onclick="startGame()">Start Game</button>
     </div>
     
@@ -149,8 +149,6 @@
         let scene, camera, renderer;
         let player, track = [];
         let obstacles = [];
-        let kiwis = [];
-        let broccolis = [];
         let collectibles = { kiwis: [], broccolis: [] };
         let gameState = {
             running: false,
@@ -283,111 +281,28 @@
             scene.add(obstacle);
         }
         
-        // Implementierte Kiwi-Spawn-Funktion
+        // ULTRA-SIMPLE Kiwi (nur 5 Zeilen)
         function createKiwi(lane, z) {
-            const kiwiGroup = new THREE.Group();
-            
-            // LANE_POSITIONS definieren falls nicht vorhanden
-            const LANE_POSITIONS = [-2, 0, 2];
-            
-            // Einfache braune Kiwi-Geometrie (elliptisch)
-            const kiwiRadiusX = 0.3;
-            const kiwiRadiusY = 0.4; 
-            const kiwiRadiusZ = 0.3;
-            
-            // Hauptkörper - braune Außenhaut
-            const kiwiGeometry = new THREE.SphereGeometry(1, 12, 8);
-            kiwiGeometry.scale(kiwiRadiusX, kiwiRadiusY, kiwiRadiusZ);
-            const skinMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x8B4513,  // Braun wie spezifiziert
-                emissive: 0x2A1A0A
-            });
-            const kiwiSkin = new THREE.Mesh(kiwiGeometry, skinMaterial);
-            kiwiSkin.position.y = 0.3;  // Y = 0.3 wie spezifiziert
-            kiwiSkin.castShadow = true;
-            kiwiGroup.add(kiwiSkin);
-            
-            // Grünes Fruchtfleisch (flache Oberseite)
-            const fleshGeometry = new THREE.CircleGeometry(kiwiRadiusX * 0.9, 16);
-            const fleshMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x90EE90,
-                emissive: 0x2F5F2F
-            });
-            const kiwiFlesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
-            kiwiFlesh.rotation.x = -Math.PI / 2;
-            kiwiFlesh.position.y = 0.3 + kiwiRadiusY * 0.9;  // Oben auf dem Kiwi
-            kiwiGroup.add(kiwiFlesh);
-            
-            // Position setzen
-            kiwiGroup.position.set(LANE_POSITIONS[lane], 0, z);
-            kiwiGroup.userData = { type: 'kiwi', lane: lane, collected: false };
-            scene.add(kiwiGroup);
-            
-            const kiwiData = {
-                mesh: kiwiGroup,
-                lane: lane,
-                z: z,
-                type: 'kiwi',
-                collected: false
-            };
-            
-            kiwis.push(kiwiData);
-            return kiwiData;
+            const kiwi = new THREE.Mesh(
+                new THREE.SphereGeometry(0.4, 8, 8),
+                new THREE.MeshLambertMaterial({ color: 0x8B4513 })  // Braun
+            );
+            kiwi.position.set(LANE_POSITIONS[lane], 0.6, z);  // Y=0.6 sicher über Boden
+            kiwi.userData = { type: 'kiwi' };
+            collectibles.kiwis.push(kiwi);
+            scene.add(kiwi);
         }
         
-        // Implementierte Broccoli-Spawn-Funktion
+        // ULTRA-SIMPLE Broccoli (nur 5 Zeilen)
         function createBroccoli(lane, z) {
-            const broccoliGroup = new THREE.Group();
-            
-            // LANE_POSITIONS definieren falls nicht vorhanden
-            const LANE_POSITIONS = [-2, 0, 2];
-            
-            // Stiel (Stamm)
-            const stemGeometry = new THREE.CylinderGeometry(0.1, 0.15, 0.6, 8);
-            const stemMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x4A6741,  // Dunkles Grün für Stiel
-                emissive: 0x1A241A
-            });
-            const broccoliStem = new THREE.Mesh(stemGeometry, stemMaterial);
-            broccoliStem.position.y = 0.3;  // Y = 0.3 wie spezifiziert
-            broccoliStem.castShadow = true;
-            broccoliGroup.add(broccoliStem);
-            
-            // Broccoli-Kopf (mehrere kleine Kugeln)
-            const floretPositions = [
-                { x: 0, y: 0.5, scale: 1.0 },
-                { x: -0.15, y: 0.6, scale: 0.8 },
-                { x: 0.15, y: 0.6, scale: 0.8 },
-                { x: 0, y: 0.7, scale: 0.9 }
-            ];
-            
-            floretPositions.forEach(pos => {
-                const floretGeometry = new THREE.SphereGeometry(0.15 * pos.scale, 8, 6);
-                const floretMaterial = new THREE.MeshLambertMaterial({ 
-                    color: 0x228B22,  // Grün wie spezifiziert
-                    emissive: 0x0F3F0F
-                });
-                const floret = new THREE.Mesh(floretGeometry, floretMaterial);
-                floret.position.set(pos.x, pos.y, 0);
-                floret.castShadow = true;
-                broccoliGroup.add(floret);
-            });
-            
-            // Position setzen
-            broccoliGroup.position.set(LANE_POSITIONS[lane], 0, z);
-            broccoliGroup.userData = { type: 'broccoli', lane: lane, collected: false };
-            scene.add(broccoliGroup);
-            
-            const broccoliData = {
-                mesh: broccoliGroup,
-                lane: lane,
-                z: z,
-                type: 'broccoli',
-                collected: false
-            };
-            
-            broccolis.push(broccoliData);
-            return broccoliData;
+            const broccoli = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.3, 0.3, 0.6, 8),
+                new THREE.MeshLambertMaterial({ color: 0x228B22 })  // Grün
+            );
+            broccoli.position.set(LANE_POSITIONS[lane], 0.6, z);  // Y=0.6 sicher über Boden
+            broccoli.userData = { type: 'broccoli' };
+            collectibles.broccolis.push(broccoli);
+            scene.add(broccoli);
         }
         
         function handleKeyDown(event) {
@@ -447,35 +362,32 @@
             // Check collectible collisions
             const playerBBox = new THREE.Box3().setFromObject(player);
             
-            // Check kiwi collisions
-            for (let i = kiwis.length - 1; i >= 0; i--) {
-                if (kiwis[i].collected) continue;
-                if (kiwis[i].z > 2 || kiwis[i].z < -2) continue;
+            // ULTRA-SIMPLE Collectible Collisions (distance < 1.2)
+            const checkDistance = 1.2;
+            
+            // Check Kiwis
+            for (let i = collectibles.kiwis.length - 1; i >= 0; i--) {
+                const kiwi = collectibles.kiwis[i];
+                const distance = player.position.distanceTo(kiwi.position);
                 
-                const kiwiBBox = new THREE.Box3().setFromObject(kiwis[i].mesh);
-                if (playerBBox.intersectsBox(kiwiBBox)) {
-                    // Collect kiwi
-                    kiwis[i].collected = true;
-                    scene.remove(kiwis[i].mesh);
-                    gameState.score += 50;
-                    console.log("Kiwi collected! +50 points");
-                    kiwis.splice(i, 1);
+                if (distance < checkDistance) {
+                    gameState.kiwisCollected++;
+                    document.getElementById('kiwis').textContent = gameState.kiwisCollected;
+                    scene.remove(kiwi);
+                    collectibles.kiwis.splice(i, 1);
                 }
             }
             
-            // Check broccoli collisions  
-            for (let i = broccolis.length - 1; i >= 0; i--) {
-                if (broccolis[i].collected) continue;
-                if (broccolis[i].z > 2 || broccolis[i].z < -2) continue;
+            // Check Broccolis
+            for (let i = collectibles.broccolis.length - 1; i >= 0; i--) {
+                const broccoli = collectibles.broccolis[i];
+                const distance = player.position.distanceTo(broccoli.position);
                 
-                const broccoliBBox = new THREE.Box3().setFromObject(broccolis[i].mesh);
-                if (playerBBox.intersectsBox(broccoliBBox)) {
-                    // Collect broccoli
-                    broccolis[i].collected = true;
-                    scene.remove(broccolis[i].mesh);
-                    gameState.score += 75;
-                    console.log("Broccoli collected! +75 points");
-                    broccolis.splice(i, 1);
+                if (distance < checkDistance) {
+                    gameState.broccolisCollected++;
+                    document.getElementById('broccolis').textContent = gameState.broccolisCollected;
+                    scene.remove(broccoli);
+                    collectibles.broccolis.splice(i, 1);
                 }
             }
         }
@@ -562,13 +474,30 @@
                 createObstacle(type, lane, -50);
             }
             
-            // TODO: Spawn collectibles
-            if (Math.random() < 0.03) {
+            // ULTRA-SAFE Collectible Spawning (0.008 = ~29 items in 30 sec)
+            if (Math.random() < 0.008) {  // Ultra-sichere Rate
                 const lane = Math.floor(Math.random() * 3);
-                if (Math.random() < 0.85) {
+                if (Math.random() < 0.7) {  // 70% Kiwis, 30% Broccolis
                     createKiwi(lane, -50);
                 } else {
                     createBroccoli(lane, -50);
+                }
+            }
+            
+            // Move Collectibles
+            for (let i = collectibles.kiwis.length - 1; i >= 0; i--) {
+                collectibles.kiwis[i].position.z += gameState.speed;
+                if (collectibles.kiwis[i].position.z > 10) {
+                    scene.remove(collectibles.kiwis[i]);
+                    collectibles.kiwis.splice(i, 1);
+                }
+            }
+            
+            for (let i = collectibles.broccolis.length - 1; i >= 0; i--) {
+                collectibles.broccolis[i].position.z += gameState.speed;
+                if (collectibles.broccolis[i].position.z > 10) {
+                    scene.remove(collectibles.broccolis[i]);
+                    collectibles.broccolis.splice(i, 1);
                 }
             }
             
@@ -614,14 +543,12 @@
             obstacles = [];
             
             // Clear collectibles
-            for (let kiwi of kiwis) {
-                scene.remove(kiwi.mesh);
+            for (let kiwi of collectibles.kiwis) {
+                scene.remove(kiwi);
             }
-            for (let broccoli of broccolis) {
-                scene.remove(broccoli.mesh);
+            for (let broccoli of collectibles.broccolis) {
+                scene.remove(broccoli);
             }
-            kiwis = [];
-            broccolis = [];
             collectibles = { kiwis: [], broccolis: [] };
             
             // Reset UI
