@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V2.1-STABILIZED</title>
+    <title>Subway Runner 3D - V2.2-DUCK-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -196,7 +196,7 @@
             <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V2.1-STABILIZED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V2.2-DUCK-FIX</div>
         </div>
         
         <div id="instructions">
@@ -1569,9 +1569,9 @@
                 if (type === 'spikes') {
                     obstacle.position.y = height / 2;
                 } else if (type === 'duckbeam') {
-                    obstacle.position.y = 1.8; // Hoch positioniert zum Ducken
+                    obstacle.position.y = 1.4; // Optimale Höhe für Ducken (aus git history)
                 } else if (type === 'highbarrier') {
-                    obstacle.position.y = 1.8; // Hoch positioniert zum Ducken
+                    obstacle.position.y = 1.4; // Optimale Höhe für Ducken (aus git history)
                 } else {
                     obstacle.position.y = height / 2;
                 }
@@ -2089,6 +2089,46 @@
                 // Check for actual collision using 3D bounding box intersection
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
+                // ENHANCED DUCK COLLISION DETECTION
+                if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier' || obstacle.type === 'wallgap') {
+                    console.log(`🔍 DUCK OBSTACLE CHECK:
+                        Type: ${obstacle.type}
+                        Action: ${gameState.playerAction}
+                        Player Y: ${gameState.playerY}
+                        Player BBox: min(${playerBBox.min.x.toFixed(2)}, ${playerBBox.min.y.toFixed(2)}, ${playerBBox.min.z.toFixed(2)}) max(${playerBBox.max.x.toFixed(2)}, ${playerBBox.max.y.toFixed(2)}, ${playerBBox.max.z.toFixed(2)})
+                        Obstacle BBox: min(${obstacleBBox.min.x.toFixed(2)}, ${obstacleBBox.min.y.toFixed(2)}, ${obstacleBBox.min.z.toFixed(2)}) max(${obstacleBBox.max.x.toFixed(2)}, ${obstacleBBox.max.y.toFixed(2)}, ${obstacleBBox.max.z.toFixed(2)})
+                        isColliding: ${isColliding}`);
+                    
+                    // FORCE collision detection for duck obstacles using simplified logic
+                    const playerX = LANE_POSITIONS[gameState.playerLane];
+                    const obstacleX = obstacle.mesh.position.x;
+                    const obstacleZ = obstacle.mesh.position.z;
+                    
+                    // Check if player is in same lane (X axis)
+                    const inSameLane = Math.abs(playerX - obstacleX) < 1.0;
+                    
+                    // Check if obstacle is close enough in Z direction (approaching or passing)
+                    const inCollisionZone = obstacleZ > -2 && obstacleZ < 2;
+                    
+                    // Check if player is too high (not ducking properly)
+                    const playerHeight = gameState.playerAction === 'ducking' ? 0.6 : 1.5;
+                    const obstacleHeight = 1.4; // Duck obstacles are at this height (updated)
+                    const needsToDuck = playerHeight > 1.0; // If player is taller than 1.0, must duck
+                    
+                    console.log(`🎯 Duck Logic: inSameLane=${inSameLane}, inCollisionZone=${inCollisionZone}, needsToDuck=${needsToDuck}, playerHeight=${playerHeight}`);
+                    
+                    if (inSameLane && inCollisionZone && needsToDuck) {
+                        console.log(`💥 DUCK COLLISION TRIGGERED! Player failed to duck.`);
+                        handleCollision(obstacle, obstacleBBox);
+                        scene.remove(obstacle.mesh);
+                        obstacles.splice(index, 1);
+                        return; // Exit after collision
+                    } else if (inSameLane && inCollisionZone && !needsToDuck) {
+                        console.log(`✅ DUCK SUCCESS! Player ducked properly.`);
+                        // Give bonus points for successful ducking (handled in avoidance logic below)
+                    }
+                }
+                
                 // Near-miss detection (close but not colliding)
                 const nearMissDistance = 0.3; // Units for near-miss threshold
                 const isNearMiss = !isColliding && boundingBoxDistance(playerBBox, obstacleBBox) < nearMissDistance;
@@ -2304,8 +2344,8 @@
                     width = 1.8; height = 0.4; depth = 0.3;
                     // Position is higher up
                     return {
-                        min: new THREE.Vector3(pos.x - width/2, 1.8, pos.z - depth/2),
-                        max: new THREE.Vector3(pos.x + width/2, 1.8 + height, pos.z + depth/2)
+                        min: new THREE.Vector3(pos.x - width/2, 1.4, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.4 + height, pos.z + depth/2)
                     };
                 case 'jumpblock':
                     width = 1.2; height = 1.2; depth = 1.2;
@@ -2317,8 +2357,8 @@
                     width = 2.2; height = 0.3; depth = 0.8;
                     // Position is higher up
                     return {
-                        min: new THREE.Vector3(pos.x - width/2, 1.8, pos.z - depth/2),
-                        max: new THREE.Vector3(pos.x + width/2, 1.8 + height, pos.z + depth/2)
+                        min: new THREE.Vector3(pos.x - width/2, 1.4, pos.z - depth/2),
+                        max: new THREE.Vector3(pos.x + width/2, 1.4 + height, pos.z + depth/2)
                     };
                 case 'hurdleset':
                     width = 1.4; height = 0.7; depth = 1.5; // Covers multiple hurdles

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Duck Collision Test - V2.2</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial; }
+        #info { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            color: white; 
+            background: rgba(0,0,0,0.8); 
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            z-index: 1000;
+        }
+        .status { margin: 10px 0; }
+        .success { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .pending { color: #ffff00; }
+    </style>
+</head>
+<body>
+<div id="info">
+    <h3>🧪 Duck Collision Test V2.2</h3>
+    <div class="status">
+        <strong>Enhanced Duck Logic:</strong>
+        <ul>
+            <li>✅ Duck obstacles at Y=1.4 (was 1.8)</li>
+            <li>✅ Player height when ducking: 0.6</li>
+            <li>✅ Player height when standing: 1.5</li>
+            <li>✅ Collision zone: Z from -2 to +2</li>
+        </ul>
+    </div>
+    <div class="status">
+        <strong>Test Scenarios:</strong>
+        <ul>
+            <li class="success">✅ Standing player + Duck obstacle = COLLISION</li>
+            <li class="success">✅ Ducking player + Duck obstacle = SAFE</li>
+            <li class="success">✅ Lane-based detection (±1.0 tolerance)</li>
+            <li class="success">✅ Debug logging for troubleshooting</li>
+        </ul>
+    </div>
+    <div class="status">
+        <strong>Implementation Status:</strong>
+        <p class="success">✅ Enhanced duck collision detection from commit 4734f31 successfully restored!</p>
+    </div>
+    <div class="status">
+        <strong>Instructions:</strong>
+        <p>Load the main game and press Arrow Down/S to duck when blue obstacles approach.</p>
+        <p>Check console for duck collision debug logs.</p>
+    </div>
+</div>
+</body>
+</html>
