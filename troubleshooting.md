@@ -1,6 +1,65 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **STABLE** - V4.6.2-STABILIZED
+## **Aktueller Status**: ✅ **STABLE** - V3.0-COLLECTIBLES (NEUE BASISVERSION 3)
+
+---
+
+## 🚨 **CRITICAL: UNFAIR COLLECTIBLE PLACEMENT** - 05. August 2025
+
+### **Problem**: Collectibles spawnen direkt vor/hinter Hindernissen - UNEINSAMMELBAR!
+
+**User Feedback**: 
+> "Ein weiteres Problem ist, dass Collectibles teilweise direkt hinter Hindernissen stehen oder direkt vor Hindernissen stehen und das muss auch definitiv verhindert werden... das ist ein unfaires Spiel, weil man die einfach nicht einsammeln kann"
+
+#### **WARUM IST DAS KRITISCH?**
+1. **Gameplay Frustration**: Spieler sehen Collectibles, können sie aber nicht sammeln
+2. **Unfair Difficulty**: Unmögliche Situationen durch schlechtes Spawning
+3. **Score Impact**: Verpasste Collectibles = weniger Punkte ohne Spielerfehler
+
+#### **CURRENT IMPLEMENTATION (V3.0)**
+```javascript
+// PROBLEM: Nur 30 units Abstand reicht NICHT aus!
+function isLaneSafeForCollectible(lane, z) {
+    for (const obstacle of obstacles) {
+        if (obstacle.lane === lane && 
+            Math.abs(obstacle.mesh.position.z - z) < 30) {
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+#### **LÖSUNG FÜR V3.1**
+```javascript
+// BESSER: Größerer Sicherheitsabstand + Vor/Hinter Check
+function isLaneSafeForCollectible(lane, z) {
+    const MIN_DISTANCE = 50; // Erhöht von 30
+    
+    for (const obstacle of obstacles) {
+        if (obstacle.lane === lane) {
+            const distance = obstacle.mesh.position.z - z;
+            
+            // Check BEIDE Richtungen
+            if (distance > 0 && distance < MIN_DISTANCE) {
+                // Obstacle ist VOR dem Collectible
+                return false;
+            }
+            if (distance < 0 && Math.abs(distance) < MIN_DISTANCE) {
+                // Obstacle ist HINTER dem Collectible  
+                return false;
+            }
+        }
+    }
+    return true;
+}
+```
+
+#### **ZUSÄTZLICHE VERBESSERUNGEN FÜR V3.1**
+1. **Spawn Z-Position variieren**: Nicht immer bei -50, sondern -50 bis -70
+2. **Multi-Lane Check**: Auch Nachbar-Lanes prüfen bei breiten Obstacles
+3. **Time-based Safety**: Nach Obstacle-Spawn 1 Sekunde warten
+4. **Visual Debug Mode**: Rote Marker wo Collectibles NICHT spawnen dürfen
 
 ---
 

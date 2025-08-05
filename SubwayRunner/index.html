@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.0-COLLECTIBLES</title>
+    <title>Subway Runner 3D - V3.1-BALANCED</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -198,7 +198,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.0-COLLECTIBLES</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.1-BALANCED</div>
         </div>
         
         <div id="instructions">
@@ -681,9 +681,9 @@
             lastHealthCheck: 0,
             // COLLECTIBLES SYSTEM
             lastCollectibleTime: 0,
-            collectibleInterval: 4000, // 4 seconds
+            collectibleInterval: 2500, // 2.5 seconds (increased from 4)
             activeCollectibles: [],
-            maxActiveCollectibles: 8,
+            maxActiveCollectibles: 10, // Increased from 8
             collectedApples: 0,
             collectedBroccolis: 0
         };
@@ -1709,31 +1709,63 @@
             return broccoliGroup;
         }
 
-        // Check if lane is safe for spawning collectibles
+        // Check if lane is safe for spawning collectibles - IMPROVED
         function isLaneSafeForCollectible(lane, z) {
+            const MIN_DISTANCE = 50; // Increased from 30 for fair gameplay
+            
             for (const obstacle of obstacles) {
-                if (obstacle.lane === lane && 
-                    Math.abs(obstacle.mesh.position.z - z) < 30) {
-                    return false; // Too close to obstacle
+                if (obstacle.lane === lane) {
+                    const distance = obstacle.mesh.position.z - z;
+                    
+                    // Check BOTH directions to prevent unfair placement
+                    if (distance > 0 && distance < MIN_DISTANCE) {
+                        // Obstacle is IN FRONT of collectible
+                        return false;
+                    }
+                    if (distance < 0 && Math.abs(distance) < MIN_DISTANCE) {
+                        // Obstacle is BEHIND collectible  
+                        return false;
+                    }
+                }
+                
+                // Also check adjacent lanes for wide obstacles
+                if (Math.abs(obstacle.lane - lane) === 1) {
+                    const wideObstacles = ['wallgap', 'hurdleset', 'movingwall'];
+                    if (wideObstacles.includes(obstacle.type)) {
+                        const distance = Math.abs(obstacle.mesh.position.z - z);
+                        if (distance < MIN_DISTANCE * 0.7) {
+                            return false; // Wide obstacle nearby
+                        }
+                    }
                 }
             }
             return true;
         }
 
-        // Spawn collectible with 4-second interval
+        // Spawn collectible with improved interval and placement
         function spawnCollectible() {
             const currentTime = performance.now();
             const timeSinceLastSpawn = currentTime - gameState.lastCollectibleTime;
             
-            // Only spawn if 4 seconds have passed and under limit
+            // Only spawn if interval has passed and under limit
             if (timeSinceLastSpawn >= gameState.collectibleInterval && 
                 gameState.activeCollectibles.length < gameState.maxActiveCollectibles) {
                 
                 // Random lane
-                const lane = Math.floor(Math.random() * 3);
-                const spawnZ = -50; // Safe distance
+                let lane = Math.floor(Math.random() * 3);
+                // Varied spawn distance for more natural placement
+                const spawnZ = -50 - Math.random() * 20; // Between -50 and -70
                 
-                if (!isLaneSafeForCollectible(lane, spawnZ)) return;
+                if (!isLaneSafeForCollectible(lane, spawnZ)) {
+                    // Try different lane if first is blocked
+                    const altLane = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
+                    if (!isLaneSafeForCollectible(altLane, spawnZ)) {
+                        return; // Skip this spawn if no safe lane
+                    } else {
+                        // Use alternative lane
+                        lane = altLane;
+                    }
+                }
                 
                 // 70% Apple, 30% Broccoli
                 const isApple = Math.random() < 0.7;
@@ -3083,9 +3115,9 @@
                 // Spawn collectibles with 4-second interval
                 spawnCollectible();
                 
-                // Spawn obstacles - increase frequency with speed
-                const baseSpawnRate = 0.012;
-                const spawnSpeedMultiplier = 1 + (gameState.speed / gameState.maxSpeed) * 1.5; // Up to 2.5x spawn rate
+                // Spawn obstacles - REDUCED frequency for better balance
+                const baseSpawnRate = 0.008; // Reduced from 0.012 (33% less obstacles)
+                const spawnSpeedMultiplier = 1 + (gameState.speed / gameState.maxSpeed) * 1.0; // Reduced from 1.5
                 const spawnRate = baseSpawnRate * spawnSpeedMultiplier;
                 
                 if (Math.random() < spawnRate) {
