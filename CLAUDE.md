@@ -179,8 +179,10 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
-- **Previous**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
+- **BASISVERSION 3**: V2.2-DUCK-FIX (✅ STABLE BASE - Duck collision detection restored)
+- **Previous**: V2.1-STABILIZED (Basic version with stability features)
+- **Before**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
+- **Before**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
 - **Before**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
 - **Before**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
 - **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
@@ -189,8 +191,24 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
 - **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
 
+### **BASISVERSION 3 - DEFINITION (05.08.2025)**
+**VERSION**: V2.2-DUCK-FIX  
+**STATUS**: ✅ STABLE & FUNKTIONSFÄHIG  
+**FEATURES**:
+- ✅ Grundlegendes Endless Runner Gameplay
+- ✅ Duck Collision Detection (Spieler MUSS ducken bei highbarrier/duckbeam)
+- ✅ Stability Features (Score Limits, Object Limits, Memory Monitoring)
+- ✅ Verschiedene Hindernistypen (lowbarrier, highbarrier, spikes, etc.)
+- ✅ Lane-Switching System
+- ✅ Jump & Duck Mechanics
+- ❌ KEINE Collectibles (werden in V3.0 hinzugefügt)
+- ❌ KEINE Level/Characters (zu komplex für Basis)
+
+**WARUM BASISVERSION 3?**
+Nach 10+ Stunden Fehlversuchen mit komplexen Features zurück zur funktionierenden Basis. Diese Version ist GETESTET und STABIL - perfekte Grundlage für neue Features.
+
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version 4.6.13-SCORE-FIX. The SubwayRunner/index.html is the primary production file with embedded modules. The codebase has a stable React development version in src/ folder alongside the production HTML file.
+The game is currently at version V2.2-DUCK-FIX (BASISVERSION 3). The SubwayRunner/index.html is the primary production file. All complex systems (GameCore, LevelManager, etc.) wurden entfernt für maximale Stabilität.
 
 ### **V4.6.13 SCORE-FIX DETAILS**
 - **CRITICAL BUG FIXED**: Score explosion to 2+ billion points
@@ -431,6 +449,37 @@ function animate() {
 - **V4.6.13**: Fixed 2 billion score bug (removed score queue system)
 - **V4.6.12**: Fixed collectible Y-positioning (Y=0.3 for ground items)
 - **V4.7.x**: FAILED - Aggressive spawning caused crashes (rolled back)
+
+## 🎮 **BASISVERSION 3 - IMPLEMENTATION GUIDE**
+
+### **ADDING FEATURES TO BASISVERSION 3**
+When adding ANY new feature to BASISVERSION 3, follow this checklist:
+
+1. **RESEARCH FIRST**
+   ```bash
+   # Check if feature existed before
+   git log --oneline --grep="feature_name"
+   grep -r "createFeature" SubwayRunner/*.backup
+   ```
+
+2. **CALCULATE IMPACT**
+   ```javascript
+   // For any spawn rate feature:
+   const spawnRate = 0.02; // 2% chance
+   const fps = 60;
+   const itemsPerSecond = spawnRate * fps; // 1.2
+   const itemsPer30Seconds = itemsPerSecond * 30; // 36
+   console.log(`Will spawn ${itemsPer30Seconds} items in 30 seconds`);
+   ```
+
+3. **INCREMENTAL IMPLEMENTATION**
+   - Start with MINIMAL code (max 20 lines)
+   - Test locally for 30+ seconds
+   - Only add complexity if basic version works
+
+4. **VERSION INCREMENT**
+   - V2.2 → V2.3 for small features
+   - V2.2 → V3.0 for collectibles/major features
 
 ## 🚨 **CRITICAL GAME DESIGN RULES** (Never delete!)
 
