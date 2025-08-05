@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.2-APPLE-REDESIGN</title>
+    <title>Subway Runner 3D - V3.3-JUMP-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -198,7 +198,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.2-APPLE-REDESIGN</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.3-JUMP-FIX</div>
         </div>
         
         <div id="instructions">
@@ -668,6 +668,9 @@
             playerAction: 'running', // running, jumping, ducking
             playerY: 0,
             jumpVelocity: 0,
+            // JUMP TIMEOUT SYSTEM
+            jumpStartTime: 0,
+            maxJumpDuration: 1000, // 1 second max jump time
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -1830,6 +1833,7 @@
             gameState.playerAction = 'running';
             gameState.playerY = 0;
             gameState.jumpVelocity = 0;
+            gameState.jumpStartTime = 0; // Reset jump timer
             gameState.invulnerable = false;
             gameState.invulnerabilityTime = 0;
             gameState.timeScale = 1.0;
@@ -2053,8 +2057,26 @@
                 case 'Space':
                     event.preventDefault();
                     if (gameState.playerAction === 'running') {
+                        // First jump
                         gameState.playerAction = 'jumping';
                         gameState.jumpVelocity = 10; // Höherer Sprung
+                        gameState.jumpStartTime = performance.now(); // Track jump start
+                        
+                        // Audio & Visual Feedback with speed dynamics
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        audioManager.resume(); // Resume audio context if needed
+                        
+                        // Sprung-Partikel
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                            0xFFFF00,
+                            'jump'
+                        );
+                    } else if (gameState.playerAction === 'jumping' && gameState.playerY > 0.5) {
+                        // Double jump - allow if high enough
+                        gameState.jumpVelocity = 8; // Slightly lower second jump
+                        gameState.jumpStartTime = performance.now(); // RESET timer!
                         
                         // Audio & Visual Feedback with speed dynamics
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
@@ -3034,19 +3056,31 @@
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
                 
-                // Handle jumping - verbesserte Physik
+                // Handle jumping - ROBUST mit absolutem Timeout
                 if (gameState.playerAction === 'jumping') {
+                    // Physics update
                     gameState.playerY += gameState.jumpVelocity * 0.016;
                     gameState.jumpVelocity -= 30 * 0.016; // Stärkere Gravitation
                     
-                    // Landing
-                    if (gameState.playerY <= 0) {
+                    // ABSOLUTE TIMEOUT CHECK - Senior Developer Approach
+                    const jumpDuration = performance.now() - gameState.jumpStartTime;
+                    const shouldForceLand = jumpDuration > gameState.maxJumpDuration;
+                    
+                    // Landing conditions: physics OR timeout
+                    if (gameState.playerY <= 0 || shouldForceLand) {
+                        // FORCE landing - absolute condition!
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
+                        gameState.jumpStartTime = 0; // Reset timer
                         
                         // Landing Audio & Visual
                         audioManager.play('land');
+                        
+                        // Debug log if forced landing
+                        if (shouldForceLand && gameState.playerY > 0) {
+                            console.warn('⚠️ Jump timeout triggered - forced landing!');
+                        }
                         
                         // Landing-Partikel
                         createParticleEffect(
