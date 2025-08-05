@@ -179,8 +179,9 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **BASISVERSION 3**: V3.0-COLLECTIBLES (✅ STABLE BASE - Äpfel & Brokkoli funktionieren!)
-- **Previous**: V2.2-DUCK-FIX (✅ Duck collision detection restored)
+- **BASISVERSION 3 FINAL**: V3.1-BALANCED (✅ ERFOLGREICH GETESTET - 60 Sekunden durchgespielt!)
+- **Previous**: V3.0-COLLECTIBLES (✅ Äpfel & Brokkoli funktionieren)
+- **Before**: V2.2-DUCK-FIX (✅ Duck collision detection restored)
 - **Before**: V2.1-STABILIZED (Basic version with stability features)
 - **Before**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
 - **Before**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
@@ -192,9 +193,11 @@ This is a collection of endless runner game projects built with different techno
 - **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
 - **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
 
-### **BASISVERSION 3 - DEFINITION (05.08.2025 - UPDATED)**
-**VERSION**: V3.0-COLLECTIBLES  
-**STATUS**: ✅ STABLE & FUNKTIONSFÄHIG & GETESTET
+### **BASISVERSION 3 FINAL - DEFINITION (05.08.2025 - FINALIZED)**
+**VERSION**: V3.1-BALANCED  
+**STATUS**: ✅ ERFOLGREICH GETESTET - 60 SEKUNDEN DURCHGESPIELT!
+**USER BESTÄTIGUNG**: "Das können wir als großen Erfolg abspeichern. Ich habe die 60 Sekunden durchgespielt. Ich habe 13 Äpfel und einige Brokkolis gesammelt, und das Spiel ist nicht abgestürzt."
+
 **FEATURES**:
 - ✅ Grundlegendes Endless Runner Gameplay
 - ✅ Duck Collision Detection (Spieler MUSS ducken bei highbarrier/duckbeam)
@@ -202,20 +205,24 @@ This is a collection of endless runner game projects built with different techno
 - ✅ Verschiedene Hindernistypen (lowbarrier, highbarrier, spikes, etc.)
 - ✅ Lane-Switching System
 - ✅ Jump & Duck Mechanics
-- ✅ **NEU**: Äpfel & Brokkoli Collectibles (4-Sekunden Intervall)
-- ✅ **NEU**: Sichere Spawn-Limitierung (max 8 gleichzeitig)
+- ✅ Äpfel & Brokkoli Collectibles (2.5-Sekunden Intervall)
+- ✅ Sichere Spawn-Limitierung (max 10 gleichzeitig)
+- ✅ Faire Collectible-Platzierung (50 units Abstand)
+- ✅ Ausbalancierte Spawn-Raten (weniger Obstacles, mehr Collectibles)
 - ❌ KEINE Level/Characters (zu komplex für Basis)
 
-**WARUM BASISVERSION 3?**
-Nach erfolgreicher Implementation der Collectibles (Äpfel & Brokkoli mit 4-Sekunden Spawn) ist dies die neue stabile Basis. User bestätigt: "Das hat sehr gut funktioniert" und "es stürzt wahrscheinlich nicht ab".
+**ERFOLGSMETRIKEN**:
+- 60 Sekunden durchgespielt ohne Absturz
+- 13 Äpfel gesammelt (realistischer Wert)
+- Mehrere Brokkolis gesammelt
+- Keine Performance-Probleme
+- Faires, spaßiges Gameplay
 
-### **KNOWN ISSUES TO FIX IN V3.1**:
-- ⚠️ Zu viele Hindernisse (spawn rate reduzieren)
-- ⚠️ Zu wenige Collectibles (von 4 auf 2-3 Sekunden)
-- ⚠️ Collectibles spawnen direkt vor/hinter Hindernissen (unfair!)
+### **KNOWN ISSUE TO FIX IN V3.2**:
+- ⚠️ Apfel sieht aus wie Spike-Hindernis (Kugel) - muss eindeutig unterscheidbar sein!
 
 ### **CURRENT CODEBASE STATUS**
-The game is currently at version V3.0-COLLECTIBLES (NEUE BASISVERSION 3). The SubwayRunner/index.html is the primary production file with working Apple & Broccoli collectibles.
+The game is at version V3.1-BALANCED (FINALE BASISVERSION 3). Dies ist die endgültig getestete und vom User abgenommene Basis für alle weiteren Entwicklungen.
 
 ### **V4.6.13 SCORE-FIX DETAILS**
 - **CRITICAL BUG FIXED**: Score explosion to 2+ billion points

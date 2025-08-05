@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.1-BALANCED</title>
+    <title>Subway Runner 3D - V3.2-APPLE-REDESIGN</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -198,7 +198,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.1-BALANCED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.2-APPLE-REDESIGN</div>
         </div>
         
         <div id="instructions">
@@ -1632,41 +1632,66 @@
             obstacles.push(obstacleData);
         }
 
-        // Create Apple collectible (red fruit)
+        // Create Apple collectible (red fruit) - DISTINCT from spikes!
         function createApple(lane, z) {
             const appleGroup = new THREE.Group();
             
-            // Red apple body
-            const appleGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-            appleGeometry.scale(1, 1.1, 1); // Slightly taller
+            // Apple body - DISTINCTIVE APPLE SHAPE
+            const appleGeometry = new THREE.SphereGeometry(0.35, 12, 12);
+            // Scale to create apple shape: wider at top, narrower at bottom
+            appleGeometry.scale(1.1, 1.2, 1.1);
             
+            // Apply custom apple shape by modifying vertices
+            const positions = appleGeometry.attributes.position;
+            for (let i = 0; i < positions.count; i++) {
+                const y = positions.getY(i);
+                const x = positions.getX(i);
+                const z = positions.getZ(i);
+                
+                // Create apple indentation at top
+                if (y > 0.3) {
+                    const indent = 1 - (y - 0.3) * 0.3;
+                    positions.setX(i, x * indent);
+                    positions.setZ(i, z * indent);
+                }
+                
+                // Create apple bottom curve
+                if (y < -0.2) {
+                    const curve = 1 - Math.abs(y + 0.2) * 0.5;
+                    positions.setX(i, x * curve);
+                    positions.setZ(i, z * curve);
+                }
+            }
+            appleGeometry.attributes.position.needsUpdate = true;
+            
+            // Bright red apple material - very different from orange spikes
             const appleMaterial = new THREE.MeshLambertMaterial({
-                color: 0xDC143C,      // Crimson red
-                emissive: 0x8B0000,   // Dark red glow
-                emissiveIntensity: 0.1
+                color: 0xFF0000,      // Pure red (not orange like spikes!)
+                emissive: 0x660000,   // Dark red glow
+                emissiveIntensity: 0.2
             });
             
             const apple = new THREE.Mesh(appleGeometry, appleMaterial);
-            apple.position.y = 0.6; // Above ground for easy collection
+            apple.position.y = 0.6;
             apple.castShadow = true;
             appleGroup.add(apple);
             
-            // Brown stem
-            const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 4);
+            // Thicker brown stem for visibility
+            const stemGeometry = new THREE.CylinderGeometry(0.03, 0.04, 0.2, 6);
             const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
             const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-            stem.position.y = 1.1;
+            stem.position.y = 1.05;
             appleGroup.add(stem);
             
-            // Green leaf
-            const leafGeometry = new THREE.PlaneGeometry(0.15, 0.08);
+            // Larger green leaf - more visible
+            const leafGeometry = new THREE.PlaneGeometry(0.2, 0.12);
             const leafMaterial = new THREE.MeshLambertMaterial({ 
                 color: 0x228B22,
                 side: THREE.DoubleSide
             });
             const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-            leaf.position.set(0.05, 1.05, 0);
-            leaf.rotation.z = Math.PI / 6;
+            leaf.position.set(0.08, 1.0, 0);
+            leaf.rotation.z = Math.PI / 4;
             appleGroup.add(leaf);
             
             appleGroup.position.set(LANE_POSITIONS[lane], 0, z);
