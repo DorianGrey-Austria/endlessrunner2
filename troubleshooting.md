@@ -1,6 +1,32 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **STABLE** - V3.0-COLLECTIBLES (NEUE BASISVERSION 3)
+## **Aktueller Status**: 🔧 **FIXING** - Wiederkehrendes hemisphereLight Problem
+
+---
+
+## 🚨 **CRITICAL: WIEDERHOLTER STARTUP FEHLER** - 06. August 2025
+
+### **Problem**: Gleicher Fehler wie bei V4.1 - hemisphereLight doppelt deklariert!
+
+**Fehlermeldungen**:
+- `Uncaught SyntaxError: Identifier 'hemisphereLight' has already been declared`
+- `Uncaught ReferenceError: startGame is not defined`
+
+#### **MUSTER ERKANNT**
+Dieses Problem tritt IMMER auf wenn wir:
+1. Graphics Updates machen
+2. Hemisphere Light hinzufügen
+3. Von älteren Versionen Code übernehmen
+
+#### **SENIOR DEVELOPER ANALYSE**
+Das Problem ist NICHT der Code selbst, sondern:
+- Die BASE VERSION (V4.0-MULTI-JUMP) hat BEREITS ein hemisphereLight
+- Wir fügen NOCH EINS hinzu → FEHLER!
+
+#### **LÖSUNG ALS SENIOR DEVELOPER**
+1. IMMER zuerst prüfen was schon da ist
+2. NIEMALS blind Code hinzufügen
+3. VARIABLE NAMEN eindeutig machen
 
 ---
 

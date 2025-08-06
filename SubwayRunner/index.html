@@ -812,8 +812,7 @@
             renderer.setClearColor(0x0a0a0f); // Darker background
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
+            // Removed tone mapping - can cause issues
 
             // Better lighting (SAFE)
             // Ambient light for overall illumination
@@ -840,9 +839,9 @@
             directionalLight.shadow.bias = -0.0005;
             scene.add(directionalLight);
 
-            // Atmospheric hemisphere light for sky gradient
-            const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
-            scene.add(hemisphereLight);
+            // Atmospheric sky light for gradient
+            const skyHemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
+            scene.add(skyHemisphereLight);
 
             // Rim lighting for urban atmosphere
             const rimLight = new THREE.DirectionalLight(0x4A90E2, 0.3);
@@ -850,9 +849,8 @@
             scene.add(rimLight);
 
             // Enhance renderer for better visuals
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            // Removed tone mapping - can cause issues
+            // Removed outputColorSpace - can cause issues
 
             // Create player
             createPlayer();
@@ -3390,9 +3388,11 @@
             console.log('renderer:', renderer);
         };
 
-        // Initialize game
-        console.log('Starting game initialization...');
-        init();
+        // Initialize game when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM ready, starting game initialization...');
+            init();
+        });
     </script>
 </body>
 </html>
