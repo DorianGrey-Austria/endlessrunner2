@@ -31,6 +31,15 @@ jobs:
         # Copy all necessary files
         cp index.html deploy/
         
+        # Copy JavaScript modules for gesture control
+        echo "📁 Copying JavaScript modules..."
+        cp -r SubwayRunner/js deploy/
+        
+        # Copy CSS files if they exist
+        if [ -d "SubwayRunner/css" ]; then
+            cp -r SubwayRunner/css deploy/
+        fi
+        
         # Create .htaccess for production security and performance
         cat > deploy/.htaccess << 'EOF'
         # Force HTTPS for secure gaming
@@ -99,6 +108,8 @@ jobs:
         echo "✅ Production files prepared"
         echo "📁 Deployment structure:"
         ls -la deploy/
+        echo "📁 JavaScript modules:"
+        ls -la deploy/js/ || echo "❌ JS modules not found"
         
     - name: Validate Deployment Configuration
       run: |
@@ -135,7 +146,7 @@ jobs:
         echo "🎮 Features deployed:"
         echo "• ✅ 30 Kiwis & 7 Broccolis Collection System"
         echo "• ✅ Jump Particle Effects & Animations" 
-        echo "• ✅ Minimal UI Design Philosophy"
+        echo "• ✅ Gesture Control System (MediaPipe)"
         echo "• ✅ 7+ Different Obstacle Types"
         echo "• ✅ Speed-based Difficulty Progression"
         echo "• ✅ 3D Bounding Box Collision Detection"
