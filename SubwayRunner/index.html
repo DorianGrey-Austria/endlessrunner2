@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.3-JUMP-FIX</title>
+    <title>Subway Runner 3D - V4.0-MULTI-JUMP</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -198,7 +198,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V3.3-JUMP-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.0-MULTI-JUMP</div>
         </div>
         
         <div id="instructions">
@@ -671,6 +671,11 @@
             // JUMP TIMEOUT SYSTEM
             jumpStartTime: 0,
             maxJumpDuration: 1000, // 1 second max jump time
+            // MULTI-LEVEL JUMP SYSTEM (V4.0)
+            jumpCount: 0,
+            maxJumps: 4,
+            currentHeightLevel: 1,
+            aerialCombo: 0,
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -698,6 +703,28 @@
             MAX_SCENE_OBJECTS: 500,
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
         };
+        
+        // HEIGHT LEVEL SYSTEM (V4.0)
+        const HEIGHT_LEVELS = {
+            GROUND: 0,
+            DUCKING: 0.5,
+            STANDING: 1.0,
+            JUMP_1: 3.0,
+            JUMP_2: 5.0,
+            JUMP_3: 7.0,
+            SUPER: 8.0
+        };
+        
+        // Get current player height level (0-5)
+        function getPlayerHeightLevel() {
+            const y = gameState.playerY;
+            if (y >= HEIGHT_LEVELS.SUPER) return 5;
+            if (y >= HEIGHT_LEVELS.JUMP_3) return 4;
+            if (y >= HEIGHT_LEVELS.JUMP_2) return 3;
+            if (y >= HEIGHT_LEVELS.JUMP_1) return 2;
+            if (gameState.playerAction === 'ducking') return 0;
+            return 1; // Standing
+        }
         
         // SAFE SCORE FUNCTION WITH LIMITS
         function addScore(amount) {
@@ -1834,6 +1861,8 @@
             gameState.playerY = 0;
             gameState.jumpVelocity = 0;
             gameState.jumpStartTime = 0; // Reset jump timer
+            gameState.jumpCount = 0; // Reset jump counter
+            gameState.aerialCombo = 0; // Reset aerial combo
             gameState.invulnerable = false;
             gameState.invulnerabilityTime = 0;
             gameState.timeScale = 1.0;
@@ -2059,26 +2088,37 @@
                     if (gameState.playerAction === 'running') {
                         // First jump
                         gameState.playerAction = 'jumping';
-                        gameState.jumpVelocity = 10; // Höherer Sprung
-                        gameState.jumpStartTime = performance.now(); // Track jump start
+                        gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = performance.now();
+                        gameState.jumpCount = 1;
                         
-                        // Audio & Visual Feedback with speed dynamics
+                        // Audio & Visual Feedback
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                        audioManager.resume(); // Resume audio context if needed
+                        audioManager.resume();
                         
-                        // Sprung-Partikel
+                        // Jump particles - color based on jump number
                         createParticleEffect(
                             new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
+                            0xFFFF00, // Yellow for first jump
                             'jump'
                         );
-                    } else if (gameState.playerAction === 'jumping' && gameState.playerY > 0.5) {
-                        // Double jump - allow if high enough
-                        gameState.jumpVelocity = 8; // Slightly lower second jump
+                    } else if (gameState.playerAction === 'jumping' && 
+                               gameState.jumpCount < gameState.maxJumps && 
+                               gameState.playerY > 0.5) {
+                        // Multi-jump system - up to 4 jumps
+                        gameState.jumpCount++;
+                        
+                        // Jump force decreases with each jump
+                        const jumpForce = 10 - (gameState.jumpCount - 1) * 1.5;
+                        gameState.jumpVelocity = Math.max(jumpForce, 6);
                         gameState.jumpStartTime = performance.now(); // RESET timer!
                         
-                        // Audio & Visual Feedback with speed dynamics
+                        // Different particle colors for each jump level
+                        const jumpColors = [0xFFFF00, 0xFF8800, 0xFF0088, 0x8800FF, 0x00FFFF];
+                        const particleColor = jumpColors[Math.min(gameState.jumpCount - 1, 4)];
+                        
+                        // Audio pitch increases with jump count
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
@@ -2305,17 +2345,8 @@
                 // Check for actual collision using 3D bounding box intersection
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
-                // ENHANCED DUCK COLLISION DETECTION
+                // ENHANCED DUCK COLLISION DETECTION - V4.0 WITH SUPER JUMP
                 if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier' || obstacle.type === 'wallgap') {
-                    console.log(`🔍 DUCK OBSTACLE CHECK:
-                        Type: ${obstacle.type}
-                        Action: ${gameState.playerAction}
-                        Player Y: ${gameState.playerY}
-                        Player BBox: min(${playerBBox.min.x.toFixed(2)}, ${playerBBox.min.y.toFixed(2)}, ${playerBBox.min.z.toFixed(2)}) max(${playerBBox.max.x.toFixed(2)}, ${playerBBox.max.y.toFixed(2)}, ${playerBBox.max.z.toFixed(2)})
-                        Obstacle BBox: min(${obstacleBBox.min.x.toFixed(2)}, ${obstacleBBox.min.y.toFixed(2)}, ${obstacleBBox.min.z.toFixed(2)}) max(${obstacleBBox.max.x.toFixed(2)}, ${obstacleBBox.max.y.toFixed(2)}, ${obstacleBBox.max.z.toFixed(2)})
-                        isColliding: ${isColliding}`);
-                    
-                    // FORCE collision detection for duck obstacles using simplified logic
                     const playerX = LANE_POSITIONS[gameState.playerLane];
                     const obstacleX = obstacle.mesh.position.x;
                     const obstacleZ = obstacle.mesh.position.z;
@@ -2323,25 +2354,48 @@
                     // Check if player is in same lane (X axis)
                     const inSameLane = Math.abs(playerX - obstacleX) < 1.0;
                     
-                    // Check if obstacle is close enough in Z direction (approaching or passing)
+                    // Check if obstacle is close enough in Z direction
                     const inCollisionZone = obstacleZ > -2 && obstacleZ < 2;
                     
-                    // Check if player is too high (not ducking properly)
-                    const playerHeight = gameState.playerAction === 'ducking' ? 0.6 : 1.5;
-                    const obstacleHeight = 1.4; // Duck obstacles are at this height (updated)
-                    const needsToDuck = playerHeight > 1.0; // If player is taller than 1.0, must duck
-                    
-                    console.log(`🎯 Duck Logic: inSameLane=${inSameLane}, inCollisionZone=${inCollisionZone}, needsToDuck=${needsToDuck}, playerHeight=${playerHeight}`);
-                    
-                    if (inSameLane && inCollisionZone && needsToDuck) {
-                        console.log(`💥 DUCK COLLISION TRIGGERED! Player failed to duck.`);
-                        handleCollision(obstacle, obstacleBBox);
-                        scene.remove(obstacle.mesh);
-                        obstacles.splice(index, 1);
-                        return; // Exit after collision
-                    } else if (inSameLane && inCollisionZone && !needsToDuck) {
-                        console.log(`✅ DUCK SUCCESS! Player ducked properly.`);
-                        // Give bonus points for successful ducking (handled in avoidance logic below)
+                    if (inSameLane && inCollisionZone) {
+                        const playerHeight = gameState.playerY;
+                        const safeJumpHeight = 3.0; // Can jump over duck obstacles at this height
+                        
+                        // V4.0: Check if player is high enough to jump over
+                        if (playerHeight >= safeJumpHeight) {
+                            // SUPER JUMP SUCCESS! No collision when jumping high
+                            console.log(`🚀 SUPER JUMP! Cleared duck obstacle at height ${playerHeight.toFixed(1)}`);
+                            
+                            // Bonus points for skillful play
+                            const heightBonus = Math.floor((playerHeight - safeJumpHeight) * 50);
+                            addScore(200 + heightBonus);
+                            gameState.aerialCombo++;
+                            
+                            // Show achievement
+                            if (gameState.jumpCount >= 3) {
+                                showScorePopup(300 + heightBonus, obstacle.mesh.position, 'SUPER JUMP!');
+                            }
+                            
+                            // Special particle effect
+                            createParticleEffect(
+                                obstacle.mesh.position.clone().add(new THREE.Vector3(0, 2, 0)),
+                                0x00FFFF,
+                                'success'
+                            );
+                            
+                            // No collision - continue to next obstacle
+                            return;
+                        } else if (gameState.playerAction === 'ducking') {
+                            // Normal ducking success
+                            console.log(`✅ DUCK SUCCESS! Player ducked properly.`);
+                        } else {
+                            // Collision - not ducking and not high enough
+                            console.log(`💥 DUCK COLLISION! Height: ${playerHeight.toFixed(1)}, needed: ${safeJumpHeight}`);
+                            handleCollision(obstacle, obstacleBBox);
+                            scene.remove(obstacle.mesh);
+                            obstacles.splice(index, 1);
+                            return;
+                        }
                     }
                 }
                 
@@ -3073,6 +3127,8 @@
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
                         gameState.jumpStartTime = 0; // Reset timer
+                        gameState.jumpCount = 0; // Reset jump counter
+                        gameState.aerialCombo = 0; // Reset aerial combo
                         
                         // Landing Audio & Visual
                         audioManager.play('land');
