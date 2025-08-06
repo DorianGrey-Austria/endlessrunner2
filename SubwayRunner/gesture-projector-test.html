@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubwayRunner - Projektor Gesture Control Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #00ff88;
+            box-shadow: 0 2px 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        h1 {
+            color: #00ff88;
+            font-size: 2em;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .subtitle {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        #mainContainer {
+            flex: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            max-height: calc(100vh - 100px);
+        }
+        
+        #gameArea {
+            flex: 1;
+            background: #000;
+            border-radius: 15px;
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        #controlPanel {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .panel-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .panel-section h3 {
+            color: #00ff88;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #00ff88, #00cc70);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            width: 100%;
+            margin: 5px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+            background: linear-gradient(135deg, #00ff88, #00ff88);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        button.danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+        }
+        
+        button.danger:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff6666, #ff4444);
+            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
+        }
+        
+        .slider-group {
+            margin: 15px 0;
+        }
+        
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .slider-value {
+            color: #00ff88;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            outline: none;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #00ff88;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+        }
+        
+        .checkbox-group {
+            margin: 10px 0;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        #statsDisplay {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-label {
+            color: #888;
+        }
+        
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .stat-value.warning {
+            color: #ffaa00;
+        }
+        
+        .stat-value.error {
+            color: #ff4444;
+        }
+        
+        #videoContainer {
+            position: relative;
+            margin-top: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+        
+        #videoElement {
+            display: none;
+        }
+        
+        #videoCanvas {
+            width: 100%;
+            display: block;
+            background: #000;
+        }
+        
+        #player {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(135deg, #00ff88, #00cc70);
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        #player.jumping {
+            animation: jump 0.8s ease;
+        }
+        
+        #player.ducking {
+            height: 50px;
+            bottom: 5%;
+        }
+        
+        @keyframes jump {
+            0%, 100% { bottom: 10%; }
+            50% { bottom: 40%; }
+        }
+        
+        .lane {
+            position: absolute;
+            width: 33.33%;
+            height: 100%;
+            top: 0;
+            border-right: 2px dashed rgba(255, 255, 255, 0.1);
+        }
+        
+        .lane:last-child {
+            border-right: none;
+        }
+        
+        #lane0 { left: 0; }
+        #lane1 { left: 33.33%; }
+        #lane2 { left: 66.66%; }
+        
+        .gesture-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+        }
+        
+        .gesture-indicator.active {
+            opacity: 1;
+            animation: pulse 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        #calibrationOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        
+        #calibrationOverlay.active {
+            display: flex;
+        }
+        
+        .calibration-text {
+            font-size: 3em;
+            color: #00ff88;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        .calibration-instruction {
+            font-size: 1.2em;
+            color: #aaa;
+        }
+        
+        #alertBox {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            display: none;
+            animation: slideIn 0.3s ease;
+            z-index: 2000;
+        }
+        
+        #alertBox.success {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+        }
+        
+        #alertBox.error {
+            background: rgba(255, 68, 68, 0.2);
+            border: 2px solid #ff4444;
+            color: #ff4444;
+        }
+        
+        #alertBox.warning {
+            background: rgba(255, 170, 0, 0.2);
+            border: 2px solid #ffaa00;
+            color: #ffaa00;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>🎮 SubwayRunner Projektor Gesture Control</h1>
+        <div class="subtitle">Optimiert für Video-Projektor mit Overhead-Kamera</div>
+    </div>
+    
+    <div id="mainContainer">
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+            <div class="lane" id="lane0"></div>
+            <div class="lane" id="lane1"></div>
+            <div class="lane" id="lane2"></div>
+            <div id="player"></div>
+            <div class="gesture-indicator" id="gestureIndicator"></div>
+            <div id="calibrationOverlay">
+                <div class="calibration-text" id="calibrationText">3</div>
+                <div class="calibration-instruction">Bitte gerade in die Kamera schauen</div>
+            </div>
+        </div>
+        
+        <div id="controlPanel">
+            <div class="panel-section">
+                <h3>🎥 Kamera-Steuerung</h3>
+                <button id="startBtn">Gestensteuerung starten</button>
+                <button id="stopBtn" disabled>Stoppen</button>
+                <button id="calibrateBtn" disabled>Neu kalibrieren</button>
+                <div id="videoContainer">
+                    <video id="videoElement" autoplay playsinline></video>
+                    <canvas id="videoCanvas"></canvas>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>⚙️ Einstellungen</h3>
+                <div class="slider-group">
+                    <label>
+                        Empfindlichkeit:
+                        <span class="slider-value" id="sensitivityValue">100%</span>
+                    </label>
+                    <input type="range" id="sensitivitySlider" min="30" max="200" value="100">
+                </div>
+                <div class="slider-group">
+                    <label>
+                        Glättung:
+                        <span class="slider-value" id="smoothingValue">3</span>
+                    </label>
+                    <input type="range" id="smoothingSlider" min="1" max="10" value="3">
+                </div>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="debugMode"> Debug-Modus
+                    </label>
+                </div>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="projectorMode" checked> Projektor-Modus
+                    </label>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>📊 Live-Statistiken</h3>
+                <div id="statsDisplay">
+                    <div class="stat-row">
+                        <span class="stat-label">Status:</span>
+                        <span class="stat-value" id="statusValue">Bereit</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">FPS (Tracking/Game):</span>
+                        <span class="stat-value" id="fpsValue">--/--</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Latenz:</span>
+                        <span class="stat-value" id="latencyValue">-- ms</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Gesicht erkannt:</span>
+                        <span class="stat-value" id="faceValue">❌</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Konfidenz:</span>
+                        <span class="stat-value" id="confidenceValue">--%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Kopf-Position (Y/P):</span>
+                        <span class="stat-value" id="poseValue">0°/0°</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Aktuelle Geste:</span>
+                        <span class="stat-value" id="gestureValue">NONE</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Zuverlässigkeit:</span>
+                        <span class="stat-value" id="reliabilityValue">100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>🎮 Steuerung</h3>
+                <div style="font-size: 0.9em; color: #aaa; line-height: 1.8;">
+                    <div>👈 Kopf links = Links laufen</div>
+                    <div>👉 Kopf rechts = Rechts laufen</div>
+                    <div>👆 Kopf hoch = Springen</div>
+                    <div>👇 Kopf runter = Ducken</div>
+                    <div>😐 Neutral = Normale Position</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="alertBox"></div>
+    
+    <script type="module">
+        import { GestureControllerProjector } from './js/GestureControllerProjector.js';
+        
+        let controller = null;
+        let currentLane = 1;
+        let isJumping = false;
+        let isDucking = false;
+        
+        const elements = {
+            startBtn: document.getElementById('startBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            calibrateBtn: document.getElementById('calibrateBtn'),
+            sensitivitySlider: document.getElementById('sensitivitySlider'),
+            smoothingSlider: document.getElementById('smoothingSlider'),
+            debugMode: document.getElementById('debugMode'),
+            projectorMode: document.getElementById('projectorMode'),
+            player: document.getElementById('player'),
+            gestureIndicator: document.getElementById('gestureIndicator'),
+            calibrationOverlay: document.getElementById('calibrationOverlay'),
+            calibrationText: document.getElementById('calibrationText')
+        };
+        
+        const stats = {
+            status: document.getElementById('statusValue'),
+            fps: document.getElementById('fpsValue'),
+            latency: document.getElementById('latencyValue'),
+            face: document.getElementById('faceValue'),
+            confidence: document.getElementById('confidenceValue'),
+            pose: document.getElementById('poseValue'),
+            gesture: document.getElementById('gestureValue'),
+            reliability: document.getElementById('reliabilityValue')
+        };
+        
+        function initializeController() {
+            controller = new GestureControllerProjector({
+                videoElement: document.getElementById('videoElement'),
+                canvasElement: document.getElementById('videoCanvas'),
+                onGestureDetected: handleGesture,
+                onStatsUpdate: updateStats,
+                onError: showError,
+                onCalibrationComplete: handleCalibrationComplete,
+                debugMode: elements.debugMode.checked,
+                projectorMode: elements.projectorMode.checked
+            });
+        }
+        
+        async function start() {
+            try {
+                elements.startBtn.disabled = true;
+                stats.status.textContent = 'Initialisiere...';
+                stats.status.className = 'stat-value warning';
+                
+                if (!controller) {
+                    initializeController();
+                }
+                
+                await controller.start();
+                
+                elements.startBtn.disabled = true;
+                elements.stopBtn.disabled = false;
+                elements.calibrateBtn.disabled = false;
+                
+                stats.status.textContent = 'Aktiv';
+                stats.status.className = 'stat-value';
+                
+                showAlert('Gestensteuerung erfolgreich gestartet!', 'success');
+                
+            } catch (error) {
+                console.error('Start error:', error);
+                elements.startBtn.disabled = false;
+                stats.status.textContent = 'Fehler';
+                stats.status.className = 'stat-value error';
+                showError(error.message);
+            }
+        }
+        
+        function stop() {
+            if (controller) {
+                controller.stop();
+                
+                const analytics = controller.getAnalytics();
+                console.log('Session Analytics:', analytics);
+                
+                showAlert(`Session beendet. ${analytics.totalGestures} Gesten erkannt.`, 'success');
+            }
+            
+            elements.startBtn.disabled = false;
+            elements.stopBtn.disabled = true;
+            elements.calibrateBtn.disabled = true;
+            
+            stats.status.textContent = 'Gestoppt';
+            stats.status.className = 'stat-value';
+            
+            resetStats();
+        }
+        
+        function calibrate() {
+            if (controller) {
+                showCalibrationOverlay();
+                controller.recalibrate();
+            }
+        }
+        
+        function showCalibrationOverlay() {
+            elements.calibrationOverlay.classList.add('active');
+            let count = 3;
+            
+            const interval = setInterval(() => {
+                if (count > 0) {
+                    elements.calibrationText.textContent = count;
+                } else {
+                    elements.calibrationText.textContent = '👀';
+                    setTimeout(() => {
+                        elements.calibrationOverlay.classList.remove('active');
+                    }, 1000);
+                    clearInterval(interval);
+                }
+                count--;
+            }, 1000);
+        }
+        
+        function handleCalibrationComplete(data) {
+            showAlert('Kalibrierung erfolgreich abgeschlossen!', 'success');
+            console.log('Calibration data:', data);
+        }
+        
+        function handleGesture(gesture) {
+            stats.gesture.textContent = gesture;
+            
+            switch (gesture) {
+                case 'MOVE_LEFT':
+                    if (currentLane > 0 && !isJumping) {
+                        currentLane--;
+                        updatePlayerPosition();
+                        showGestureIndicator('⬅️');
+                    }
+                    break;
+                    
+                case 'MOVE_RIGHT':
+                    if (currentLane < 2 && !isJumping) {
+                        currentLane++;
+                        updatePlayerPosition();
+                        showGestureIndicator('➡️');
+                    }
+                    break;
+                    
+                case 'JUMP':
+                    if (!isJumping && !isDucking) {
+                        isJumping = true;
+                        elements.player.classList.add('jumping');
+                        showGestureIndicator('⬆️');
+                        setTimeout(() => {
+                            elements.player.classList.remove('jumping');
+                            isJumping = false;
+                        }, 800);
+                    }
+                    break;
+                    
+                case 'DUCK':
+                    if (!isJumping && !isDucking) {
+                        isDucking = true;
+                        elements.player.classList.add('ducking');
+                        showGestureIndicator('⬇️');
+                    }
+                    break;
+                    
+                case 'NONE':
+                    if (isDucking) {
+                        isDucking = false;
+                        elements.player.classList.remove('ducking');
+                    }
+                    break;
+            }
+        }
+        
+        function updatePlayerPosition() {
+            const positions = ['16.66%', '50%', '83.33%'];
+            elements.player.style.left = positions[currentLane];
+        }
+        
+        function showGestureIndicator(emoji) {
+            elements.gestureIndicator.textContent = emoji;
+            elements.gestureIndicator.classList.add('active');
+            setTimeout(() => {
+                elements.gestureIndicator.classList.remove('active');
+            }, 500);
+        }
+        
+        function updateStats(data) {
+            stats.fps.textContent = `${data.trackingFps?.toFixed(0) || '--'}/${data.fps?.toFixed(0) || '--'}`;
+            stats.latency.textContent = `${data.latency?.toFixed(0) || '--'} ms`;
+            stats.face.textContent = data.faceDetected ? '✅' : '❌';
+            
+            const confidence = (data.confidence * 100) || 0;
+            stats.confidence.textContent = `${confidence.toFixed(0)}%`;
+            stats.confidence.className = confidence > 60 ? 'stat-value' : 'stat-value warning';
+            
+            stats.pose.textContent = `${data.yaw?.toFixed(0) || 0}°/${data.pitch?.toFixed(0) || 0}°`;
+            
+            stats.reliability.textContent = `${data.reliability || 100}%`;
+            stats.reliability.className = data.reliability > 80 ? 'stat-value' : 'stat-value warning';
+            
+            if (data.latency > 30) {
+                stats.latency.className = 'stat-value warning';
+            } else if (data.latency > 50) {
+                stats.latency.className = 'stat-value error';
+            } else {
+                stats.latency.className = 'stat-value';
+            }
+        }
+        
+        function resetStats() {
+            Object.values(stats).forEach(el => {
+                if (el.id === 'statusValue') return;
+                el.textContent = el.id === 'faceValue' ? '❌' : '--';
+                el.className = 'stat-value';
+            });
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = type;
+            alertBox.style.display = 'block';
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 3000);
+        }
+        
+        function showError(message) {
+            showAlert(`❌ ${message}`, 'error');
+        }
+        
+        elements.startBtn.addEventListener('click', start);
+        elements.stopBtn.addEventListener('click', stop);
+        elements.calibrateBtn.addEventListener('click', calibrate);
+        
+        elements.sensitivitySlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            document.getElementById('sensitivityValue').textContent = `${value}%`;
+            if (controller) {
+                controller.setSensitivity(value / 100);
+            }
+        });
+        
+        elements.smoothingSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            document.getElementById('smoothingValue').textContent = value;
+            if (controller) {
+                controller.setSmoothingFrames(parseInt(value));
+            }
+        });
+        
+        elements.debugMode.addEventListener('change', (e) => {
+            if (controller) {
+                controller.setDebugMode(e.target.checked);
+            }
+        });
+        
+        elements.projectorMode.addEventListener('change', (e) => {
+            if (controller) {
+                controller.setProjectorMode(e.target.checked);
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (controller && controller.isRunning) return;
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                case 'a':
+                    handleGesture('MOVE_LEFT');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    handleGesture('MOVE_RIGHT');
+                    break;
+                case 'ArrowUp':
+                case 'w':
+                case ' ':
+                    handleGesture('JUMP');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    handleGesture('DUCK');
+                    break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (controller && controller.isRunning) return;
+            
+            if (e.key === 'ArrowDown' || e.key === 's') {
+                handleGesture('NONE');
+            }
+        });
+        
+        console.log('🚀 SubwayRunner Projektor Gesture Control bereit!');
+    </script>
+</body>
+</html>

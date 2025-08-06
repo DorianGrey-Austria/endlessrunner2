@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.3-LEVELS</title>
+    <title>Subway Runner 3D - V3.4-GESTURE</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script type="module">
+        import { GestureControllerProjector } from './js/GestureControllerProjector.js';
+        window.GestureControllerProjector = GestureControllerProjector;
+    </script>
     <style>
         * {
             margin: 0;
@@ -95,6 +99,70 @@
         #timer {
             font-size: 20px;
             margin-top: 5px;
+        }
+        
+        #gestureControl {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 150;
+        }
+        
+        #gestureControlBtn {
+            background: rgba(0, 255, 136, 0.9);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 255, 136, 0.3);
+            transition: all 0.3s;
+        }
+        
+        #gestureControlBtn:hover {
+            background: #00ff88;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        #gestureControlBtn.active {
+            background: #ff4444;
+        }
+        
+        #gestureCanvas {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 180px;
+            height: 135px;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            display: none;
+            z-index: 150;
+            background: #000;
+        }
+        
+        #gestureCanvas.active {
+            display: block;
+        }
+        
+        #gestureStatus {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff88;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            z-index: 150;
+        }
+        
+        #gestureStatus.active {
+            display: block;
         }
         
         .timer-warning {
@@ -211,6 +279,17 @@
             <div>🔵 Blau/Grau oben: Ducken!</div>
             <div>🔴 Stacheln: Beides möglich!</div>
         </div>
+        
+        <div id="gestureControl">
+            <button id="gestureControlBtn">🎮 Gestensteuerung aktivieren</button>
+            <div id="gestureStatus">
+                <div>Status: <span id="gestureStatusText">Bereit</span></div>
+                <div>Geste: <span id="gestureCurrentText">NONE</span></div>
+            </div>
+        </div>
+        
+        <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
+        <canvas id="gestureCanvas"></canvas>
         
         <div id="menu">
             <h1>🚇 Subway Runner 3D</h1>
@@ -3654,6 +3733,127 @@
         // Event listeners
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
+        
+        // Gesture Control Integration
+        let gestureController = null;
+        let gestureEnabled = false;
+        
+        const gestureBtn = document.getElementById('gestureControlBtn');
+        const gestureCanvas = document.getElementById('gestureCanvas');
+        const gestureStatus = document.getElementById('gestureStatus');
+        const gestureStatusText = document.getElementById('gestureStatusText');
+        const gestureCurrentText = document.getElementById('gestureCurrentText');
+        
+        if (gestureBtn && window.GestureControllerProjector) {
+            gestureBtn.addEventListener('click', async () => {
+                if (!gestureEnabled) {
+                    try {
+                        // Initialize gesture controller
+                        if (!gestureController) {
+                            gestureController = new window.GestureControllerProjector({
+                                videoElement: document.getElementById('gestureVideo'),
+                                canvasElement: gestureCanvas,
+                                onGestureDetected: handleGestureInput,
+                                onStatsUpdate: updateGestureStats,
+                                onError: handleGestureError,
+                                onCalibrationComplete: () => {
+                                    console.log('✅ Gesture calibration complete');
+                                    gestureStatusText.textContent = 'Kalibriert';
+                                },
+                                debugMode: false,
+                                projectorMode: true
+                            });
+                        }
+                        
+                        await gestureController.start();
+                        gestureEnabled = true;
+                        gestureBtn.textContent = '🛑 Gestensteuerung stoppen';
+                        gestureBtn.classList.add('active');
+                        gestureCanvas.classList.add('active');
+                        gestureStatus.classList.add('active');
+                        gestureStatusText.textContent = 'Aktiv';
+                        
+                    } catch (error) {
+                        console.error('Failed to start gesture control:', error);
+                        alert('Gestensteuerung konnte nicht gestartet werden. Bitte Kamera-Zugriff erlauben.');
+                    }
+                } else {
+                    // Stop gesture control
+                    if (gestureController) {
+                        gestureController.stop();
+                    }
+                    gestureEnabled = false;
+                    gestureBtn.textContent = '🎮 Gestensteuerung aktivieren';
+                    gestureBtn.classList.remove('active');
+                    gestureCanvas.classList.remove('active');
+                    gestureStatus.classList.remove('active');
+                    gestureStatusText.textContent = 'Gestoppt';
+                    gestureCurrentText.textContent = 'NONE';
+                }
+            });
+        }
+        
+        function handleGestureInput(gesture) {
+            if (!gameState.isPlaying) return;
+            
+            gestureCurrentText.textContent = gesture;
+            
+            switch (gesture) {
+                case 'MOVE_LEFT':
+                    if (gameState.playerLane > 0) {
+                        gameState.playerLane--;
+                        updatePlayerPosition();
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'MOVE_RIGHT':
+                    if (gameState.playerLane < 2) {
+                        gameState.playerLane++;
+                        updatePlayerPosition();
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'JUMP':
+                    if (!gameState.isJumping && gameState.jumpCount < 2) {
+                        gameState.isJumping = true;
+                        gameState.jumpCount++;
+                        gameState.jumpVelocity = config.jumpPower;
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'DUCK':
+                    if (!gameState.isDucking && !gameState.isJumping) {
+                        gameState.isDucking = true;
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'NONE':
+                    if (gameState.isDucking) {
+                        gameState.isDucking = false;
+                    }
+                    break;
+            }
+        }
+        
+        function updateGestureStats(stats) {
+            // Optional: Update UI with gesture tracking stats
+            if (stats.faceDetected && gestureStatusText) {
+                gestureStatusText.textContent = `Aktiv (${stats.confidence ? (stats.confidence * 100).toFixed(0) : 0}%)`;
+            }
+        }
+        
+        function handleGestureError(error) {
+            console.error('Gesture control error:', error);
+            gestureStatusText.textContent = 'Fehler';
+        }
 
         // Debug function for testing
         window.testFunction = function() {
