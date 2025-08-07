@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.5-CRASH-FIX</title>
+    <title>Subway Runner 3D - V3.6-STABLE</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -1046,14 +1046,37 @@
             },
             
             cleanup: function() {
-                // Safe cleanup - environmentObjects doesn't exist in this version
-                console.log('Neon level cleanup completed');
-                
-                // Clear level objects safely
-                if (this.objects) {
-                    this.objects.cyberpunkBuildings = [];
-                    this.objects.neonLights = [];
-                    this.objects.gridFloor = null;
+                try {
+                    console.log('Neon level cleanup started');
+                    
+                    // Clear level objects safely with full error handling
+                    if (this.objects) {
+                        // Safe cleanup of arrays
+                        ['cyberpunkBuildings', 'neonLights'].forEach(key => {
+                            if (this.objects[key] && Array.isArray(this.objects[key])) {
+                                this.objects[key].forEach(obj => {
+                                    if (obj && obj.parent) {
+                                        try { scene.remove(obj); } catch(e) {}
+                                    }
+                                });
+                                this.objects[key] = [];
+                            }
+                        });
+                        
+                        // Safe cleanup of single objects
+                        if (this.objects.gridFloor) {
+                            try {
+                                if (this.objects.gridFloor.parent) {
+                                    scene.remove(this.objects.gridFloor);
+                                }
+                            } catch(e) {}
+                            this.objects.gridFloor = null;
+                        }
+                    }
+                    console.log('Neon level cleanup completed');
+                } catch (error) {
+                    console.error('Error during cleanup, but continuing:', error);
+                    // Game continues even if cleanup fails
                 }
             }
         };
@@ -2838,6 +2861,14 @@
                                 playerBBox.max.y < obstacleBBox.min.y + 0.2) {
                                 canAvoid = true;
                                 avoidanceType = 'duck';
+                            } else if (gameState.playerAction === 'jumping') {
+                                // EXPLICITLY HANDLE: Cannot jump over duck obstacles!
+                                console.warn('Cannot jump over duck obstacles - collision!');
+                                canAvoid = false;
+                                // Mark obstacle as hit for score tracking
+                                obstacle.hitPlayer = true;
+                            } else {
+                                canAvoid = false;
                             }
                             break;
                             
@@ -3624,7 +3655,10 @@
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        addScore(10); // SAFE SCORE UPDATE
+                        // Only give score if obstacle was properly avoided (not hit)
+                        if (!obstacle.hitPlayer) {
+                            addScore(10); // SAFE SCORE UPDATE
+                        }
                     }
                 });
                 
