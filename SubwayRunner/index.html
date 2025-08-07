@@ -6,6 +6,10 @@
     <title>Subway Runner 3D - V3.7-LOOP-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- MediaPipe Pose Detection CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/vision_bundle.js" crossorigin="anonymous"></script>
+    
     <script type="module">
         // Pre-load Gesture Control Module
         import('./js/GestureControllerProjector.js')
@@ -269,11 +273,89 @@
             color: #4CAF50;
             font-weight: bold;
         }
+        
+        /* Pose Detection Preview Window */
+        #posePreview {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            z-index: 500;
+            display: none;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+        
+        #posePreview.active {
+            display: block;
+        }
+        
+        #poseVideo {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        
+        #poseCanvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+        
+        #poseStatus {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            color: #00ff88;
+            font-size: 10px;
+            font-family: monospace;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+        }
+        
+        #poseToggleBtn {
+            position: fixed;
+            top: 20px;
+            right: 230px;
+            padding: 10px 15px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 501;
+            transition: all 0.3s;
+        }
+        
+        #poseToggleBtn:hover {
+            background: #00cc70;
+            transform: scale(1.05);
+        }
+        
+        #poseToggleBtn.active {
+            background: #ff6b6b;
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
+        
+        <!-- Pose Detection Preview Window -->
+        <button id="poseToggleBtn">📹 Pose Detection</button>
+        <div id="posePreview">
+            <video id="poseVideo" autoplay playsinline></video>
+            <canvas id="poseCanvas"></canvas>
+            <div id="poseStatus">FPS: 0 | Pose: ❌</div>
+        </div>
         
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
@@ -334,6 +416,304 @@
     </div>
 
     <script>
+        // ============================================
+        // POSE DETECTION SYSTEM (MediaPipe)
+        // ============================================
+        class PoseDetectionPreview {
+            constructor() {
+                this.video = null;
+                this.canvas = null;
+                this.ctx = null;
+                this.isActive = false;
+                this.poseLandmarker = null;
+                this.lastVideoTime = -1;
+                this.fps = 0;
+                this.frameCount = 0;
+                this.lastFpsUpdate = 0;
+                
+                // Landmark indices for specific body parts
+                this.landmarks = {
+                    head: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  // Face and head landmarks
+                    leftHand: [15, 17, 19, 21],  // Left arm/hand
+                    rightHand: [16, 18, 20, 22], // Right arm/hand
+                    leftFoot: [27, 29, 31],      // Left leg/foot
+                    rightFoot: [28, 30, 32]      // Right leg/foot
+                };
+                
+                this.init();
+            }
+            
+            async init() {
+                // Get DOM elements
+                this.video = document.getElementById('poseVideo');
+                this.canvas = document.getElementById('poseCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Set canvas size
+                this.canvas.width = 200;
+                this.canvas.height = 150;
+                
+                // Setup button
+                const toggleBtn = document.getElementById('poseToggleBtn');
+                toggleBtn.addEventListener('click', () => this.toggle());
+                
+                // Initialize MediaPipe Pose
+                await this.initializePose();
+            }
+            
+            async initializePose() {
+                try {
+                    // Check if MediaPipe is loaded
+                    if (typeof window.PoseLandmarker === 'undefined' && window.vision) {
+                        window.PoseLandmarker = window.vision.PoseLandmarker;
+                        window.FilesetResolver = window.vision.FilesetResolver;
+                    }
+                    
+                    if (!window.PoseLandmarker || !window.FilesetResolver) {
+                        console.warn('MediaPipe not loaded yet, retrying...');
+                        setTimeout(() => this.initializePose(), 1000);
+                        return;
+                    }
+                    
+                    // Create the pose landmarker
+                    const filesetResolver = await window.FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                    );
+                    
+                    this.poseLandmarker = await window.PoseLandmarker.createFromOptions(filesetResolver, {
+                        baseOptions: {
+                            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+                            delegate: "GPU"
+                        },
+                        runningMode: "VIDEO",
+                        numPoses: 1,
+                        minPoseDetectionConfidence: 0.5,
+                        minPosePresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    
+                    console.log('✅ Pose Detection initialized');
+                } catch (error) {
+                    console.error('❌ Failed to initialize Pose Detection:', error);
+                }
+            }
+            
+            async toggle() {
+                if (this.isActive) {
+                    this.stop();
+                } else {
+                    await this.start();
+                }
+            }
+            
+            async start() {
+                try {
+                    // Request webcam access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: 640,
+                            height: 480,
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    this.video.srcObject = stream;
+                    this.isActive = true;
+                    
+                    // Update UI
+                    document.getElementById('posePreview').classList.add('active');
+                    document.getElementById('poseToggleBtn').classList.add('active');
+                    document.getElementById('poseToggleBtn').textContent = '🛑 Stop Pose';
+                    
+                    // Start detection loop
+                    this.detectPose();
+                    
+                    console.log('✅ Pose Detection started');
+                } catch (error) {
+                    console.error('❌ Failed to access webcam:', error);
+                    alert('Kamera-Zugriff verweigert. Bitte erlauben Sie den Kamera-Zugriff.');
+                }
+            }
+            
+            stop() {
+                // Stop video stream
+                if (this.video.srcObject) {
+                    const tracks = this.video.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.video.srcObject = null;
+                }
+                
+                this.isActive = false;
+                
+                // Update UI
+                document.getElementById('posePreview').classList.remove('active');
+                document.getElementById('poseToggleBtn').classList.remove('active');
+                document.getElementById('poseToggleBtn').textContent = '📹 Pose Detection';
+                
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                console.log('✅ Pose Detection stopped');
+            }
+            
+            async detectPose() {
+                if (!this.isActive || !this.poseLandmarker) return;
+                
+                // Only process if video is ready
+                if (this.video.readyState === 4) {
+                    const startTimeMs = performance.now();
+                    
+                    // Skip if same frame
+                    if (this.video.currentTime !== this.lastVideoTime) {
+                        this.lastVideoTime = this.video.currentTime;
+                        
+                        try {
+                            // Detect poses
+                            const results = await this.poseLandmarker.detectForVideo(
+                                this.video,
+                                startTimeMs
+                            );
+                            
+                            // Draw results
+                            this.drawResults(results);
+                            
+                            // Update FPS
+                            this.updateFPS();
+                        } catch (error) {
+                            console.error('Detection error:', error);
+                        }
+                    }
+                }
+                
+                // Continue detection loop
+                if (this.isActive) {
+                    requestAnimationFrame(() => this.detectPose());
+                }
+            }
+            
+            drawResults(results) {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                if (results.landmarks && results.landmarks.length > 0) {
+                    const landmarks = results.landmarks[0];
+                    
+                    // Draw connections first (skeleton)
+                    this.drawConnections(landmarks);
+                    
+                    // Draw landmarks with colored rectangles for body parts
+                    this.drawBodyParts(landmarks);
+                    
+                    // Update status
+                    document.getElementById('poseStatus').innerHTML = 
+                        `FPS: ${this.fps} | Pose: ✅`;
+                } else {
+                    document.getElementById('poseStatus').innerHTML = 
+                        `FPS: ${this.fps} | Pose: ❌`;
+                }
+            }
+            
+            drawConnections(landmarks) {
+                // Define connections (simplified skeleton)
+                const connections = [
+                    // Head
+                    [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+                    // Arms
+                    [11, 13], [13, 15], [15, 17], [17, 19], [19, 21],
+                    [12, 14], [14, 16], [16, 18], [18, 20], [20, 22],
+                    // Body
+                    [11, 12], [11, 23], [12, 24], [23, 24],
+                    // Legs
+                    [23, 25], [25, 27], [27, 29], [29, 31],
+                    [24, 26], [26, 28], [28, 30], [30, 32]
+                ];
+                
+                this.ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+                this.ctx.lineWidth = 1;
+                
+                connections.forEach(([start, end]) => {
+                    if (landmarks[start] && landmarks[end]) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(
+                            landmarks[start].x * this.canvas.width,
+                            landmarks[start].y * this.canvas.height
+                        );
+                        this.ctx.lineTo(
+                            landmarks[end].x * this.canvas.width,
+                            landmarks[end].y * this.canvas.height
+                        );
+                        this.ctx.stroke();
+                    }
+                });
+            }
+            
+            drawBodyParts(landmarks) {
+                // Draw head (red rectangles)
+                this.ctx.strokeStyle = '#ff0000';
+                this.ctx.lineWidth = 2;
+                this.landmarks.head.forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(
+                            landmarks[idx].x * this.canvas.width,
+                            landmarks[idx].y * this.canvas.height,
+                            8, 8, '#ff000040'
+                        );
+                    }
+                });
+                
+                // Draw hands (green rectangles)
+                this.ctx.strokeStyle = '#00ff00';
+                [...this.landmarks.leftHand, ...this.landmarks.rightHand].forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(
+                            landmarks[idx].x * this.canvas.width,
+                            landmarks[idx].y * this.canvas.height,
+                            10, 10, '#00ff0040'
+                        );
+                    }
+                });
+                
+                // Draw feet (blue rectangles)
+                this.ctx.strokeStyle = '#0088ff';
+                [...this.landmarks.leftFoot, ...this.landmarks.rightFoot].forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(
+                            landmarks[idx].x * this.canvas.width,
+                            landmarks[idx].y * this.canvas.height,
+                            12, 12, '#0088ff40'
+                        );
+                    }
+                });
+            }
+            
+            drawRectangle(x, y, width, height, fillColor) {
+                this.ctx.fillStyle = fillColor;
+                this.ctx.fillRect(x - width/2, y - height/2, width, height);
+                this.ctx.strokeRect(x - width/2, y - height/2, width, height);
+            }
+            
+            updateFPS() {
+                this.frameCount++;
+                const now = performance.now();
+                
+                if (now - this.lastFpsUpdate >= 1000) {
+                    this.fps = this.frameCount;
+                    this.frameCount = 0;
+                    this.lastFpsUpdate = now;
+                }
+            }
+        }
+        
+        // Initialize pose detection when page loads
+        let poseDetection = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            // Delay initialization to ensure MediaPipe is loaded
+            setTimeout(() => {
+                poseDetection = new PoseDetectionPreview();
+                console.log('🎮 Pose Detection System ready');
+            }, 1000);
+        });
+        
         // Audio System
         class AudioManager {
             constructor() {
