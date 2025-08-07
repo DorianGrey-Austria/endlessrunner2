@@ -4523,40 +4523,62 @@
                 const targetX = LANE_POSITIONS[gameState.playerLane];
                 player.position.x += (targetX - player.position.x) * 0.1;
                 
-                // Handle jumping - ROBUST mit absolutem Timeout
+                // Handle jumping - SMOOTH LANDING with gradual descent
                 if (gameState.playerAction === 'jumping') {
-                    // Physics update
-                    gameState.playerY += gameState.jumpVelocity * 0.016;
-                    gameState.jumpVelocity -= 30 * 0.016; // Stärkere Gravitation
+                    // Smooth physics update with gradual gravity
+                    const deltaTime = 0.016;
+                    gameState.playerY += gameState.jumpVelocity * deltaTime;
+                    
+                    // Gradual gravity increase for natural arc
+                    const gravityStrength = 35; // Slightly stronger for better feel
+                    gameState.jumpVelocity -= gravityStrength * deltaTime;
                     
                     // ABSOLUTE TIMEOUT CHECK - Senior Developer Approach
                     const jumpDuration = performance.now() - gameState.jumpStartTime;
                     const shouldForceLand = jumpDuration > gameState.maxJumpDuration;
                     
+                    // Smooth landing approach - gradual descent near ground
+                    if (gameState.playerY <= 0.5 && gameState.jumpVelocity < 0) {
+                        // Near ground - apply landing smoothing
+                        gameState.playerY = Math.max(0, gameState.playerY);
+                        
+                        if (gameState.playerY <= 0.1) {
+                            // Very close to ground - smooth final landing
+                            gameState.playerY *= 0.5; // Gradual approach to zero
+                        }
+                    }
+                    
                     // Landing conditions: physics OR timeout
                     if (gameState.playerY <= 0 || shouldForceLand) {
-                        // FORCE landing - absolute condition!
-                        gameState.playerY = 0;
-                        gameState.jumpVelocity = 0;
-                        gameState.playerAction = 'running';
-                        gameState.jumpStartTime = 0; // Reset timer
-                        gameState.jumpCount = 0; // Reset jump counter
-                        gameState.aerialCombo = 0; // Reset aerial combo
+                        // Smooth landing - no instant drop!
+                        if (shouldForceLand && gameState.playerY > 1) {
+                            // Forced landing from height - accelerate descent gradually
+                            gameState.jumpVelocity = Math.min(gameState.jumpVelocity, -20);
+                            gameState.playerY = Math.max(0, gameState.playerY - 0.5);
+                        } else if (gameState.playerY <= 0) {
+                            // Natural landing - only when actually at ground
+                            gameState.playerY = 0;
+                            gameState.jumpVelocity = 0;
+                            gameState.playerAction = 'running';
+                            gameState.jumpStartTime = 0; // Reset timer
+                            gameState.jumpCount = 0; // Reset jump counter
+                            gameState.aerialCombo = 0; // Reset aerial combo
+                            
+                            // Landing Audio & Visual - only when actually landing
+                            audioManager.play('land');
                         
-                        // Landing Audio & Visual
-                        audioManager.play('land');
-                        
-                        // Debug log if forced landing
-                        if (shouldForceLand && gameState.playerY > 0) {
-                            console.warn('⚠️ Jump timeout triggered - forced landing!');
+                            // Debug log if forced landing
+                            if (shouldForceLand && gameState.playerY > 0) {
+                                console.warn('⚠️ Jump timeout triggered - forced landing!');
+                            }
+                            
+                            // Landing-Partikel
+                            createParticleEffect(
+                                new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                                0xAAAAAA,
+                                'landing'
+                            );
                         }
-                        
-                        // Landing-Partikel
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xAAAAAA,
-                            'landing'
-                        );
                         
                         // Mini screen shake for landing
                         screenShake(0.05, 100);
