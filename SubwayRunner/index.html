@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.4-GESTURE-DEPLOY</title>
+    <title>Subway Runner 3D - V3.4-GESTURE-DEBUG</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script type="module">
-        import { GestureControllerProjector } from './js/GestureControllerProjector.js';
-        window.GestureControllerProjector = GestureControllerProjector;
-    </script>
+    <!-- Gesture Control wird später dynamisch geladen -->
     <style>
         * {
             margin: 0;
@@ -102,10 +99,11 @@
         }
         
         #gestureControl {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 150;
+            position: fixed !important;
+            top: 20px !important;
+            right: 20px !important;
+            z-index: 9999 !important;
+            display: block !important;
         }
         
         #gestureControlBtn {
@@ -3734,9 +3732,10 @@
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
         
-        // Gesture Control Integration
+        // Gesture Control Integration with Dynamic Loading
         let gestureController = null;
         let gestureEnabled = false;
+        let gestureModuleLoaded = false;
         
         const gestureBtn = document.getElementById('gestureControlBtn');
         const gestureCanvas = document.getElementById('gestureCanvas');
@@ -3744,12 +3743,59 @@
         const gestureStatusText = document.getElementById('gestureStatusText');
         const gestureCurrentText = document.getElementById('gestureCurrentText');
         
-        if (gestureBtn && window.GestureControllerProjector) {
+        // Dynamically load gesture module when needed
+        async function loadGestureModule() {
+            if (gestureModuleLoaded) return true;
+            
+            try {
+                console.log('🎮 Loading Gesture Control Module...');
+                const module = await import('./js/GestureControllerProjector.js');
+                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
+                gestureModuleLoaded = true;
+                console.log('✅ Gesture Module loaded successfully');
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to load Gesture Module:', error);
+                // Fallback: try loading from CDN or alternative source
+                try {
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.textContent = `
+                        import { GestureControllerProjector } from './js/GestureControllerProjector.js';
+                        window.GestureControllerProjector = GestureControllerProjector;
+                    `;
+                    document.head.appendChild(script);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    if (window.GestureControllerProjector) {
+                        gestureModuleLoaded = true;
+                        console.log('✅ Gesture Module loaded via fallback');
+                        return true;
+                    }
+                } catch (fallbackError) {
+                    console.error('❌ Fallback also failed:', fallbackError);
+                }
+                return false;
+            }
+        }
+        
+        // Initialize gesture control button
+        if (gestureBtn) {
+            console.log('🎮 Gesture Control Button found!');
+            gestureBtn.style.display = 'block'; // Force visibility
+            gestureBtn.style.visibility = 'visible';
             gestureBtn.addEventListener('click', async () => {
                 if (!gestureEnabled) {
                     try {
+                        // First ensure module is loaded
+                        const moduleLoaded = await loadGestureModule();
+                        if (!moduleLoaded) {
+                            alert('Gestensteuerung konnte nicht geladen werden. Bitte Seite neu laden und erneut versuchen.');
+                            return;
+                        }
+                        
                         // Initialize gesture controller
-                        if (!gestureController) {
+                        if (!gestureController && window.GestureControllerProjector) {
+                            console.log('🎮 Initializing Gesture Controller...');
                             gestureController = new window.GestureControllerProjector({
                                 videoElement: document.getElementById('gestureVideo'),
                                 canvasElement: gestureCanvas,
@@ -3772,10 +3818,11 @@
                         gestureCanvas.classList.add('active');
                         gestureStatus.classList.add('active');
                         gestureStatusText.textContent = 'Aktiv';
+                        console.log('✅ Gesture Control activated successfully');
                         
                     } catch (error) {
-                        console.error('Failed to start gesture control:', error);
-                        alert('Gestensteuerung konnte nicht gestartet werden. Bitte Kamera-Zugriff erlauben.');
+                        console.error('❌ Failed to start gesture control:', error);
+                        alert(`Gestensteuerung Fehler: ${error.message}\n\nBitte stelle sicher dass:\n1. Kamera-Zugriff erlaubt ist\n2. HTTPS verwendet wird\n3. Chrome/Edge Browser verwendet wird`);
                     }
                 } else {
                     // Stop gesture control
@@ -3791,6 +3838,10 @@
                     gestureCurrentText.textContent = 'NONE';
                 }
             });
+        } else {
+            console.warn('⚠️ Gesture Control Button not found or module not available');
+            console.log('Button element:', gestureBtn);
+            console.log('Module loaded:', window.GestureControllerProjector);
         }
         
         function handleGestureInput(gesture) {
@@ -3858,12 +3909,36 @@
         // Debug function for testing
         window.testFunction = function() {
             console.log('Test function works!');
-            console.log('THREE object:', typeof THREE);
-            console.log('gameState:', gameState);
-            console.log('scene:', scene);
-            console.log('camera:', camera);
-            console.log('renderer:', renderer);
         };
+        
+        // Gesture Control Debug Info
+        window.debugGesture = function() {
+            console.log('🎮 === GESTURE CONTROL DEBUG INFO ===');
+            console.log('Button Element:', document.getElementById('gestureControlBtn'));
+            console.log('Canvas Element:', document.getElementById('gestureCanvas'));
+            console.log('Video Element:', document.getElementById('gestureVideo'));
+            console.log('Status Element:', document.getElementById('gestureStatus'));
+            console.log('Module Loaded:', !!window.GestureControllerProjector);
+            console.log('Controller Instance:', gestureController);
+            console.log('Gesture Enabled:', gestureEnabled);
+            
+            // Check visibility
+            const btn = document.getElementById('gestureControlBtn');
+            if (btn) {
+                const rect = btn.getBoundingClientRect();
+                console.log('Button Position:', { top: rect.top, right: rect.right, width: rect.width, height: rect.height });
+                console.log('Button Display:', window.getComputedStyle(btn).display);
+                console.log('Button Visibility:', window.getComputedStyle(btn).visibility);
+                console.log('Button Z-Index:', window.getComputedStyle(btn).zIndex);
+            }
+            console.log('=====================================');
+        };
+        
+        // Auto-run debug on page load
+        setTimeout(() => {
+            console.log('🎮 SubwayRunner V3.4-GESTURE-DEBUG loaded');
+            window.debugGesture();
+        }, 2000);
 
         // Initialize game when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
