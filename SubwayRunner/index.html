@@ -294,6 +294,17 @@
             z-index: 100;
             min-width: 200px;
             font-size: 12px;
+            display: none; /* Hidden by default */
+            transition: opacity 0.5s ease;
+        }
+        
+        .highscore-panel.visible {
+            display: block;
+            opacity: 1;
+        }
+        
+        .highscore-panel.fading {
+            opacity: 0;
         }
         
         .highscore-entry {
@@ -1745,6 +1756,45 @@
         }
 
         const highscoreManager = new HighscoreManager();
+        
+        // Highscore Panel Visibility Control
+        let highscorePanelTimeout = null;
+        
+        function showHighscorePanelTemporarily() {
+            const panel = document.getElementById('highscorePanel');
+            if (!panel) return;
+            
+            // Show panel
+            panel.classList.add('visible');
+            panel.classList.remove('fading');
+            
+            // Hide after 5 seconds
+            if (highscorePanelTimeout) {
+                clearTimeout(highscorePanelTimeout);
+            }
+            
+            highscorePanelTimeout = setTimeout(() => {
+                hideHighscorePanel();
+            }, 5000);
+        }
+        
+        function showHighscorePanel() {
+            const panel = document.getElementById('highscorePanel');
+            if (!panel) return;
+            panel.classList.add('visible');
+            panel.classList.remove('fading');
+        }
+        
+        function hideHighscorePanel() {
+            const panel = document.getElementById('highscorePanel');
+            if (!panel) return;
+            
+            panel.classList.add('fading');
+            setTimeout(() => {
+                panel.classList.remove('visible');
+                panel.classList.remove('fading');
+            }, 500);
+        }
 
         // Make functions globally available for onclick handlers
         window.startGame = function() {
@@ -3333,6 +3383,9 @@
             gameState.playerAction = 'running';
             gameState.playerY = 0;
             
+            // Show highscore panel for first 5 seconds
+            showHighscorePanelTemporarily();
+            
             // Load Level 1
             currentLevel = 1;
             LevelManager.loadLevel(1);
@@ -3369,6 +3422,15 @@
             if (gameState.isGameOver) {
                 console.log('Game over already triggered, skipping');
                 return;
+            }
+            
+            // Hide highscore panel when game ends
+            hideHighscorePanel();
+            
+            // Clear any pending timeout
+            if (highscorePanelTimeout) {
+                clearTimeout(highscorePanelTimeout);
+                highscorePanelTimeout = null;
             }
             
             gameState.isPlaying = false;
@@ -3454,6 +3516,12 @@
             
             // Timer visual states with audio warnings
             const timeLeft = Math.ceil(gameState.timeRemaining);
+            
+            // Show highscore panel in last 5 seconds
+            if (timeLeft <= 5 && timeLeft > 0) {
+                showHighscorePanel();
+            }
+            
             if (timeLeft <= 10) {
                 timerElement.className = 'timer-critical';
                 // Final countdown beeps
