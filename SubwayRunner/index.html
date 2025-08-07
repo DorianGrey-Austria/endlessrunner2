@@ -1345,18 +1345,23 @@
                     land: null, // Will use synthesizer
                     powerup: null, // Will use synthesizer
                 };
-                this.initAudio();
+                // DON'T initialize audio here - wait for user interaction!
+                this.audioInitialized = false;
                 this.loadMutePreference();
-                this.preloadSounds();
             }
 
             async initAudio() {
+                if (this.audioInitialized) return; // Already initialized
+                
                 try {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.masterGain = this.audioContext.createGain();
                     this.masterGain.gain.value = this.isMuted ? 0 : this.masterVolume;
                     this.masterGain.connect(this.audioContext.destination);
                     this.createAdvancedSounds();
+                    this.audioInitialized = true;
+                    this.preloadSounds(); // Now load sounds after context is created
+                    console.log('✅ Audio system initialized on user interaction');
                 } catch (error) {
                     console.log('Audio not supported');
                 }
@@ -1677,9 +1682,14 @@
                 }
             }
 
-            resume() {
+            async resume() {
+                // First ensure audio is initialized
+                if (!this.audioInitialized) {
+                    await this.initAudio();
+                }
+                
                 if (this.audioContext && this.audioContext.state === 'suspended') {
-                    this.audioContext.resume();
+                    await this.audioContext.resume();
                 }
             }
         }
@@ -1700,18 +1710,13 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // Initialize Supabase
-        try {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase initialized successfully');
-            } else {
-                console.warn('⚠️ Supabase library not loaded, using offline mode');
-            }
-        } catch (error) {
-            console.error('❌ Failed to initialize Supabase:', error);
-            console.log('📴 Falling back to offline mode');
-        }
+        // TEMPORARILY DISABLED - Using localStorage only for now
+        // The Supabase database needs the correct table (subway_runner_scores) to be created
+        console.log('📴 Supabase temporarily disabled - using localStorage for highscores');
+        supabase = null; // Explicitly set to null to use localStorage fallback
+        
+        // TODO: Create subway_runner_scores table in Supabase database
+        // SQL is available in SUPABASE_SETUP.md
 
         // Highscore Management System
         class HighscoreManager {
@@ -1845,10 +1850,10 @@
         }
 
         // Make functions globally available for onclick handlers
-        window.startGame = function() {
+        window.startGame = async function() {
             console.log('startGame called');
             try {
-                startGameInternal();
+                await startGameInternal();
             } catch (error) {
                 console.error('Error in startGame:', error);
             }
@@ -3409,9 +3414,9 @@
             }
         }
 
-        function startGameInternal() {
-            // Resume audio context
-            audioManager.resume();
+        async function startGameInternal() {
+            // Resume audio context (will initialize on first call)
+            await audioManager.resume();
             
             // Start ambient city sounds
             if (!ambientStarted) {
