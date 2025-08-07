@@ -2,8 +2,10 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.7-LOOP-FIX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Subway Runner 3D - V3.9-MOBILE</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -369,9 +371,17 @@
         
         <div id="instructions">
             <div><strong>🎮 Steuerung:</strong></div>
-            <div>A/D: Spurwechsel</div>
-            <div>Leertaste/W: Springen 🦘</div>
-            <div>S: Ducken 🦆</div>
+            <div class="desktop-controls">
+                <div>A/D: Spurwechsel</div>
+                <div>Leertaste/W: Springen 🦘</div>
+                <div>S: Ducken 🦆</div>
+            </div>
+            <div class="mobile-controls" style="display: none;">
+                <div>◀️ Wisch Links/Rechts ▶️</div>
+                <div>⬆️ Wisch Hoch: Springen</div>
+                <div>⬇️ Wisch Runter: Ducken</div>
+                <div>👆 Doppeltipp: Multi-Jump</div>
+            </div>
             <div><strong>💡 Tipps:</strong></div>
             <div>🟠 Orange/Braun: Überspringen!</div>
             <div>🔵 Blau/Grau oben: Ducken!</div>
@@ -712,6 +722,327 @@
                 poseDetection = new PoseDetectionPreview();
                 console.log('🎮 Pose Detection System ready');
             }, 1000);
+        });
+        
+        // ============================================
+        // MOBILE TOUCH CONTROLLER
+        // ============================================
+        class TouchController {
+            constructor() {
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.touchStartTime = 0;
+                this.touchEndX = 0;
+                this.touchEndY = 0;
+                
+                // Double/Triple tap detection
+                this.lastTapTime = 0;
+                this.tapCount = 0;
+                this.tapTimeout = null;
+                
+                // Swipe detection thresholds
+                this.minSwipeDistance = 30; // Minimum distance for swipe
+                this.maxSwipeTime = 300; // Maximum time for swipe (ms)
+                this.doubleTapDelay = 300; // Max time between taps
+                
+                // Duck state tracking
+                this.duckTimeout = null;
+                this.isDucking = false;
+                
+                this.init();
+            }
+            
+            init() {
+                // Get canvas element
+                const canvas = document.getElementById('gameCanvas');
+                if (!canvas) return;
+                
+                // Add touch event listeners with passive: false for better control
+                canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
+                canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+                canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
+                
+                // Prevent default touch behaviors
+                canvas.addEventListener('gesturestart', (e) => e.preventDefault());
+                document.body.addEventListener('touchmove', (e) => {
+                    if (e.target === canvas) e.preventDefault();
+                }, { passive: false });
+                
+                console.log('📱 Touch Controller initialized');
+            }
+            
+            handleTouchStart(e) {
+                e.preventDefault();
+                
+                if (!gameState.isPlaying) return;
+                
+                const touch = e.touches[0];
+                this.touchStartX = touch.clientX;
+                this.touchStartY = touch.clientY;
+                this.touchStartTime = Date.now();
+                
+                // Double/Triple tap detection
+                const currentTime = Date.now();
+                const timeSinceLastTap = currentTime - this.lastTapTime;
+                
+                if (timeSinceLastTap < this.doubleTapDelay) {
+                    this.tapCount++;
+                } else {
+                    this.tapCount = 1;
+                }
+                
+                this.lastTapTime = currentTime;
+                
+                // Clear previous tap timeout
+                if (this.tapTimeout) {
+                    clearTimeout(this.tapTimeout);
+                }
+                
+                // Set timeout to process taps
+                this.tapTimeout = setTimeout(() => {
+                    this.processTaps();
+                }, this.doubleTapDelay);
+            }
+            
+            handleTouchMove(e) {
+                e.preventDefault();
+                
+                if (!gameState.isPlaying) return;
+                
+                const touch = e.touches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+            }
+            
+            handleTouchEnd(e) {
+                e.preventDefault();
+                
+                if (!gameState.isPlaying) return;
+                
+                const touch = e.changedTouches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                
+                // Calculate swipe
+                const deltaX = this.touchEndX - this.touchStartX;
+                const deltaY = this.touchEndY - this.touchStartY;
+                const deltaTime = Date.now() - this.touchStartTime;
+                
+                // Check if it's a swipe (not a tap)
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                if (distance > this.minSwipeDistance && deltaTime < this.maxSwipeTime) {
+                    // It's a swipe, cancel tap processing
+                    if (this.tapTimeout) {
+                        clearTimeout(this.tapTimeout);
+                        this.tapTimeout = null;
+                    }
+                    this.tapCount = 0;
+                    
+                    // Determine swipe direction
+                    this.processSwipe(deltaX, deltaY);
+                }
+            }
+            
+            processSwipe(deltaX, deltaY) {
+                const absX = Math.abs(deltaX);
+                const absY = Math.abs(deltaY);
+                
+                // Determine primary direction
+                if (absX > absY) {
+                    // Horizontal swipe
+                    if (deltaX > 0) {
+                        this.swipeRight();
+                    } else {
+                        this.swipeLeft();
+                    }
+                } else {
+                    // Vertical swipe
+                    if (deltaY > 0) {
+                        this.swipeDown();
+                    } else {
+                        this.swipeUp();
+                    }
+                }
+            }
+            
+            swipeLeft() {
+                // Move lane left
+                if (gameState.playerLane > 0) {
+                    gameState.playerLane--;
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    console.log('📱 Swipe Left - Lane:', gameState.playerLane);
+                }
+            }
+            
+            swipeRight() {
+                // Move lane right
+                if (gameState.playerLane < 2) {
+                    gameState.playerLane++;
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    console.log('📱 Swipe Right - Lane:', gameState.playerLane);
+                }
+            }
+            
+            swipeUp() {
+                // If ducking, stand up
+                if (gameState.playerAction === 'ducking') {
+                    this.standUp();
+                } 
+                // Otherwise jump (same as tap)
+                else if (gameState.playerAction === 'running') {
+                    this.jump();
+                }
+            }
+            
+            swipeDown() {
+                // Duck
+                if (gameState.playerAction === 'running') {
+                    this.duck();
+                }
+                // If jumping, fast fall (slam down)
+                else if (gameState.playerAction === 'jumping') {
+                    gameState.jumpVelocity = -15; // Fast fall
+                    console.log('📱 Swipe Down - Fast Fall');
+                }
+            }
+            
+            processTaps() {
+                if (!gameState.isPlaying) return;
+                
+                console.log('📱 Taps detected:', this.tapCount);
+                
+                if (this.tapCount === 1) {
+                    // Single tap - Jump
+                    this.jump();
+                } else if (this.tapCount === 2) {
+                    // Double tap - Double Jump
+                    this.doubleJump();
+                } else if (this.tapCount >= 3) {
+                    // Triple tap - Multi Jump
+                    this.multiJump();
+                }
+                
+                // Reset tap count
+                this.tapCount = 0;
+                this.tapTimeout = null;
+            }
+            
+            jump() {
+                if (gameState.playerAction === 'running') {
+                    gameState.playerAction = 'jumping';
+                    gameState.jumpVelocity = 10;
+                    gameState.jumpStartTime = performance.now();
+                    gameState.jumpCount = 1;
+                    
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    
+                    // Jump particles
+                    createParticleEffect(
+                        new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                        0xFFFF00,
+                        'jump'
+                    );
+                    
+                    console.log('📱 Jump!');
+                }
+            }
+            
+            doubleJump() {
+                if (gameState.playerAction === 'jumping' && gameState.jumpCount < 2) {
+                    gameState.jumpVelocity = 12;
+                    gameState.jumpCount = 2;
+                    gameState.jumpStartTime = performance.now();
+                    
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    
+                    // Double jump particles
+                    createParticleEffect(
+                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
+                        0xFF8800,
+                        'jump'
+                    );
+                    
+                    console.log('📱 Double Jump!');
+                }
+            }
+            
+            multiJump() {
+                if (gameState.jumpCount < 3) {
+                    gameState.playerAction = 'jumping';
+                    gameState.jumpVelocity = 14;
+                    gameState.jumpCount = 3;
+                    gameState.jumpStartTime = performance.now();
+                    
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    
+                    // Multi jump particles
+                    createParticleEffect(
+                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
+                        0xFF0088,
+                        'jump'
+                    );
+                    
+                    console.log('📱 Multi Jump!');
+                }
+            }
+            
+            duck() {
+                gameState.playerAction = 'ducking';
+                this.isDucking = true;
+                
+                const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                
+                // Clear previous duck timeout
+                if (this.duckTimeout) {
+                    clearTimeout(this.duckTimeout);
+                }
+                
+                // Auto stand up after 800ms
+                this.duckTimeout = setTimeout(() => {
+                    this.standUp();
+                }, 800);
+                
+                console.log('📱 Duck!');
+            }
+            
+            standUp() {
+                if (gameState.playerAction === 'ducking') {
+                    gameState.playerAction = 'running';
+                    this.isDucking = false;
+                    
+                    if (this.duckTimeout) {
+                        clearTimeout(this.duckTimeout);
+                        this.duckTimeout = null;
+                    }
+                    
+                    console.log('📱 Stand Up!');
+                }
+            }
+        }
+        
+        // Initialize touch controller
+        let touchController = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile || 'ontouchstart' in window) {
+                touchController = new TouchController();
+                console.log('📱 Mobile device detected - Touch controls enabled');
+                
+                // Show mobile controls instructions
+                const desktopControls = document.querySelector('.desktop-controls');
+                const mobileControls = document.querySelector('.mobile-controls');
+                if (desktopControls) desktopControls.style.display = 'none';
+                if (mobileControls) mobileControls.style.display = 'block';
+            }
         });
         
         // Audio System
