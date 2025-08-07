@@ -5,10 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 🚨 CRITICAL DEPLOYMENT & WORKFLOW RULES (TOP PRIORITY!)
 
 ### 🔴 AUTO-DEPLOYMENT IST PFLICHT!
-- **NACH JEDER SESSION**: `git add . && git commit -m "message" && git push`
+- **NACH JEDER ÄNDERUNG**: `git add . && git commit -m "message" && git push`
+- **IMMER SOFORT ONLINE STELLEN**: Jede Code-Änderung muss deployed werden!
 - **URL FORMAT**: Immer als **🌐 https://ki-revolution.at/** (klickbar!)
 - **BROWSER**: Chrome verwenden (NIEMALS Safari)
 - **NACH DEPLOYMENT SAGEN**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
+- **KEINE LOKALEN TESTS**: Direkt online testen auf https://ki-revolution.at/
 
 ### 📋 WORKFLOW STANDARDS
 1. **Versionierung**: IMMER updaten (MAJOR.MINOR.PATCH)
