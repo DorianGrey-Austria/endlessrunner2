@@ -294,13 +294,14 @@
             z-index: 100;
             min-width: 200px;
             font-size: 12px;
-            display: none; /* Hidden by default */
+            opacity: 0;
             transition: opacity 0.5s ease;
+            pointer-events: none;
         }
         
         .highscore-panel.visible {
-            display: block;
             opacity: 1;
+            pointer-events: auto;
         }
         
         .highscore-panel.fading {
@@ -1690,8 +1691,8 @@
         let ambientStarted = false;
 
         // Supabase Configuration - Disabled for now to fix startup issue
-        const SUPABASE_URL = 'https://xyzcompany.supabase.co' // Replace with your URL
-        const SUPABASE_ANON_KEY = 'your-anon-key-here' // Replace with your anon key
+        const SUPABASE_URL = 'https://cquahsbgcycdmslcmmdz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdWFoc2JnY3ljZG1zbGNtbWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1MzU2NDUsImV4cCI6MjA1MjExMTY0NX0.7icZ7GGer0DAM2gxHpeXCOS6K-xLziVX9w0nwPmA0_k';
         
         // Initialize Supabase client
         let supabase = null;
@@ -1699,8 +1700,18 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // Disable Supabase for now to fix the startup issue
-        console.log('Supabase disabled for debugging - running in offline mode only');
+        // Initialize Supabase
+        try {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase initialized successfully');
+            } else {
+                console.warn('⚠️ Supabase library not loaded, using offline mode');
+            }
+        } catch (error) {
+            console.error('❌ Failed to initialize Supabase:', error);
+            console.log('📴 Falling back to offline mode');
+        }
 
         // Highscore Management System
         class HighscoreManager {
