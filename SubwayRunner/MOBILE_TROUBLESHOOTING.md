@@ -197,6 +197,14 @@ console.log('📱 Touch Event:', {
 
 ## 📝 **CHANGELOG**
 
+### **V3.13-SOUND-SYSTEM (07.08.2025)**
+- ✅ Audio Mute Button implementiert (links oben)
+- ✅ Audio standardmäßig STUMM (isMuted = true)
+- ✅ LocalStorage speichert Audio-Präferenz
+- ✅ Toggle zwischen 🔇 (muted) und 🔊 (unmuted)
+- ✅ Highscore Panel nur 5 Sek am Anfang & Ende
+- ✅ Multi-Jump Smooth Landing mit parabolischer Physik
+
 ### **V3.10-MOBILE-PRO (07.08.2025)**
 - ✅ Duck Auto-Aufstehen ENTFERNT
 - ✅ Multi-Jump mit Swipe Up (statt Tap)

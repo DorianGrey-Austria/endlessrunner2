@@ -1327,15 +1327,26 @@
             }
         }
         
-        // Audio System
+        // Modern Audio System with Real Sounds
         class AudioManager {
             constructor() {
                 this.audioContext = null;
                 this.sounds = {};
                 this.masterVolume = 0.3;
                 this.isMuted = true; // Start muted by default!
+                this.audioBuffers = {}; // Cache for loaded sounds
+                this.soundUrls = {
+                    // Using free sound effects (these are example URLs - replace with actual working ones)
+                    jump: 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=', // Placeholder
+                    coin: 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=', // Placeholder
+                    crash: null, // Will use synthesizer
+                    whoosh: null, // Will use synthesizer
+                    land: null, // Will use synthesizer
+                    powerup: null, // Will use synthesizer
+                };
                 this.initAudio();
                 this.loadMutePreference();
+                this.preloadSounds();
             }
 
             async initAudio() {
@@ -1383,6 +1394,40 @@
                     this.masterGain.gain.value = this.masterVolume;
                 }
                 localStorage.setItem('audioMuted', 'false');
+            }
+            
+            async preloadSounds() {
+                // Preload any external sounds or base64 sounds
+                for (const [name, url] of Object.entries(this.soundUrls)) {
+                    if (url) {
+                        try {
+                            if (url.startsWith('data:')) {
+                                // Base64 encoded sound
+                                const response = await fetch(url);
+                                const arrayBuffer = await response.arrayBuffer();
+                                this.audioBuffers[name] = await this.audioContext.decodeAudioData(arrayBuffer);
+                            } else if (url.startsWith('http')) {
+                                // External URL
+                                const response = await fetch(url, { mode: 'cors' });
+                                const arrayBuffer = await response.arrayBuffer();
+                                this.audioBuffers[name] = await this.audioContext.decodeAudioData(arrayBuffer);
+                            }
+                        } catch (error) {
+                            console.log(`Could not load sound ${name}, will use synthesizer fallback`);
+                        }
+                    }
+                }
+            }
+            
+            playBuffer(name) {
+                if (this.audioBuffers[name] && this.audioContext) {
+                    const source = this.audioContext.createBufferSource();
+                    source.buffer = this.audioBuffers[name];
+                    source.connect(this.masterGain);
+                    source.start();
+                    return true;
+                }
+                return false;
             }
 
             createTone(frequency, duration, type = 'sine', fadeOut = true) {
@@ -1441,26 +1486,23 @@
                 // Enhanced realistic sounds using multiple layers
                 this.sounds = {
                     jump: () => {
-                        // Multi-layered jump sound: impact + whoosh + landing prep
-                        this.createTone(180, 0.08, 'sine'); // Base thump
-                        setTimeout(() => this.createTone(320, 0.12, 'triangle'), 20); // Whoosh up
-                        setTimeout(() => this.createNoise(0.06, 4000), 40); // Air resistance
-                        this.createReverbEffect(240, 0.15, 0.3); // Echo for depth
+                        // Softer, more natural jump sound
+                        this.createTone(100, 0.05, 'sine'); // Soft thud
+                        setTimeout(() => this.createNoise(0.04, 1500), 20); // Light whoosh
+                        // Removed reverb for cleaner sound
                     },
                     
                     land: () => {
-                        // Heavy landing with ground impact and dust
-                        this.createTone(80, 0.15, 'square'); // Deep thud
-                        this.createNoise(0.12, 800); // Ground crunch
-                        setTimeout(() => this.createNoise(0.08, 1500), 50); // Dust settle
-                        this.createReverbEffect(120, 0.2, 0.4); // Ground echo
+                        // Subtle landing sound
+                        this.createTone(60, 0.08, 'sine'); // Soft thud
+                        this.createNoise(0.05, 600); // Light impact
+                        // No reverb for cleaner sound
                     },
                     
                     duck: () => {
-                        // Quick duck sound with fabric/wind
-                        this.createTone(140, 0.15, 'sawtooth');
-                        this.createNoise(0.1, 3500); // Wind resistance
-                        setTimeout(() => this.createTone(110, 0.1, 'sine'), 80); // Body movement
+                        // Minimal duck sound
+                        this.createNoise(0.06, 2000); // Soft swoosh
+                        this.createTone(90, 0.06, 'sine'); // Light movement
                     },
                     
                     success: () => {
@@ -1481,39 +1523,27 @@
                     },
                     
                     collision: () => {
-                        // Dramatic collision with multiple impact layers
-                        this.createNoise(0.4, 1200); // Main crash
-                        this.createTone(60, 0.6, 'sawtooth', false); // Low rumble
-                        setTimeout(() => this.createNoise(0.25, 2500), 100); // Glass/debris
-                        setTimeout(() => this.createTone(200, 0.3, 'square'), 150); // Metal impact
-                        this.createReverbEffect(150, 0.8, 0.7); // Long echo
+                        // Softer collision sound
+                        this.createNoise(0.15, 800); // Muffled impact
+                        this.createTone(40, 0.2, 'sine', false); // Low bump
                         
-                        // Add screen shake intensity based on collision
                         if (window.gameState) {
-                            gameState.cameraShakeIntensity = Math.max(gameState.cameraShakeIntensity, 0.3);
+                            gameState.cameraShakeIntensity = Math.max(gameState.cameraShakeIntensity, 0.15);
                         }
                     },
                     
                     coin: () => {
-                        // Magical coin collection with sparkle
-                        this.createTone(800, 0.12, 'sine');
-                        setTimeout(() => this.createTone(1200, 0.1, 'sine'), 40);
-                        setTimeout(() => this.createTone(1600, 0.08, 'triangle'), 80);
-                        this.createReverbEffect(1000, 0.2, 0.5); // Magical echo
-                        // Add subtle high-frequency shimmer
-                        setTimeout(() => {
-                            for (let k = 0; k < 4; k++) {
-                                setTimeout(() => this.createTone(2000 + k * 200, 0.03, 'sine'), k * 15);
-                            }
-                        }, 120);
+                        // Pleasant two-tone chime
+                        this.createTone(800, 0.08, 'sine'); // First note
+                        setTimeout(() => this.createTone(1200, 0.06, 'sine'), 40); // Second note
+                        // Removed excessive shimmer effects
                     },
                     
                     whoosh: () => {
-                        // Enhanced lane change with speed-dependent pitch
+                        // Subtle lane change sound
                         const speedMultiplier = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.5;
-                        const baseFreq = 2000 + speedMultiplier * 2000;
-                        this.createNoise(0.15 + speedMultiplier * 0.1, baseFreq);
-                        this.createTone(250 + speedMultiplier * 100, 0.1, 'triangle');
+                        this.createNoise(0.08, 1500 + speedMultiplier * 500); // Light swoosh
+                        // Removed tone for cleaner effect
                     },
                     
                     powerup: () => {
@@ -1630,6 +1660,13 @@
             
             play(soundName) {
                 if (this.isMuted) return; // Don't play if muted
+                
+                // First try to play buffered/real sound
+                if (this.playBuffer(soundName)) {
+                    return; // Successfully played real sound
+                }
+                
+                // Fall back to synthesizer sounds
                 if (this.sounds[soundName]) {
                     try {
                         this.sounds[soundName]();
