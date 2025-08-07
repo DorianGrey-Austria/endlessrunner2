@@ -1454,7 +1454,7 @@
             }
 
             createNoise(duration, filterFreq = 1000) {
-                if (!this.audioContext) return;
+                if (!this.audioContext || this.isMuted) return; // Check muted!
                 
                 const bufferSize = this.audioContext.sampleRate * duration;
                 const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
@@ -1592,7 +1592,7 @@
 
             // Enhanced reverb effect for depth
             createReverbEffect(frequency, duration, intensity) {
-                if (!this.audioContext) return;
+                if (!this.audioContext || this.isMuted) return; // Check muted!
                 
                 const delay = this.audioContext.createDelay(0.3);
                 const feedback = this.audioContext.createGain();

@@ -223,6 +223,49 @@ console.log('📱 Touch Event:', {
 
 ---
 
+## 🔊 **AUDIO SYSTEM PROBLEME**
+
+### **KRITISCH: Audio Button funktioniert nicht (V3.14)**
+**Symptome:**
+- ❌ Audio Button zeigt korrektes Icon (🔇/🔊) aber Sound bleibt an
+- ❌ Klick ändert nur Icon, Sound ignoriert Mute-Status
+- ❌ LocalStorage speichert Präferenz, wird aber beim Sound ignoriert
+- ❌ Synthesizer-Sounds spielen auch wenn muted
+
+**Root Causes:**
+1. **preloadSounds() Race Condition**: Läuft bevor AudioContext fertig initialisiert
+2. **createTone/createNoise Bug**: Ignorieren isMuted Flag komplett
+3. **masterGain Problem**: Wird nicht korrekt auf 0 gesetzt bei Mute
+4. **Async Init Issue**: AudioContext Init ist async, aber nicht awaited
+
+**Temporäre Workaround:**
+- Browser komplett refreshen (Cmd+Shift+R)
+- LocalStorage löschen
+- Seite neu laden
+
+**Fix in V3.15:**
+- ✅ Async/Await für AudioContext Initialisierung
+- ✅ isMuted Check in ALLEN Sound-Generierungs-Methoden
+- ✅ masterGain.gain.value direkt auf 0 wenn muted
+- ✅ updateMasterVolume() Method für zentrale Kontrolle
+
+---
+
+## 🎵 **SOUND QUALITY PROBLEME**
+
+### **Problem: Altmodische Computer-Sounds**
+**Symptome:**
+- Synthesizer-basierte Sounds klingen künstlich
+- Oscillator/Noise Generator statt echte Sounds
+- Unangenehme Frequenzen und Reverb-Effekte
+
+**Lösung ab V3.15:**
+- GitHub Repository + jsDelivr CDN für echte MP3s
+- Lazy Loading für Performance
+- Fallback auf verbesserte Synthesizer
+
+---
+
 ## 🆘 **SUPPORT**
 
 Bei Problemen mit der Touch-Steuerung:
