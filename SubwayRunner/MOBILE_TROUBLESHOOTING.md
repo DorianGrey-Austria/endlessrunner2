@@ -1,26 +1,31 @@
 # 📱 MOBILE TOUCH CONTROLS - TROUBLESHOOTING GUIDE
 
-## Version: V3.9-MOBILE (Stand: 07.08.2025)
+## Version: V3.10-MOBILE-PRO (Stand: 07.08.2025)
 
 ---
 
 ## ✅ **IMPLEMENTIERTE FEATURES**
 
-### **Touch-Gesten Steuerung**
+### **Touch-Gesten Steuerung V3.10**
 | Geste | Aktion | Status |
 |-------|--------|--------|
 | Swipe Links | Lane nach links wechseln | ✅ Funktioniert |
 | Swipe Rechts | Lane nach rechts wechseln | ✅ Funktioniert |
-| Swipe Hoch | Springen / Aufstehen (wenn geduckt) | ✅ Funktioniert |
+| Swipe Hoch (Boden) | Erster Sprung | ✅ Funktioniert |
+| Swipe Hoch (Luft) | Multi-Jump (2. & 3. Sprung) | ✅ NEU! |
+| Swipe Hoch (Geduckt) | Aufstehen | ✅ Funktioniert |
 | Swipe Runter | Ducken / Fast Fall (wenn in Luft) | ✅ Funktioniert |
-| Single Tap | Springen | ✅ Funktioniert |
-| Double Tap | Double Jump | ✅ Funktioniert |
-| Triple Tap | Multi Jump (3. Sprung) | ✅ Funktioniert |
 
-### **Duck-Problem Lösung**
-- **Auto-Aufstehen**: Nach 800ms steht der Spieler automatisch auf
-- **Manuelles Aufstehen**: Swipe nach oben zum sofortigen Aufstehen
+### **Duck-System V3.10**
+- **KEIN Auto-Aufstehen mehr!** - Spieler bleibt geduckt bis Swipe nach oben
+- **Manuelles Aufstehen**: NUR mit Swipe nach oben
 - **Fast Fall**: Swipe nach unten während des Sprungs für schnelleres Fallen
+
+### **Multi-Jump System V3.10**
+- **1. Swipe Hoch** (am Boden) → Erster Sprung
+- **2. Swipe Hoch** (in Luft) → Double Jump
+- **3. Swipe Hoch** (in Luft) → Triple Jump
+- **Kein Double/Triple Tap mehr nötig!**
 
 ---
 
@@ -167,7 +172,38 @@ console.log('📱 Touch Event:', {
 
 ---
 
+## 🎨 **MOBILE UI DESIGN V3.10**
+
+### **Layout-Struktur**
+```
+┌─────────────────────────────┐
+│ Score | 🍎 | 🥦 | ❤️       │ ← Top Bar (40px)
+├─────────────────────────────┤
+│                             │
+│       GAME CANVAS           │ ← Full Height
+│                             │
+├─────────────────────────────┤
+│    Speed | Time             │ ← Bottom Bar (30px)
+└─────────────────────────────┘
+```
+
+### **UI-Verhalten**
+- **Menü**: Zeigt Touch-Steuerung Anleitung
+- **Gameplay**: Versteckt alle Instructions
+- **Score**: Kompakte Anzeige oben (14px Schrift)
+- **Info**: Minimale Anzeige unten (11px Schrift)
+
+---
+
 ## 📝 **CHANGELOG**
+
+### **V3.10-MOBILE-PRO (07.08.2025)**
+- ✅ Duck Auto-Aufstehen ENTFERNT
+- ✅ Multi-Jump mit Swipe Up (statt Tap)
+- ✅ Professionelles Mobile UI Design
+- ✅ Score/Info Bars oben/unten
+- ✅ Instructions nur im Menü
+- ✅ Optimierte Schriftgrößen
 
 ### **V3.9-MOBILE (07.08.2025)**
 - ✅ TouchController Klasse implementiert

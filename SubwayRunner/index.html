@@ -345,11 +345,168 @@
         #poseToggleBtn.active {
             background: #ff6b6b;
         }
+        
+        /* Mobile UI Optimization */
+        #mobileScoreBar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0 10px;
+            z-index: 1000;
+            align-items: center;
+            justify-content: space-around;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        #mobileInfoBar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 0 10px;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        .mobile-score-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Media Queries for Mobile */
+        @media (max-width: 768px) or (pointer: coarse) {
+            /* Hide desktop UI elements */
+            #ui {
+                display: none !important;
+            }
+            
+            #instructions {
+                display: none !important;
+            }
+            
+            #gestureControl {
+                display: none !important;
+            }
+            
+            #poseToggleBtn {
+                display: none !important;
+            }
+            
+            #posePreview {
+                display: none !important;
+            }
+            
+            /* Show mobile UI */
+            #mobileScoreBar {
+                display: flex !important;
+            }
+            
+            #mobileInfoBar {
+                display: flex !important;
+            }
+            
+            /* Adjust game container for mobile bars */
+            #gameCanvas {
+                position: fixed;
+                top: 40px;
+                bottom: 30px;
+                left: 0;
+                right: 0;
+                width: 100% !important;
+                height: calc(100vh - 70px) !important;
+                max-width: none !important;
+                max-height: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+            }
+            
+            /* Mobile menu adjustments */
+            #menu {
+                width: 90%;
+                padding: 20px;
+                font-size: 14px;
+            }
+            
+            #menu h1 {
+                font-size: 24px;
+            }
+            
+            #menu p {
+                font-size: 12px;
+                margin: 5px 0;
+            }
+            
+            #menu button {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+            
+            /* Show mobile instructions in menu only */
+            #menu .mobile-instructions {
+                display: block;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 10px;
+                border-radius: 8px;
+                margin: 10px 0;
+            }
+        }
+        
+        /* Desktop-only styles */
+        @media (min-width: 769px) and (pointer: fine) {
+            #mobileScoreBar, #mobileInfoBar {
+                display: none !important;
+            }
+            
+            #menu .mobile-instructions {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
+        
+        <!-- Mobile Score Bar (Top) -->
+        <div id="mobileScoreBar">
+            <div class="mobile-score-item">
+                <span>Score:</span>
+                <span id="mobileScore">0</span>
+            </div>
+            <div class="mobile-score-item">
+                <span>🍎</span>
+                <span id="mobileApples">0</span>
+            </div>
+            <div class="mobile-score-item">
+                <span>🥦</span>
+                <span id="mobileBroccolis">0</span>
+            </div>
+            <div class="mobile-score-item">
+                <span>❤️</span>
+                <span id="mobileLives">3</span>
+            </div>
+        </div>
+        
+        <!-- Mobile Info Bar (Bottom) -->
+        <div id="mobileInfoBar">
+            <span>Speed: <span id="mobileSpeed">100</span></span>
+            <span> | </span>
+            <span>Time: <span id="mobileTime">60</span>s</span>
+        </div>
         
         <!-- Pose Detection Preview Window -->
         <button id="poseToggleBtn">📹 Pose Detection</button>
@@ -405,8 +562,21 @@
             <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
             <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
             <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
+            
+            <!-- Desktop Instructions -->
+            <div class="desktop-instructions">
+                <p><strong>🎮 Steuerung:</strong></p>
+                <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
+            </div>
+            
+            <!-- Mobile Instructions -->
+            <div class="mobile-instructions">
+                <p><strong>📱 Touch-Steuerung:</strong></p>
+                <p>◀️ Wisch Links/Rechts ▶️ Lane wechseln</p>
+                <p>⬆️ Wisch Hoch: Springen (mehrfach für Multi-Jump)</p>
+                <p>⬇️ Wisch Runter: Ducken (Wisch hoch zum Aufstehen)</p>
+            </div>
+            
             <button onclick="startGame()">🎮 Challenge starten!</button>
         </div>
         
@@ -891,9 +1061,53 @@
                 if (gameState.playerAction === 'ducking') {
                     this.standUp();
                 } 
-                // Otherwise jump (same as tap)
+                // If running, first jump
                 else if (gameState.playerAction === 'running') {
                     this.jump();
+                }
+                // If already jumping, perform multi-jump
+                else if (gameState.playerAction === 'jumping') {
+                    this.performMultiJump();
+                }
+            }
+            
+            performMultiJump() {
+                // Check current jump count and perform next jump level
+                if (gameState.jumpCount === 1 && gameState.jumpCount < 3) {
+                    // Second jump (Double Jump)
+                    gameState.jumpVelocity = 12;
+                    gameState.jumpCount = 2;
+                    gameState.jumpStartTime = performance.now();
+                    
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    
+                    // Double jump particles
+                    createParticleEffect(
+                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
+                        0xFF8800,
+                        'jump'
+                    );
+                    
+                    console.log('📱 Swipe Up - Double Jump!');
+                } 
+                else if (gameState.jumpCount === 2 && gameState.jumpCount < 3) {
+                    // Third jump (Triple Jump)
+                    gameState.jumpVelocity = 14;
+                    gameState.jumpCount = 3;
+                    gameState.jumpStartTime = performance.now();
+                    
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    
+                    // Triple jump particles
+                    createParticleEffect(
+                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
+                        0xFF0088,
+                        'jump'
+                    );
+                    
+                    console.log('📱 Swipe Up - Triple Jump!');
                 }
             }
             
@@ -999,17 +1213,8 @@
                 const speedMultiplier = gameState.speed / gameState.maxSpeed;
                 audioManager.playSpeedDependentSound('duck', speedMultiplier);
                 
-                // Clear previous duck timeout
-                if (this.duckTimeout) {
-                    clearTimeout(this.duckTimeout);
-                }
-                
-                // Auto stand up after 800ms
-                this.duckTimeout = setTimeout(() => {
-                    this.standUp();
-                }, 800);
-                
-                console.log('📱 Duck!');
+                // NO auto stand up - only manual with swipe up
+                console.log('📱 Duck! (Swipe up to stand)');
             }
             
             standUp() {
@@ -3116,11 +3321,27 @@
         }
 
         function updateUI() {
+            // Update desktop UI
             document.getElementById('score').textContent = gameState.score;
             document.getElementById('speed').textContent = Math.floor(gameState.speed * 1000);
             document.getElementById('lives').textContent = gameState.lives;
             document.getElementById('apples').textContent = gameState.collectedApples;
             document.getElementById('broccolis').textContent = gameState.collectedBroccolis;
+            
+            // Update mobile UI
+            const mobileScore = document.getElementById('mobileScore');
+            const mobileSpeed = document.getElementById('mobileSpeed');
+            const mobileLives = document.getElementById('mobileLives');
+            const mobileApples = document.getElementById('mobileApples');
+            const mobileBroccolis = document.getElementById('mobileBroccolis');
+            const mobileTime = document.getElementById('mobileTime');
+            
+            if (mobileScore) mobileScore.textContent = gameState.score;
+            if (mobileSpeed) mobileSpeed.textContent = Math.floor(gameState.speed * 1000);
+            if (mobileLives) mobileLives.textContent = gameState.lives;
+            if (mobileApples) mobileApples.textContent = gameState.collectedApples;
+            if (mobileBroccolis) mobileBroccolis.textContent = gameState.collectedBroccolis;
+            if (mobileTime) mobileTime.textContent = Math.max(0, Math.ceil(gameState.timeRemaining));
             
             // Update timer with visual warnings
             const timeElement = document.getElementById('timeRemaining');
