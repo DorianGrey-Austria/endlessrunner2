@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pose Detection Test - MediaPipe</title>
+    
+    <!-- MediaPipe CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/vision_bundle.js" crossorigin="anonymous"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1 {
+            color: #00ff88;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .preview-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .preview-box {
+            position: relative;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #largePreview {
+            width: 640px;
+            height: 480px;
+        }
+        
+        #smallPreview {
+            width: 200px;
+            height: 150px;
+        }
+        
+        video, canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+        
+        .status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #00ff88;
+            z-index: 10;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00cc70;
+            transform: scale(1.05);
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .info {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Pose Detection Test - MediaPipe</h1>
+        
+        <div class="info">
+            <h2>Test Features:</h2>
+            <ul>
+                <li>✅ 33 3D Body Landmarks Detection</li>
+                <li>✅ Colored Rectangles for Body Parts</li>
+                <li>✅ FPS Counter</li>
+                <li>✅ Large & Small Preview (Game Size)</li>
+            </ul>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">📹 Start Camera</button>
+            <button id="stopBtn" disabled>🛑 Stop Camera</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="color-box" style="background: #ff000040; border-color: #ff0000;"></div>
+                <span>Head</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #00ff0040; border-color: #00ff00;"></div>
+                <span>Hands</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background: #0088ff40; border-color: #0088ff;"></div>
+                <span>Feet</span>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <div class="preview-box" id="largePreview">
+                <video id="videoLarge" autoplay playsinline></video>
+                <canvas id="canvasLarge"></canvas>
+                <div class="status" id="statusLarge">FPS: 0 | Pose: ❌</div>
+            </div>
+            
+            <div class="preview-box" id="smallPreview">
+                <video id="videoSmall" autoplay playsinline></video>
+                <canvas id="canvasSmall"></canvas>
+                <div class="status" id="statusSmall">Game Preview</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class PoseDetectionTest {
+            constructor() {
+                this.videoLarge = document.getElementById('videoLarge');
+                this.videoSmall = document.getElementById('videoSmall');
+                this.canvasLarge = document.getElementById('canvasLarge');
+                this.canvasSmall = document.getElementById('canvasSmall');
+                this.ctxLarge = this.canvasLarge.getContext('2d');
+                this.ctxSmall = this.canvasSmall.getContext('2d');
+                
+                this.canvasLarge.width = 640;
+                this.canvasLarge.height = 480;
+                this.canvasSmall.width = 200;
+                this.canvasSmall.height = 150;
+                
+                this.isRunning = false;
+                this.poseLandmarker = null;
+                this.lastVideoTime = -1;
+                this.fps = 0;
+                this.frameCount = 0;
+                this.lastFpsUpdate = 0;
+                
+                this.landmarks = {
+                    head: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    leftHand: [15, 17, 19, 21],
+                    rightHand: [16, 18, 20, 22],
+                    leftFoot: [27, 29, 31],
+                    rightFoot: [28, 30, 32]
+                };
+                
+                this.init();
+            }
+            
+            async init() {
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                
+                await this.initializePose();
+            }
+            
+            async initializePose() {
+                try {
+                    if (typeof window.PoseLandmarker === 'undefined' && window.vision) {
+                        window.PoseLandmarker = window.vision.PoseLandmarker;
+                        window.FilesetResolver = window.vision.FilesetResolver;
+                    }
+                    
+                    if (!window.PoseLandmarker || !window.FilesetResolver) {
+                        console.warn('MediaPipe not loaded yet, retrying...');
+                        setTimeout(() => this.initializePose(), 1000);
+                        return;
+                    }
+                    
+                    const filesetResolver = await window.FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                    );
+                    
+                    this.poseLandmarker = await window.PoseLandmarker.createFromOptions(filesetResolver, {
+                        baseOptions: {
+                            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+                            delegate: "GPU"
+                        },
+                        runningMode: "VIDEO",
+                        numPoses: 1,
+                        minPoseDetectionConfidence: 0.5,
+                        minPosePresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    
+                    console.log('✅ Pose Detection initialized');
+                } catch (error) {
+                    console.error('❌ Failed to initialize:', error);
+                }
+            }
+            
+            async start() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 640, height: 480, facingMode: 'user' }
+                    });
+                    
+                    this.videoLarge.srcObject = stream;
+                    this.videoSmall.srcObject = stream;
+                    this.isRunning = true;
+                    
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('stopBtn').disabled = false;
+                    
+                    this.detectPose();
+                } catch (error) {
+                    console.error('Camera error:', error);
+                    alert('Camera access denied!');
+                }
+            }
+            
+            stop() {
+                if (this.videoLarge.srcObject) {
+                    const tracks = this.videoLarge.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.videoLarge.srcObject = null;
+                    this.videoSmall.srcObject = null;
+                }
+                
+                this.isRunning = false;
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                
+                this.ctxLarge.clearRect(0, 0, this.canvasLarge.width, this.canvasLarge.height);
+                this.ctxSmall.clearRect(0, 0, this.canvasSmall.width, this.canvasSmall.height);
+            }
+            
+            async detectPose() {
+                if (!this.isRunning || !this.poseLandmarker) return;
+                
+                if (this.videoLarge.readyState === 4) {
+                    const startTimeMs = performance.now();
+                    
+                    if (this.videoLarge.currentTime !== this.lastVideoTime) {
+                        this.lastVideoTime = this.videoLarge.currentTime;
+                        
+                        try {
+                            const results = await this.poseLandmarker.detectForVideo(
+                                this.videoLarge, startTimeMs
+                            );
+                            
+                            this.drawResults(results, this.ctxLarge, this.canvasLarge);
+                            this.drawResults(results, this.ctxSmall, this.canvasSmall);
+                            
+                            this.updateFPS();
+                            
+                            if (results.landmarks && results.landmarks.length > 0) {
+                                document.getElementById('statusLarge').innerHTML = 
+                                    `FPS: ${this.fps} | Pose: ✅`;
+                            } else {
+                                document.getElementById('statusLarge').innerHTML = 
+                                    `FPS: ${this.fps} | Pose: ❌`;
+                            }
+                        } catch (error) {
+                            console.error('Detection error:', error);
+                        }
+                    }
+                }
+                
+                if (this.isRunning) {
+                    requestAnimationFrame(() => this.detectPose());
+                }
+            }
+            
+            drawResults(results, ctx, canvas) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                if (results.landmarks && results.landmarks.length > 0) {
+                    const landmarks = results.landmarks[0];
+                    this.drawConnections(landmarks, ctx, canvas);
+                    this.drawBodyParts(landmarks, ctx, canvas);
+                }
+            }
+            
+            drawConnections(landmarks, ctx, canvas) {
+                const connections = [
+                    [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+                    [11, 13], [13, 15], [15, 17], [17, 19], [19, 21],
+                    [12, 14], [14, 16], [16, 18], [18, 20], [20, 22],
+                    [11, 12], [11, 23], [12, 24], [23, 24],
+                    [23, 25], [25, 27], [27, 29], [29, 31],
+                    [24, 26], [26, 28], [28, 30], [30, 32]
+                ];
+                
+                ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+                ctx.lineWidth = canvas.width > 300 ? 2 : 1;
+                
+                connections.forEach(([start, end]) => {
+                    if (landmarks[start] && landmarks[end]) {
+                        ctx.beginPath();
+                        ctx.moveTo(
+                            landmarks[start].x * canvas.width,
+                            landmarks[start].y * canvas.height
+                        );
+                        ctx.lineTo(
+                            landmarks[end].x * canvas.width,
+                            landmarks[end].y * canvas.height
+                        );
+                        ctx.stroke();
+                    }
+                });
+            }
+            
+            drawBodyParts(landmarks, ctx, canvas) {
+                const scale = canvas.width > 300 ? 1 : 0.6;
+                
+                // Head (red)
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                this.landmarks.head.forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(ctx,
+                            landmarks[idx].x * canvas.width,
+                            landmarks[idx].y * canvas.height,
+                            8 * scale, 8 * scale, '#ff000040'
+                        );
+                    }
+                });
+                
+                // Hands (green)
+                ctx.strokeStyle = '#00ff00';
+                [...this.landmarks.leftHand, ...this.landmarks.rightHand].forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(ctx,
+                            landmarks[idx].x * canvas.width,
+                            landmarks[idx].y * canvas.height,
+                            10 * scale, 10 * scale, '#00ff0040'
+                        );
+                    }
+                });
+                
+                // Feet (blue)
+                ctx.strokeStyle = '#0088ff';
+                [...this.landmarks.leftFoot, ...this.landmarks.rightFoot].forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(ctx,
+                            landmarks[idx].x * canvas.width,
+                            landmarks[idx].y * canvas.height,
+                            12 * scale, 12 * scale, '#0088ff40'
+                        );
+                    }
+                });
+            }
+            
+            drawRectangle(ctx, x, y, width, height, fillColor) {
+                ctx.fillStyle = fillColor;
+                ctx.fillRect(x - width/2, y - height/2, width, height);
+                ctx.strokeRect(x - width/2, y - height/2, width, height);
+            }
+            
+            updateFPS() {
+                this.frameCount++;
+                const now = performance.now();
+                
+                if (now - this.lastFpsUpdate >= 1000) {
+                    this.fps = this.frameCount;
+                    this.frameCount = 0;
+                    this.lastFpsUpdate = now;
+                }
+            }
+        }
+        
+        // Start when page loads
+        window.addEventListener('load', () => {
+            new PoseDetectionTest();
+        });
+    </script>
+</body>
+</html>
