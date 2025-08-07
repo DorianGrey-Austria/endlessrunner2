@@ -3,10 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.4-GESTURE-DEBUG</title>
+    <title>Subway Runner 3D - V3.5-CRASH-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- Gesture Control wird später dynamisch geladen -->
+    <script type="module">
+        // Pre-load Gesture Control Module
+        import('./js/GestureControllerProjector.js')
+            .then(module => {
+                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
+                console.log('✅ Gesture Module pre-loaded successfully');
+            })
+            .catch(error => {
+                console.error('❌ Gesture Module pre-load failed:', error);
+                // Fallback: Try alternative loading method
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.innerHTML = `
+                    import { GestureControllerProjector } from './js/GestureControllerProjector.js';
+                    window.GestureControllerProjector = GestureControllerProjector;
+                `;
+                document.head.appendChild(script);
+            });
+    </script>
     <style>
         * {
             margin: 0;
@@ -1028,15 +1046,15 @@
             },
             
             cleanup: function() {
-                // Show default environment objects again
-                environmentObjects.buildings.forEach(b => b.visible = true);
-                environmentObjects.lamps.forEach(l => l.visible = true);
-                environmentObjects.debris.forEach(d => d.visible = true);
+                // Safe cleanup - environmentObjects doesn't exist in this version
+                console.log('Neon level cleanup completed');
                 
-                // Clear level objects
-                this.objects.cyberpunkBuildings = [];
-                this.objects.neonLights = [];
-                this.objects.gridFloor = null;
+                // Clear level objects safely
+                if (this.objects) {
+                    this.objects.cyberpunkBuildings = [];
+                    this.objects.neonLights = [];
+                    this.objects.gridFloor = null;
+                }
             }
         };
 
@@ -3743,37 +3761,32 @@
         const gestureStatusText = document.getElementById('gestureStatusText');
         const gestureCurrentText = document.getElementById('gestureCurrentText');
         
-        // Dynamically load gesture module when needed
+        // Check if gesture module is already loaded
         async function loadGestureModule() {
-            if (gestureModuleLoaded) return true;
+            if (gestureModuleLoaded || window.GestureControllerProjector) {
+                gestureModuleLoaded = true;
+                return true;
+            }
             
+            // Wait a bit for pre-loaded module
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (window.GestureControllerProjector) {
+                gestureModuleLoaded = true;
+                console.log('✅ Gesture Module already loaded');
+                return true;
+            }
+            
+            // Try loading again if not available
             try {
-                console.log('🎮 Loading Gesture Control Module...');
+                console.log('🎮 Attempting to load Gesture Control Module...');
                 const module = await import('./js/GestureControllerProjector.js');
                 window.GestureControllerProjector = module.GestureControllerProjector || module.default;
                 gestureModuleLoaded = true;
-                console.log('✅ Gesture Module loaded successfully');
+                console.log('✅ Gesture Module loaded on demand');
                 return true;
             } catch (error) {
-                console.error('❌ Failed to load Gesture Module:', error);
-                // Fallback: try loading from CDN or alternative source
-                try {
-                    const script = document.createElement('script');
-                    script.type = 'module';
-                    script.textContent = `
-                        import { GestureControllerProjector } from './js/GestureControllerProjector.js';
-                        window.GestureControllerProjector = GestureControllerProjector;
-                    `;
-                    document.head.appendChild(script);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    if (window.GestureControllerProjector) {
-                        gestureModuleLoaded = true;
-                        console.log('✅ Gesture Module loaded via fallback');
-                        return true;
-                    }
-                } catch (fallbackError) {
-                    console.error('❌ Fallback also failed:', fallbackError);
-                }
+                console.error('❌ Module loading failed:', error);
                 return false;
             }
         }
