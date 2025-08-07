@@ -72,7 +72,7 @@ jobs:
         Header always set Referrer-Policy "strict-origin-when-cross-origin"
         
         # Content Security Policy for Three.js and external resources
-        Header always set Content-Security-Policy "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https:;"
+        Header always set Content-Security-Policy "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https: https://fonts.gstatic.com;"
         EOF
         
         # Create README for the deployment

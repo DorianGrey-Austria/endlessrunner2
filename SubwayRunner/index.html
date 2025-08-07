@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V3.6-STABLE</title>
+    <title>Subway Runner 3D - V3.7-LOOP-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -822,14 +822,27 @@
                 
                 // Load new level
                 if (this.levels[levelId]) {
-                    this.currentLevel = levelId;
-                    this.levels[levelId].load(scene, renderer);
-                    
-                    // Show level notification
-                    this.showLevelNotification(levelId);
-                    
-                    // Update game state
-                    currentLevel = levelId;
+                    try {
+                        this.currentLevel = levelId;
+                        this.levels[levelId].load(scene, renderer);
+                        
+                        // Show level notification
+                        this.showLevelNotification(levelId);
+                        
+                        // Update game state
+                        currentLevel = levelId;
+                        
+                        // Clear loading flag on success
+                        this.loadingLevel = null;
+                    } catch (error) {
+                        console.error(`Failed to load level ${levelId}:`, error);
+                        // Reset loading flag on error
+                        this.loadingLevel = null;
+                        // Keep playing with current level
+                        console.log('Continuing with current level due to load error');
+                    }
+                } else {
+                    this.loadingLevel = null;
                 }
             },
             
@@ -868,11 +881,24 @@
             },
             
             checkProgression: function() {
+                // Prevent progression during game over, victory, or while loading
+                if (gameState.isGameOver || gameState.isVictory || this.loadingLevel) {
+                    return;
+                }
+                
+                // Prevent rapid-fire level changes
+                const now = Date.now();
+                if (this.lastLevelChange && (now - this.lastLevelChange) < 2000) {
+                    return; // Wait at least 2 seconds between level changes
+                }
+                
                 nextLevelScore = currentLevel * 1000; // Update for test compatibility
                 const nextLevelThreshold = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
                 if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
-                    this.loadLevel(currentLevel + 1);
-                    nextLevelScore = (currentLevel + 1) * 1000;
+                    this.lastLevelChange = now;
+                    currentLevel++; // INCREMENT BEFORE LOADING!
+                    this.loadLevel(currentLevel);
+                    nextLevelScore = currentLevel * 1000;
                 }
             },
             
@@ -963,10 +989,9 @@
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
                 
-                // Hide default environment objects
-                environmentObjects.buildings.forEach(b => b.visible = false);
-                environmentObjects.lamps.forEach(l => l.visible = false);
-                environmentObjects.debris.forEach(d => d.visible = false);
+                // Safe environment handling - these objects don't exist
+                // Skip hiding non-existent objects to prevent crashes
+                console.log('Level 2 loading - skipping environment object hiding');
                 
                 // Create neon environment
                 this.createEnvironment(scene);
@@ -2320,6 +2345,12 @@
         }
 
         function endGame() {
+            // Prevent multiple game over calls
+            if (gameState.isGameOver) {
+                console.log('Game over already triggered, skipping');
+                return;
+            }
+            
             gameState.isPlaying = false;
             gameState.isGameOver = true;
             
@@ -2339,6 +2370,12 @@
         }
 
         function victoryGame() {
+            // Prevent multiple victory calls
+            if (gameState.isVictory) {
+                console.log('Victory already triggered, skipping');
+                return;
+            }
+            
             gameState.isPlaying = false;
             gameState.isVictory = true;
             
@@ -3738,7 +3775,8 @@
                 gameState.timeRemaining = Math.max(0, gameState.gameTime - elapsedTime);
                 
                 // Check for victory (survived 60 seconds!)
-                if (gameState.timeRemaining <= 0 && !gameState.isVictory) {
+                if (gameState.timeRemaining <= 0 && !gameState.isVictory && !gameState.isGameOver) {
+                    console.log('Victory condition met - calling victoryGame()');
                     victoryGame();
                     return;
                 }
