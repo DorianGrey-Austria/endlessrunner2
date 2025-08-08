@@ -12,6 +12,16 @@
     <!-- Jeeliz FaceFilter for Head Tracking (REPLACING MediaPipe) -->
     <!-- MediaPipe Tasks Vision for Face Tracking -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.js"></script>
+    <script>
+        // Ensure MediaPipe is globally available
+        window.addEventListener('load', () => {
+            if (typeof FilesetResolver === 'undefined' && window.MediaPipeVision) {
+                window.FilesetResolver = window.MediaPipeVision.FilesetResolver;
+                window.FaceLandmarker = window.MediaPipeVision.FaceLandmarker;
+                console.log('✅ MediaPipe globals set from MediaPipeVision');
+            }
+        });
+    </script>
     
     <script type="module">
         // Pre-load Gesture Control Module
@@ -746,33 +756,34 @@
                 this.smoothedX = 0;
                 this.confidence = 0;
                 
-                // Filters
-                this.xFilter = new OneEuroFilter(60, 1.0, 0.02, 1.0);
+                // Filters - MINIMAL FILTERING für maximale Responsiveness!
+                this.xFilter = new OneEuroFilter(60, 0.5, 0.5, 1.0); // VIEL weniger Filterung!
                 this.leftHysteresis = new HysteresisController(-0.15, -0.08);
                 this.rightHysteresis = new HysteresisController(0.15, 0.08);
                 
-                // Thresholds
+                // Thresholds - VIEL SENSIBLER!
                 this.thresholds = {
-                    enterLeft: -0.15,
-                    exitLeft: -0.08,
-                    enterRight: 0.15,
-                    exitRight: 0.08,
-                    deadZone: 0.06,
-                    minConfidence: 0.6
+                    enterLeft: -0.05,    // War -0.15 - VIEL zu hoch!
+                    exitLeft: -0.03,     // War -0.08
+                    enterRight: 0.05,    // War 0.15 - VIEL zu hoch!
+                    exitRight: 0.03,     // War 0.08
+                    deadZone: 0.01,      // War 0.06 - zu große Dead Zone!
+                    minConfidence: 0.3   // War 0.6 - zu strikt!
                 };
                 
-                // Timing
-                this.cooldownMs = 250;
-                this.candidateMs = 100;
-                this.autoResetMs = 500;
-                this.minFramesRequired = 3;
+                // Timing - SCHNELLER!
+                this.cooldownMs = 100;      // War 250 - zu lang!
+                this.candidateMs = 0;        // War 100 - unnötige Verzögerung!
+                this.autoResetMs = 200;      // War 500 - zu lang!
+                this.minFramesRequired = 1;  // War 3 - zu viele!
                 
                 // Settings
                 this.sensitivity = this.loadSetting('headTrackSensitivity', 1.0);
                 
-                // Debug
-                this.debugMode = false;
+                // Debug - IMMER AN für Diagnose!
+                this.debugMode = true;  // War false - Debug immer an!
                 this.debugHUD = null;
+                console.log('🚨 HEAD TRACKING DEBUG MODE: ON');
                 
                 // Calibration
                 this.calibrationFrames = [];
@@ -991,59 +1002,34 @@
                 const exitRight = this.thresholds.exitRight / this.sensitivity;
                 const deadZone = this.thresholds.deadZone / this.sensitivity;
                 
+                // RADIKAL VEREINFACHTE STATE MACHINE - Nur 2 States!
                 switch(this.state) {
                     case 'IDLE':
-                        // Check for movement initiation
+                        // SOFORT reagieren auf JEDE Bewegung über Threshold!
                         if (relativeX < enterLeft) {
-                            this.changeState('CANDIDATE_LEFT');
-                            this.candidateFrames = 1;
+                            // DIREKT links bewegen - keine Verzögerung!
+                            this.executeLaneChange('left');
+                            this.changeState('COOLDOWN');
+                            console.log('🎯 INSTANT LEFT: relativeX =', relativeX.toFixed(3));
                         } else if (relativeX > enterRight) {
-                            this.changeState('CANDIDATE_RIGHT');
-                            this.candidateFrames = 1;
-                        }
-                        break;
-                        
-                    case 'CANDIDATE_LEFT':
-                        if (relativeX < enterLeft) {
-                            this.candidateFrames++;
-                            if (this.candidateFrames >= this.minFramesRequired && 
-                                timeSinceStateChange >= this.candidateTime) {
-                                this.executeLaneChange('left');
-                                this.changeState('COOLDOWN');
-                            }
-                        } else if (relativeX > exitLeft) {
-                            // Movement cancelled
-                            this.changeState('IDLE');
-                        }
-                        break;
-                        
-                    case 'CANDIDATE_RIGHT':
-                        if (relativeX > enterRight) {
-                            this.candidateFrames++;
-                            if (this.candidateFrames >= this.minFramesRequired && 
-                                timeSinceStateChange >= this.candidateTime) {
-                                this.executeLaneChange('right');
-                                this.changeState('COOLDOWN');
-                            }
-                        } else if (relativeX < exitRight) {
-                            // Movement cancelled
-                            this.changeState('IDLE');
+                            // DIREKT rechts bewegen - keine Verzögerung!
+                            this.executeLaneChange('right');
+                            this.changeState('COOLDOWN');
+                            console.log('🎯 INSTANT RIGHT: relativeX =', relativeX.toFixed(3));
                         }
                         break;
                         
                     case 'COOLDOWN':
+                        // KURZE Cooldown - dann sofort wieder bereit!
                         if (timeSinceStateChange >= this.cooldownMs) {
-                            // Check if we're back in dead zone
-                            if (Math.abs(relativeX) < deadZone) {
-                                this.changeState('IDLE');
-                            } else {
-                                // Still holding position, wait for release
-                                if (timeSinceStateChange >= this.autoResetMs) {
-                                    // Force reset after timeout
-                                    this.changeState('IDLE');
-                                }
-                            }
+                            this.changeState('IDLE');
                         }
+                        break;
+                        
+                    default:
+                        // Fallback - sollte nie passieren
+                        console.warn('⚠️ Unknown state:', this.state);
+                        this.changeState('IDLE');
                         break;
                 }
                 
@@ -1109,10 +1095,7 @@
             
             updateDisplay(relativeX = 0) {
                 const stateIcon = {
-                    'IDLE': '⭕',
-                    'CANDIDATE_LEFT': '⬅',
-                    'CANDIDATE_RIGHT': '➡',
-                    'EXECUTING': '⚡',
+                    'IDLE': '✅',
                     'COOLDOWN': '⏸️'
                 }[this.state] || '❓';
                 
@@ -1217,17 +1200,20 @@
                     this.createDebugHUD();
                 }
                 
+                // Zeige Schwellenwerte visuell
+                const leftIndicator = relativeX < this.thresholds.enterLeft ? '🔴' : '⚪';
+                const rightIndicator = relativeX > this.thresholds.enterRight ? '🔴' : '⚪';
+                
                 const html = `
-                    <div style="font-family: monospace; font-size: 10px;">
-                        <div>State: ${this.state}</div>
-                        <div>Raw: ${this.rawX.toFixed(3)}</div>
-                        <div>Smooth: ${this.smoothedX.toFixed(3)}</div>
-                        <div>Center: ${this.centerX.toFixed(3)}</div>
-                        <div>Relative: ${relativeX.toFixed(3)}</div>
+                    <div style="font-family: monospace; font-size: 12px; color: #0f0;">
+                        <div style="color: yellow;">🎯 HEAD TRACKING DEBUG</div>
+                        <div>State: ${this.state} ${this.state === 'IDLE' ? '✅' : '⏸️'}</div>
+                        <div>Position: ${(relativeX * 100).toFixed(1)}%</div>
+                        <div>${leftIndicator} Left: ${(this.thresholds.enterLeft * 100).toFixed(1)}%</div>
+                        <div>${rightIndicator} Right: ${(this.thresholds.enterRight * 100).toFixed(1)}%</div>
                         <div>Confidence: ${(this.confidence * 100).toFixed(0)}%</div>
-                        <div>Frames: ${this.candidateFrames}/${this.minFramesRequired}</div>
                         <div>Lane: ${typeof gameState !== 'undefined' ? gameState.playerLane : 1}</div>
-                        <div>Sensitivity: ${this.sensitivity.toFixed(1)}</div>
+                        <div>Cooldown: ${this.cooldownMs}ms</div>
                     </div>
                 `;
                 this.debugHUD.innerHTML = html;

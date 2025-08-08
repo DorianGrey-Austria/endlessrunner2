@@ -515,6 +515,33 @@ Basierend auf professionellen Python-Beispielen implementieren wir:
    - Auto-Rezentrierung alle 30s
    - User-einstellbare Sensitivity
 
+## 🔴 VERSION 6.0 DISASTER - IMMER NOCH KAPUTT! (08.08.2025)
+
+### **BRUTALE WAHRHEIT nach 6 Versionen:**
+"Es funktioniert eigentlich nur minimal besser! Ich kann zwar von rechts nach links gehen, aber es passiert ständig, dass Bewegungen nicht erkannt werden."
+
+### **ROOT CAUSE - Das wahre Problem:**
+1. **MediaPipe lädt nicht korrekt**
+   - FilesetResolver undefined
+   - FaceLandmarker undefined  
+   - Dynamisches Laden funktioniert NICHT
+
+2. **Thresholds viel zu hoch**
+   - -0.15/+0.15 ist VIEL zu viel
+   - User muss Kopf extrem bewegen
+
+3. **Zu viele Frames required**
+   - 3 Frames = 50ms Verzögerung minimum
+   - Bewegungen werden "verschluckt"
+
+4. **Cooldown zu lang**
+   - 250ms = User kann nur 4x pro Sekunde wechseln
+   - Fühlt sich träge an
+
+5. **State Machine zu komplex**
+   - CANDIDATE State unnötig
+   - Zu viele Bedingungen
+
 ## ✅ CHECKLISTE FÜR ZUKÜNFTIGE IMPLEMENTIERUNGEN
 
 - [ ] One-Euro-Filter oder ähnliches Smoothing
