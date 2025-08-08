@@ -318,20 +318,23 @@
             font-weight: bold;
         }
         
-        /* Head Tracking Preview Window */
+        /* Head Tracking Preview Window - ENHANCED */
         #headTrackPreview {
             position: fixed;
             top: 20px;
             right: 20px;
-            width: 200px;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.8);
+            width: 400px;
+            height: 300px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 0, 40, 0.9));
             border: 2px solid #00ff88;
-            border-radius: 8px;
+            border-radius: 12px;
             z-index: 500;
             display: none;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 136, 0.5),
+                inset 0 0 20px rgba(0, 255, 136, 0.1);
+            backdrop-filter: blur(10px);
         }
         
         #headTrackPreview.active {
@@ -351,17 +354,62 @@
             width: 100%;
             height: 100%;
             transform: scaleX(-1);
+            z-index: 2;
         }
         
         #headTrackStatus {
             position: absolute;
-            bottom: 5px;
-            left: 5px;
+            bottom: 10px;
+            left: 10px;
             color: #00ff88;
-            font-size: 10px;
-            font-family: monospace;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.8);
             z-index: 10;
+        }
+        
+        /* Visual Feedback Metrics Panel */
+        #headTrackMetrics {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            color: #00ffff;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 3px rgba(0, 255, 255, 0.8);
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+        
+        .metric-label {
+            color: #888;
+        }
+        
+        .metric-value {
+            color: #0ff;
+            font-weight: bold;
+        }
+        
+        .metric-value.warning {
+            color: #ff0;
+        }
+        
+        .metric-value.danger {
+            color: #f00;
+        }
+        
+        .metric-value.success {
+            color: #0f0;
         }
         
         #headTrackToggle {
@@ -560,7 +608,25 @@
         <button id="headTrackToggle">📹 Head Tracking</button>
         <div id="headTrackPreview">
             <video id="headTrackVideo" autoplay playsinline></video>
-            <canvas id="headTrackCanvas" width="200" height="150"></canvas>
+            <canvas id="headTrackCanvas" width="400" height="300"></canvas>
+            <div id="headTrackMetrics">
+                <div class="metric-row">
+                    <span class="metric-label">POSITION:</span>
+                    <span class="metric-value" id="metricPosition">0.0cm</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">VELOCITY:</span>
+                    <span class="metric-value" id="metricVelocity">0.0cm/s</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">CONFIDENCE:</span>
+                    <span class="metric-value" id="metricConfidence">0%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">STATE:</span>
+                    <span class="metric-value" id="metricState">IDLE</span>
+                </div>
+            </div>
             <div id="headTrackStatus">Inactive</div>
         </div>
         
@@ -722,6 +788,452 @@
         }
         
         // ============================================
+        // ADVANCED VISUAL FEEDBACK SYSTEM
+        // ============================================
+        class AdvancedVisualFeedback {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.width = canvas.width;
+                this.height = canvas.height;
+                
+                // Metrics tracking
+                this.position = 0;
+                this.velocity = 0;
+                this.lastPosition = 0;
+                this.lastUpdateTime = Date.now();
+                this.confidence = 0;
+                this.state = 'IDLE';
+                
+                // Movement history (circular buffer)
+                this.historySize = 60; // 1 second at 60fps
+                this.positionHistory = new Array(this.historySize).fill(0);
+                this.historyIndex = 0;
+                
+                // Visual settings
+                this.zones = {
+                    triggerLeft: -5,    // cm
+                    warningLeft: -3,    // cm
+                    deadZone: 3,        // cm (±3)
+                    warningRight: 3,    // cm
+                    triggerRight: 5     // cm
+                };
+                
+                // Animation states
+                this.triggerFlashAlpha = 0;
+                this.cooldownProgress = 0;
+                this.particleEffects = [];
+                
+                // Debug mode
+                this.debugMode = 1; // 0=off, 1=basic, 2=advanced, 3=developer
+            }
+            
+            update(positionCm, confidence, state, cooldownActive, cooldownTime) {
+                const now = Date.now();
+                const deltaTime = (now - this.lastUpdateTime) / 1000; // seconds
+                
+                // Calculate velocity
+                if (deltaTime > 0) {
+                    this.velocity = (positionCm - this.lastPosition) / deltaTime;
+                }
+                
+                this.position = positionCm;
+                this.confidence = confidence;
+                this.state = state;
+                this.lastPosition = positionCm;
+                this.lastUpdateTime = now;
+                
+                // Update history
+                this.positionHistory[this.historyIndex] = positionCm;
+                this.historyIndex = (this.historyIndex + 1) % this.historySize;
+                
+                // Update cooldown progress
+                if (cooldownActive && cooldownTime > 0) {
+                    this.cooldownProgress = 1 - (cooldownTime / 300); // 300ms total cooldown
+                } else {
+                    this.cooldownProgress = 0;
+                }
+                
+                // Update metrics display
+                this.updateMetricsDisplay();
+            }
+            
+            updateMetricsDisplay() {
+                // Update HTML metrics
+                const posEl = document.getElementById('metricPosition');
+                const velEl = document.getElementById('metricVelocity');
+                const confEl = document.getElementById('metricConfidence');
+                const stateEl = document.getElementById('metricState');
+                
+                if (posEl) {
+                    posEl.textContent = `${this.position.toFixed(1)}cm`;
+                    posEl.className = 'metric-value';
+                    
+                    if (Math.abs(this.position) > this.zones.triggerRight) {
+                        posEl.className += ' danger';
+                    } else if (Math.abs(this.position) > this.zones.warningRight) {
+                        posEl.className += ' warning';
+                    } else {
+                        posEl.className += ' success';
+                    }
+                }
+                
+                if (velEl) {
+                    velEl.textContent = `${this.velocity.toFixed(1)}cm/s`;
+                    const absVel = Math.abs(this.velocity);
+                    velEl.className = 'metric-value';
+                    if (absVel > 10) velEl.className += ' danger';
+                    else if (absVel > 5) velEl.className += ' warning';
+                }
+                
+                if (confEl) {
+                    const confPercent = Math.round(this.confidence * 100);
+                    confEl.textContent = `${confPercent}%`;
+                    confEl.className = 'metric-value';
+                    if (confPercent < 50) confEl.className += ' danger';
+                    else if (confPercent < 70) confEl.className += ' warning';
+                    else confEl.className += ' success';
+                }
+                
+                if (stateEl) {
+                    stateEl.textContent = this.state;
+                    stateEl.className = 'metric-value';
+                    if (this.state === 'TRACKING') stateEl.className += ' success';
+                    else if (this.state === 'COOLDOWN') stateEl.className += ' warning';
+                }
+            }
+            
+            render() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                // Draw components based on debug mode
+                if (this.debugMode >= 1) {
+                    this.drawMovementBar();
+                    this.drawCooldownIndicator();
+                }
+                
+                if (this.debugMode >= 2) {
+                    this.drawHistoryGraph();
+                    this.drawVelocityVector();
+                }
+                
+                if (this.debugMode >= 3) {
+                    this.drawRawData();
+                }
+                
+                // Always draw trigger effects
+                this.drawTriggerEffects();
+                this.updateParticles();
+            }
+            
+            drawMovementBar() {
+                const barY = this.height - 60;
+                const barHeight = 30;
+                const barWidth = this.width - 40;
+                const barX = 20;
+                const scale = barWidth / (this.zones.triggerRight * 2); // Scale to fit -5 to +5 cm
+                
+                // Draw background
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                this.ctx.fillRect(barX, barY, barWidth, barHeight);
+                
+                // Draw zones
+                const centerX = barX + barWidth / 2;
+                
+                // Dead zone (green)
+                const deadZoneWidth = this.zones.deadZone * scale;
+                this.ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+                this.ctx.fillRect(centerX - deadZoneWidth, barY, deadZoneWidth * 2, barHeight);
+                
+                // Warning zones (yellow)
+                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.2)';
+                // Left warning
+                const leftWarningX = centerX + (this.zones.warningLeft * scale);
+                const leftTriggerX = centerX + (this.zones.triggerLeft * scale);
+                this.ctx.fillRect(leftTriggerX, barY, leftWarningX - leftTriggerX, barHeight);
+                // Right warning
+                const rightWarningX = centerX + (this.zones.warningRight * scale);
+                const rightTriggerX = centerX + (this.zones.triggerRight * scale);
+                this.ctx.fillRect(rightWarningX, barY, rightTriggerX - rightWarningX, barHeight);
+                
+                // Trigger zones (red)
+                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                // Left trigger
+                this.ctx.fillRect(barX, barY, leftTriggerX - barX, barHeight);
+                // Right trigger
+                this.ctx.fillRect(rightTriggerX, barY, barX + barWidth - rightTriggerX, barHeight);
+                
+                // Draw threshold lines
+                this.ctx.strokeStyle = '#444';
+                this.ctx.lineWidth = 1;
+                
+                // Center line
+                this.ctx.strokeStyle = '#0ff';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, barY);
+                this.ctx.lineTo(centerX, barY + barHeight);
+                this.ctx.stroke();
+                
+                // Current position indicator
+                const currentX = centerX + (this.position * scale);
+                
+                // Draw position marker
+                this.ctx.fillStyle = this.getPositionColor();
+                this.ctx.beginPath();
+                this.ctx.arc(currentX, barY + barHeight/2, 8, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Draw position line
+                this.ctx.strokeStyle = this.getPositionColor();
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(currentX, barY - 5);
+                this.ctx.lineTo(currentX, barY + barHeight + 5);
+                this.ctx.stroke();
+                
+                // Draw zone labels
+                this.ctx.fillStyle = '#888';
+                this.ctx.font = '10px monospace';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('-5cm', leftTriggerX, barY - 5);
+                this.ctx.fillText('-3cm', leftWarningX, barY - 5);
+                this.ctx.fillText('0', centerX, barY - 5);
+                this.ctx.fillText('3cm', rightWarningX, barY - 5);
+                this.ctx.fillText('5cm', rightTriggerX, barY - 5);
+            }
+            
+            drawHistoryGraph() {
+                const graphY = 100;
+                const graphHeight = 80;
+                const graphWidth = this.width - 40;
+                const graphX = 20;
+                
+                // Background
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+                
+                // Draw grid
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 0.5;
+                
+                // Horizontal lines
+                for (let i = 0; i <= 4; i++) {
+                    const y = graphY + (graphHeight / 4) * i;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(graphX, y);
+                    this.ctx.lineTo(graphX + graphWidth, y);
+                    this.ctx.stroke();
+                }
+                
+                // Draw history line
+                this.ctx.strokeStyle = '#0ff';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                
+                const stepX = graphWidth / this.historySize;
+                const centerY = graphY + graphHeight / 2;
+                const scale = graphHeight / 20; // Scale to fit -10 to +10 cm
+                
+                for (let i = 0; i < this.historySize; i++) {
+                    const index = (this.historyIndex + i) % this.historySize;
+                    const value = this.positionHistory[index];
+                    const x = graphX + i * stepX;
+                    const y = centerY - (value * scale);
+                    
+                    if (i === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                }
+                this.ctx.stroke();
+                
+                // Draw threshold lines
+                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([5, 5]);
+                
+                // Upper threshold
+                const upperY = centerY - (this.zones.triggerRight * scale);
+                this.ctx.beginPath();
+                this.ctx.moveTo(graphX, upperY);
+                this.ctx.lineTo(graphX + graphWidth, upperY);
+                this.ctx.stroke();
+                
+                // Lower threshold
+                const lowerY = centerY - (this.zones.triggerLeft * scale);
+                this.ctx.beginPath();
+                this.ctx.moveTo(graphX, lowerY);
+                this.ctx.lineTo(graphX + graphWidth, lowerY);
+                this.ctx.stroke();
+                
+                this.ctx.setLineDash([]);
+            }
+            
+            drawVelocityVector() {
+                const centerX = this.width / 2;
+                const centerY = 50;
+                const maxLength = 40;
+                
+                // Background circle
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, maxLength + 10, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Velocity vector
+                const velocityLength = Math.min(Math.abs(this.velocity) * 2, maxLength);
+                const velocityAngle = this.velocity > 0 ? 0 : Math.PI;
+                
+                const endX = centerX + Math.cos(velocityAngle) * velocityLength;
+                const endY = centerY;
+                
+                // Draw arrow
+                this.ctx.strokeStyle = this.velocity > 0 ? '#f00' : '#0f0';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, centerY);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+                
+                // Arrow head
+                if (velocityLength > 5) {
+                    this.ctx.beginPath();
+                    const arrowSize = 8;
+                    const angle1 = velocityAngle + 2.5;
+                    const angle2 = velocityAngle - 2.5;
+                    this.ctx.moveTo(endX, endY);
+                    this.ctx.lineTo(endX - Math.cos(angle1) * arrowSize, endY - Math.sin(angle1) * arrowSize);
+                    this.ctx.moveTo(endX, endY);
+                    this.ctx.lineTo(endX - Math.cos(angle2) * arrowSize, endY - Math.sin(angle2) * arrowSize);
+                    this.ctx.stroke();
+                }
+                
+                // Velocity text
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = '12px monospace';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(`${this.velocity.toFixed(1)} cm/s`, centerX, centerY + maxLength + 25);
+            }
+            
+            drawCooldownIndicator() {
+                if (this.cooldownProgress > 0) {
+                    const centerX = this.width - 40;
+                    const centerY = 40;
+                    const radius = 25;
+                    
+                    // Background circle
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Progress arc
+                    this.ctx.strokeStyle = '#ff0';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX, centerY, radius - 2, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * this.cooldownProgress));
+                    this.ctx.stroke();
+                    
+                    // Text
+                    this.ctx.fillStyle = '#ff0';
+                    this.ctx.font = '10px monospace';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('COOLDOWN', centerX, centerY + radius + 15);
+                }
+            }
+            
+            drawTriggerEffects() {
+                // Flash effect when triggering
+                if (this.triggerFlashAlpha > 0) {
+                    const color = this.position < 0 ? '0, 255, 0' : '255, 0, 0';
+                    this.ctx.fillStyle = `rgba(${color}, ${this.triggerFlashAlpha})`;
+                    this.ctx.fillRect(0, 0, this.width, this.height);
+                    this.triggerFlashAlpha -= 0.05;
+                }
+            }
+            
+            updateParticles() {
+                // Update and draw particle effects
+                this.particleEffects = this.particleEffects.filter(particle => {
+                    particle.y -= particle.velocity;
+                    particle.alpha -= 0.02;
+                    particle.size *= 0.98;
+                    
+                    if (particle.alpha > 0) {
+                        this.ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        return true;
+                    }
+                    return false;
+                });
+            }
+            
+            triggerLaneChange(direction) {
+                // Visual feedback for lane change
+                this.triggerFlashAlpha = 0.3;
+                
+                // Create particles
+                const centerX = this.width / 2;
+                const centerY = this.height - 60;
+                
+                for (let i = 0; i < 10; i++) {
+                    this.particleEffects.push({
+                        x: centerX + (Math.random() - 0.5) * 100,
+                        y: centerY,
+                        velocity: Math.random() * 2 + 1,
+                        size: Math.random() * 5 + 2,
+                        color: direction === 'left' ? '0, 255, 0' : '255, 0, 0',
+                        alpha: 1
+                    });
+                }
+            }
+            
+            drawRawData() {
+                // Developer mode - show raw data
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(10, 10, 150, 80);
+                
+                this.ctx.fillStyle = '#0f0';
+                this.ctx.font = '10px monospace';
+                this.ctx.textAlign = 'left';
+                
+                const lines = [
+                    `Pos: ${this.position.toFixed(3)}cm`,
+                    `Vel: ${this.velocity.toFixed(3)}cm/s`,
+                    `Conf: ${(this.confidence * 100).toFixed(1)}%`,
+                    `State: ${this.state}`,
+                    `History: ${this.historyIndex}/${this.historySize}`,
+                    `FPS: ${(1000 / (Date.now() - this.lastUpdateTime)).toFixed(0)}`
+                ];
+                
+                lines.forEach((line, i) => {
+                    this.ctx.fillText(line, 15, 25 + i * 12);
+                });
+            }
+            
+            getPositionColor() {
+                const absPos = Math.abs(this.position);
+                if (absPos > this.zones.triggerRight) {
+                    return '#f00'; // Red - trigger zone
+                } else if (absPos > this.zones.warningRight) {
+                    return '#ff0'; // Yellow - warning zone
+                } else {
+                    return '#0f0'; // Green - safe zone
+                }
+            }
+            
+            toggleDebugMode() {
+                this.debugMode = (this.debugMode + 1) % 4;
+                console.log(`Debug mode: ${this.debugMode}`);
+            }
+        }
+        
+        // ============================================
         // SIMPLE HEAD TRACKER - Using Headtrackr.js
         // ============================================
         class SimpleHeadTracker {
@@ -737,6 +1249,7 @@
                 this.centerX = 0;
                 this.cooldownActive = false;
                 this.lastMoveTime = 0;
+                this.confidence = 0;
                 
                 // Simple thresholds
                 this.moveThreshold = 5; // cm of movement to trigger lane change
@@ -745,6 +1258,10 @@
                 // Debug
                 this.debugMode = true;
                 
+                // Visual feedback system
+                this.visualFeedback = null;
+                this.renderLoop = null;
+                
                 this.init();
             }
             
@@ -752,6 +1269,11 @@
                 // Get DOM elements
                 this.video = document.getElementById('headTrackVideo');
                 this.canvas = document.getElementById('headTrackCanvas');
+                
+                // Initialize visual feedback system
+                if (this.canvas) {
+                    this.visualFeedback = new AdvancedVisualFeedback(this.canvas);
+                }
                 
                 // Create input canvas for headtrackr (hidden)
                 const inputCanvas = document.createElement('canvas');
@@ -767,7 +1289,16 @@
                     toggleBtn.addEventListener('click', () => this.toggle());
                 }
                 
-                console.log('✅ Headtrackr.js initialized');
+                // Setup TAB key for debug mode toggle
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab' && this.visualFeedback) {
+                        e.preventDefault();
+                        this.visualFeedback.toggleDebugMode();
+                    }
+                });
+                
+                console.log('✅ Headtrackr.js with Advanced Visual Feedback initialized');
+                console.log('💡 Press TAB to toggle debug modes (1=basic, 2=advanced, 3=developer)');
             }
             
             initializeHeadtrackr() {
@@ -835,6 +1366,9 @@
                     this.htracker.start();
                     this.isActive = true;
                     
+                    // Start render loop for visual feedback
+                    this.startRenderLoop();
+                    
                     // Update UI
                     document.getElementById('headTrackPreview').classList.add('active');
                     document.getElementById('headTrackToggle').classList.add('active');
@@ -844,7 +1378,13 @@
                     setTimeout(() => {
                         this.centerX = this.lastX;
                         console.log('🎯 Calibrated center position:', this.centerX);
-                        document.getElementById('headTrackStatus').textContent = 'Active';
+                        document.getElementById('headTrackStatus').textContent = 'Calibrating...';
+                        
+                        // After calibration, set to active
+                        setTimeout(() => {
+                            document.getElementById('headTrackStatus').textContent = 'TRACKING';
+                            this.confidence = 1.0;
+                        }, 500);
                     }, 1000);
                     
                     console.log('✅ Head tracking started with Headtrackr');
@@ -854,8 +1394,24 @@
                 }
             }
             
+            startRenderLoop() {
+                const render = () => {
+                    if (this.isActive && this.visualFeedback) {
+                        this.visualFeedback.render();
+                        this.renderLoop = requestAnimationFrame(render);
+                    }
+                };
+                render();
+            }
+            
             stop() {
                 this.isActive = false;
+                
+                // Stop render loop
+                if (this.renderLoop) {
+                    cancelAnimationFrame(this.renderLoop);
+                    this.renderLoop = null;
+                }
                 
                 // Stop headtrackr
                 if (this.htracker) {
@@ -869,28 +1425,61 @@
                     this.video.srcObject = null;
                 }
                 
+                // Clear canvas
+                if (this.canvas) {
+                    const ctx = this.canvas.getContext('2d');
+                    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+                
                 // Update UI
                 document.getElementById('headTrackPreview').classList.remove('active');
                 document.getElementById('headTrackToggle').classList.remove('active');
                 document.getElementById('headTrackToggle').textContent = '📹 Head Tracking';
+                document.getElementById('headTrackStatus').textContent = 'Inactive';
                 
                 console.log('✅ Head tracking stopped');
             }
             
             onHeadMove(event) {
-                if (!this.isActive || !gameState.isPlaying) return;
+                if (!this.isActive) return;
                 
                 // event.x is horizontal position in cm relative to screen
                 const currentX = event.x;
                 this.lastX = currentX;
                 
+                // Update confidence based on event (headtrackr provides this)
+                this.confidence = event.confidence || 0.8;
+                
                 // Calculate relative movement from center
                 const relativeX = currentX - this.centerX;
                 
+                // Update visual feedback system
+                if (this.visualFeedback) {
+                    const now = Date.now();
+                    const cooldownTime = this.cooldownActive ? 
+                        this.cooldownMs - (now - this.lastMoveTime) : 0;
+                    const state = this.cooldownActive ? 'COOLDOWN' : 'TRACKING';
+                    
+                    this.visualFeedback.update(
+                        relativeX,
+                        this.confidence,
+                        state,
+                        this.cooldownActive,
+                        cooldownTime
+                    );
+                }
+                
+                // Only process game moves if game is playing
+                if (!gameState.isPlaying) return;
+                
                 // Check cooldown
                 const now = Date.now();
-                if (this.cooldownActive && (now - this.lastMoveTime) < this.cooldownMs) {
-                    return;
+                if (this.cooldownActive) {
+                    if ((now - this.lastMoveTime) >= this.cooldownMs) {
+                        this.cooldownActive = false;
+                    } else {
+                        return; // Still in cooldown
+                    }
                 }
                 
                 // Simple threshold-based lane change
@@ -902,7 +1491,10 @@
                         this.lastMoveTime = now;
                         console.log('⬅ HEAD: Move left to lane', gameState.playerLane);
                         
-                        // Visual feedback
+                        // Trigger visual effects
+                        if (this.visualFeedback) {
+                            this.visualFeedback.triggerLaneChange('left');
+                        }
                         this.showMoveFeedback('LEFT');
                     }
                 } else if (relativeX > this.moveThreshold) {
@@ -913,19 +1505,17 @@
                         this.lastMoveTime = now;
                         console.log('➡ HEAD: Move right to lane', gameState.playerLane);
                         
-                        // Visual feedback
+                        // Trigger visual effects
+                        if (this.visualFeedback) {
+                            this.visualFeedback.triggerLaneChange('right');
+                        }
                         this.showMoveFeedback('RIGHT');
                     }
-                } else {
-                    // In dead zone - reset cooldown
-                    this.cooldownActive = false;
                 }
                 
                 // Update status display
-                if (this.debugMode) {
-                    document.getElementById('headTrackStatus').textContent = 
-                        `Pos: ${relativeX.toFixed(1)}cm | Lane: ${gameState.playerLane}`;
-                }
+                document.getElementById('headTrackStatus').textContent = 
+                    `${relativeX >= 0 ? '+' : ''}${relativeX.toFixed(1)}cm | Lane ${gameState.playerLane}`;
             }
             
             showMoveFeedback(direction) {
