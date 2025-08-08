@@ -832,6 +832,9 @@
                     // Track head position for game control
                     this.trackHeadPosition(landmarks);
                     
+                    // Draw professional tracking feedback
+                    this.drawHeadTrackingFeedback();
+                    
                     // Update status with head tracking info
                     const headControlActive = this.centerX !== undefined ? '🎯' : '📷';
                     document.getElementById('poseStatus').innerHTML = 
@@ -921,96 +924,290 @@
                 this.ctx.strokeRect(x - width/2, y - height/2, width, height);
             }
             
+            initHeadTracking() {
+                // Professional tracking system initialization
+                this.positionHistory = [];     // Buffer for median filter
+                this.smoothedX = 0.5;          // EMA smoothed position
+                this.velocityX = 0;            // Head velocity
+                this.lastX = 0.5;
+                
+                // Filter parameters
+                this.historySize = 5;          // Median filter window
+                this.alphaIdle = 0.15;         // High smoothing when idle
+                this.alphaActive = 0.35;       // Less smoothing when moving
+                
+                // Hysterese & Deadzone
+                this.deadzoneX = 0.01;         // 1% deadzone
+                this.enterThresholdLeft = -0.02;   // 2% to trigger left
+                this.enterThresholdRight = 0.02;   // 2% to trigger right
+                this.exitThreshold = 0.015;        // 1.5% to exit state
+                
+                // State machine
+                this.trackingState = 'CENTER';     // LEFT_ARMING, LEFT, CENTER, RIGHT_ARMING, RIGHT
+                this.stateStartTime = 0;
+                this.armingDuration = 100;         // 100ms arming time
+                this.cooldownDuration = 200;       // 200ms cooldown
+                this.lastTriggerTime = 0;
+                
+                // Temporal voting
+                this.voteBuffer = [];
+                this.voteBufferSize = 8;
+                this.voteThreshold = 5;            // 5/8 frames must agree
+                
+                // Visual feedback
+                this.visualState = {
+                    tilt: 0,
+                    confidence: 0,
+                    state: 'IDLE'
+                };
+                
+                console.log('🎯 Professional Head Tracking initialized');
+            }
+            
             trackHeadPosition(landmarks) {
-                // Get nose position (landmark 0)
-                const nose = landmarks[0];
-                if (!nose) return;
-                
-                const headX = nose.x;
-                
-                // Initialize calibration on first detection or re-calibrate after 10 seconds
-                if (this.centerX === undefined || (Date.now() - this.calibrationTime > 10000 && !gameState.isPlaying)) {
-                    this.centerX = headX;
-                    this.leftThreshold = 0.025;  // 2.5% movement to trigger (ULTRA sensitive)
-                    this.rightThreshold = 0.025;
-                    this.lastLaneChange = 0;
-                    this.laneChangeDelay = 250; // ms between lane changes (much faster)
-                    this.calibrationTime = Date.now();
-                    console.log('📏 Head tracking calibrated at center:', this.centerX);
-                    console.log('🎮 Move your head left/right to control the player!');
-                    console.log('🎯 Sensitivity: ULTRA HIGH (2.5% threshold)');
+                // Initialize if needed
+                if (!this.positionHistory) {
+                    this.initHeadTracking();
                 }
+                
+                // Get multiple head landmarks for stability
+                const headIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8];  // All head points
+                let sumX = 0;
+                let sumConfidence = 0;
+                let validPoints = 0;
+                
+                // Calculate weighted average of head landmarks
+                headIndices.forEach(idx => {
+                    const landmark = landmarks[idx];
+                    if (landmark && landmark.visibility > 0.5) {
+                        sumX += landmark.x * landmark.visibility;
+                        sumConfidence += landmark.visibility;
+                        validPoints++;
+                    }
+                });
+                
+                if (validPoints === 0) return;
+                
+                const rawX = sumX / sumConfidence;
+                const confidence = sumConfidence / validPoints;
+                
+                // Initialize center on first detection
+                if (this.centerX === undefined) {
+                    this.centerX = rawX;
+                    this.smoothedX = rawX;
+                    this.lastX = rawX;
+                    console.log('📏 Calibrated at center:', this.centerX);
+                }
+                
+                // Add to history for median filter
+                this.positionHistory.push(rawX);
+                if (this.positionHistory.length > this.historySize) {
+                    this.positionHistory.shift();
+                }
+                
+                // Apply median filter
+                const medianX = this.getMedian([...this.positionHistory]);
+                
+                // Calculate velocity
+                this.velocityX = medianX - this.lastX;
+                const isMoving = Math.abs(this.velocityX) > 0.002;
+                
+                // Apply EMA filter with adaptive alpha
+                const alpha = isMoving ? this.alphaActive : this.alphaIdle;
+                this.smoothedX = alpha * medianX + (1 - alpha) * this.smoothedX;
                 
                 // Calculate relative position
-                const relativeX = headX - this.centerX;
+                const relativeX = this.smoothedX - this.centerX;
+                
+                // Apply deadzone
+                const effectiveX = Math.abs(relativeX) < this.deadzoneX ? 0 : relativeX;
+                
+                // State machine with hysteresis
+                this.updateTrackingState(effectiveX, confidence);
+                
+                // Execute lane changes based on state
+                this.executeLaneChange();
+                
+                // Update visual feedback
+                this.updateVisualFeedback(relativeX, confidence);
+                
+                // Store for next frame
+                this.lastX = medianX;
+            }
+            
+            getMedian(arr) {
+                arr.sort((a, b) => a - b);
+                const mid = Math.floor(arr.length / 2);
+                return arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+            }
+            
+            updateTrackingState(relativeX, confidence) {
+                const now = Date.now();
+                const timeSinceTrigger = now - this.lastTriggerTime;
+                
+                // Skip if in cooldown
+                if (timeSinceTrigger < this.cooldownDuration) {
+                    this.trackingState = 'COOLDOWN';
+                    return;
+                }
+                
+                // State transitions with hysteresis
+                switch(this.trackingState) {
+                    case 'CENTER':
+                        if (relativeX < this.enterThresholdLeft && confidence > 0.6) {
+                            this.trackingState = 'LEFT_ARMING';
+                            this.stateStartTime = now;
+                        } else if (relativeX > this.enterThresholdRight && confidence > 0.6) {
+                            this.trackingState = 'RIGHT_ARMING';
+                            this.stateStartTime = now;
+                        }
+                        break;
+                        
+                    case 'LEFT_ARMING':
+                        if (relativeX > -this.exitThreshold) {
+                            this.trackingState = 'CENTER';
+                        } else if (now - this.stateStartTime > this.armingDuration) {
+                            this.trackingState = 'LEFT';
+                        }
+                        break;
+                        
+                    case 'RIGHT_ARMING':
+                        if (relativeX < this.exitThreshold) {
+                            this.trackingState = 'CENTER';
+                        } else if (now - this.stateStartTime > this.armingDuration) {
+                            this.trackingState = 'RIGHT';
+                        }
+                        break;
+                        
+                    case 'LEFT':
+                    case 'RIGHT':
+                        // Will trigger action and go to cooldown
+                        break;
+                        
+                    case 'COOLDOWN':
+                        if (timeSinceTrigger > this.cooldownDuration) {
+                            this.trackingState = 'CENTER';
+                        }
+                        break;
+                }
+            }
+            
+            executeLaneChange() {
+                if (!gameState.isPlaying) return;
+                
                 const now = Date.now();
                 
-                // Debug output
-                if (this.frameCount % 30 === 0) { // Log every 30 frames
-                    console.log(`Head: X=${headX.toFixed(3)}, Relative=${relativeX.toFixed(3)}, Lane=${gameState.playerLane}`);
+                if (this.trackingState === 'LEFT' && gameState.playerLane > 0) {
+                    gameState.playerLane--;
+                    this.lastTriggerTime = now;
+                    this.trackingState = 'COOLDOWN';
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    console.log('👈 LEFT - Lane:', gameState.playerLane);
+                } else if (this.trackingState === 'RIGHT' && gameState.playerLane < 2) {
+                    gameState.playerLane++;
+                    this.lastTriggerTime = now;
+                    this.trackingState = 'COOLDOWN';
+                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    console.log('👉 RIGHT - Lane:', gameState.playerLane);
                 }
+            }
+            
+            updateVisualFeedback(relativeX, confidence) {
+                this.visualState.tilt = relativeX;
+                this.visualState.confidence = confidence;
+                this.visualState.state = this.trackingState;
+            }
                 
-                // Check if game is playing and enough time has passed
-                if (gameState.isPlaying && (now - this.lastLaneChange > this.laneChangeDelay)) {
-                    // Move left
-                    if (relativeX < -this.leftThreshold && gameState.playerLane > 0) {
-                        gameState.playerLane--;
-                        this.lastLaneChange = now;
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
-                        console.log('👈 Head moved LEFT - Lane:', gameState.playerLane);
-                    }
-                    // Move right
-                    else if (relativeX > this.rightThreshold && gameState.playerLane < 2) {
-                        gameState.playerLane++;
-                        this.lastLaneChange = now;
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
-                        console.log('👉 Head moved RIGHT - Lane:', gameState.playerLane);
-                    }
-                }
+            
+            drawHeadTrackingFeedback() {
+                if (!this.visualState || !this.centerX) return;
                 
-                // Visual feedback on canvas - make it more prominent
-                const noseX = headX * this.canvas.width;
-                const noseY = nose.y * this.canvas.height;
+                const canvasW = this.canvas.width;
+                const canvasH = this.canvas.height;
                 
-                // Draw nose position with color based on movement
-                if (Math.abs(relativeX) > Math.max(this.leftThreshold, this.rightThreshold) * 0.5) {
-                    // Orange when getting close to threshold
-                    this.ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
-                    this.ctx.strokeStyle = 'rgba(255, 165, 0, 1)';
-                } else {
-                    // Yellow when centered
-                    this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                    this.ctx.strokeStyle = 'rgba(255, 255, 0, 1)';
-                }
+                // Draw tilt bar at bottom
+                const barHeight = 20;
+                const barY = canvasH - barHeight - 10;
+                const barWidth = canvasW * 0.8;
+                const barX = canvasW * 0.1;
                 
-                // Draw larger indicator
+                // Background
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                this.ctx.fillRect(barX, barY, barWidth, barHeight);
+                
+                // Deadzone
+                const deadzoneW = this.deadzoneX * 2 * barWidth;
+                this.ctx.fillStyle = 'rgba(100, 100, 100, 0.3)';
+                this.ctx.fillRect(barX + barWidth/2 - deadzoneW/2, barY, deadzoneW, barHeight);
+                
+                // Thresholds
+                this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
                 this.ctx.lineWidth = 2;
+                // Left threshold
+                const leftThreshX = barX + barWidth/2 + (this.enterThresholdLeft * barWidth * 2);
                 this.ctx.beginPath();
-                this.ctx.arc(noseX, noseY, 8, 0, Math.PI * 2);
-                this.ctx.fill();
+                this.ctx.moveTo(leftThreshX, barY);
+                this.ctx.lineTo(leftThreshX, barY + barHeight);
+                this.ctx.stroke();
+                // Right threshold
+                const rightThreshX = barX + barWidth/2 + (this.enterThresholdRight * barWidth * 2);
+                this.ctx.beginPath();
+                this.ctx.moveTo(rightThreshX, barY);
+                this.ctx.lineTo(rightThreshX, barY + barHeight);
                 this.ctx.stroke();
                 
-                // Draw threshold indicators
-                if (this.centerX !== undefined) {
-                    this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
-                    this.ctx.lineWidth = 1;
-                    // Center line
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.centerX * this.canvas.width, 0);
-                    this.ctx.lineTo(this.centerX * this.canvas.width, this.canvas.height);
-                    this.ctx.stroke();
-                    // Left threshold
-                    this.ctx.beginPath();
-                    this.ctx.moveTo((this.centerX - this.leftThreshold) * this.canvas.width, 0);
-                    this.ctx.lineTo((this.centerX - this.leftThreshold) * this.canvas.width, this.canvas.height);
-                    this.ctx.stroke();
-                    // Right threshold
-                    this.ctx.beginPath();
-                    this.ctx.moveTo((this.centerX + this.rightThreshold) * this.canvas.width, 0);
-                    this.ctx.lineTo((this.centerX + this.rightThreshold) * this.canvas.width, this.canvas.height);
-                    this.ctx.stroke();
+                // Current position indicator
+                const currentX = barX + barWidth/2 + (this.visualState.tilt * barWidth * 2);
+                
+                // Color based on state
+                let color;
+                switch(this.trackingState) {
+                    case 'LEFT_ARMING':
+                    case 'RIGHT_ARMING':
+                        color = 'rgba(255, 165, 0, 0.9)';  // Orange
+                        break;
+                    case 'LEFT':
+                    case 'RIGHT':
+                        color = 'rgba(0, 255, 0, 0.9)';    // Green
+                        break;
+                    case 'COOLDOWN':
+                        color = 'rgba(255, 0, 0, 0.5)';    // Red
+                        break;
+                    default:
+                        color = 'rgba(255, 255, 0, 0.9)';  // Yellow
+                }
+                
+                this.ctx.fillStyle = color;
+                this.ctx.beginPath();
+                this.ctx.arc(currentX, barY + barHeight/2, 8, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // State text
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                this.ctx.font = '12px monospace';
+                this.ctx.textAlign = 'center';
+                let stateText = '';
+                switch(this.trackingState) {
+                    case 'LEFT_ARMING': stateText = '← Arming...'; break;
+                    case 'RIGHT_ARMING': stateText = 'Arming... →'; break;
+                    case 'LEFT': stateText = '← LEFT!'; break;
+                    case 'RIGHT': stateText = 'RIGHT! →'; break;
+                    case 'COOLDOWN': stateText = 'Cooldown'; break;
+                    default: stateText = 'Ready';
+                }
+                this.ctx.fillText(stateText, canvasW/2, barY - 5);
+                
+                // Confidence indicator
+                const confText = `Confidence: ${(this.visualState.confidence * 100).toFixed(0)}%`;
+                this.ctx.fillText(confText, canvasW/2, barY - 20);
+                
+                // Velocity indicator (optional)
+                if (this.velocityX !== undefined) {
+                    const velBar = Math.min(Math.abs(this.velocityX) * 1000, 50);
+                    this.ctx.fillStyle = this.velocityX < 0 ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)';
+                    this.ctx.fillRect(canvasW/2 - velBar/2, barY - 35, velBar, 5);
                 }
             }
             
