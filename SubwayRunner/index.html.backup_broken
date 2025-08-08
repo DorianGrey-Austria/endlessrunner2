@@ -951,6 +951,277 @@
                 console.log('🎮 Simple Head Tracking System ready');
             }, 1000);
         });
+                
+                // Apply sensitivity to thresholds
+                const enterLeft = this.thresholds.enterLeft / this.sensitivity;
+                const exitLeft = this.thresholds.exitLeft / this.sensitivity;
+                const enterRight = this.thresholds.enterRight / this.sensitivity;
+                const exitRight = this.thresholds.exitRight / this.sensitivity;
+                const deadZone = this.thresholds.deadZone / this.sensitivity;
+                
+                // RADIKAL VEREINFACHTE STATE MACHINE - Nur 2 States!
+                switch(this.state) {
+                    case 'IDLE':
+                        // SOFORT reagieren auf JEDE Bewegung über Threshold!
+                        if (relativeX < enterLeft) {
+                            // DIREKT links bewegen - keine Verzögerung!
+                            this.executeLaneChange('left');
+                            this.changeState('COOLDOWN');
+                            console.log('🎯 INSTANT LEFT: relativeX =', relativeX.toFixed(3));
+                        } else if (relativeX > enterRight) {
+                            // DIREKT rechts bewegen - keine Verzögerung!
+                            this.executeLaneChange('right');
+                            this.changeState('COOLDOWN');
+                            console.log('🎯 INSTANT RIGHT: relativeX =', relativeX.toFixed(3));
+                        }
+                        break;
+                        
+                    case 'COOLDOWN':
+                        // KURZE Cooldown - dann sofort wieder bereit!
+                        if (timeSinceStateChange >= this.cooldownMs) {
+                            this.changeState('IDLE');
+                        }
+                        break;
+                        
+                    default:
+                        // Fallback - sollte nie passieren
+                        console.warn('⚠️ Unknown state:', this.state);
+                        this.changeState('IDLE');
+                        break;
+                }
+                
+                // Set auto-reset timer if not already set
+                if (this.state !== 'IDLE' && !this.autoResetTimeout) {
+                    this.autoResetTimeout = setTimeout(() => {
+                        console.log('⚠️ Auto-reset triggered');
+                        this.resetState();
+                    }, this.autoResetMs);
+                }
+                
+                // Update display
+                this.updateDisplay(relativeX);
+                
+                // Debug output
+                if (this.debugMode) {
+                    this.updateDebugHUD(relativeX);
+                }
+            }
+            
+            changeState(newState) {
+                if (this.state !== newState) {
+                    console.log(`🔄 State: ${this.state} → ${newState}`);
+                    this.state = newState;
+                    this.lastStateChange = Date.now();
+                    
+                    // Clear auto-reset timer when returning to IDLE
+                    if (newState === 'IDLE' && this.autoResetTimeout) {
+                        clearTimeout(this.autoResetTimeout);
+                        this.autoResetTimeout = null;
+                    }
+                }
+            }
+            
+            resetState() {
+                this.state = 'IDLE';
+                this.candidateFrames = 0;
+                this.lastStateChange = Date.now();
+                if (this.autoResetTimeout) {
+                    clearTimeout(this.autoResetTimeout);
+                    this.autoResetTimeout = null;
+                }
+                this.leftHysteresis.reset();
+                this.rightHysteresis.reset();
+            }
+            
+            executeLaneChange(direction) {
+                if (typeof gameState !== 'undefined' && gameState.isPlaying) {
+                    if (direction === 'left' && gameState.playerLane > 0) {
+                        gameState.playerLane--;
+                        console.log('⬅ HEAD TRACKING: Moving left to lane', gameState.playerLane);
+                        // Force immediate visual update
+                        if (typeof player !== 'undefined') {
+                            const targetX = LANE_POSITIONS[gameState.playerLane];
+                            // We don't set player.position.x here - let animate() handle it
+                        }
+                    } else if (direction === 'right' && gameState.playerLane < 2) {
+                        gameState.playerLane++;
+                        console.log('➡ HEAD TRACKING: Moving right to lane', gameState.playerLane);
+                    }
+                }
+            }
+            
+            updateDisplay(relativeX = 0) {
+                const stateIcon = {
+                    'IDLE': '✅',
+                    'COOLDOWN': '⏸️'
+                }[this.state] || '❓';
+                
+                const confidence = (this.confidence * 100).toFixed(0);
+                const position = (relativeX * 100).toFixed(1);
+                
+                document.getElementById('headTrackStatus').textContent = 
+                    `${stateIcon} | Conf: ${confidence}% | Pos: ${position}%`;
+            }
+            
+            drawVisualization() {
+                if (!this.ctx) return;
+                
+                const relativeX = this.smoothedX - this.centerX;
+                const ctx = this.canvas.getContext('2d');
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw position bar
+                const barHeight = 30;
+                const barY = 60;
+                const barWidth = this.canvas.width * 0.9;
+                const barX = this.canvas.width * 0.05;
+                const scale = barWidth / 2; // Scale factor for visualization
+                
+                // Background
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+                
+                // Dead zone
+                const deadZoneWidth = this.thresholds.deadZone * scale;
+                ctx.fillStyle = 'rgba(100, 100, 100, 0.3)';
+                ctx.fillRect(barX + barWidth/2 - deadZoneWidth, barY, deadZoneWidth * 2, barHeight);
+                
+                // Center line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(barX + barWidth/2, barY);
+                ctx.lineTo(barX + barWidth/2, barY + barHeight);
+                ctx.stroke();
+                
+                // Threshold lines
+                const leftEnterX = barX + barWidth/2 + (this.thresholds.enterLeft * scale);
+                const leftExitX = barX + barWidth/2 + (this.thresholds.exitLeft * scale);
+                const rightEnterX = barX + barWidth/2 + (this.thresholds.enterRight * scale);
+                const rightExitX = barX + barWidth/2 + (this.thresholds.exitRight * scale);
+                
+                // Enter thresholds (solid)
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(leftEnterX, barY);
+                ctx.lineTo(leftEnterX, barY + barHeight);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(rightEnterX, barY);
+                ctx.lineTo(rightEnterX, barY + barHeight);
+                ctx.stroke();
+                
+                // Exit thresholds (dashed)
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(leftExitX, barY);
+                ctx.lineTo(leftExitX, barY + barHeight);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(rightExitX, barY);
+                ctx.lineTo(rightExitX, barY + barHeight);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Current position indicator
+                const currentX = barX + barWidth/2 + (relativeX * scale);
+                const color = {
+                    'IDLE': '#ffff00',
+                    'CANDIDATE_LEFT': '#ffa500',
+                    'CANDIDATE_RIGHT': '#ffa500',
+                    'COOLDOWN': '#00ff00'
+                }[this.state] || '#ff00ff';
+                
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(currentX, barY + barHeight/2, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // State text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.state, this.canvas.width/2, barY - 5);
+            }
+            
+            updateDebugHUD(relativeX) {
+                if (!this.debugHUD) {
+                    this.createDebugHUD();
+                }
+                
+                // Zeige Schwellenwerte visuell
+                const leftIndicator = relativeX < this.thresholds.enterLeft ? '🔴' : '⚪';
+                const rightIndicator = relativeX > this.thresholds.enterRight ? '🔴' : '⚪';
+                
+                const html = `
+                    <div style="font-family: monospace; font-size: 12px; color: #0f0;">
+                        <div style="color: yellow;">🎯 HEAD TRACKING DEBUG</div>
+                        <div>State: ${this.state} ${this.state === 'IDLE' ? '✅' : '⏸️'}</div>
+                        <div>Position: ${(relativeX * 100).toFixed(1)}%</div>
+                        <div>${leftIndicator} Left: ${(this.thresholds.enterLeft * 100).toFixed(1)}%</div>
+                        <div>${rightIndicator} Right: ${(this.thresholds.enterRight * 100).toFixed(1)}%</div>
+                        <div>Confidence: ${(this.confidence * 100).toFixed(0)}%</div>
+                        <div>Lane: ${typeof gameState !== 'undefined' ? gameState.playerLane : 1}</div>
+                        <div>Cooldown: ${this.cooldownMs}ms</div>
+                    </div>
+                `;
+                this.debugHUD.innerHTML = html;
+            }
+            
+            createDebugHUD() {
+                this.debugHUD = document.createElement('div');
+                this.debugHUD.id = 'headTrackingDebug';
+                this.debugHUD.style.cssText = `
+                    position: fixed;
+                    top: 200px;
+                    right: 20px;
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #00ff00;
+                    padding: 10px;
+                    border: 1px solid #00ff00;
+                    border-radius: 5px;
+                    z-index: 10000;
+                `;
+                document.body.appendChild(this.debugHUD);
+            }
+            
+            loadSetting(key, defaultValue) {
+                try {
+                    const saved = localStorage.getItem(key);
+                    if (saved !== null) {
+                        const value = parseFloat(saved);
+                        console.log(`⚙️ Loaded ${key}: ${value}`);
+                        return value;
+                    }
+                } catch (e) {
+                    console.error(`Failed to load ${key}:`, e);
+                }
+                return defaultValue;
+            }
+            
+            saveSetting(key, value) {
+                try {
+                    localStorage.setItem(key, value.toString());
+                    console.log(`💾 Saved ${key}: ${value}`);
+                } catch (e) {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+            }
+            
+            setSensitivity(value) {
+                this.sensitivity = Math.max(0.5, Math.min(2.0, value));
+                this.saveSetting('headTrackSensitivity', this.sensitivity);
+                console.log(`🎚️ Sensitivity set to ${this.sensitivity}`);
+            }
+        }
         
         // ============================================
         // MOBILE TOUCH CONTROLLER
