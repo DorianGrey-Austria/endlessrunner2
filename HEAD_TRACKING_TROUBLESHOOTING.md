@@ -403,3 +403,127 @@ Diese Kombination bietet:
 - ✅ Weniger Fehlauslösungen
 
 **Alternative**: Nutze eine bewährte Library wie headtrackr.js statt eigene Implementation!
+
+## 🔴 JEELIZ FACEFILTER DISASTER (08.08.2025)
+
+### **Das Problem: Jeeliz funktioniert NICHT für kontinuierliche Steuerung**
+
+Nach mehreren Stunden Debugging haben wir festgestellt:
+
+1. **"Einmal und nie wieder" Bug**
+   - State Machine bleibt in COOLDOWN/CANDIDATE hängen
+   - Exit-Schwellen werden nie erreicht (ry-Werte zu instabil)
+   - Kein automatischer Reset implementiert
+
+2. **Falsche Werte von Jeeliz**
+   - `detectState.ry` liefert inkonsistente Werte
+   - Nicht normalisiert zwischen -1 und 1 wie dokumentiert
+   - Sprünge und Jitter selbst bei stillstehendem Kopf
+
+3. **Hysterese-Problem**
+   - Exit-Thresholds zu nah an Enter-Thresholds
+   - Keine Dead-Zone implementiert
+   - State bleibt "gefangen" nach erster Bewegung
+
+4. **Player-Position Konflikt**
+   - `player.position.x = targetX` überschreibt JEDE Änderung
+   - Head-Tracking ändert nur `gameState.playerLane`
+   - Aber animate() Loop setzt position.x direkt
+
+## 📚 LESSONS LEARNED - NIE WIEDER DIESE FEHLER!
+
+### **1. IMMER One-Euro-Filter verwenden**
+```javascript
+// NIEMALS raw values direkt nutzen!
+const smoothed = oneEuroFilter.filter(timestamp, rawValue);
+```
+
+### **2. State Machine MUSS Auto-Reset haben**
+```javascript
+// PFLICHT: Timeout für jeden State
+if (timeSinceStateChange > AUTO_RESET_MS) {
+    this.state = 'IDLE';
+}
+```
+
+### **3. Hysterese RICHTIG implementieren**
+```javascript
+// Enter/Exit müssen weit genug auseinander!
+const hysteresis = {
+    enterLeft: -0.15,   // Aktivierung
+    exitLeft: -0.08,    // MUSS > enterLeft sein!
+    deadZone: 0.06      // PFLICHT: Neutrale Zone
+};
+```
+
+### **4. M-of-N Frame Validation**
+```javascript
+// NIEMALS auf Single-Frame reagieren
+if (candidateFrames >= MIN_FRAMES_REQUIRED) {
+    executeLaneChange();
+}
+```
+
+### **5. Confidence-Checks sind PFLICHT**
+```javascript
+if (detection.confidence < 0.6) {
+    resetToIdle();
+    return;
+}
+```
+
+### **6. Debug-HUD von Anfang an**
+```javascript
+// IMMER implementieren für Debugging
+showDebugInfo({
+    state: currentState,
+    raw: rawValue,
+    smooth: smoothedValue,
+    thresholds: activeThresholds
+});
+```
+
+## 🚀 NEUE LÖSUNG: MediaPipe Tasks + One-Euro-Filter
+
+Basierend auf professionellen Python-Beispielen implementieren wir:
+
+1. **MediaPipe Tasks Vision API** (2024 Version)
+   - Moderne, stabile API
+   - Bessere Performance
+   - Zuverlässige Landmark-Detection
+
+2. **One-Euro-Filter** für Smoothing
+   - Reduziert Jitter ohne Lag
+   - Adaptiv bei schnellen Bewegungen
+   - Bewährt in Produktions-Umgebungen
+
+3. **Robuste State Machine**
+   ```
+   IDLE → CANDIDATE → EXECUTING → COOLDOWN → IDLE
+   - Auto-Reset nach 500ms
+   - Clear State-Übergänge
+   - Keine "gefangenen" States
+   ```
+
+4. **Proper Hysterese & Debouncing**
+   - Enter/Exit-Schwellen mit genug Abstand
+   - Dead-Zone um Neutral-Position
+   - Edge-Detection für Events
+
+5. **Kalibrierung & Settings**
+   - 1 Sekunde Initial-Kalibrierung
+   - Auto-Rezentrierung alle 30s
+   - User-einstellbare Sensitivity
+
+## ✅ CHECKLISTE FÜR ZUKÜNFTIGE IMPLEMENTIERUNGEN
+
+- [ ] One-Euro-Filter oder ähnliches Smoothing
+- [ ] State Machine mit Auto-Reset
+- [ ] Hysterese mit ausreichendem Abstand
+- [ ] M-of-N Frame Validation
+- [ ] Confidence Thresholds
+- [ ] Debug-HUD von Anfang an
+- [ ] Kalibrierungs-Phase
+- [ ] Settings in localStorage
+- [ ] Graceful Degradation
+- [ ] Unit Tests für State-Übergänge
