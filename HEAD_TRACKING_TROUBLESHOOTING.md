@@ -577,9 +577,44 @@ Basierend auf professionellen Python-Beispielen implementieren wir:
 - **Keine Verzögerung** - instant response
 - **Debug immer an** für besseres Testing
 
+## 🔴 VERSION 8.0 - HEADTRACKR.JS REWRITE (08.08.2025)
+
+### **Problem: MediaPipe zu instabil, "einmal und nie wieder" Bug**
+
+### **Lösung: Kompletter Wechsel zu Headtrackr.js**
+- MediaPipe komplett entfernt
+- Headtrackr.js implementiert (speziell für Head Tracking)
+- Event-basierte API statt komplexer State Machine
+- 5cm Bewegung für Lane-Wechsel
+- Q/E Keyboard Fallback
+
+### **KRITISCHER BUG: Dead Code nach Refactoring**
+**Symptome:**
+```
+Uncaught SyntaxError: Unexpected token '}'
+Uncaught ReferenceError: startGame is not defined
+```
+
+**Root Cause:**
+- Beim Entfernen der MediaPipe Implementation blieben 275 Zeilen Dead Code
+- Methoden außerhalb von Klassen
+- Unvollständig gelöschte Funktionen
+
+**Fix:**
+```bash
+# Dead Code zwischen Zeile 954-1228 entfernen
+sed '954,1228d' index.html > index_fixed.html
+mv index_fixed.html index.html
+```
+
+**Lesson Learned:**
+- IMMER nach großen Refactorings auf Dead Code prüfen
+- Syntax-Checker verwenden vor Deployment
+- Backup erstellen vor sed-Operationen
+
 ## ✅ CHECKLISTE FÜR ZUKÜNFTIGE IMPLEMENTIERUNGEN
 
-- [ ] One-Euro-Filter oder ähnliches Smoothing
+- [x] One-Euro-Filter oder ähnliches Smoothing (nicht mehr nötig mit Headtrackr)
 - [ ] State Machine mit Auto-Reset
 - [ ] Hysterese mit ausreichendem Abstand
 - [ ] M-of-N Frame Validation
