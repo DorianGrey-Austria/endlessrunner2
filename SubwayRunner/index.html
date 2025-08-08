@@ -829,9 +829,13 @@
                     // Draw landmarks with colored rectangles for body parts
                     this.drawBodyParts(landmarks);
                     
-                    // Update status
+                    // Track head position for game control
+                    this.trackHeadPosition(landmarks);
+                    
+                    // Update status with head tracking info
+                    const headControlActive = this.centerX !== undefined ? '🎯' : '📷';
                     document.getElementById('poseStatus').innerHTML = 
-                        `FPS: ${this.fps} | Pose: ✅`;
+                        `FPS: ${this.fps} | Pose: ✅ | Head: ${headControlActive}`;
                 } else {
                     document.getElementById('poseStatus').innerHTML = 
                         `FPS: ${this.fps} | Pose: ❌`;
@@ -915,6 +919,74 @@
                 this.ctx.fillStyle = fillColor;
                 this.ctx.fillRect(x - width/2, y - height/2, width, height);
                 this.ctx.strokeRect(x - width/2, y - height/2, width, height);
+            }
+            
+            trackHeadPosition(landmarks) {
+                // Get nose position (landmark 0)
+                const nose = landmarks[0];
+                if (!nose) return;
+                
+                const headX = nose.x;
+                
+                // Initialize calibration on first detection
+                if (this.centerX === undefined) {
+                    this.centerX = headX;
+                    this.leftThreshold = 0.08;  // 8% movement to trigger (more sensitive)
+                    this.rightThreshold = 0.08;
+                    this.lastLaneChange = 0;
+                    this.laneChangeDelay = 400; // ms between lane changes (slightly slower)
+                    console.log('📏 Head tracking calibrated at center:', this.centerX);
+                    console.log('🎮 Move your head left/right to control the player!');
+                }
+                
+                // Calculate relative position
+                const relativeX = headX - this.centerX;
+                const now = Date.now();
+                
+                // Check if game is playing and enough time has passed
+                if (gameState.isPlaying && (now - this.lastLaneChange > this.laneChangeDelay)) {
+                    // Move left
+                    if (relativeX < -this.leftThreshold && gameState.playerLane > 0) {
+                        gameState.playerLane--;
+                        this.lastLaneChange = now;
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        console.log('👈 Head moved LEFT - Lane:', gameState.playerLane);
+                    }
+                    // Move right
+                    else if (relativeX > this.rightThreshold && gameState.playerLane < 2) {
+                        gameState.playerLane++;
+                        this.lastLaneChange = now;
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        console.log('👉 Head moved RIGHT - Lane:', gameState.playerLane);
+                    }
+                }
+                
+                // Visual feedback on canvas
+                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                this.ctx.fillRect(headX * this.canvas.width - 5, nose.y * this.canvas.height - 5, 10, 10);
+                
+                // Draw threshold indicators
+                if (this.centerX !== undefined) {
+                    this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+                    this.ctx.lineWidth = 1;
+                    // Center line
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.centerX * this.canvas.width, 0);
+                    this.ctx.lineTo(this.centerX * this.canvas.width, this.canvas.height);
+                    this.ctx.stroke();
+                    // Left threshold
+                    this.ctx.beginPath();
+                    this.ctx.moveTo((this.centerX - this.leftThreshold) * this.canvas.width, 0);
+                    this.ctx.lineTo((this.centerX - this.leftThreshold) * this.canvas.width, this.canvas.height);
+                    this.ctx.stroke();
+                    // Right threshold
+                    this.ctx.beginPath();
+                    this.ctx.moveTo((this.centerX + this.rightThreshold) * this.canvas.width, 0);
+                    this.ctx.lineTo((this.centerX + this.rightThreshold) * this.canvas.width, this.canvas.height);
+                    this.ctx.stroke();
+                }
             }
             
             updateFPS() {
