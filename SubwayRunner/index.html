@@ -9,19 +9,8 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
-    <!-- Jeeliz FaceFilter for Head Tracking (REPLACING MediaPipe) -->
-    <!-- MediaPipe Tasks Vision for Face Tracking -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.js"></script>
-    <script>
-        // Ensure MediaPipe is globally available
-        window.addEventListener('load', () => {
-            if (typeof FilesetResolver === 'undefined' && window.MediaPipeVision) {
-                window.FilesetResolver = window.MediaPipeVision.FilesetResolver;
-                window.FaceLandmarker = window.MediaPipeVision.FaceLandmarker;
-                console.log('✅ MediaPipe globals set from MediaPipeVision');
-            }
-        });
-    </script>
+    <!-- Headtrackr.js for stable head tracking -->
+    <script src="https://cdn.jsdelivr.net/gh/auduno/headtrackr/headtrackr.min.js"></script>
     
     <script type="module">
         // Pre-load Gesture Control Module
@@ -733,122 +722,95 @@
         }
         
         // ============================================
-        // ROBUST HEAD TRACKER - Professional Implementation
+        // SIMPLE HEAD TRACKER - Using Headtrackr.js
         // ============================================
-        class RobustHeadTracker {
+        class SimpleHeadTracker {
             constructor() {
                 // Core components
-                this.faceLandmarker = null;
+                this.htracker = null;
                 this.video = null;
                 this.canvas = null;
-                this.ctx = null;
                 this.isActive = false;
                 
-                // State Machine
-                this.state = 'IDLE'; // IDLE, CANDIDATE_LEFT, CANDIDATE_RIGHT, EXECUTING, COOLDOWN
-                this.lastStateChange = Date.now();
-                this.candidateFrames = 0;
-                this.autoResetTimeout = null;
-                
                 // Tracking values
+                this.lastX = 0;
                 this.centerX = 0;
-                this.rawX = 0;
-                this.smoothedX = 0;
-                this.confidence = 0;
+                this.cooldownActive = false;
+                this.lastMoveTime = 0;
                 
-                // Filters - MINIMAL FILTERING für maximale Responsiveness!
-                this.xFilter = new OneEuroFilter(60, 0.5, 0.5, 1.0); // VIEL weniger Filterung!
-                this.leftHysteresis = new HysteresisController(-0.15, -0.08);
-                this.rightHysteresis = new HysteresisController(0.15, 0.08);
+                // Simple thresholds
+                this.moveThreshold = 5; // cm of movement to trigger lane change
+                this.cooldownMs = 300; // ms between moves
                 
-                // Thresholds - VIEL SENSIBLER!
-                this.thresholds = {
-                    enterLeft: -0.05,    // War -0.15 - VIEL zu hoch!
-                    exitLeft: -0.03,     // War -0.08
-                    enterRight: 0.05,    // War 0.15 - VIEL zu hoch!
-                    exitRight: 0.03,     // War 0.08
-                    deadZone: 0.01,      // War 0.06 - zu große Dead Zone!
-                    minConfidence: 0.3   // War 0.6 - zu strikt!
-                };
-                
-                // Timing - SCHNELLER!
-                this.cooldownMs = 100;      // War 250 - zu lang!
-                this.candidateMs = 0;        // War 100 - unnötige Verzögerung!
-                this.autoResetMs = 200;      // War 500 - zu lang!
-                this.minFramesRequired = 1;  // War 3 - zu viele!
-                
-                // Settings
-                this.sensitivity = this.loadSetting('headTrackSensitivity', 1.0);
-                
-                // Debug - IMMER AN für Diagnose!
-                this.debugMode = true;  // War false - Debug immer an!
-                this.debugHUD = null;
-                console.log('🚨 HEAD TRACKING DEBUG MODE: ON');
-                
-                // Calibration
-                this.calibrationFrames = [];
-                this.calibrationDuration = 1000; // 1 second
-                this.isCalibrating = false;
+                // Debug
+                this.debugMode = true;
                 
                 this.init();
             }
             
-            async init() {
+            init() {
                 // Get DOM elements
                 this.video = document.getElementById('headTrackVideo');
                 this.canvas = document.getElementById('headTrackCanvas');
-                this.ctx = this.canvas.getContext('2d');
+                
+                // Create input canvas for headtrackr (hidden)
+                const inputCanvas = document.createElement('canvas');
+                inputCanvas.id = 'headtrackrInput';
+                inputCanvas.width = 320;
+                inputCanvas.height = 240;
+                inputCanvas.style.display = 'none';
+                document.body.appendChild(inputCanvas);
                 
                 // Setup button
                 const toggleBtn = document.getElementById('headTrackToggle');
-                toggleBtn.addEventListener('click', () => this.toggle());
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', () => this.toggle());
+                }
                 
-                // Initialize MediaPipe FaceLandmarker
-                await this.initializeMediaPipe();
+                console.log('✅ Headtrackr.js initialized');
             }
             
-            async initializeMediaPipe() {
+            initializeHeadtrackr() {
+                if (typeof headtrackr === 'undefined') {
+                    console.error('❌ Headtrackr.js not loaded!');
+                    return false;
+                }
+                
                 try {
-                    const vision = await FilesetResolver.forVisionTasks(
-                        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm'
-                    );
-                    
-                    this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
-                        baseOptions: {
-                            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-                            delegate: 'GPU'
-                        },
-                        runningMode: 'VIDEO',
-                        numFaces: 1,
-                        minFaceDetectionConfidence: 0.5,
-                        minFacePresenceConfidence: 0.5,
-                        minTrackingConfidence: 0.5
+                    // Create headtrackr instance
+                    this.htracker = new headtrackr.Tracker({
+                        ui: false,
+                        calcAngles: false,
+                        headPosition: true
                     });
                     
-                    console.log('✅ MediaPipe FaceLandmarker initialized');
+                    // Initialize with video and canvas
+                    const inputCanvas = document.getElementById('headtrackrInput');
+                    this.htracker.init(this.video, inputCanvas);
+                    
+                    // Setup event listener for head tracking
+                    document.addEventListener('headtrackingEvent', (event) => {
+                        this.onHeadMove(event);
+                    });
+                    
+                    console.log('✅ Headtrackr initialized');
+                    return true;
                 } catch (error) {
-                    console.error('❌ Failed to initialize MediaPipe:', error);
+                    console.error('❌ Failed to initialize headtrackr:', error);
+                    return false;
                 }
             }
             
-            async toggle() {
+            toggle() {
                 if (this.isActive) {
                     this.stop();
                 } else {
-                    await this.start();
+                    this.start();
                 }
             }
             
             async start() {
                 try {
-                    if (!this.faceLandmarker) {
-                        await this.initializeMediaPipe();
-                        if (!this.faceLandmarker) {
-                            alert('MediaPipe konnte nicht initialisiert werden.');
-                            return;
-                        }
-                    }
-                    
                     // Request webcam access
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { 
@@ -861,6 +823,16 @@
                     this.video.srcObject = stream;
                     await this.video.play();
                     
+                    // Initialize headtrackr after video is ready
+                    if (!this.htracker) {
+                        if (!this.initializeHeadtrackr()) {
+                            alert('Headtrackr konnte nicht initialisiert werden.');
+                            return;
+                        }
+                    }
+                    
+                    // Start tracking
+                    this.htracker.start();
                     this.isActive = true;
                     
                     // Update UI
@@ -868,13 +840,14 @@
                     document.getElementById('headTrackToggle').classList.add('active');
                     document.getElementById('headTrackToggle').textContent = '🛑 Stop Tracking';
                     
-                    // Start calibration
-                    this.startCalibration();
+                    // Calibrate center position after 1 second
+                    setTimeout(() => {
+                        this.centerX = this.lastX;
+                        console.log('🎯 Calibrated center position:', this.centerX);
+                        document.getElementById('headTrackStatus').textContent = 'Active';
+                    }, 1000);
                     
-                    // Start tracking loop
-                    this.trackingLoop();
-                    
-                    console.log('✅ Head tracking started');
+                    console.log('✅ Head tracking started with Headtrackr');
                 } catch (error) {
                     console.error('❌ Failed to start head tracking:', error);
                     alert('Fehler beim Starten der Kopfsteuerung. Bitte Kamera-Zugriff erlauben.');
@@ -884,6 +857,11 @@
             stop() {
                 this.isActive = false;
                 
+                // Stop headtrackr
+                if (this.htracker) {
+                    this.htracker.stop();
+                }
+                
                 // Stop video stream
                 if (this.video && this.video.srcObject) {
                     const tracks = this.video.srcObject.getTracks();
@@ -891,65 +869,88 @@
                     this.video.srcObject = null;
                 }
                 
-                // Clear state
-                this.resetState();
-                
                 // Update UI
                 document.getElementById('headTrackPreview').classList.remove('active');
                 document.getElementById('headTrackToggle').classList.remove('active');
                 document.getElementById('headTrackToggle').textContent = '📹 Head Tracking';
                 
-                // Remove debug HUD if exists
-                if (this.debugHUD) {
-                    this.debugHUD.remove();
-                    this.debugHUD = null;
-                }
-                
                 console.log('✅ Head tracking stopped');
             }
             
-            startCalibration() {
-                this.isCalibrating = true;
-                this.calibrationFrames = [];
-                const startTime = Date.now();
+            onHeadMove(event) {
+                if (!this.isActive || !gameState.isPlaying) return;
                 
-                console.log('🎯 Starting calibration...');
-                document.getElementById('headTrackStatus').textContent = 'Calibrating...';
+                // event.x is horizontal position in cm relative to screen
+                const currentX = event.x;
+                this.lastX = currentX;
                 
-                const calibrationInterval = setInterval(() => {
-                    if (!this.isCalibrating || Date.now() - startTime >= this.calibrationDuration) {
-                        // Calculate center from average
-                        if (this.calibrationFrames.length > 0) {
-                            const sum = this.calibrationFrames.reduce((a, b) => a + b, 0);
-                            this.centerX = sum / this.calibrationFrames.length;
-                            console.log(`✅ Calibration complete: center=${this.centerX.toFixed(3)}, samples=${this.calibrationFrames.length}`);
-                        } else {
-                            this.centerX = 0;
-                            console.log('⚠️ No calibration data, using default center');
-                        }
+                // Calculate relative movement from center
+                const relativeX = currentX - this.centerX;
+                
+                // Check cooldown
+                const now = Date.now();
+                if (this.cooldownActive && (now - this.lastMoveTime) < this.cooldownMs) {
+                    return;
+                }
+                
+                // Simple threshold-based lane change
+                if (relativeX < -this.moveThreshold) {
+                    // Move left
+                    if (gameState.playerLane > 0) {
+                        gameState.playerLane--;
+                        this.cooldownActive = true;
+                        this.lastMoveTime = now;
+                        console.log('⬅ HEAD: Move left to lane', gameState.playerLane);
                         
-                        this.isCalibrating = false;
-                        clearInterval(calibrationInterval);
-                        document.getElementById('headTrackStatus').textContent = 'Active';
+                        // Visual feedback
+                        this.showMoveFeedback('LEFT');
                     }
-                }, 50);
+                } else if (relativeX > this.moveThreshold) {
+                    // Move right
+                    if (gameState.playerLane < 2) {
+                        gameState.playerLane++;
+                        this.cooldownActive = true;
+                        this.lastMoveTime = now;
+                        console.log('➡ HEAD: Move right to lane', gameState.playerLane);
+                        
+                        // Visual feedback
+                        this.showMoveFeedback('RIGHT');
+                    }
+                } else {
+                    // In dead zone - reset cooldown
+                    this.cooldownActive = false;
+                }
+                
+                // Update status display
+                if (this.debugMode) {
+                    document.getElementById('headTrackStatus').textContent = 
+                        `Pos: ${relativeX.toFixed(1)}cm | Lane: ${gameState.playerLane}`;
+                }
             }
             
-            async trackingLoop() {
-                if (!this.isActive || !this.faceLandmarker) return;
+            showMoveFeedback(direction) {
+                // Quick visual feedback for successful move
+                const canvas = this.canvas;
+                const ctx = canvas.getContext('2d');
                 
-                if (this.video.readyState === 4) {
-                    const now = performance.now() / 1000; // Convert to seconds for One-Euro Filter
-                    
-                    try {
-                        // Detect face landmarks
-                        const results = await this.faceLandmarker.detectForVideo(
-                            this.video,
-                            performance.now()
-                        );
-                        
-                        if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-                            const landmarks = results.faceLandmarks[0];
+                ctx.fillStyle = direction === 'LEFT' ? '#00ff00' : '#00ffff';
+                ctx.fillRect(0, 0, canvas.width, 10);
+                
+                setTimeout(() => {
+                    ctx.clearRect(0, 0, canvas.width, 10);
+                }, 100);
+            }
+        }
+        
+        // Initialize head tracking when page loads
+        let headTracker = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Headtrackr after page load
+            setTimeout(() => {
+                headTracker = new SimpleHeadTracker();
+                console.log('🎮 Simple Head Tracking System ready');
+            }, 1000);
+        });
                             
                             // Use nose tip (landmark 1) for head position
                             const noseX = landmarks[1].x;
@@ -1265,21 +1266,6 @@
                 console.log(`🎚️ Sensitivity set to ${this.sensitivity}`);
             }
         }
-        
-        // Initialize head tracking when page loads
-        let headTracker = null;
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize MediaPipe
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.js';
-            script.onload = () => {
-                setTimeout(() => {
-                    headTracker = new RobustHeadTracker();
-                    console.log('🎮 Robust Head Tracking System ready');
-                }, 1000);
-            };
-            document.head.appendChild(script);
-        });
         
         // ============================================
         // MOBILE TOUCH CONTROLLER
@@ -4033,20 +4019,24 @@
             switch (event.code) {
                 case 'ArrowLeft':
                 case 'KeyA':
+                case 'KeyQ':  // HEAD TRACKING FALLBACK
                     event.preventDefault();
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        console.log('⌨️ Q/A/← Lane left:', gameState.playerLane);
                     }
                     break;
                 case 'ArrowRight':
                 case 'KeyD':
+                case 'KeyE':  // HEAD TRACKING FALLBACK
                     event.preventDefault();
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        console.log('⌨️ E/D/→ Lane right:', gameState.playerLane);
                     }
                     break;
                 case 'ArrowUp':
