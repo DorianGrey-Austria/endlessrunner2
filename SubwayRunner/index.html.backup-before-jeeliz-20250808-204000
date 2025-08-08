@@ -9,8 +9,8 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
-    <!-- Jeeliz FaceFilter for Head Tracking (REPLACING MediaPipe) -->
-    <script src="https://cdn.jsdelivr.net/gh/jeeliz/jeelizFaceFilter@latest/dist/jeelizFaceFilter.js"></script>
+    <!-- MediaPipe Pose Detection CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/vision_bundle.js" crossorigin="anonymous"></script>
     
     <script type="module">
         // Pre-load Gesture Control Module
@@ -521,10 +521,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <!-- Jeeliz Face Tracking Canvas (behind game) -->
-        <canvas id="faceCanvas" style="position: absolute; width: 100%; height: 100%; z-index: 1; display: none;"></canvas>
-        <!-- Game Canvas (on top) -->
-        <canvas id="gameCanvas" style="position: relative; z-index: 2;"></canvas>
+        <canvas id="gameCanvas"></canvas>
         
         <!-- Audio Toggle Button -->
         <button id="audioToggle" class="muted" title="Toggle Sound">🔇</button>
@@ -556,13 +553,12 @@
             <span>Time: <span id="mobileTime">60</span>s</span>
         </div>
         
-        <!-- Head Tracking Preview Window -->
-        <button id="poseToggleBtn">📹 Head Tracking</button>
+        <!-- Pose Detection Preview Window -->
+        <button id="poseToggleBtn">📹 Pose Detection</button>
         <div id="posePreview">
-            <video id="poseVideo" autoplay playsinline style="display:none;"></video>
-            <canvas id="faceCanvas" width="200" height="150"></canvas>
-            <canvas id="poseCanvas" width="200" height="150"></canvas>
-            <div id="poseStatus">FPS: 0 | Face: ❌</div>
+            <video id="poseVideo" autoplay playsinline></video>
+            <canvas id="poseCanvas"></canvas>
+            <div id="poseStatus">FPS: 0 | Pose: ❌</div>
         </div>
         
         <div id="ui">
@@ -646,27 +642,28 @@
 
     <script>
         // ============================================
-        // HEAD TRACKING SYSTEM (Jeeliz FaceFilter)
+        // POSE DETECTION SYSTEM (MediaPipe)
         // ============================================
-        class JeelizHeadController {
+        class PoseDetectionPreview {
             constructor() {
-                this.isActive = false;
-                this.canvas = null;
-                this.glCanvas = null;
                 this.video = null;
+                this.canvas = null;
+                this.ctx = null;
+                this.isActive = false;
+                this.poseLandmarker = null;
+                this.lastVideoTime = -1;
+                this.fps = 0;
+                this.frameCount = 0;
+                this.lastFpsUpdate = 0;
                 
-                // Tracking parameters
-                this.centerX = 0;
-                this.threshold = 0.1; // 10% movement threshold
-                this.lastLaneChange = 0;
-                this.laneChangeDelay = 400; // ms between lane changes
-                
-                // Hysteresis for stable control
-                this.hysteresis = {
-                    left: { threshold: -0.1, release: -0.05 },
-                    right: { threshold: 0.1, release: 0.05 }
+                // Landmark indices for specific body parts
+                this.landmarks = {
+                    head: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  // Face and head landmarks
+                    leftHand: [15, 17, 19, 21],  // Left arm/hand
+                    rightHand: [16, 18, 20, 22], // Right arm/hand
+                    leftFoot: [27, 29, 31],      // Left leg/foot
+                    rightFoot: [28, 30, 32]      // Right leg/foot
                 };
-                this.currentState = 'center';
                 
                 this.init();
             }
@@ -675,22 +672,54 @@
                 // Get DOM elements
                 this.video = document.getElementById('poseVideo');
                 this.canvas = document.getElementById('poseCanvas');
-                this.glCanvas = document.getElementById('faceCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Set canvas size
+                this.canvas.width = 200;
+                this.canvas.height = 150;
                 
                 // Setup button
                 const toggleBtn = document.getElementById('poseToggleBtn');
                 toggleBtn.addEventListener('click', () => this.toggle());
                 
-                // Wait for Jeeliz to be loaded
-                this.waitForJeeliz();
+                // Initialize MediaPipe Pose
+                await this.initializePose();
             }
             
-            waitForJeeliz() {
-                if (typeof JEELIZFACEFILTER !== 'undefined') {
-                    console.log('✅ Jeeliz FaceFilter loaded');
-                } else {
-                    console.log('⏳ Waiting for Jeeliz to load...');
-                    setTimeout(() => this.waitForJeeliz(), 500);
+            async initializePose() {
+                try {
+                    // Check if MediaPipe is loaded
+                    if (typeof window.PoseLandmarker === 'undefined' && window.vision) {
+                        window.PoseLandmarker = window.vision.PoseLandmarker;
+                        window.FilesetResolver = window.vision.FilesetResolver;
+                    }
+                    
+                    if (!window.PoseLandmarker || !window.FilesetResolver) {
+                        console.warn('MediaPipe not loaded yet, retrying...');
+                        setTimeout(() => this.initializePose(), 1000);
+                        return;
+                    }
+                    
+                    // Create the pose landmarker
+                    const filesetResolver = await window.FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                    );
+                    
+                    this.poseLandmarker = await window.PoseLandmarker.createFromOptions(filesetResolver, {
+                        baseOptions: {
+                            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+                            delegate: "GPU"
+                        },
+                        runningMode: "VIDEO",
+                        numPoses: 1,
+                        minPoseDetectionConfidence: 0.5,
+                        minPosePresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    
+                    console.log('✅ Pose Detection initialized');
+                } catch (error) {
+                    console.error('❌ Failed to initialize Pose Detection:', error);
                 }
             }
             
@@ -704,56 +733,39 @@
             
             async start() {
                 try {
-                    if (typeof JEELIZFACEFILTER === 'undefined') {
-                        alert('Jeeliz FaceFilter ist noch nicht geladen. Bitte warten Sie.');
-                        return;
-                    }
-                    
-                    // Initialize Jeeliz FaceFilter
-                    JEELIZFACEFILTER.init({
-                        canvas: this.glCanvas,
-                        NNCPath: 'https://appstatic.jeeliz.com/faceFilter/NNCwasm.json',
-                        maxFacesDetected: 1,
-                        followZRot: false,
-                        onWebcamAsk: () => {
-                            console.log('🎥 Requesting webcam access...');
-                        },
-                        onWebcamGet: (video) => {
-                            console.log('✅ Webcam access granted');
-                            this.video = video;
-                            this.isActive = true;
-                            
-                            // Update UI
-                            document.getElementById('posePreview').classList.add('active');
-                            document.getElementById('poseToggleBtn').classList.add('active');
-                            document.getElementById('poseToggleBtn').textContent = '🛑 Stop Tracking';
-                            
-                            // Calibrate center position
-                            setTimeout(() => {
-                                this.calibrateCenter();
-                            }, 1000);
-                        },
-                        callbackReady: (errCode, spec) => {
-                            if (errCode) {
-                                console.error('❌ Jeeliz init error:', errCode);
-                                alert('Fehler beim Initialisieren der Gesichtserkennung');
-                                return;
-                            }
-                            console.log('✅ Jeeliz FaceFilter ready', spec);
-                        },
-                        callbackTrack: (detectState) => {
-                            this.handleTracking(detectState);
+                    // Request webcam access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: 640,
+                            height: 480,
+                            facingMode: 'user'
                         }
                     });
+                    
+                    this.video.srcObject = stream;
+                    this.isActive = true;
+                    
+                    // Update UI
+                    document.getElementById('posePreview').classList.add('active');
+                    document.getElementById('poseToggleBtn').classList.add('active');
+                    document.getElementById('poseToggleBtn').textContent = '🛑 Stop Pose';
+                    
+                    // Start detection loop
+                    this.detectPose();
+                    
+                    console.log('✅ Pose Detection started');
                 } catch (error) {
-                    console.error('❌ Failed to start face tracking:', error);
-                    alert('Fehler beim Starten der Gesichtserkennung');
+                    console.error('❌ Failed to access webcam:', error);
+                    alert('Kamera-Zugriff verweigert. Bitte erlauben Sie den Kamera-Zugriff.');
                 }
             }
             
             stop() {
-                if (typeof JEELIZFACEFILTER !== 'undefined' && JEELIZFACEFILTER.destroy) {
-                    JEELIZFACEFILTER.destroy();
+                // Stop video stream
+                if (this.video.srcObject) {
+                    const tracks = this.video.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.video.srcObject = null;
                 }
                 
                 this.isActive = false;
@@ -761,127 +773,322 @@
                 // Update UI
                 document.getElementById('posePreview').classList.remove('active');
                 document.getElementById('poseToggleBtn').classList.remove('active');
-                document.getElementById('poseToggleBtn').textContent = '📹 Head Tracking';
+                document.getElementById('poseToggleBtn').textContent = '📹 Pose Detection';
                 
-                console.log('✅ Face tracking stopped');
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                console.log('✅ Pose Detection stopped');
             }
             
-            calibrateCenter() {
-                // Store current position as center
-                console.log('🎯 Calibrating center position...');
-                this.centerX = 0;
-            }
-            
-            handleTracking(detectState) {
-                if (!this.isActive) return;
+            async detectPose() {
+                if (!this.isActive || !this.poseLandmarker) return;
                 
-                // Check if face is detected
-                if (detectState.detected < 0.5) {
-                    document.getElementById('poseStatus').innerHTML = 'Face: ❌';
-                    return;
-                }
-                
-                // Get face rotation (yaw)
-                const faceX = detectState.ry; // Rotation around Y axis (left/right)
-                
-                // Calculate relative position from center
-                const relativeX = faceX - this.centerX;
-                
-                // Hysteresis-based control
-                let newState = this.currentState;
-                
-                if (this.currentState !== 'left' && relativeX < this.hysteresis.left.threshold) {
-                    newState = 'left';
-                } else if (this.currentState === 'left' && relativeX > this.hysteresis.left.release) {
-                    newState = 'center';
-                } else if (this.currentState !== 'right' && relativeX > this.hysteresis.right.threshold) {
-                    newState = 'right';
-                } else if (this.currentState === 'right' && relativeX < this.hysteresis.right.release) {
-                    newState = 'center';
-                }
-                
-                // Apply lane change if state changed
-                const now = Date.now();
-                if (newState !== this.currentState && (now - this.lastLaneChange) > this.laneChangeDelay) {
-                    this.currentState = newState;
-                    this.lastLaneChange = now;
+                // Only process if video is ready
+                if (this.video.readyState === 4) {
+                    const startTimeMs = performance.now();
                     
-                    // Update game state
-                    if (typeof gameState !== 'undefined' && gameState.isPlaying) {
-                        if (newState === 'left' && gameState.playerLane > 0) {
-                            gameState.playerLane--;
-                            console.log('⬅ Moving left to lane', gameState.playerLane);
-                        } else if (newState === 'right' && gameState.playerLane < 2) {
-                            gameState.playerLane++;
-                            console.log('➡ Moving right to lane', gameState.playerLane);
+                    // Skip if same frame
+                    if (this.video.currentTime !== this.lastVideoTime) {
+                        this.lastVideoTime = this.video.currentTime;
+                        
+                        try {
+                            // Detect poses
+                            const results = await this.poseLandmarker.detectForVideo(
+                                this.video,
+                                startTimeMs
+                            );
+                            
+                            // Draw results
+                            this.drawResults(results);
+                            
+                            // Update FPS
+                            this.updateFPS();
+                        } catch (error) {
+                            console.error('Detection error:', error);
                         }
                     }
                 }
                 
-                // Update status display
-                const arrow = newState === 'left' ? '⬅' : newState === 'right' ? '➡' : '↕️';
-                document.getElementById('poseStatus').innerHTML = 
-                    `Face: ✅ | Pos: ${relativeX.toFixed(2)} | ${arrow}`;
-                
-                // Draw visualization on canvas
-                this.drawVisualization(relativeX);
+                // Continue detection loop
+                if (this.isActive) {
+                    requestAnimationFrame(() => this.detectPose());
+                }
             }
             
-            drawVisualization(relativeX) {
-                const ctx = this.canvas.getContext('2d');
-                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            drawResults(results) {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 
-                // Draw position bar
-                const barHeight = 30;
-                const barY = 60;
-                const barWidth = this.canvas.width * 0.9;
-                const barX = this.canvas.width * 0.05;
+                if (results.landmarks && results.landmarks.length > 0) {
+                    const landmarks = results.landmarks[0];
+                    
+                    // Draw connections first (skeleton)
+                    this.drawConnections(landmarks);
+                    
+                    // Draw landmarks with colored rectangles for body parts
+                    this.drawBodyParts(landmarks);
+                    
+                    // Track head position for game control
+                    this.trackHeadPosition(landmarks);
+                    
+                    // Draw professional tracking feedback
+                    this.drawHeadTrackingFeedback();
+                    
+                    // Update status with head tracking info
+                    const headControlActive = this.centerX !== undefined ? '🎯' : '📷';
+                    document.getElementById('poseStatus').innerHTML = 
+                        `FPS: ${this.fps} | Pose: ✅ | Head: ${headControlActive}`;
+                } else {
+                    document.getElementById('poseStatus').innerHTML = 
+                        `FPS: ${this.fps} | Pose: ❌`;
+                }
+            }
+            
+            drawConnections(landmarks) {
+                // Define connections (simplified skeleton)
+                const connections = [
+                    // Head
+                    [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+                    // Arms
+                    [11, 13], [13, 15], [15, 17], [17, 19], [19, 21],
+                    [12, 14], [14, 16], [16, 18], [18, 20], [20, 22],
+                    // Body
+                    [11, 12], [11, 23], [12, 24], [23, 24],
+                    // Legs
+                    [23, 25], [25, 27], [27, 29], [29, 31],
+                    [24, 26], [26, 28], [28, 30], [30, 32]
+                ];
                 
-                // Background
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(barX, barY, barWidth, barHeight);
+                this.ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+                this.ctx.lineWidth = 1;
+                
+                connections.forEach(([start, end]) => {
+                    if (landmarks[start] && landmarks[end]) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(
+                            landmarks[start].x * this.canvas.width,
+                            landmarks[start].y * this.canvas.height
+                        );
+                        this.ctx.lineTo(
+                            landmarks[end].x * this.canvas.width,
+                            landmarks[end].y * this.canvas.height
+                        );
+                        this.ctx.stroke();
+                    }
+                });
+            }
+            
+            drawBodyParts(landmarks) {
+                // Draw head (red rectangles)
+                this.ctx.strokeStyle = '#ff0000';
+                this.ctx.lineWidth = 2;
+                this.landmarks.head.forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(
+                            landmarks[idx].x * this.canvas.width,
+                            landmarks[idx].y * this.canvas.height,
+                            8, 8, '#ff000040'
+                        );
+                    }
+                });
+                
+                // Draw hands (green rectangles)
+                this.ctx.strokeStyle = '#00ff00';
+                [...this.landmarks.leftHand, ...this.landmarks.rightHand].forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(
+                            landmarks[idx].x * this.canvas.width,
+                            landmarks[idx].y * this.canvas.height,
+                            10, 10, '#00ff0040'
+                        );
+                    }
+                });
+                
+                // Draw feet (blue rectangles)
+                this.ctx.strokeStyle = '#0088ff';
+                [...this.landmarks.leftFoot, ...this.landmarks.rightFoot].forEach(idx => {
+                    if (landmarks[idx]) {
+                        this.drawRectangle(
+                            landmarks[idx].x * this.canvas.width,
+                            landmarks[idx].y * this.canvas.height,
+                            12, 12, '#0088ff40'
+                        );
+                    }
+                });
+            }
+            
+            drawRectangle(x, y, width, height, fillColor) {
+                this.ctx.fillStyle = fillColor;
+                this.ctx.fillRect(x - width/2, y - height/2, width, height);
+                this.ctx.strokeRect(x - width/2, y - height/2, width, height);
+            }
+            
+            initHeadTracking() {
+                // SIMPLIFIED tracking - direct and responsive
+                this.centerX = undefined;
+                this.smoothedX = 0;
+                this.lastLaneChange = 0;
+                this.debugFrameCount = 0;
+                
+                console.log('🎯 SIMPLIFIED Head Tracking initialized');
+                console.log('🔄 Ultra-sensitive mode: 0.5% movement threshold');
+            }
+            
+            trackHeadPosition(landmarks) {
+                // Initialize if needed
+                if (this.centerX === undefined) {
+                    this.initHeadTracking();
+                }
+                
+                // Get nose position (landmark 0) - SIMPLE!
+                const nose = landmarks[0];
+                if (!nose || nose.visibility < 0.3) return;
+                
+                const rawX = nose.x;
+                
+                // Initialize center on first detection
+                if (this.centerX === undefined) {
+                    this.centerX = rawX;
+                    this.smoothedX = rawX;
+                    console.log('📏 HEAD TRACKING CALIBRATED - Center:', this.centerX);
+                    console.log('🎯 Move head left/right - ULTRA SENSITIVE MODE');
+                }
+                
+                // Very light smoothing (90% new, 10% old)
+                this.smoothedX = 0.9 * rawX + 0.1 * this.smoothedX;
+                
+                // Calculate relative position
+                const relativeX = this.smoothedX - this.centerX;
+                
+                // Debug output EVERY 10 frames
+                this.debugFrameCount++;
+                if (this.debugFrameCount % 10 === 0) {
+                    console.log(`👁️ Head: Raw=${rawX.toFixed(3)}, Smooth=${this.smoothedX.toFixed(3)}, Relative=${relativeX.toFixed(3)}, Lane=${gameState.playerLane}`);
+                }
+                
+                // DIRECT LANE CHANGE - Ultra sensitive (0.5% threshold)
+                const now = Date.now();
+                const MIN_TIME_BETWEEN_CHANGES = 300; // 300ms minimum
+                
+                if (gameState.isPlaying && (now - this.lastLaneChange > MIN_TIME_BETWEEN_CHANGES)) {
+                    // Move LEFT
+                    if (relativeX < -0.005 && gameState.playerLane > 0) { // 0.5% threshold!
+                        gameState.playerLane--;
+                        this.lastLaneChange = now;
+                        console.log('👈 HEAD LEFT → Lane:', gameState.playerLane);
+                        audioManager.playSpeedDependentSound('whoosh', 0.5);
+                    }
+                    // Move RIGHT  
+                    else if (relativeX > 0.005 && gameState.playerLane < 2) { // 0.5% threshold!
+                        gameState.playerLane++;
+                        this.lastLaneChange = now;
+                        console.log('👉 HEAD RIGHT → Lane:', gameState.playerLane);
+                        audioManager.playSpeedDependentSound('whoosh', 0.5);
+                    }
+                }
+                
+                // Store for visual feedback
+                this.visualState = {
+                    tilt: relativeX,
+                    confidence: nose.visibility,
+                    threshold: 0.005
+                };
+            }
+            
+                
+            
+            drawHeadTrackingFeedback() {
+                if (!this.visualState || !this.centerX) return;
+                
+                const canvasW = this.canvas.width;
+                const canvasH = this.canvas.height;
+                
+                // SIMPLIFIED visual feedback - just a position bar
+                const barHeight = 25;
+                const barY = canvasH - barHeight - 10;
+                const barWidth = canvasW * 0.9;
+                const barX = canvasW * 0.05;
+                
+                // Background bar
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(barX, barY, barWidth, barHeight);
+                
+                // Ultra-sensitive threshold lines (0.5%)
+                this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+                this.ctx.lineWidth = 2;
                 
                 // Center line
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(barX + barWidth/2, barY);
-                ctx.lineTo(barX + barWidth/2, barY + barHeight);
-                ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.moveTo(barX + barWidth/2, barY);
+                this.ctx.lineTo(barX + barWidth/2, barY + barHeight);
+                this.ctx.stroke();
                 
-                // Threshold lines
-                const leftThreshX = barX + barWidth/2 + (this.hysteresis.left.threshold * barWidth * 2);
-                const rightThreshX = barX + barWidth/2 + (this.hysteresis.right.threshold * barWidth * 2);
+                // Left threshold (0.5%)
+                const leftThreshX = barX + barWidth/2 - (0.005 * barWidth * 20);
+                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                this.ctx.beginPath();
+                this.ctx.moveTo(leftThreshX, barY);
+                this.ctx.lineTo(leftThreshX, barY + barHeight);
+                this.ctx.stroke();
                 
-                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-                ctx.beginPath();
-                ctx.moveTo(leftThreshX, barY);
-                ctx.lineTo(leftThreshX, barY + barHeight);
-                ctx.stroke();
+                // Right threshold (0.5%)
+                const rightThreshX = barX + barWidth/2 + (0.005 * barWidth * 20);
+                this.ctx.beginPath();
+                this.ctx.moveTo(rightThreshX, barY);
+                this.ctx.lineTo(rightThreshX, barY + barHeight);
+                this.ctx.stroke();
                 
-                ctx.beginPath();
-                ctx.moveTo(rightThreshX, barY);
-                ctx.lineTo(rightThreshX, barY + barHeight);
-                ctx.stroke();
+                // Current head position indicator
+                const currentX = barX + barWidth/2 + (this.visualState.tilt * barWidth * 20);
                 
-                // Current position indicator
-                const currentX = barX + barWidth/2 + (relativeX * barWidth * 2);
-                const color = this.currentState === 'left' ? '#00ff00' : 
-                             this.currentState === 'right' ? '#00ff00' : '#ffff00';
+                // Color based on position
+                let color = 'rgba(255, 255, 0, 0.9)'; // Yellow default
+                if (Math.abs(this.visualState.tilt) > 0.005) {
+                    color = 'rgba(0, 255, 0, 0.9)'; // Green when past threshold
+                }
                 
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.arc(currentX, barY + barHeight/2, 8, 0, Math.PI * 2);
-                ctx.fill();
+                // Draw position dot
+                this.ctx.fillStyle = color;
+                this.ctx.beginPath();
+                this.ctx.arc(currentX, barY + barHeight/2, 10, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.strokeStyle = 'white';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Simple text
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 14px monospace';
+                this.ctx.textAlign = 'center';
+                const posText = `Tilt: ${(this.visualState.tilt * 100).toFixed(1)}% | Lane: ${gameState.playerLane}`;
+                this.ctx.fillText(posText, canvasW/2, barY - 5);
+                
+                // Confidence
+                const confText = `Signal: ${(this.visualState.confidence * 100).toFixed(0)}%`;
+                this.ctx.font = '12px monospace';
+                this.ctx.fillText(confText, canvasW/2, barY - 20);
+            }
+            
+            updateFPS() {
+                this.frameCount++;
+                const now = performance.now();
+                
+                if (now - this.lastFpsUpdate >= 1000) {
+                    this.fps = this.frameCount;
+                    this.frameCount = 0;
+                    this.lastFpsUpdate = now;
+                }
             }
         }
         
-        // Initialize head tracking when page loads
-        let headController = null;
+        // Initialize pose detection when page loads
+        let poseDetection = null;
         document.addEventListener('DOMContentLoaded', () => {
+            // Delay initialization to ensure MediaPipe is loaded
             setTimeout(() => {
-                headController = new JeelizHeadController();
-                console.log('🎮 Head Tracking System ready');
+                poseDetection = new PoseDetectionPreview();
+                console.log('🎮 Pose Detection System ready');
             }, 1000);
         });
         
