@@ -928,20 +928,27 @@
                 
                 const headX = nose.x;
                 
-                // Initialize calibration on first detection
-                if (this.centerX === undefined) {
+                // Initialize calibration on first detection or re-calibrate after 10 seconds
+                if (this.centerX === undefined || (Date.now() - this.calibrationTime > 10000 && !gameState.isPlaying)) {
                     this.centerX = headX;
-                    this.leftThreshold = 0.08;  // 8% movement to trigger (more sensitive)
-                    this.rightThreshold = 0.08;
+                    this.leftThreshold = 0.025;  // 2.5% movement to trigger (ULTRA sensitive)
+                    this.rightThreshold = 0.025;
                     this.lastLaneChange = 0;
-                    this.laneChangeDelay = 400; // ms between lane changes (slightly slower)
+                    this.laneChangeDelay = 250; // ms between lane changes (much faster)
+                    this.calibrationTime = Date.now();
                     console.log('📏 Head tracking calibrated at center:', this.centerX);
                     console.log('🎮 Move your head left/right to control the player!');
+                    console.log('🎯 Sensitivity: ULTRA HIGH (2.5% threshold)');
                 }
                 
                 // Calculate relative position
                 const relativeX = headX - this.centerX;
                 const now = Date.now();
+                
+                // Debug output
+                if (this.frameCount % 30 === 0) { // Log every 30 frames
+                    console.log(`Head: X=${headX.toFixed(3)}, Relative=${relativeX.toFixed(3)}, Lane=${gameState.playerLane}`);
+                }
                 
                 // Check if game is playing and enough time has passed
                 if (gameState.isPlaying && (now - this.lastLaneChange > this.laneChangeDelay)) {
@@ -963,9 +970,27 @@
                     }
                 }
                 
-                // Visual feedback on canvas
-                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                this.ctx.fillRect(headX * this.canvas.width - 5, nose.y * this.canvas.height - 5, 10, 10);
+                // Visual feedback on canvas - make it more prominent
+                const noseX = headX * this.canvas.width;
+                const noseY = nose.y * this.canvas.height;
+                
+                // Draw nose position with color based on movement
+                if (Math.abs(relativeX) > Math.max(this.leftThreshold, this.rightThreshold) * 0.5) {
+                    // Orange when getting close to threshold
+                    this.ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
+                    this.ctx.strokeStyle = 'rgba(255, 165, 0, 1)';
+                } else {
+                    // Yellow when centered
+                    this.ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                    this.ctx.strokeStyle = 'rgba(255, 255, 0, 1)';
+                }
+                
+                // Draw larger indicator
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(noseX, noseY, 8, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
                 
                 // Draw threshold indicators
                 if (this.centerX !== undefined) {
