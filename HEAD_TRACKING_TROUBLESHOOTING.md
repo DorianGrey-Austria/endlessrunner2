@@ -542,6 +542,41 @@ Basierend auf professionellen Python-Beispielen implementieren wir:
    - CANDIDATE State unnötig
    - Zu viele Bedingungen
 
+## 🚨 VERSION 7.0 EMERGENCY FIX - RADIKAL VEREINFACHT! (08.08.2025)
+
+### **10 SOFORT-MASSNAHMEN implementiert:**
+
+1. **ULTRA-SENSIBLE THRESHOLDS**
+   - enterLeft: -0.02 (war -0.15!)
+   - enterRight: 0.02 (war 0.15!)
+   - deadZone: 0.005 (war 0.06!)
+   - minConfidence: 0.2 (war 0.6!)
+
+2. **INSTANT RESPONSE**
+   - cooldownMs: 50 (war 250!)
+   - candidateMs: 0 (war 100!)
+   - minFramesRequired: 1 (war 3!)
+
+3. **MINIMALE FILTERUNG**
+   - OneEuroFilter: beta=0.5 (war 0.02)
+   - Weniger Smoothing = mehr Responsiveness
+
+4. **RADIKAL VEREINFACHTE STATE MACHINE**
+   - Nur noch 2 States: IDLE und COOLDOWN
+   - Keine CANDIDATE States mehr
+   - SOFORT Reaktion bei Threshold-Überschreitung
+
+5. **VERBESSERTES DEBUG HUD**
+   - Zeigt Schwellenwerte visuell
+   - Rote/weiße Indikatoren für Aktivierung
+   - Größere, lesbarere Anzeige
+
+### **ERGEBNIS:**
+- **2% Kopfbewegung** reicht für Lane-Wechsel
+- **50ms Cooldown** = bis zu 20 Wechsel/Sekunde möglich
+- **Keine Verzögerung** - instant response
+- **Debug immer an** für besseres Testing
+
 ## ✅ CHECKLISTE FÜR ZUKÜNFTIGE IMPLEMENTIERUNGEN
 
 - [ ] One-Euro-Filter oder ähnliches Smoothing
