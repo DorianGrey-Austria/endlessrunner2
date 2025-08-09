@@ -1234,6 +1234,737 @@
         }
         
         // ============================================
+        // LOW-LIGHT HEAD TRACKER - Enhanced for poor lighting
+        // ============================================
+        class LowLightHeadTracker {
+            constructor() {
+                // Core tracking modes
+                this.TRACKING_MODES = {
+                    FACE: 'face',           // Headtrackr face detection
+                    OPTICAL_FLOW: 'flow',   // Motion tracking
+                    SHOULDER: 'shoulder',   // Upper body silhouette
+                    GESTURE: 'gesture'      // Big gesture mode
+                };
+                
+                // Current state
+                this.currentMode = this.TRACKING_MODES.FACE;
+                this.confidence = 0;
+                this.lightLevel = 1.0; // 0=dark, 1=bright
+                this.isCalibrating = true;
+                this.calibrationFrames = 0;
+                
+                // Image preprocessing
+                this.preprocessCanvas = null;
+                this.preprocessCtx = null;
+                this.enhancementLevel = 0; // 0=none, 1=mild, 2=moderate, 3=aggressive
+                
+                // Adaptive thresholds
+                this.baseThreshold = 5; // cm
+                this.currentThreshold = 5;
+                this.thresholdMultiplier = 1.0;
+                
+                // Optical flow tracking
+                this.opticalFlowData = {
+                    prevFrame: null,
+                    currentFrame: null,
+                    flowVectors: [],
+                    avgMotionX: 0,
+                    avgMotionY: 0
+                };
+                
+                // Shoulder tracking
+                this.shoulderData = {
+                    leftEdge: 0,
+                    rightEdge: 0,
+                    centerX: 0,
+                    detected: false
+                };
+                
+                // Big gesture mode
+                this.gestureMode = {
+                    active: false,
+                    requiredMovement: 15, // cm
+                    lastGestureTime: 0
+                };
+                
+                // Fallback to SimpleHeadTracker
+                this.simpleTracker = null;
+                
+                this.init();
+            }
+            
+            init() {
+                // Create preprocessing canvas
+                this.preprocessCanvas = document.createElement('canvas');
+                this.preprocessCanvas.width = 320;
+                this.preprocessCanvas.height = 240;
+                this.preprocessCtx = this.preprocessCanvas.getContext('2d');
+                
+                // Initialize simple tracker as base
+                this.simpleTracker = new SimpleHeadTracker();
+                
+                // Override the simple tracker's onHeadMove
+                const originalOnHeadMove = this.simpleTracker.onHeadMove.bind(this.simpleTracker);
+                this.simpleTracker.onHeadMove = (event) => {
+                    this.enhancedHeadMove(event, originalOnHeadMove);
+                };
+                
+                // Start calibration
+                this.startCalibration();
+                
+                console.log('🌙 Low-Light Head Tracker initialized');
+            }
+            
+            startCalibration() {
+                this.isCalibrating = true;
+                this.calibrationFrames = 0;
+                const calibrationData = {
+                    brightness: [],
+                    contrast: [],
+                    noise: []
+                };
+                
+                const calibrationInterval = setInterval(() => {
+                    if (!this.simpleTracker.video || !this.simpleTracker.isActive) {
+                        return;
+                    }
+                    
+                    // Analyze frame
+                    const metrics = this.analyzeFrame();
+                    calibrationData.brightness.push(metrics.brightness);
+                    calibrationData.contrast.push(metrics.contrast);
+                    calibrationData.noise.push(metrics.noise);
+                    
+                    this.calibrationFrames++;
+                    
+                    // After 60 frames (1 second), determine lighting conditions
+                    if (this.calibrationFrames >= 60) {
+                        clearInterval(calibrationInterval);
+                        this.completeCalibration(calibrationData);
+                    }
+                }, 16); // 60fps
+            }
+            
+            analyzeFrame() {
+                if (!this.simpleTracker.video) {
+                    return { brightness: 0.5, contrast: 0.5, noise: 0 };
+                }
+                
+                // Draw video frame to preprocessing canvas
+                this.preprocessCtx.drawImage(
+                    this.simpleTracker.video,
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                // Get image data
+                const imageData = this.preprocessCtx.getImageData(
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                const pixels = imageData.data;
+                
+                // Calculate brightness (average luminance)
+                let totalBrightness = 0;
+                let minBrightness = 255;
+                let maxBrightness = 0;
+                
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const luminance = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
+                    totalBrightness += luminance;
+                    minBrightness = Math.min(minBrightness, luminance);
+                    maxBrightness = Math.max(maxBrightness, luminance);
+                }
+                
+                const avgBrightness = totalBrightness / (pixels.length / 4) / 255;
+                const contrast = (maxBrightness - minBrightness) / 255;
+                
+                // Estimate noise (simplified)
+                let noise = 0;
+                for (let i = 4; i < pixels.length - 4; i += 4) {
+                    const diff = Math.abs(pixels[i] - pixels[i-4]);
+                    noise += diff;
+                }
+                noise = noise / (pixels.length / 4) / 255;
+                
+                return {
+                    brightness: avgBrightness,
+                    contrast: contrast,
+                    noise: noise
+                };
+            }
+            
+            completeCalibration(data) {
+                // Calculate averages
+                const avgBrightness = data.brightness.reduce((a, b) => a + b, 0) / data.brightness.length;
+                const avgContrast = data.contrast.reduce((a, b) => a + b, 0) / data.contrast.length;
+                const avgNoise = data.noise.reduce((a, b) => a + b, 0) / data.noise.length;
+                
+                // Determine light level and enhancement needs
+                this.lightLevel = avgBrightness;
+                
+                if (avgBrightness < 0.2) {
+                    // Very dark
+                    this.enhancementLevel = 3;
+                    this.thresholdMultiplier = 3.0;
+                    this.currentMode = this.TRACKING_MODES.GESTURE;
+                    console.log('🌑 Very dark environment detected - Big Gesture Mode');
+                } else if (avgBrightness < 0.35) {
+                    // Dark
+                    this.enhancementLevel = 2;
+                    this.thresholdMultiplier = 2.0;
+                    this.currentMode = this.TRACKING_MODES.SHOULDER;
+                    console.log('🌘 Dark environment - Shoulder Tracking Mode');
+                } else if (avgBrightness < 0.5) {
+                    // Dim
+                    this.enhancementLevel = 1;
+                    this.thresholdMultiplier = 1.5;
+                    this.currentMode = this.TRACKING_MODES.OPTICAL_FLOW;
+                    console.log('🌗 Dim lighting - Optical Flow Mode');
+                } else {
+                    // Good lighting
+                    this.enhancementLevel = 0;
+                    this.thresholdMultiplier = 1.0;
+                    this.currentMode = this.TRACKING_MODES.FACE;
+                    console.log('🌕 Good lighting - Face Tracking Mode');
+                }
+                
+                // Update thresholds
+                this.currentThreshold = this.baseThreshold * this.thresholdMultiplier;
+                
+                // Update visual feedback
+                if (this.simpleTracker.visualFeedback) {
+                    this.simpleTracker.visualFeedback.zones.triggerLeft = -this.currentThreshold;
+                    this.simpleTracker.visualFeedback.zones.triggerRight = this.currentThreshold;
+                }
+                
+                this.isCalibrating = false;
+                
+                // Show calibration results to user
+                this.showCalibrationResults();
+                
+                // Re-calibrate every 30 seconds
+                setTimeout(() => this.startCalibration(), 30000);
+            }
+            
+            showCalibrationResults() {
+                const status = document.getElementById('headTrackStatus');
+                if (status) {
+                    const modeText = {
+                        [this.TRACKING_MODES.FACE]: '😊 Face Tracking',
+                        [this.TRACKING_MODES.OPTICAL_FLOW]: '〰️ Motion Tracking',
+                        [this.TRACKING_MODES.SHOULDER]: '👤 Shoulder Tracking',
+                        [this.TRACKING_MODES.GESTURE]: '🙌 Big Gesture Mode'
+                    };
+                    
+                    status.innerHTML = `
+                        <span style="color: ${this.lightLevel < 0.35 ? '#ff9900' : '#00ff00'}">
+                            Light: ${Math.round(this.lightLevel * 100)}% | 
+                            Mode: ${modeText[this.currentMode]} |
+                            Sensitivity: ${this.currentThreshold.toFixed(1)}cm
+                        </span>
+                    `;
+                }
+            }
+            
+            enhancedHeadMove(event, originalCallback) {
+                // Apply preprocessing if needed
+                if (this.enhancementLevel > 0) {
+                    this.preprocessFrame();
+                }
+                
+                // Route to appropriate tracking mode
+                switch (this.currentMode) {
+                    case this.TRACKING_MODES.FACE:
+                        // Use original headtrackr with enhanced confidence check
+                        if (event.confidence > 0.4) {
+                            this.confidence = event.confidence;
+                            originalCallback(event);
+                        } else {
+                            // Fallback to optical flow
+                            this.trackOpticalFlow();
+                        }
+                        break;
+                        
+                    case this.TRACKING_MODES.OPTICAL_FLOW:
+                        this.trackOpticalFlow();
+                        break;
+                        
+                    case this.TRACKING_MODES.SHOULDER:
+                        this.trackShoulders();
+                        break;
+                        
+                    case this.TRACKING_MODES.GESTURE:
+                        this.trackBigGestures();
+                        break;
+                }
+                
+                // Update visual feedback with current mode
+                this.updateModeFeedback();
+            }
+            
+            preprocessFrame() {
+                if (!this.simpleTracker.video) return;
+                
+                // Draw original frame
+                this.preprocessCtx.drawImage(
+                    this.simpleTracker.video,
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                // Get image data
+                const imageData = this.preprocessCtx.getImageData(
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                // Apply enhancements based on level
+                if (this.enhancementLevel >= 1) {
+                    this.applyGammaCorrection(imageData, 1.5);
+                }
+                
+                if (this.enhancementLevel >= 2) {
+                    this.applyCLAHE(imageData);
+                }
+                
+                if (this.enhancementLevel >= 3) {
+                    this.applyBilateralFilter(imageData);
+                }
+                
+                // Put enhanced image back
+                this.preprocessCtx.putImageData(imageData, 0, 0);
+            }
+            
+            applyGammaCorrection(imageData, gamma) {
+                const data = imageData.data;
+                const invGamma = 1 / gamma;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = 255 * Math.pow(data[i] / 255, invGamma);
+                    data[i + 1] = 255 * Math.pow(data[i + 1] / 255, invGamma);
+                    data[i + 2] = 255 * Math.pow(data[i + 2] / 255, invGamma);
+                }
+            }
+            
+            applyCLAHE(imageData) {
+                // Simplified CLAHE (Contrast Limited Adaptive Histogram Equalization)
+                const data = imageData.data;
+                const width = imageData.width;
+                const height = imageData.height;
+                const tileSize = 8;
+                const clipLimit = 2.0;
+                
+                // Convert to grayscale and apply local histogram equalization
+                for (let ty = 0; ty < height; ty += tileSize) {
+                    for (let tx = 0; tx < width; tx += tileSize) {
+                        this.equalizeHistogramTile(data, width, height, tx, ty, tileSize, clipLimit);
+                    }
+                }
+            }
+            
+            equalizeHistogramTile(data, width, height, tx, ty, tileSize, clipLimit) {
+                // Simplified tile-based histogram equalization
+                const histogram = new Array(256).fill(0);
+                let pixelCount = 0;
+                
+                // Build histogram for tile
+                for (let y = ty; y < Math.min(ty + tileSize, height); y++) {
+                    for (let x = tx; x < Math.min(tx + tileSize, width); x++) {
+                        const idx = (y * width + x) * 4;
+                        const gray = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+                        histogram[gray]++;
+                        pixelCount++;
+                    }
+                }
+                
+                // Apply clipping
+                const avgBinSize = pixelCount / 256;
+                const limit = avgBinSize * clipLimit;
+                let excess = 0;
+                
+                for (let i = 0; i < 256; i++) {
+                    if (histogram[i] > limit) {
+                        excess += histogram[i] - limit;
+                        histogram[i] = limit;
+                    }
+                }
+                
+                // Redistribute excess
+                const avgExcess = excess / 256;
+                for (let i = 0; i < 256; i++) {
+                    histogram[i] += avgExcess;
+                }
+                
+                // Build cumulative distribution
+                const cdf = new Array(256);
+                cdf[0] = histogram[0];
+                for (let i = 1; i < 256; i++) {
+                    cdf[i] = cdf[i - 1] + histogram[i];
+                }
+                
+                // Apply equalization to tile
+                for (let y = ty; y < Math.min(ty + tileSize, height); y++) {
+                    for (let x = tx; x < Math.min(tx + tileSize, width); x++) {
+                        const idx = (y * width + x) * 4;
+                        const gray = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+                        const newGray = Math.round((cdf[gray] / pixelCount) * 255);
+                        
+                        // Apply to all channels
+                        const ratio = newGray / (gray || 1);
+                        data[idx] = Math.min(255, data[idx] * ratio);
+                        data[idx + 1] = Math.min(255, data[idx + 1] * ratio);
+                        data[idx + 2] = Math.min(255, data[idx + 2] * ratio);
+                    }
+                }
+            }
+            
+            applyBilateralFilter(imageData) {
+                // Simplified bilateral filter for noise reduction
+                const data = imageData.data;
+                const width = imageData.width;
+                const height = imageData.height;
+                const output = new Uint8ClampedArray(data);
+                const kernelSize = 3;
+                const spatialSigma = 2;
+                const intensitySigma = 30;
+                
+                for (let y = kernelSize; y < height - kernelSize; y++) {
+                    for (let x = kernelSize; x < width - kernelSize; x++) {
+                        const centerIdx = (y * width + x) * 4;
+                        let sumR = 0, sumG = 0, sumB = 0, sumW = 0;
+                        
+                        for (let ky = -kernelSize; ky <= kernelSize; ky++) {
+                            for (let kx = -kernelSize; kx <= kernelSize; kx++) {
+                                const idx = ((y + ky) * width + (x + kx)) * 4;
+                                
+                                // Spatial weight
+                                const spatialDist = Math.sqrt(kx * kx + ky * ky);
+                                const spatialWeight = Math.exp(-(spatialDist * spatialDist) / (2 * spatialSigma * spatialSigma));
+                                
+                                // Intensity weight
+                                const intensityDiff = Math.sqrt(
+                                    Math.pow(data[centerIdx] - data[idx], 2) +
+                                    Math.pow(data[centerIdx + 1] - data[idx + 1], 2) +
+                                    Math.pow(data[centerIdx + 2] - data[idx + 2], 2)
+                                );
+                                const intensityWeight = Math.exp(-(intensityDiff * intensityDiff) / (2 * intensitySigma * intensitySigma));
+                                
+                                const weight = spatialWeight * intensityWeight;
+                                
+                                sumR += data[idx] * weight;
+                                sumG += data[idx + 1] * weight;
+                                sumB += data[idx + 2] * weight;
+                                sumW += weight;
+                            }
+                        }
+                        
+                        output[centerIdx] = sumR / sumW;
+                        output[centerIdx + 1] = sumG / sumW;
+                        output[centerIdx + 2] = sumB / sumW;
+                    }
+                }
+                
+                // Copy back
+                for (let i = 0; i < data.length; i++) {
+                    data[i] = output[i];
+                }
+            }
+            
+            trackOpticalFlow() {
+                if (!this.simpleTracker.video) return;
+                
+                // Get current frame
+                this.preprocessCtx.drawImage(
+                    this.simpleTracker.video,
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                const currentFrame = this.preprocessCtx.getImageData(
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                if (this.opticalFlowData.prevFrame) {
+                    // Calculate optical flow using Lucas-Kanade method (simplified)
+                    const flow = this.calculateOpticalFlow(
+                        this.opticalFlowData.prevFrame,
+                        currentFrame
+                    );
+                    
+                    // Average horizontal motion
+                    const avgMotionX = flow.reduce((sum, v) => sum + v.x, 0) / flow.length;
+                    
+                    // Convert to cm (rough estimation)
+                    const motionCm = avgMotionX * 50; // Scale factor
+                    
+                    // Trigger lane change if motion exceeds threshold
+                    if (Math.abs(motionCm) > this.currentThreshold) {
+                        this.triggerLaneChange(motionCm > 0 ? 'right' : 'left');
+                    }
+                    
+                    this.confidence = Math.min(0.6, Math.abs(avgMotionX) * 10);
+                }
+                
+                this.opticalFlowData.prevFrame = currentFrame;
+            }
+            
+            calculateOpticalFlow(prevFrame, currentFrame) {
+                // Simplified Lucas-Kanade optical flow
+                const flow = [];
+                const blockSize = 16;
+                const width = prevFrame.width;
+                const height = prevFrame.height;
+                
+                for (let y = blockSize; y < height - blockSize; y += blockSize) {
+                    for (let x = blockSize; x < width - blockSize; x += blockSize) {
+                        // Calculate gradients
+                        let Ix = 0, Iy = 0, It = 0;
+                        let sumIx2 = 0, sumIy2 = 0, sumIxIy = 0;
+                        let sumIxIt = 0, sumIyIt = 0;
+                        
+                        for (let by = -blockSize/2; by < blockSize/2; by++) {
+                            for (let bx = -blockSize/2; bx < blockSize/2; bx++) {
+                                const idx = ((y + by) * width + (x + bx)) * 4;
+                                const idxLeft = ((y + by) * width + (x + bx - 1)) * 4;
+                                const idxRight = ((y + by) * width + (x + bx + 1)) * 4;
+                                const idxUp = ((y + by - 1) * width + (x + bx)) * 4;
+                                const idxDown = ((y + by + 1) * width + (x + bx)) * 4;
+                                
+                                // Spatial gradients
+                                Ix = (currentFrame.data[idxRight] - currentFrame.data[idxLeft]) / 2;
+                                Iy = (currentFrame.data[idxDown] - currentFrame.data[idxUp]) / 2;
+                                
+                                // Temporal gradient
+                                It = currentFrame.data[idx] - prevFrame.data[idx];
+                                
+                                sumIx2 += Ix * Ix;
+                                sumIy2 += Iy * Iy;
+                                sumIxIy += Ix * Iy;
+                                sumIxIt += Ix * It;
+                                sumIyIt += Iy * It;
+                            }
+                        }
+                        
+                        // Solve for flow vector
+                        const det = sumIx2 * sumIy2 - sumIxIy * sumIxIy;
+                        if (Math.abs(det) > 0.001) {
+                            const vx = (sumIy2 * (-sumIxIt) - sumIxIy * (-sumIyIt)) / det;
+                            const vy = (sumIx2 * (-sumIyIt) - sumIxIy * (-sumIxIt)) / det;
+                            
+                            flow.push({ x: vx, y: vy });
+                        }
+                    }
+                }
+                
+                return flow;
+            }
+            
+            trackShoulders() {
+                if (!this.simpleTracker.video) return;
+                
+                // Get frame
+                this.preprocessCtx.drawImage(
+                    this.simpleTracker.video,
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                const imageData = this.preprocessCtx.getImageData(
+                    0, 0,
+                    this.preprocessCanvas.width,
+                    this.preprocessCanvas.height
+                );
+                
+                // Find upper body silhouette (simplified edge detection)
+                const edges = this.detectEdges(imageData);
+                
+                // Find shoulder positions
+                const shoulderY = Math.floor(imageData.height * 0.3); // Upper third of image
+                let leftMost = imageData.width;
+                let rightMost = 0;
+                
+                for (let x = 0; x < imageData.width; x++) {
+                    const idx = (shoulderY * imageData.width + x) * 4;
+                    if (edges.data[idx] > 128) {
+                        leftMost = Math.min(leftMost, x);
+                        rightMost = Math.max(rightMost, x);
+                    }
+                }
+                
+                if (rightMost > leftMost) {
+                    const centerX = (leftMost + rightMost) / 2;
+                    const normalizedX = (centerX / imageData.width - 0.5) * 2; // -1 to 1
+                    
+                    // Convert to cm
+                    const positionCm = normalizedX * 30; // Scale factor
+                    
+                    if (Math.abs(positionCm) > this.currentThreshold) {
+                        this.triggerLaneChange(positionCm > 0 ? 'right' : 'left');
+                    }
+                    
+                    this.shoulderData = {
+                        leftEdge: leftMost,
+                        rightEdge: rightMost,
+                        centerX: centerX,
+                        detected: true
+                    };
+                    
+                    this.confidence = 0.4;
+                }
+            }
+            
+            detectEdges(imageData) {
+                // Simplified Sobel edge detection
+                const data = imageData.data;
+                const width = imageData.width;
+                const height = imageData.height;
+                const output = new ImageData(width, height);
+                
+                const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+                const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+                
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        let pixelX = 0;
+                        let pixelY = 0;
+                        
+                        for (let ky = -1; ky <= 1; ky++) {
+                            for (let kx = -1; kx <= 1; kx++) {
+                                const idx = ((y + ky) * width + (x + kx)) * 4;
+                                const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                                const kernelIdx = (ky + 1) * 3 + (kx + 1);
+                                
+                                pixelX += gray * sobelX[kernelIdx];
+                                pixelY += gray * sobelY[kernelIdx];
+                            }
+                        }
+                        
+                        const magnitude = Math.sqrt(pixelX * pixelX + pixelY * pixelY);
+                        const idx = (y * width + x) * 4;
+                        
+                        output.data[idx] = magnitude;
+                        output.data[idx + 1] = magnitude;
+                        output.data[idx + 2] = magnitude;
+                        output.data[idx + 3] = 255;
+                    }
+                }
+                
+                return output;
+            }
+            
+            trackBigGestures() {
+                // In very low light, require big movements
+                if (!this.simpleTracker.video) return;
+                
+                // Get frame center brightness
+                const metrics = this.analyzeFrame();
+                
+                // Show instruction to user
+                const status = document.getElementById('headTrackStatus');
+                if (status) {
+                    status.innerHTML = `
+                        <span style="color: #ff9900; font-size: 18px;">
+                            🙌 BIG GESTURE MODE - Move head LEFT or RIGHT strongly!
+                        </span>
+                    `;
+                }
+                
+                // Use optical flow but with much higher threshold
+                const prevThreshold = this.currentThreshold;
+                this.currentThreshold = this.gestureMode.requiredMovement;
+                
+                this.trackOpticalFlow();
+                
+                this.currentThreshold = prevThreshold;
+                
+                this.confidence = 0.2;
+            }
+            
+            triggerLaneChange(direction) {
+                const now = Date.now();
+                
+                // Check cooldown
+                if (this.simpleTracker.cooldownActive && 
+                    (now - this.simpleTracker.lastMoveTime) < this.simpleTracker.cooldownMs) {
+                    return;
+                }
+                
+                // Change lane
+                if (direction === 'left' && gameState.playerLane > 0) {
+                    gameState.playerLane--;
+                    console.log(`⬅ ${this.currentMode.toUpperCase()}: Move left to lane ${gameState.playerLane}`);
+                } else if (direction === 'right' && gameState.playerLane < 2) {
+                    gameState.playerLane++;
+                    console.log(`➡ ${this.currentMode.toUpperCase()}: Move right to lane ${gameState.playerLane}`);
+                }
+                
+                this.simpleTracker.cooldownActive = true;
+                this.simpleTracker.lastMoveTime = now;
+                
+                // Visual feedback
+                if (this.simpleTracker.visualFeedback) {
+                    this.simpleTracker.visualFeedback.triggerLaneChange(direction);
+                }
+                
+                this.simpleTracker.showMoveFeedback(direction.toUpperCase());
+            }
+            
+            updateModeFeedback() {
+                // Update visual feedback to show current tracking mode
+                if (this.simpleTracker.visualFeedback) {
+                    const ctx = this.simpleTracker.canvas.getContext('2d');
+                    
+                    // Mode indicator
+                    ctx.fillStyle = this.getModeColor();
+                    ctx.fillRect(0, 0, 100, 20);
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '12px monospace';
+                    ctx.fillText(this.currentMode.toUpperCase(), 5, 15);
+                    
+                    // Confidence bar
+                    const confWidth = this.confidence * 100;
+                    ctx.fillStyle = this.confidence > 0.5 ? '#00ff00' : '#ff9900';
+                    ctx.fillRect(0, 20, confWidth, 5);
+                    
+                    // Show shoulder detection if active
+                    if (this.currentMode === this.TRACKING_MODES.SHOULDER && this.shoulderData.detected) {
+                        ctx.strokeStyle = '#00ffff';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(this.shoulderData.leftEdge, 50);
+                        ctx.lineTo(this.shoulderData.rightEdge, 50);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            getModeColor() {
+                switch (this.currentMode) {
+                    case this.TRACKING_MODES.FACE:
+                        return '#00ff00';
+                    case this.TRACKING_MODES.OPTICAL_FLOW:
+                        return '#00ccff';
+                    case this.TRACKING_MODES.SHOULDER:
+                        return '#ffcc00';
+                    case this.TRACKING_MODES.GESTURE:
+                        return '#ff6600';
+                    default:
+                        return '#ffffff';
+                }
+            }
+        }
+        
+        // ============================================
         // SIMPLE HEAD TRACKER - Using Headtrackr.js
         // ============================================
         class SimpleHeadTracker {
@@ -1535,10 +2266,12 @@
         // Initialize head tracking when page loads
         let headTracker = null;
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize Headtrackr after page load
+            // Initialize Low-Light Head Tracker after page load
             setTimeout(() => {
-                headTracker = new SimpleHeadTracker();
-                console.log('🎮 Simple Head Tracking System ready');
+                headTracker = new LowLightHeadTracker();
+                console.log('🌙 Low-Light Head Tracking System ready');
+                console.log('💡 System will auto-calibrate for your lighting conditions');
+                console.log('🎮 Use Q/E keys as fallback controls');
             }, 1000);
         });
         

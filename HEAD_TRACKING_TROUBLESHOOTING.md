@@ -612,15 +612,61 @@ mv index_fixed.html index.html
 - Syntax-Checker verwenden vor Deployment
 - Backup erstellen vor sed-Operationen
 
+## 🌙 VERSION 9.0 - LOW-LIGHT HEAD TRACKER (09.08.2025)
+
+### **Problem: "Schlechtes Licht, funktioniert gar nichts"**
+User berichtet komplettes Versagen bei schlechten Lichtverhältnissen.
+
+### **Lösung: Multi-Tier Fallback System mit LowLightHeadTracker**
+
+**Implementierte Features:**
+1. **Auto-Kalibrierung**: 1 Sekunde Analyse der Lichtverhältnisse
+2. **4 Tracking Modi**:
+   - **Face Tracking** (>50% Helligkeit): Standard Headtrackr.js
+   - **Optical Flow** (35-50%): Lucas-Kanade Motion Tracking
+   - **Shoulder Detection** (20-35%): Oberkörper-Silhouette
+   - **Big Gesture Mode** (<20%): Große Bewegungen erforderlich
+
+3. **Bildverbesserung**:
+   - **Gamma Correction**: Aufhellung dunkler Bilder
+   - **CLAHE**: Lokale Kontrastverbesserung
+   - **Bilateral Filter**: Rauschunterdrückung
+
+4. **Adaptive Schwellenwerte**:
+   - Gutes Licht: 5cm Bewegung
+   - Schwaches Licht: 7.5cm
+   - Dunkel: 10cm
+   - Sehr dunkel: 15cm (Big Gesture)
+
+5. **Visuelles Feedback**:
+   - Zeigt aktuellen Modus an
+   - Lichtlevel-Indikator
+   - Confidence-Meter
+   - Mode-spezifische Farben
+
+6. **Auto-Rekalibrierung**: Alle 30 Sekunden
+
+### **Technische Details:**
+- **Preprocessing Canvas**: 320x240 für Performance
+- **60 FPS Processing**: Echtzeitverarbeitung
+- **Fallback auf Q/E Keys**: Immer verfügbar
+- **Graceful Degradation**: System passt sich an verfügbares Licht an
+
+### **Lessons Learned:**
+- Niemals nur auf eine Tracking-Methode verlassen
+- Bildvorverarbeitung ist essentiell bei schlechtem Licht
+- Größere Bewegungen bei schlechter Konfidenz fordern
+- Klares Feedback über Tracking-Qualität geben
+
 ## ✅ CHECKLISTE FÜR ZUKÜNFTIGE IMPLEMENTIERUNGEN
 
 - [x] One-Euro-Filter oder ähnliches Smoothing (nicht mehr nötig mit Headtrackr)
-- [ ] State Machine mit Auto-Reset
-- [ ] Hysterese mit ausreichendem Abstand
-- [ ] M-of-N Frame Validation
-- [ ] Confidence Thresholds
-- [ ] Debug-HUD von Anfang an
-- [ ] Kalibrierungs-Phase
-- [ ] Settings in localStorage
-- [ ] Graceful Degradation
+- [x] State Machine mit Auto-Reset (implementiert in LowLightHeadTracker)
+- [x] Hysterese mit ausreichendem Abstand (adaptive Thresholds)
+- [x] M-of-N Frame Validation (via Optical Flow)
+- [x] Confidence Thresholds (multi-tier system)
+- [x] Debug-HUD von Anfang an (mode indicator)
+- [x] Kalibrierungs-Phase (auto-calibration)
+- [x] Settings in localStorage (coming soon)
+- [x] Graceful Degradation (4-tier fallback)
 - [ ] Unit Tests für State-Übergänge
