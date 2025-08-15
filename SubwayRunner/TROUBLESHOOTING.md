@@ -53,33 +53,87 @@
 
 ## 🔴 KRITISCHER TIMER-BUG: Date.now() vs performance.now() (15.08.2025)
 
-### Problem:
-- Nach Round 1 wird sofort das Finale angezeigt
-- Round 2 startet, aber timeRemaining ist sofort 0
-- Alle 3 Durchgänge werden als erledigt angezeigt
+### **DIE GESCHICHTE EINES EPISCHEN BUGS**
 
-### Ursache - DER KILLER-BUG:
+#### **Symptome:**
+- User spielt Round 1 durch (60 Sekunden)
+- Statt Round 2 zu starten, zeigt das Spiel "LEGENDARY RUNNER!" (alle 3 Durchgänge geschafft)
+- Victory-Screen zeigt: "✅ Durchgang 1: 60s ✅ Durchgang 2: 60s ✅ Durchgang 3: 60s"
+- Obwohl User nur EINEN Durchgang gespielt hat!
+
+#### **Was wir alles versucht haben (und warum es fehlschlug):**
+
+**Versuch 1: Overlay-Display-Problem**
+- Dachten: `display: none !important` blockiert die Round-Transition
+- Haben entfernt, hat nichts gebracht
+- Problem war woanders
+
+**Versuch 2: Round-Increment-Logik**
+- Dachten: `currentRound++` wird mehrfach aufgerufen
+- Haben Console.logs hinzugefügt
+- Logs zeigten: Round wird korrekt incrementiert, aber Timer war das Problem
+
+**Versuch 3: Victory-Condition prüfen**
+- Dachten: `if (currentRound >= 3)` ist falsch
+- War korrekt, Problem war der Timer
+
+#### **DIE WAHRE URSACHE - Ein klassischer Timer-API-Konflikt:**
+
 ```javascript
-// FALSCH - Gemischte Timer-APIs:
+// WAS PASSIERTE:
+// In startGame():
+gameState.gameStartTime = Date.now();        // z.B. 1692000000000 (ms seit 1970)
+
+// Nach 60 Sekunden in startNextRound():
 gameState.gameStartTime = performance.now(); // z.B. 65000 (ms seit Seiten-Load)
-const currentTime = Date.now();               // z.B. 1692000000000 (ms seit 1970)
-const elapsedTime = (currentTime - gameState.gameStartTime) / 1000; // = MILLIONEN SEKUNDEN!
+
+// In der Game-Loop:
+const currentTime = Date.now();              // z.B. 1692000065000 
+const elapsedTime = (currentTime - gameState.gameStartTime) / 1000;
+// = (1692000065000 - 65000) / 1000 = 1.692 MILLIARDEN Sekunden!
+
+// timeRemaining = 60 - 1692000000 = SOFORT NEGATIV!
+// → Victory wird SOFORT ausgelöst
+// → currentRound ist noch 2, aber >= 3 Check schlägt fehl
+// → Finale wird angezeigt!
 ```
 
-### Lösung:
-**IMMER konsistent Date.now() verwenden für Game-Timer!**
+#### **WARUM DER BUG SO SCHWER ZU FINDEN WAR:**
+1. **Inkonsistente APIs**: Code verwendete mal `Date.now()`, mal `performance.now()`
+2. **Verzögerte Auswirkung**: Bug trat erst NACH Round 1 auf
+3. **Irreführende Symptome**: Sah aus wie Round-Skip, war aber Timer-Problem
+4. **Copy-Paste-Fehler**: Jemand hatte `performance.now()` aus anderem Context kopiert
+
+#### **DIE LÖSUNG:**
 ```javascript
-// RICHTIG:
-gameState.gameStartTime = Date.now();
-const currentTime = Date.now();
-const elapsedTime = (currentTime - gameState.gameStartTime) / 1000; // Korrekte Sekunden
+// ÜBERALL konsistent Date.now() verwenden:
+function startNextRound() {
+    gameState.gameStartTime = Date.now(); // NICHT performance.now()!
+    gameState.roundStartTime = Date.now(); // Konsistent!
+}
 ```
 
-### Merke:
-- **Date.now()**: Millisekunden seit 1970 (epoch time)
-- **performance.now()**: Millisekunden seit Seiten-Load
-- **NIE MISCHEN!** Das führt zu astronomischen Zeit-Differenzen
-- Für Game-Timer IMMER die gleiche API verwenden
+#### **LESSONS LEARNED:**
+1. **NIEMALS** Timer-APIs mischen (`Date.now()` vs `performance.now()`)
+2. **Bei Timer-Bugs** IMMER prüfen welche API verwendet wird
+3. **Console.logs** für elapsed time hätten das sofort gezeigt
+4. **Copy-Paste** ist gefährlich wenn APIs unterschiedlich sind
+5. **Senior Developer** = Konsistenz in der gesamten Codebase
+
+#### **TEST-STRATEGIE FÜR DIE ZUKUNFT:**
+```javascript
+// IMMER loggen bei Timer-Problemen:
+console.log('gameStartTime:', gameState.gameStartTime);
+console.log('currentTime:', currentTime);
+console.log('elapsedTime:', elapsedTime);
+console.log('timeRemaining:', gameState.timeRemaining);
+```
+
+### **MERKE FÜR IMMER:**
+- `Date.now()` = Epoch time (ms seit 1970) ≈ 1692000000000
+- `performance.now()` = Page load time (ms seit Seiten-Load) ≈ 65000
+- **DIFFERENZ** = 1.692 MILLIARDEN - Das zerstört JEDEN Timer!
+- **REGEL**: Ein Projekt, eine Timer-API!
 
 ## 📝 **PROBLEM SUMMARY**
 The game has multiple critical bugs that persist despite attempted fixes:
