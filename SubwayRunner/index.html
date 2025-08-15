@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.2-HIGHSCORE-FIXED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.3-SPAWN-FIXED</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -6582,10 +6582,34 @@
                 // Spawn collectibles with 4-second interval
                 spawnCollectible();
                 
-                // Spawn obstacles - REDUCED frequency for better balance
-                const baseSpawnRate = 0.008; // Reduced from 0.012 (33% less obstacles)
-                const spawnSpeedMultiplier = 1 + (gameState.speed / gameState.maxSpeed) * 1.0; // Reduced from 1.5
-                const spawnRate = baseSpawnRate * spawnSpeedMultiplier;
+                // Spawn obstacles - FIXED for high-speed rounds
+                const baseSpawnRate = 0.008; // Base spawn rate
+                
+                // FIX: Compensate for absolute speed, not just relative
+                // At high speeds, obstacles pass by much faster, so we need MORE spawns
+                const speedCompensation = Math.max(1, gameState.speed / 0.15); // Normalize to a reasonable base speed
+                
+                // Round-specific bonuses to ensure challenge increases
+                let roundSpawnBonus = 1.0;
+                switch(gameState.currentRound) {
+                    case 1: 
+                        roundSpawnBonus = 1.0; // Normal spawning
+                        break;
+                    case 2: 
+                        roundSpawnBonus = 1.4; // 40% more obstacles
+                        break;
+                    case 3: 
+                        roundSpawnBonus = 2.0; // DOUBLE obstacles for insane mode!
+                        break;
+                }
+                
+                // Final spawn rate calculation
+                const spawnRate = baseSpawnRate * speedCompensation * roundSpawnBonus;
+                
+                // Debug spawn rate in Round 3
+                if (gameState.currentRound === 3 && Math.random() < 0.01) {
+                    console.log(`🎯 Round 3 Spawn - Speed: ${gameState.speed.toFixed(2)}, SpawnRate: ${(spawnRate * 100).toFixed(2)}%`);
+                }
                 
                 if (Math.random() < spawnRate) {
                     const jumpObstacles = ['lowbarrier', 'jumpblock', 'hurdleset'];
