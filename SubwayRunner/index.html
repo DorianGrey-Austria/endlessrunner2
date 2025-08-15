@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.3-SPAWN-FIXED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.4-ONLINE-HIGHSCORE</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -3064,14 +3064,132 @@
         let highscores = [];
         let currentScore = 0;
         let currentSurvivalTime = 0;
+        let isOnlineMode = false; // Track if we're using online highscores
 
-        // TEMPORARILY DISABLED - Using localStorage only for now
-        // The Supabase database needs the correct table (subway_runner_scores) to be created
-        console.log('📴 Supabase temporarily disabled - using localStorage for highscores');
-        supabase = null; // Explicitly set to null to use localStorage fallback
+        // Initialize Supabase for online highscores
+        try {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('🌐 Attempting to connect to Supabase...');
+                
+                // Test the connection
+                testSupabaseConnection();
+            } else {
+                console.warn('⚠️ Supabase library not loaded properly');
+                supabase = null;
+            }
+        } catch (error) {
+            console.error('❌ Error initializing Supabase:', error);
+            supabase = null;
+        }
         
-        // TODO: Create subway_runner_scores table in Supabase database
-        // SQL is available in SUPABASE_SETUP.md
+        // Test Supabase connection and table existence
+        async function testSupabaseConnection() {
+            if (!supabase) return;
+            
+            try {
+                // Try to fetch one score to test if table exists
+                const { data, error } = await supabase
+                    .from('subway_runner_scores')
+                    .select('id')
+                    .limit(1);
+                
+                if (error) {
+                    if (error.message.includes('relation') || error.message.includes('does not exist')) {
+                        console.error('❌ Table subway_runner_scores does not exist!');
+                        console.log('📋 Please create the table using SQL from SUPABASE_SETUP.md');
+                    } else {
+                        console.error('❌ Supabase connection error:', error.message);
+                    }
+                    supabase = null;
+                    isOnlineMode = false;
+                    updateConnectionStatus();
+                } else {
+                    console.log('✅ Supabase connected successfully - Online highscores active!');
+                    isOnlineMode = true;
+                    updateConnectionStatus();
+                }
+            } catch (error) {
+                console.error('❌ Failed to test Supabase connection:', error);
+                supabase = null;
+                isOnlineMode = false;
+                updateConnectionStatus();
+            }
+        }
+        
+        // Update UI to show connection status
+        function updateConnectionStatus() {
+            // Add status indicator to highscore panel
+            const highscorePanel = document.getElementById('highscorePanel');
+            if (highscorePanel) {
+                const statusBadge = document.createElement('div');
+                statusBadge.id = 'connectionStatus';
+                statusBadge.style.cssText = `
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    font-size: 10px;
+                    font-weight: bold;
+                `;
+                
+                if (isOnlineMode) {
+                    statusBadge.innerHTML = '🌐 ONLINE';
+                    statusBadge.style.background = 'rgba(0, 255, 0, 0.2)';
+                    statusBadge.style.color = '#00ff00';
+                    statusBadge.title = 'Globale Highscores aktiv';
+                } else {
+                    statusBadge.innerHTML = '💾 OFFLINE';
+                    statusBadge.style.background = 'rgba(255, 165, 0, 0.2)';
+                    statusBadge.style.color = '#ffa500';
+                    statusBadge.title = 'Lokale Highscores (nur Browser)';
+                }
+                
+                // Remove old badge if exists
+                const oldBadge = document.getElementById('connectionStatus');
+                if (oldBadge) oldBadge.remove();
+                
+                highscorePanel.appendChild(statusBadge);
+            }
+            
+            // Show temporary notification
+            showConnectionNotification();
+        }
+        
+        // Show a temporary notification about connection status
+        function showConnectionNotification() {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-weight: bold;
+                z-index: 10000;
+                animation: slideDown 0.5s ease;
+            `;
+            
+            if (isOnlineMode) {
+                notification.innerHTML = '🌐 Online Highscores aktiviert!';
+                notification.style.background = 'rgba(0, 255, 0, 0.9)';
+                notification.style.color = 'white';
+            } else {
+                notification.innerHTML = '💾 Offline-Modus - Scores werden lokal gespeichert';
+                notification.style.background = 'rgba(255, 165, 0, 0.9)';
+                notification.style.color = 'white';
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideUp 0.5s ease';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
 
         // Highscore Management System
         class HighscoreManager {
@@ -3082,7 +3200,7 @@
 
             async loadHighscores() {
                 try {
-                    if (supabase) {
+                    if (supabase && isOnlineMode) {
                         const { data, error } = await supabase
                             .from('subway_runner_scores')
                             .select('*')
@@ -3091,14 +3209,17 @@
                         
                         if (!error && data) {
                             highscores = data;
+                            console.log('📊 Loaded online highscores:', data.length, 'entries');
                         } else {
+                            console.warn('⚠️ Failed to load online scores:', error?.message);
                             throw new Error('Supabase error');
                         }
                     } else {
-                        throw new Error('No Supabase connection');
+                        throw new Error('Using offline mode');
                     }
                 } catch (error) {
                     // Fallback to localStorage
+                    console.log('💾 Using local highscores (offline mode)');
                     const localScores = localStorage.getItem(this.localStorageKey);
                     highscores = localScores ? JSON.parse(localScores) : [];
                 }
@@ -3114,23 +3235,35 @@
                     created_at: new Date().toISOString()
                 };
 
+                let submitted = false;
+                
                 try {
-                    if (supabase) {
+                    if (supabase && isOnlineMode) {
                         const { data, error } = await supabase
                             .from('subway_runner_scores')
                             .insert([scoreEntry])
                             .select();
                         
-                        if (error) throw error;
-                    } else {
-                        throw new Error('No Supabase connection');
+                        if (error) {
+                            console.error('❌ Failed to submit online score:', error);
+                            throw error;
+                        }
+                        console.log('✅ Score submitted online:', data);
+                        submitted = true;
                     }
                 } catch (error) {
-                    // Fallback to localStorage
-                    highscores.push(scoreEntry);
-                    highscores.sort((a, b) => b.score - a.score);
-                    highscores = highscores.slice(0, 10); // Keep only top 10
-                    localStorage.setItem(this.localStorageKey, JSON.stringify(highscores));
+                    console.warn('⚠️ Falling back to local storage');
+                }
+                
+                // Always save locally as backup
+                if (!submitted || !isOnlineMode) {
+                    console.log('💾 Saving score locally');
+                    const localScores = localStorage.getItem(this.localStorageKey);
+                    let scores = localScores ? JSON.parse(localScores) : [];
+                    scores.push(scoreEntry);
+                    scores.sort((a, b) => b.score - a.score);
+                    scores = scores.slice(0, 10); // Keep only top 10
+                    localStorage.setItem(this.localStorageKey, JSON.stringify(scores));
                 }
 
                 await this.loadHighscores();
