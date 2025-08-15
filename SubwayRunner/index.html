@@ -631,13 +631,23 @@
         </div>
         
         <div id="ui">
+            <div id="roundIndicator" style="font-size: 28px; color: #FFD700; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); margin-bottom: 10px;">
+                🎮 DURCHGANG <span id="currentRound">1</span>/3
+            </div>
             <div>Score: <span id="score">0</span></div>
-            <div>Speed: <span id="speed">100</span></div>
+            <div id="speedIndicator">Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.0-MULTI-JUMP</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.1-3ROUNDS</div>
+        </div>
+        
+        <!-- Round Transition Overlay -->
+        <div id="roundTransitionOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            <div id="transitionTitle" style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.8); margin-bottom: 20px;"></div>
+            <div id="transitionSubtitle" style="font-size: 24px; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.8);"></div>
+            <div id="transitionCountdown" style="font-size: 72px; color: white; margin-top: 30px; text-shadow: 0 0 30px rgba(255,255,255,1);"></div>
         </div>
         
         <div id="instructions">
@@ -3215,9 +3225,16 @@
             baseSpeed: 0.08,
             maxSpeed: 0.45, // Sehr schnell am Ende!
             lives: 3,
-            gameTime: 60, // 60 Sekunden
+            gameTime: 60, // 60 Sekunden pro Durchgang
             timeRemaining: 60,
             gameStartTime: 0,
+            // 3-DURCHGANG-SYSTEM
+            currentRound: 1, // 1-3
+            roundStartTime: 0,
+            totalGameTime: 180, // 3x60 Sekunden
+            roundTransition: false,
+            roundTransitionStartTime: 0,
+            roundTransitionDuration: 3000, // 3 Sekunden Übergang
             playerLane: 1, // 0=left, 1=center, 2=right
             playerAction: 'running', // running, jumping, ducking
             playerY: 0,
@@ -4764,13 +4781,23 @@
             gameState.isGameOver = false;
             gameState.isVictory = false;
             gameState.score = 0;
-            gameState.speed = gameState.baseSpeed;
             gameState.lives = 3;
             gameState.timeRemaining = gameState.gameTime;
             gameState.gameStartTime = Date.now();
             gameState.playerLane = 1;
             gameState.playerAction = 'running';
             gameState.playerY = 0;
+            
+            // Reset round system
+            gameState.currentRound = 1;
+            gameState.roundStartTime = Date.now();
+            gameState.roundTransition = false;
+            
+            // Set Round 1 speed parameters
+            setRoundSpeedParameters(1);
+            
+            // Apply Round 1 visual effects
+            applyRoundVisualEffects(1);
             
             // Show highscore panel for first 5 seconds
             showHighscorePanelTemporarily();
@@ -4842,37 +4869,238 @@
 
         function victoryGame() {
             // Prevent multiple victory calls
-            if (gameState.isVictory) {
-                console.log('Victory already triggered, skipping');
+            if (gameState.roundTransition) {
+                console.log('Round transition already in progress');
                 return;
             }
             
+            // Check if this was the final round
+            if (gameState.currentRound >= 3) {
+                // FINAL VICTORY - All 3 rounds completed!
+                gameState.isPlaying = false;
+                gameState.isVictory = true;
+                
+                // Stop ambient sounds
+                audioManager.stopAmbient();
+                ambientStarted = false;
+                
+                currentScore = gameState.score;
+                currentSurvivalTime = 180; // Full 180 seconds survived!
+                
+                // Epic victory celebration!
+                audioManager.play('powerup');
+                
+                // Massive fireworks effect
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        createParticleEffect(
+                            new THREE.Vector3((Math.random() - 0.5) * 15, 5 + Math.random() * 5, -5),
+                            [0xFF6B35, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFEDE57, 0xFF1493, 0x00FF00][i % 7],
+                            'success'
+                        );
+                    }, i * 200);
+                }
+                
+                // Show epic victory screen
+                showFinalVictoryDialog();
+            } else {
+                // Round completed - transition to next round
+                startRoundTransition();
+            }
+        }
+        
+        // New round transition function
+        function startRoundTransition() {
+            gameState.roundTransition = true;
+            gameState.roundTransitionStartTime = performance.now();
             gameState.isPlaying = false;
-            gameState.isVictory = true;
             
-            // Stop ambient sounds
-            audioManager.stopAmbient();
-            ambientStarted = false;
+            // Pause all game elements
+            obstacles.forEach(o => o.paused = true);
+            gameState.activeCollectibles.forEach(c => c.paused = true);
             
-            currentScore = gameState.score;
-            currentSurvivalTime = 60; // Full 60 seconds survived!
+            const overlay = document.getElementById('roundTransitionOverlay');
+            const title = document.getElementById('transitionTitle');
+            const subtitle = document.getElementById('transitionSubtitle');
+            const countdown = document.getElementById('transitionCountdown');
             
-            // Victory celebration!
-            audioManager.play('powerup');
+            // Show round completed message
+            title.textContent = `DURCHGANG ${gameState.currentRound} GESCHAFFT! 🎉`;
+            subtitle.textContent = `Bereite dich auf DURCHGANG ${gameState.currentRound + 1} vor...`;
             
-            // Fireworks effect
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => {
-                    createParticleEffect(
-                        new THREE.Vector3((Math.random() - 0.5) * 10, 5, -5),
-                        [0xFF6B35, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFEDE57][i],
-                        'success'
-                    );
-                }, i * 300);
+            // Apply round-specific colors
+            if (gameState.currentRound === 1) {
+                // Transition to Round 2 - Orange theme
+                title.style.color = '#FFA500';
+                subtitle.style.color = '#FF8C00';
+                overlay.style.background = 'linear-gradient(135deg, rgba(255,140,0,0.9), rgba(255,69,0,0.9))';
+            } else if (gameState.currentRound === 2) {
+                // Transition to Round 3 - Purple/Pink theme
+                title.style.color = '#FF1493';
+                subtitle.style.color = '#FF00FF';
+                overlay.style.background = 'linear-gradient(135deg, rgba(138,43,226,0.9), rgba(255,20,147,0.9))';
             }
             
-            // Always show name input for victory (it's always a highscore achievement!)
-            showNameInputDialog(true);
+            overlay.style.display = 'flex';
+            
+            // Countdown animation
+            let count = 3;
+            countdown.textContent = count;
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdown.textContent = count;
+                } else {
+                    clearInterval(countdownInterval);
+                    overlay.style.display = 'none';
+                    startNextRound();
+                }
+            }, 1000);
+        }
+        
+        function startNextRound() {
+            // Increment round
+            gameState.currentRound++;
+            gameState.roundStartTime = performance.now();
+            
+            // Reset timer for new round
+            gameState.timeRemaining = 60;
+            gameState.gameStartTime = performance.now();
+            
+            // Update UI
+            document.getElementById('currentRound').textContent = gameState.currentRound;
+            
+            // Apply round-specific visual effects
+            applyRoundVisualEffects(gameState.currentRound);
+            
+            // Set round-specific speed parameters
+            setRoundSpeedParameters(gameState.currentRound);
+            
+            // Resume game
+            gameState.roundTransition = false;
+            gameState.isPlaying = true;
+            
+            // Unpause game elements
+            obstacles.forEach(o => o.paused = false);
+            gameState.activeCollectibles.forEach(c => c.paused = false);
+            
+            // Play round start sound
+            audioManager.play('powerup');
+        }
+        
+        function setRoundSpeedParameters(round) {
+            switch(round) {
+                case 1:
+                    // Round 1: Normal progression (0.08 → 0.35)
+                    gameState.baseSpeed = 0.08;
+                    gameState.maxSpeed = 0.35;
+                    break;
+                case 2:
+                    // Round 2: Faster start, higher max (0.28 → 0.525)
+                    gameState.baseSpeed = 0.28;
+                    gameState.maxSpeed = 0.525;
+                    break;
+                case 3:
+                    // Round 3: INSANE mode (0.42 → 0.75)
+                    gameState.baseSpeed = 0.42;
+                    gameState.maxSpeed = 0.75;
+                    break;
+            }
+            
+            // Set current speed to base speed
+            gameState.speed = gameState.baseSpeed;
+        }
+        
+        function applyRoundVisualEffects(round) {
+            const speedIndicator = document.getElementById('speedIndicator');
+            const roundIndicator = document.getElementById('roundIndicator');
+            
+            switch(round) {
+                case 1:
+                    // Normal theme
+                    speedIndicator.style.color = 'white';
+                    roundIndicator.style.color = '#FFD700';
+                    document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
+                    break;
+                case 2:
+                    // Heat theme - Orange/Red
+                    speedIndicator.style.color = '#FFA500';
+                    speedIndicator.style.textShadow = '0 0 10px rgba(255,165,0,0.8)';
+                    roundIndicator.style.color = '#FF4500';
+                    roundIndicator.innerHTML = '🔥 DURCHGANG <span id="currentRound">2</span>/3 - HEAT MODE';
+                    document.body.style.background = 'linear-gradient(to bottom, #FF8C00 0%, #FF4500 100%)';
+                    
+                    // Add motion blur effect
+                    renderer.domElement.style.filter = 'blur(0.5px)';
+                    setTimeout(() => {
+                        renderer.domElement.style.filter = 'none';
+                    }, 1000);
+                    break;
+                case 3:
+                    // Insane theme - Purple/Pink Neon
+                    speedIndicator.style.color = '#FF1493';
+                    speedIndicator.style.textShadow = '0 0 20px rgba(255,20,147,1)';
+                    speedIndicator.style.animation = 'pulse 0.5s infinite';
+                    roundIndicator.style.color = '#FF00FF';
+                    roundIndicator.innerHTML = '⚡ DURCHGANG <span id="currentRound">3</span>/3 - INSANE MODE!!!';
+                    document.body.style.background = 'linear-gradient(to bottom, #8A2BE2 0%, #FF1493 100%)';
+                    
+                    // Add chromatic aberration effect
+                    renderer.domElement.style.filter = 'contrast(1.1) saturate(1.3)';
+                    
+                    // Add CSS animation for pulsing
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes pulse {
+                            0% { transform: scale(1); }
+                            50% { transform: scale(1.05); }
+                            100% { transform: scale(1); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    break;
+            }
+        }
+        
+        function showFinalVictoryDialog() {
+            // Create epic victory screen
+            const victoryHTML = `
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                     background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,20,147,0.95)); 
+                     padding: 40px; border-radius: 20px; text-align: center; z-index: 1000;
+                     box-shadow: 0 0 50px rgba(255,215,0,0.8);">
+                    <h1 style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,1); margin-bottom: 20px;">
+                        🏆 LEGENDARY RUNNER! 🏆
+                    </h1>
+                    <div style="font-size: 24px; color: white; margin-bottom: 30px;">
+                        Du hast alle 3 Durchgänge gemeistert!
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="color: #FFD700; font-size: 20px; margin-bottom: 10px;">📊 STATISTIK</div>
+                        <div style="color: white; font-size: 18px;">
+                            <div>✅ Durchgang 1: 60s</div>
+                            <div>✅ Durchgang 2: 60s</div>
+                            <div>✅ Durchgang 3: 60s</div>
+                            <div style="margin-top: 10px; font-size: 24px; color: #FFD700;">
+                                🎯 Total: 180 Sekunden überlebt!
+                            </div>
+                            <div style="margin-top: 5px;">Max Speed: ${Math.floor(gameState.maxSpeed * 1000)}</div>
+                            <div>Score: ${gameState.score}</div>
+                        </div>
+                    </div>
+                    <button onclick="location.reload()" style="padding: 15px 30px; font-size: 20px; 
+                            background: linear-gradient(135deg, #FFD700, #FFA500); border: none; 
+                            border-radius: 10px; color: white; cursor: pointer; font-weight: bold;
+                            box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                        🎮 NOCHMAL SPIELEN
+                    </button>
+                </div>
+            `;
+            
+            const victoryDiv = document.createElement('div');
+            victoryDiv.innerHTML = victoryHTML;
+            document.body.appendChild(victoryDiv);
         }
 
         function updateUI() {
@@ -4880,6 +5108,7 @@
             document.getElementById('score').textContent = gameState.score;
             document.getElementById('speed').textContent = Math.floor(gameState.speed * 1000);
             document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('currentRound').textContent = gameState.currentRound;
             document.getElementById('apples').textContent = gameState.collectedApples;
             document.getElementById('broccolis').textContent = gameState.collectedBroccolis;
             
@@ -6226,10 +6455,12 @@
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
-                // Move obstacles with smooth speed
+                // Move obstacles with smooth speed (unless in round transition)
                 obstacles.forEach((obstacle, index) => {
-                    obstacle.mesh.position.z += visualSpeed;
-                    obstacle.z = obstacle.mesh.position.z;
+                    if (!gameState.roundTransition) {
+                        obstacle.mesh.position.z += visualSpeed;
+                        obstacle.z = obstacle.mesh.position.z;
+                    }
                     
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
@@ -6241,13 +6472,15 @@
                     }
                 });
                 
-                // Move and cleanup collectibles
+                // Move and cleanup collectibles (unless in round transition)
                 gameState.activeCollectibles = gameState.activeCollectibles.filter(collectible => {
-                    collectible.mesh.position.z += visualSpeed;
-                    
-                    // Gentle floating animation
-                    collectible.mesh.position.y += Math.sin(Date.now() * 0.003 + collectible.mesh.position.x) * 0.01;
-                    collectible.mesh.rotation.y += 0.02; // Slow rotation
+                    if (!gameState.roundTransition) {
+                        collectible.mesh.position.z += visualSpeed;
+                        
+                        // Gentle floating animation
+                        collectible.mesh.position.y += Math.sin(Date.now() * 0.003 + collectible.mesh.position.x) * 0.01;
+                        collectible.mesh.rotation.y += 0.02; // Slow rotation
+                    }
                     
                     if (collectible.mesh.position.z > 10) {
                         scene.remove(collectible.mesh);
@@ -6323,9 +6556,27 @@
                     return;
                 }
                 
-                // Progressive speed increase - exponential curve for dramatic effect
+                // Progressive speed increase based on current round
                 const timeProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 to 1
-                const speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
+                
+                let speedMultiplier;
+                switch(gameState.currentRound) {
+                    case 1:
+                        // Round 1: Gradual increase (0.08 → 0.35)
+                        speedMultiplier = 1 + timeProgress * 3.375; // Results in 0.08 * 4.375 = 0.35
+                        break;
+                    case 2:
+                        // Round 2: Moderate increase (0.28 → 0.525)
+                        speedMultiplier = 1 + timeProgress * 0.875; // Results in 0.28 * 1.875 = 0.525
+                        break;
+                    case 3:
+                        // Round 3: Slight increase but very fast (0.42 → 0.75)
+                        speedMultiplier = 1 + timeProgress * 0.786; // Results in 0.42 * 1.786 = 0.75
+                        break;
+                    default:
+                        speedMultiplier = 1 + timeProgress * 3.375;
+                }
+                
                 gameState.speed = gameState.baseSpeed * speedMultiplier;
                 gameState.speed = Math.min(gameState.speed, gameState.maxSpeed);
                 

@@ -466,6 +466,109 @@ function animate() {
 - **V4.6.12**: Fixed collectible Y-positioning (Y=0.3 for ground items)
 - **V4.7.x**: FAILED - Aggressive spawning caused crashes (rolled back)
 
+## Architecture Overview
+
+### SubwayRunner Architecture (Primary Project)
+- **Dual Architecture**: 
+  - **Production**: Single `index.html` file with embedded JavaScript modules (~5000+ lines)
+  - **Development**: React + TypeScript in `src/` folder (Vite, React Three Fiber)
+- **Core Game Systems** (embedded in index.html):
+  - **Game State**: Menu, Playing, GameOver, Win states
+  - **Scene Management**: Three.js scene, camera, lighting setup
+  - **Track System**: 3-lane track with dynamic segment spawning
+  - **Collision Detection**: 3D bounding box collision with tolerance settings
+  - **Spawn System**: Distance-based spawning with speed scaling
+  - **Score System**: Direct updates (queue system removed in v4.6.13)
+- **Obstacle Types**: Tunnels, barriers, spikes, walls, moving obstacles, trains
+- **Collectibles**: Kiwis (brown spheres), Broccolis (green), Mystery Boxes (golden fountains)
+- **Controls**: Keyboard (WASD/Arrows) and planned MediaPipe gesture support
+- **Performance**: Object pooling, frustum culling, 60 FPS target
+
+### Endless3D Architecture
+- **Modular World System**: JSON-configurable environments and themes
+- **Object Pooling**: Efficient obstacle and track segment reuse
+- **Adaptive Performance**: Quality scaling based on FPS detection
+- **Perspective Rendering**: Objects spawn in distance, move toward player
+- **Pattern-based Spawning**: Configurable obstacle patterns per world
+
+### EndlessRunner-MVP Architecture
+- **Event-driven**: Clean component communication via custom events
+- **Device-adaptive**: GPU tier detection with quality scaling
+- **Feature-rich**: Shop system, biomes, power-ups, achievements
+- **Analytics System**: Real-time player behavior tracking
+- **Cross-platform**: ES5 compatibility with modern progressive enhancement
+
+### GestureRunnerPro Architecture
+- **Godot Scene System**: Modular scenes for UI, gameplay, effects
+- **Autoloaded Singletons**: GameCore, AudioManager, SaveSystem, Analytics
+- **MediaPipe Integration**: Real-time gesture recognition via JavaScript bridge
+- **WebCam Support**: Browser webcam access with pose landmark detection
+- **Gesture System**: 6 supported gestures (move left/right, jump, duck, shield, magnet)
+- **Cross-Platform Bridge**: JavaScriptBridge for web export gesture communication
+- **State Machine**: Player states with gesture-driven transitions
+
+### godot-mcp Architecture
+- **MCP Protocol**: Model Context Protocol server for Godot integration
+- **WebSocket Communication**: Real-time communication with Godot editor
+- **Command System**: Modular command processors for different operations
+- **Resource Management**: Utilities for Godot scenes, scripts, and projects
+
+## Key Design Patterns
+
+### Performance Optimization
+- All projects use object pooling to minimize garbage collection
+- Adaptive quality systems adjust rendering based on device capabilities
+- Frame-based updates ensure consistent 60+ FPS gameplay
+
+### State Management
+- **React projects**: Zustand for minimal state management
+- **Vanilla JS**: Event-driven architecture with custom events
+- **Godot**: Singleton autoloads for global state, signals for communication
+
+### Collision Detection
+- **3D projects**: Bounding box collision with configurable tolerances
+- **2D Godot**: Physics body collision layers for precise detection
+- **Performance**: Spatial partitioning and early exit optimizations
+
+## Core Implementation Details
+
+### SubwayRunner Game Loop Structure
+```javascript
+// Main game loop pattern (in index.html)
+function animate() {
+    requestAnimationFrame(animate);
+    
+    // 1. Update game state
+    if (gameState === 'playing') {
+        updatePlayer();          // Handle input, jumping, lane switching
+        updateObstacles();       // Move and spawn obstacles
+        updateCollectibles();    // Move and spawn collectibles
+        checkCollisions();       // Bounding box collision detection
+        updateScore();          // Direct score updates (no queue)
+        updateSpeed();          // Progressive difficulty
+    }
+    
+    // 2. Render scene
+    renderer.render(scene, camera);
+}
+```
+
+### Key Game Constants & Configuration
+- **Base Speed**: 0.12 (perfect balance, don't change)
+- **Max Speed**: ~0.35 (after collecting many items)
+- **Lane Positions**: [-2, 0, 2] (left, center, right)
+- **Jump Height**: 2.5 units
+- **Jump Duration**: ~600ms
+- **Collision Tolerance**: 0.2-0.3 units
+- **Spawn Distance**: 30-50 units ahead
+- **Score Cap**: 999,999 (prevents overflow)
+- **Win Condition**: 30 kiwis collected
+
+### Critical Bug Fixes History
+- **V4.6.13**: Fixed 2 billion score bug (removed score queue system)
+- **V4.6.12**: Fixed collectible Y-positioning (Y=0.3 for ground items)
+- **V4.7.x**: FAILED - Aggressive spawning caused crashes (rolled back)
+
 ## 🎮 **BASISVERSION 3 - IMPLEMENTATION GUIDE**
 
 ### **ADDING FEATURES TO BASISVERSION 3**
