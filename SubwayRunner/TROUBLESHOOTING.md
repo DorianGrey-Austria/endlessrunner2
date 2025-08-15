@@ -19,6 +19,38 @@
 2. Z-Index vom Menu erhöhen auf 1000
 3. Three.js Material Fix (emissive entfernen bei MeshBasicMaterial)
 
+## 🔴 3-DURCHGANG-SYSTEM BUGS (15.08.2025)
+
+### Problem:
+- Round-Transitionen werden nicht angezeigt
+- Spiel springt scheinbar von Round 1 zu Round 3
+- Victory-Screen zeigt nur "Legend" statt vollständigen Text
+
+### Ursache:
+- `display: none !important` im Overlay blockiert JavaScript-Änderungen
+- `removeProperty('display')` funktioniert nicht mit inline !important
+- Z-Index-Konflikte zwischen Overlays
+
+### Lösung:
+1. Niemals `!important` in inline-styles für Overlays verwenden
+2. Overlay ohne !important: `display: none;` statt `display: none !important;`
+3. Console.logs für Round-Tracking hinzufügen
+4. Z-Index-Hierarchie beachten:
+   - Menu: 1000
+   - Round-Transition-Overlay: 500
+   - Victory-Dialog: 2000
+
+### Implementiert:
+- `!important` aus roundTransitionOverlay entfernt
+- Console.logs für Round-Debugging hinzugefügt
+- Victory-Dialog z-index auf 2000 erhöht
+- Overlay Display-Logik vereinfacht
+
+### Merke:
+- `!important` in inline-styles ist böse
+- Round-Transitions müssen SICHTBAR sein für User-Feedback
+- Z-Index-Hierarchie immer dokumentieren
+
 ## 📝 **PROBLEM SUMMARY**
 The game has multiple critical bugs that persist despite attempted fixes:
 

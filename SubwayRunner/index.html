@@ -646,7 +646,7 @@
         </div>
         
         <!-- Round Transition Overlay -->
-        <div id="roundTransitionOverlay" style="display: none !important; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; justify-content: center; align-items: center; flex-direction: column;">
+        <div id="roundTransitionOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; justify-content: center; align-items: center; flex-direction: column;">
             <div id="transitionTitle" style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.8); margin-bottom: 20px;"></div>
             <div id="transitionSubtitle" style="font-size: 24px; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.8);"></div>
             <div id="transitionCountdown" style="font-size: 72px; color: white; margin-top: 30px; text-shadow: 0 0 30px rgba(255,255,255,1);"></div>
@@ -4913,6 +4913,8 @@
         
         // New round transition function
         function startRoundTransition() {
+            console.log(`🎯 Round ${gameState.currentRound} completed, transitioning to Round ${gameState.currentRound + 1}`);
+            
             gameState.roundTransition = true;
             gameState.roundTransitionStartTime = performance.now();
             gameState.isPlaying = false;
@@ -4943,9 +4945,9 @@
                 overlay.style.background = 'linear-gradient(135deg, rgba(138,43,226,0.9), rgba(255,20,147,0.9))';
             }
             
+            // Properly show the overlay
             overlay.style.display = 'flex';
-            overlay.style.removeProperty('display'); // Remove !important first
-            overlay.style.display = 'flex';
+            console.log('✅ Round transition overlay shown');
             
             // Countdown animation
             let count = 3;
@@ -4958,15 +4960,20 @@
                 } else {
                     clearInterval(countdownInterval);
                     overlay.style.display = 'none';
+                    console.log('✅ Round transition overlay hidden');
                     startNextRound();
                 }
             }, 1000);
         }
         
         function startNextRound() {
+            console.log(`🚀 Starting Round ${gameState.currentRound + 1}`);
+            
             // Increment round
             gameState.currentRound++;
             gameState.roundStartTime = performance.now();
+            
+            console.log(`✅ Now in Round ${gameState.currentRound}`);
             
             // Reset timer for new round
             gameState.timeRemaining = 60;
@@ -5072,7 +5079,7 @@
             const victoryHTML = `
                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
                      background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,20,147,0.95)); 
-                     padding: 40px; border-radius: 20px; text-align: center; z-index: 1000;
+                     padding: 40px; border-radius: 20px; text-align: center; z-index: 2000;
                      box-shadow: 0 0 50px rgba(255,215,0,0.8);">
                     <h1 style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,1); margin-bottom: 20px;">
                         🏆 LEGENDARY RUNNER! 🏆
