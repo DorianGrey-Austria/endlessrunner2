@@ -1,5 +1,80 @@
 # 🚨 SUBWAY RUNNER - CRITICAL BUG TROUBLESHOOTING LOG
 
+## 🔴🔴🔴 MEGA-KRITISCHER BUG: GAME FREEZE BEI GAME OVER/VICTORY (15.08.2025) 🔴🔴🔴
+
+### **DAS PROBLEM (ABSOLUT INAKZEPTABEL!):**
+- **Spiel hängt sich komplett auf** wenn man 3 Leben verliert
+- **Spiel hängt sich komplett auf** nach Victory (3 Runden geschafft)
+- **Desktop Chrome**: Totalabsturz
+- **Mobile/Tablet**: Teilweiser Freeze
+
+### **ROOT CAUSE ANALYSE:**
+
+#### **1. AUDIO SYSTEM CSP VIOLATIONS (Desktop)**
+```javascript
+// FEHLER: fetch() für data: URLs verursacht CSP-Fehler
+const response = await fetch(url); // ❌ CRASH auf Desktop!
+```
+- Content Security Policy blockiert `data:` URLs
+- Desktop Browser enforced CSP strikt
+- Mobile Browser sind nachsichtiger
+
+#### **2. HIGHSCORE SYSTEM RACE CONDITIONS**
+- `showNameInputDialog()` wird aufgerufen bevor DOM ready
+- Async Supabase calls blockieren Game Over flow
+- Error handling fehlt komplett
+
+#### **3. FEHLER-KASKADE:**
+1. Audio preload schlägt fehl → 
+2. Error nicht abgefangen →
+3. Game Over Funktion crasht →
+4. UI Update stoppt →
+5. **SPIEL EINGEFROREN!**
+
+### **SOFORT-MASSNAHMEN (IMPLEMENTED):**
+
+1. **Audio Preload DEAKTIVIERT**
+```javascript
+async preloadSounds() {
+    return; // TEMPORARILY DISABLED to fix Desktop crashes
+}
+```
+
+2. **Highscore Dialog ÜBERSPRUNGEN**
+```javascript
+// TEMPORARILY SKIP HIGHSCORE CHECK TO PREVENT CRASHES
+// if (highscoreManager.isHighscore(currentScore)) {
+//     showNameInputDialog(false);
+// } else {
+showGameOverMenu(false);
+// }
+```
+
+### **WARUM DAS NIE WIEDER PASSIEREN DARF:**
+- **MEGA PEINLICH** - Spieler verlieren Fortschritt
+- **UNPROFESSIONELL** - Grundlegende Funktionalität kaputt
+- **VERTRAUENSVERLUST** - User spielen nie wieder
+
+### **PERMANENTE LÖSUNG (TODO):**
+1. **Robustes Error Handling** überall
+2. **Fallback Mechanismen** für alle kritischen Systeme
+3. **Desktop Testing** vor JEDEM Deployment
+4. **CSP-kompatibles Audio System**
+5. **Async-safe Game Over Flow**
+
+### **TESTING CHECKLIST (MANDATORY!):**
+- [ ] Game Over nach 3 Leben verloren → Kein Freeze
+- [ ] Victory nach 3 Runden → Kein Freeze  
+- [ ] Desktop Chrome → Funktioniert
+- [ ] Mobile Safari → Funktioniert
+- [ ] Console → Keine Errors
+
+**STATUS**: ✅ NOTFALL-FIX DEPLOYED (Audio + Highscore deaktiviert)
+**PRIO**: 🔴🔴🔴 HÖCHSTE PRIORITÄT - NIE WIEDER!
+
+---
+
+
 ## 🔴 KRITISCHER BUG: Startbutton nicht klickbar (15.08.2025)
 
 ### Problem:

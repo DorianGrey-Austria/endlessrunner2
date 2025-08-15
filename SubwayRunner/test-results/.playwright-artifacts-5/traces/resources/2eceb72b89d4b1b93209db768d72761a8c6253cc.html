@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.5-EMERGENCY-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.4-ONLINE-HIGHSCORE</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -2758,9 +2758,26 @@
             }
             
             async preloadSounds() {
-                // FIX: Don't use fetch() for data: URLs - causes CSP violations
-                // Skip preloading to prevent crashes
-                return; // TEMPORARILY DISABLED to fix Desktop crashes
+                // Preload any external sounds or base64 sounds
+                for (const [name, url] of Object.entries(this.soundUrls)) {
+                    if (url) {
+                        try {
+                            if (url.startsWith('data:')) {
+                                // Base64 encoded sound
+                                const response = await fetch(url);
+                                const arrayBuffer = await response.arrayBuffer();
+                                this.audioBuffers[name] = await this.audioContext.decodeAudioData(arrayBuffer);
+                            } else if (url.startsWith('http')) {
+                                // External URL
+                                const response = await fetch(url, { mode: 'cors' });
+                                const arrayBuffer = await response.arrayBuffer();
+                                this.audioBuffers[name] = await this.audioContext.decodeAudioData(arrayBuffer);
+                            }
+                        } catch (error) {
+                            console.log(`Could not load sound ${name}, will use synthesizer fallback`);
+                        }
+                    }
+                }
             }
             
             playBuffer(name) {
@@ -4984,12 +5001,12 @@
             currentScore = gameState.score;
             currentSurvivalTime = Math.max(0, gameState.gameTime - Math.ceil(gameState.timeRemaining));
             
-            // TEMPORARILY SKIP HIGHSCORE CHECK TO PREVENT CRASHES
-            // if (highscoreManager.isHighscore(currentScore)) {
-            //     showNameInputDialog(false);
-            // } else {
-            showGameOverMenu(false);
-            // }
+            // Check for highscore
+            if (highscoreManager.isHighscore(currentScore)) {
+                showNameInputDialog(false);
+            } else {
+                showGameOverMenu(false);
+            }
         }
 
         function victoryGame() {
@@ -5242,12 +5259,12 @@
                 const dialog = document.getElementById('finalVictoryDialog');
                 if (dialog) dialog.remove();
                 
-                // TEMPORARILY SKIP HIGHSCORE TO PREVENT CRASHES
-                // if (highscoreManager.isHighscore(gameState.score)) {
-                //     showNameInputDialog(true); // true = victory
-                // } else {
-                showGameOverMenu(true); // true = victory
-                // }
+                // Show highscore input
+                if (highscoreManager.isHighscore(gameState.score)) {
+                    showNameInputDialog(true); // true = victory
+                } else {
+                    showGameOverMenu(true); // true = victory
+                }
             };
         }
 

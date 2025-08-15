@@ -1,0 +1,26 @@
+# Page snapshot
+
+```yaml
+- button "🔇"
+- button "📹 Head Tracking"
+- text: "🎮 DURCHGANG 1/3 Score: 0 Speed: 100 ❤️ Leben: 3 ⏱️ Zeit: 60s 🍎 Äpfel: 0 🥦 Brokkoli: 0 V4.4-ONLINE-HIGHSCORE"
+- strong: "🎮 Steuerung:"
+- text: "A/D: Spurwechsel Leertaste/W: Springen 🦘 S: Ducken 🦆"
+- strong: "💡 Tipps:"
+- text: "🟠 Orange/Braun: Überspringen! 🔵 Blau/Grau oben: Ducken! 🔴 Stacheln: Beides möglich!"
+- button "🎮 Gestensteuerung aktivieren"
+- heading "🚇 Subway Runner 3D" [level=1]
+- heading "⏱️ 60-Sekunden Challenge!" [level=2]
+- paragraph: Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!
+- paragraph:
+  - strong: "🎯 Ziel:"
+  - text: 60 Sekunden überleben
+- paragraph:
+  - strong: "⚡ Warnung:"
+  - text: Wird sehr schnell!
+- paragraph:
+  - strong: "🎮 Steuerung:"
+- paragraph: "A/D: Spurwechsel | W/Space: Springen | S: Ducken"
+- button "🎮 Challenge starten!"
+- text: 🏆 TOP 10 1. Player1 🏆 5000 pts - 60s 2. Player2 3000 pts - 45s 3. Player3 1000 pts - 20s 💾 OFFLINE 💾 Offline-Modus - Scores werden lokal gespeichert
+```
