@@ -4916,7 +4916,7 @@
             console.log(`🎯 Round ${gameState.currentRound} completed, transitioning to Round ${gameState.currentRound + 1}`);
             
             gameState.roundTransition = true;
-            gameState.roundTransitionStartTime = performance.now();
+            gameState.roundTransitionStartTime = Date.now(); // FIX: Consistent time API
             gameState.isPlaying = false;
             
             // Pause all game elements
@@ -4971,13 +4971,13 @@
             
             // Increment round
             gameState.currentRound++;
-            gameState.roundStartTime = performance.now();
+            gameState.roundStartTime = Date.now(); // FIX: Use Date.now() consistently!
             
             console.log(`✅ Now in Round ${gameState.currentRound}`);
             
             // Reset timer for new round
             gameState.timeRemaining = 60;
-            gameState.gameStartTime = performance.now();
+            gameState.gameStartTime = Date.now(); // FIX: Use Date.now() not performance.now()!
             
             // Update UI
             document.getElementById('currentRound').textContent = gameState.currentRound;

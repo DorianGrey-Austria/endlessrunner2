@@ -51,6 +51,36 @@
 - Round-Transitions müssen SICHTBAR sein für User-Feedback
 - Z-Index-Hierarchie immer dokumentieren
 
+## 🔴 KRITISCHER TIMER-BUG: Date.now() vs performance.now() (15.08.2025)
+
+### Problem:
+- Nach Round 1 wird sofort das Finale angezeigt
+- Round 2 startet, aber timeRemaining ist sofort 0
+- Alle 3 Durchgänge werden als erledigt angezeigt
+
+### Ursache - DER KILLER-BUG:
+```javascript
+// FALSCH - Gemischte Timer-APIs:
+gameState.gameStartTime = performance.now(); // z.B. 65000 (ms seit Seiten-Load)
+const currentTime = Date.now();               // z.B. 1692000000000 (ms seit 1970)
+const elapsedTime = (currentTime - gameState.gameStartTime) / 1000; // = MILLIONEN SEKUNDEN!
+```
+
+### Lösung:
+**IMMER konsistent Date.now() verwenden für Game-Timer!**
+```javascript
+// RICHTIG:
+gameState.gameStartTime = Date.now();
+const currentTime = Date.now();
+const elapsedTime = (currentTime - gameState.gameStartTime) / 1000; // Korrekte Sekunden
+```
+
+### Merke:
+- **Date.now()**: Millisekunden seit 1970 (epoch time)
+- **performance.now()**: Millisekunden seit Seiten-Load
+- **NIE MISCHEN!** Das führt zu astronomischen Zeit-Differenzen
+- Für Game-Timer IMMER die gleiche API verwenden
+
 ## 📝 **PROBLEM SUMMARY**
 The game has multiple critical bugs that persist despite attempted fixes:
 
