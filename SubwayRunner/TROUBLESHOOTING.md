@@ -1,5 +1,24 @@
 # 🚨 SUBWAY RUNNER - CRITICAL BUG TROUBLESHOOTING LOG
 
+## 🔴 KRITISCHER BUG: Startbutton nicht klickbar (15.08.2025)
+
+### Problem:
+- Startscreen wird angezeigt aber ausgegraut
+- Startbutton kann nicht geklickt werden  
+- Vermutlich unsichtbares Overlay blockiert Interaktion
+- Console zeigt: "THREE.Material: 'emissive' is not a property of THREE.MeshBasicMaterial"
+- Warnung: "Scripts build/three.min.js deprecated with r150+"
+
+### Ursache:
+- roundTransitionOverlay könnte sichtbar sein obwohl display:none gesetzt
+- Z-Index Konflikt zwischen Overlays (roundTransitionOverlay hat z-index: 500)
+- Menu hat nur z-index: 200, wird vom Overlay überdeckt
+
+### Lösung:
+1. roundTransitionOverlay initial mit display:none !important verstecken
+2. Z-Index vom Menu erhöhen auf 1000
+3. Three.js Material Fix (emissive entfernen bei MeshBasicMaterial)
+
 ## 📝 **PROBLEM SUMMARY**
 The game has multiple critical bugs that persist despite attempted fixes:
 
