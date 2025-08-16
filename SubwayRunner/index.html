@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.5-EMERGENCY-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.6-STABLE</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -3049,55 +3049,13 @@
         let currentSurvivalTime = 0;
         let isOnlineMode = false; // Track if we're using online highscores
 
-        // Initialize Supabase for online highscores
-        try {
-            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('🌐 Attempting to connect to Supabase...');
-                
-                // Test the connection
-                testSupabaseConnection();
-            } else {
-                console.warn('⚠️ Supabase library not loaded properly');
-                supabase = null;
-            }
-        } catch (error) {
-            console.error('❌ Error initializing Supabase:', error);
-            supabase = null;
-        }
+        // TEMPORARILY DISABLED - Causes crashes
+        supabase = null;
+        isOnlineMode = false;
         
-        // Test Supabase connection and table existence
-        async function testSupabaseConnection() {
-            if (!supabase) return;
-            
-            try {
-                // Try to fetch one score to test if table exists
-                const { data, error } = await supabase
-                    .from('subway_runner_scores')
-                    .select('id')
-                    .limit(1);
-                
-                if (error) {
-                    if (error.message.includes('relation') || error.message.includes('does not exist')) {
-                        console.error('❌ Table subway_runner_scores does not exist!');
-                        console.log('📋 Please create the table using SQL from SUPABASE_SETUP.md');
-                    } else {
-                        console.error('❌ Supabase connection error:', error.message);
-                    }
-                    supabase = null;
-                    isOnlineMode = false;
-                    updateConnectionStatus();
-                } else {
-                    console.log('✅ Supabase connected successfully - Online highscores active!');
-                    isOnlineMode = true;
-                    updateConnectionStatus();
-                }
-            } catch (error) {
-                console.error('❌ Failed to test Supabase connection:', error);
-                supabase = null;
-                isOnlineMode = false;
-                updateConnectionStatus();
-            }
+        // DISABLED - Not needed
+        function testSupabaseConnection() {
+            return; // Skip
         }
         
         // Update UI to show connection status
@@ -5026,8 +4984,10 @@
                     }, i * 200);
                 }
                 
-                // Show epic victory screen
-                showFinalVictoryDialog();
+                // SIMPLIFIED: Direct to game over menu
+                currentScore = gameState.score;
+                currentSurvivalTime = 180;
+                showGameOverMenu(true); // true = victory
             } else {
                 // Round completed - transition to next round
                 startRoundTransition();
@@ -5328,39 +5288,13 @@
         function showGameOverMenu(isVictory) {
             const menu = document.getElementById('menu');
             
-            // Get highscores for display
-            const highscores = highscoreManager.getHighscores();
-            let highscoreHTML = '';
-            
-            if (highscores && highscores.length > 0) {
-                highscoreHTML = `
-                    <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
-                        <h3>🏆 HIGHSCORES 🏆</h3>
-                        <table style="width: 100%; margin-top: 10px;">
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
-                                <th style="text-align: left; padding: 5px;">Rank</th>
-                                <th style="text-align: left; padding: 5px;">Name</th>
-                                <th style="text-align: right; padding: 5px;">Score</th>
-                            </tr>
-                            ${highscores.slice(0, 5).map((entry, index) => `
-                                <tr style="${entry.score === currentScore ? 'background: rgba(255,215,0,0.2); font-weight: bold;' : ''}">
-                                    <td style="padding: 5px;">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}</td>
-                                    <td style="padding: 5px;">${entry.name}</td>
-                                    <td style="text-align: right; padding: 5px;">${entry.score}</td>
-                                </tr>
-                            `).join('')}
-                        </table>
-                    </div>
-                `;
-            }
-            
+            // SIMPLIFIED VERSION - No highscores, no async calls
             if (isVictory) {
                 menu.innerHTML = `
                     <h1>🎉 VICTORY! 🎉</h1>
-                    <h2>Du hast ${gameState.currentRound > 1 ? `${gameState.currentRound} Durchgänge` : '60 Sekunden'} überlebt!</h2>
+                    <h2>Du hast alle 3 Durchgänge geschafft!</h2>
                     <p style="font-size: 24px; color: #FFD700;">Final Score: ${currentScore}</p>
                     <p>Du bist ein Subway Runner Champion! 🏆</p>
-                    ${highscoreHTML}
                     <button onclick="startGame()" style="padding: 10px 20px; font-size: 18px;">🎮 Nochmal versuchen</button>
                 `;
             } else {
@@ -5369,7 +5303,6 @@
                     <p style="font-size: 20px;">Final Score: <span style="color: #FFD700; font-weight: bold;">${currentScore}</span></p>
                     <p>Zeit überlebt: ${currentSurvivalTime}s</p>
                     <p>Durchgang: ${gameState.currentRound}/3</p>
-                    ${highscoreHTML}
                     <button onclick="startGame()" style="padding: 10px 20px; font-size: 18px;">🎮 Nochmal spielen</button>
                 `;
             }
