@@ -1,5 +1,37 @@
 # 🚨 SUBWAY RUNNER - CRITICAL BUG TROUBLESHOOTING LOG
 
+## 🔴 KRITISCHER BUG: Missing Comma Syntax Error (16.08.2025 - V5.2)
+
+### **PROBLEM:**
+`Uncaught SyntaxError: Unexpected identifier 'activePowerUp'`
+- Spiel startet nicht
+- Fehlendes Komma in gameState Object
+
+### **URSACHE:**
+```javascript
+// Zeile 3440 - FEHLENDES KOMMA
+powerUpsSpawnedThisRound: 0 // Track how many spawned
+activePowerUp: null,      // Currently active power-up type
+```
+
+### **LÖSUNG:**
+```javascript
+// KORRIGIERT - Komma hinzugefügt
+powerUpsSpawnedThisRound: 0, // Track how many spawned  
+activePowerUp: null,      // Currently active power-up type
+```
+
+### **PREVENTION CHECKLIST:**
+1. ✅ **IMMER Kommas nach Properties** in JavaScript Objects
+2. ✅ **`npm run test` VOR jedem Commit** ausführen
+3. ✅ **Browser Console** auf Syntax Errors prüfen
+4. ✅ **Lokaler Test** bevor Deployment
+
+### **HÄUFIGKEIT:** 
+Dies ist der **3. Syntax Error** durch fehlende Kommas/Semicolons in 2 Tagen!
+
+---
+
 ## 🔴 KRITISCHER BUG: SyntaxError - currentTime bereits deklariert (16.08.2025)
 
 ### **PROBLEM:**
