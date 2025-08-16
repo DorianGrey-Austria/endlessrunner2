@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.0-RAINBOW-WORLD</title>
+    <title>Subway Runner 3D - V5.1-POWER-UPS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.0-RAINBOW-WORLD</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.1-POWER-UPS</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -3373,7 +3373,16 @@
             activeCollectibles: [],
             maxActiveCollectibles: 10, // Increased from 8
             collectedApples: 0,
-            collectedBroccolis: 0
+            collectedBroccolis: 0,
+            // 🎯 POWER-UP SYSTEM
+            powerUps: [],              // Active power-ups in world
+            maxPowerUps: 2,           // Max power-ups at once
+            lastPowerUpSpawn: 0,      // Time of last power-up spawn
+            powerUpSpawnInterval: 12000, // 12 seconds between spawns
+            activePowerUp: null,      // Currently active power-up type
+            powerUpTimeRemaining: 0,  // Time left for active power-up
+            magnetActive: false,      // Magnet power-up state
+            shieldActive: false       // Shield/Star power-up state
         };
         
         // STABILITY LIMITS
@@ -4319,6 +4328,160 @@
             });
         }
 
+        // 🎯 POWER-UP SYSTEM CONFIGURATION
+        const POWER_UP_TYPES = {
+            magnet: {
+                name: 'Magnet',
+                icon: '🧲',
+                color: 0xFFD700, // Golden
+                duration: 15000, // 15 seconds
+                effect: 'magnetActive'
+            },
+            shield: {
+                name: 'Shield', 
+                icon: '⭐',
+                color: 0x00FFFF, // Cyan
+                duration: 10000, // 10 seconds
+                effect: 'shieldActive'
+            }
+        };
+        
+        function createPowerUp(type, lane, z) {
+            // Limit max power-ups
+            if (gameState.powerUps.length >= gameState.maxPowerUps) {
+                return;
+            }
+            
+            const powerUpConfig = POWER_UP_TYPES[type];
+            if (!powerUpConfig) return;
+            
+            const powerUpGroup = new THREE.Group();
+            
+            // Main power-up body - floating cube
+            const powerUpGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const powerUpMaterial = new THREE.MeshPhongMaterial({ 
+                color: powerUpConfig.color,
+                emissive: powerUpConfig.color,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.9,
+                shininess: 100
+            });
+            const powerUpMesh = new THREE.Mesh(powerUpGeometry, powerUpMaterial);
+            powerUpMesh.position.y = 1.5; // Floating height
+            powerUpMesh.castShadow = true;
+            powerUpGroup.add(powerUpMesh);
+            
+            // Glowing ring around power-up
+            const ringGeometry = new THREE.RingGeometry(0.6, 0.8);
+            const ringMaterial = new THREE.MeshBasicMaterial({ 
+                color: powerUpConfig.color,
+                transparent: true,
+                opacity: 0.5
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.1;
+            powerUpGroup.add(ring);
+            
+            // Add particle effect
+            const particleCount = 10;
+            for (let i = 0; i < particleCount; i++) {
+                const particleGeometry = new THREE.SphereGeometry(0.05);
+                const particleMaterial = new THREE.MeshBasicMaterial({
+                    color: powerUpConfig.color,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                const angle = (i / particleCount) * Math.PI * 2;
+                particle.position.x = Math.cos(angle) * 0.5;
+                particle.position.z = Math.sin(angle) * 0.5;
+                particle.position.y = 1.5;
+                particle.userData = { angle: angle, radius: 0.5 };
+                powerUpGroup.add(particle);
+            }
+            
+            // Position the power-up
+            powerUpGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            
+            // Add to scene and track
+            scene.add(powerUpGroup);
+            gameState.powerUps.push({
+                type: type,
+                mesh: powerUpGroup,
+                lane: lane,
+                config: powerUpConfig,
+                rotationSpeed: 0.02
+            });
+            
+            console.log(`✨ Spawned ${powerUpConfig.name} power-up in lane ${lane}`);
+        }
+        
+        function activatePowerUp(type) {
+            const config = POWER_UP_TYPES[type];
+            if (!config) return;
+            
+            // Deactivate any existing power-up
+            if (gameState.activePowerUp) {
+                deactivatePowerUp();
+            }
+            
+            // Activate new power-up
+            gameState.activePowerUp = type;
+            gameState.powerUpTimeRemaining = config.duration;
+            gameState[config.effect] = true;
+            
+            // Visual feedback
+            if (typeof createParticleEffect === 'function') {
+                createParticleEffect(
+                    player.position.clone(),
+                    config.color,
+                    'success'
+                );
+            }
+            
+            // Show UI notification
+            showPowerUpNotification(config.name, config.icon);
+            
+            console.log(`🎯 Activated ${config.name} for ${config.duration/1000} seconds`);
+        }
+        
+        function deactivatePowerUp() {
+            if (!gameState.activePowerUp) return;
+            
+            const config = POWER_UP_TYPES[gameState.activePowerUp];
+            gameState[config.effect] = false;
+            gameState.activePowerUp = null;
+            gameState.powerUpTimeRemaining = 0;
+            
+            console.log(`⏹️ Deactivated ${config.name}`);
+        }
+        
+        function showPowerUpNotification(name, icon) {
+            // Create temporary notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: absolute;
+                top: 150px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-size: 24px;
+                z-index: 1000;
+                animation: fadeInOut 3s ease;
+            `;
+            notification.innerHTML = `${icon} ${name} ACTIVATED!`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 3000);
+        }
+
         function createObstacle(type, lane, z) {
             // STABILITY: Limit max obstacles
             if (obstacles.length >= LIMITS.MAX_OBSTACLES) {
@@ -5149,6 +5312,10 @@
             gameState.timeRemaining = 60;
             gameState.gameStartTime = Date.now(); // FIX: Use Date.now() not performance.now()!
             
+            // 🔴 CRITICAL: Reset lives to 3 for new round!
+            gameState.lives = 3;
+            console.log('❤️ Lives reset to 3 for Round', gameState.currentRound);
+            
             // Update UI
             document.getElementById('currentRound').textContent = gameState.currentRound;
             
@@ -5895,7 +6062,43 @@
 
         // Enhanced collision detection with precise bounding boxes and near-miss system
         function checkCollisions() {
-            if (gameState.invulnerable) return;
+            // Shield provides invulnerability
+            if (gameState.invulnerable || gameState.shieldActive) {
+                // Check if shield absorbed a hit
+                if (gameState.shieldActive && !gameState.invulnerable) {
+                    // Check for obstacle collisions while shielded
+                    const playerBBox = calculatePlayerBoundingBox();
+                    let shieldHit = false;
+                    
+                    obstacles.forEach((obstacle) => {
+                        const obstacleBBox = calculateObstacleBoundingBox(obstacle);
+                        if (boundingBoxIntersection(playerBBox, obstacleBBox)) {
+                            shieldHit = true;
+                            // Shield absorbs the hit
+                            console.log('🛡️ Shield absorbed hit!');
+                            deactivatePowerUp(); // Shield breaks after one hit
+                            
+                            // Visual effect
+                            if (typeof createParticleEffect === 'function') {
+                                createParticleEffect(
+                                    player.position.clone(),
+                                    0x00FFFF,
+                                    'explosion'
+                                );
+                            }
+                            
+                            // Remove the obstacle
+                            scene.remove(obstacle.mesh);
+                            const index = obstacles.indexOf(obstacle);
+                            if (index > -1) obstacles.splice(index, 1);
+                        }
+                    });
+                    
+                    if (shieldHit) return; // Don't process further collisions
+                }
+                
+                if (gameState.invulnerable) return; // Normal invulnerability
+            }
             
             // Player bounding box calculation
             const playerBBox = calculatePlayerBoundingBox();
@@ -6155,8 +6358,56 @@
                 }
             });
             
-            // Check collectible collisions
+            // Check power-up collisions
+            gameState.powerUps.forEach((powerUp, index) => {
+                const powerUpBBox = {
+                    min: new THREE.Vector3(
+                        powerUp.mesh.position.x - 0.5,
+                        powerUp.mesh.position.y - 0.5,
+                        powerUp.mesh.position.z - 0.5
+                    ),
+                    max: new THREE.Vector3(
+                        powerUp.mesh.position.x + 0.5,
+                        powerUp.mesh.position.y + 2.0, // Higher because it floats
+                        powerUp.mesh.position.z + 0.5
+                    )
+                };
+                
+                if (boundingBoxIntersection(playerBBox, powerUpBBox)) {
+                    // Power-up collected!
+                    activatePowerUp(powerUp.type);
+                    
+                    // Remove power-up
+                    scene.remove(powerUp.mesh);
+                    gameState.powerUps.splice(index, 1);
+                }
+            });
+            
+            // Check collectible collisions (with magnet effect)
             gameState.activeCollectibles.forEach((collectible, index) => {
+                // Magnet attraction effect
+                if (gameState.magnetActive) {
+                    const magnetRange = 3.0; // 3 units attraction range
+                    const distance = Math.sqrt(
+                        Math.pow(collectible.mesh.position.x - LANE_POSITIONS[gameState.playerLane], 2) +
+                        Math.pow(collectible.mesh.position.y - gameState.playerY, 2) +
+                        Math.pow(collectible.mesh.position.z - 0, 2)
+                    );
+                    
+                    if (distance < magnetRange && !collectible.attracted) {
+                        collectible.attracted = true; // Mark as being attracted
+                        const attractionSpeed = 0.3;
+                        
+                        // Move collectible towards player
+                        const targetX = LANE_POSITIONS[gameState.playerLane];
+                        const targetY = gameState.playerY + 0.5;
+                        const targetZ = 0;
+                        
+                        collectible.mesh.position.x += (targetX - collectible.mesh.position.x) * attractionSpeed;
+                        collectible.mesh.position.y += (targetY - collectible.mesh.position.y) * attractionSpeed;
+                        collectible.mesh.position.z += (targetZ - collectible.mesh.position.z) * attractionSpeed;
+                    }
+                }
                 const collectibleBBox = {
                     min: new THREE.Vector3(
                         collectible.mesh.position.x - 0.5,
@@ -6875,8 +7126,56 @@
                     return true;
                 });
                 
+                // Update power-ups
+                gameState.powerUps = gameState.powerUps.filter(powerUp => {
+                    if (!gameState.roundTransition) {
+                        // Move forward
+                        powerUp.mesh.position.z += visualSpeed;
+                        
+                        // Rotation and floating animation
+                        powerUp.mesh.rotation.y += powerUp.rotationSpeed;
+                        powerUp.mesh.position.y = 1.5 + Math.sin(Date.now() * 0.002) * 0.2;
+                        
+                        // Rotate particles around power-up
+                        powerUp.mesh.children.forEach((child, index) => {
+                            if (child.userData && child.userData.angle !== undefined) {
+                                const newAngle = child.userData.angle + Date.now() * 0.001;
+                                child.position.x = Math.cos(newAngle) * child.userData.radius;
+                                child.position.z = Math.sin(newAngle) * child.userData.radius;
+                            }
+                        });
+                    }
+                    
+                    // Remove if too far
+                    if (powerUp.mesh.position.z > 10) {
+                        scene.remove(powerUp.mesh);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // Update active power-up timer
+                if (gameState.activePowerUp && gameState.powerUpTimeRemaining > 0) {
+                    gameState.powerUpTimeRemaining -= deltaTime;
+                    if (gameState.powerUpTimeRemaining <= 0) {
+                        deactivatePowerUp();
+                    }
+                }
+                
                 // Spawn collectibles with 4-second interval
                 spawnCollectible();
+                
+                // Spawn power-ups
+                const currentTime = Date.now();
+                if (currentTime - gameState.lastPowerUpSpawn > gameState.powerUpSpawnInterval) {
+                    // 30% chance to spawn a power-up
+                    if (Math.random() < 0.3 && gameState.powerUps.length < gameState.maxPowerUps) {
+                        const lane = Math.floor(Math.random() * 3);
+                        const type = Math.random() < 0.5 ? 'magnet' : 'shield';
+                        createPowerUp(type, lane, -30);
+                        gameState.lastPowerUpSpawn = currentTime;
+                    }
+                }
                 
                 // Spawn obstacles - FIXED for high-speed rounds
                 const baseSpawnRate = 0.008; // Base spawn rate
