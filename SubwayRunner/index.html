@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V3.9-MOBILE</title>
+    <title>Subway Runner 3D - V4.8-AUDIO-SAFE</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.7-CONTROL-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.8-AUDIO-SAFE</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -2440,8 +2440,11 @@
                 // Move lane left
                 if (gameState.playerLane > 0) {
                     gameState.playerLane--;
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    }
                     console.log('📱 Swipe Left - Lane:', gameState.playerLane);
                 }
             }
@@ -2450,8 +2453,11 @@
                 // Move lane right
                 if (gameState.playerLane < 2) {
                     gameState.playerLane++;
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    }
                     console.log('📱 Swipe Right - Lane:', gameState.playerLane);
                 }
             }
@@ -2479,8 +2485,11 @@
                     gameState.jumpCount = 2;
                     gameState.jumpStartTime = performance.now();
                     
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
                     
                     // Double jump particles
                     createParticleEffect(
@@ -2497,8 +2506,11 @@
                     gameState.jumpCount = 3;
                     gameState.jumpStartTime = performance.now();
                     
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
                     
                     // Triple jump particles
                     createParticleEffect(
@@ -2551,8 +2563,11 @@
                     gameState.jumpStartTime = performance.now();
                     gameState.jumpCount = 1;
                     
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
                     
                     // Jump particles
                     createParticleEffect(
@@ -2571,8 +2586,11 @@
                     gameState.jumpCount = 2;
                     gameState.jumpStartTime = performance.now();
                     
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
                     
                     // Double jump particles
                     createParticleEffect(
@@ -2592,8 +2610,11 @@
                     gameState.jumpCount = 3;
                     gameState.jumpStartTime = performance.now();
                     
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
                     
                     // Multi jump particles
                     createParticleEffect(
@@ -2656,12 +2677,15 @@
                 updateAudioButtonState();
                 
                 audioToggle.addEventListener('click', () => {
-                    const isMuted = audioManager.toggleMute();
+                    // FIXED: Check if audioManager exists before using it
+                    const isMuted = (typeof audioManager !== 'undefined' && audioManager) ? audioManager.toggleMute() : false;
                     updateAudioButtonState();
                     
                     // Resume audio context if needed
                     if (!isMuted) {
-                        audioManager.resume();
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            audioManager.resume();
+                        }
                     }
                 });
             }
@@ -2671,7 +2695,7 @@
         function updateAudioButtonState() {
             const audioToggle = document.getElementById('audioToggle');
             if (audioToggle && audioManager) {
-                if (audioManager.isMuted) {
+                if (typeof audioManager !== 'undefined' && audioManager && audioManager.isMuted) {
                     audioToggle.textContent = '🔇';
                     audioToggle.classList.add('muted');
                     audioToggle.title = 'Enable Sound';
@@ -3033,7 +3057,9 @@
         }
 
         const audioManager = new AudioManager();
-        audioManager.ambientPlaying = false;
+        if (typeof audioManager !== 'undefined' && audioManager) {
+            audioManager.ambientPlaying = false;
+        }
         
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
@@ -4852,11 +4878,16 @@
 
         async function startGameInternal() {
             // Resume audio context (will initialize on first call)
-            await audioManager.resume();
+            // FIXED: Check if audioManager exists before using it
+            if (typeof audioManager !== 'undefined' && audioManager) {
+                await audioManager.resume();
+            }
             
             // Start ambient city sounds
             if (!ambientStarted) {
-                audioManager.play('ambient');
+                if (typeof audioManager !== 'undefined' && audioManager) {
+                    audioManager.play('ambient');
+                }
                 ambientStarted = true;
             }
             
@@ -4910,7 +4941,9 @@
             obstacles = [];
             
             // Start sound
-            audioManager.play('powerup');
+            if (typeof audioManager !== 'undefined' && audioManager) {
+                audioManager.play('powerup');
+            }
             
             document.getElementById('menu').style.display = 'none';
             updateUI();
@@ -4936,7 +4969,9 @@
             gameState.isGameOver = true;
             
             // Stop ambient sounds
-            audioManager.stopAmbient();
+            if (typeof audioManager !== 'undefined' && audioManager) {
+                audioManager.stopAmbient();
+            }
             ambientStarted = false;
             
             currentScore = gameState.score;
@@ -4964,14 +4999,18 @@
                 gameState.isVictory = true;
                 
                 // Stop ambient sounds
+                if (typeof audioManager !== 'undefined' && audioManager) {
                 audioManager.stopAmbient();
+            }
                 ambientStarted = false;
                 
                 currentScore = gameState.score;
                 currentSurvivalTime = 180; // Full 180 seconds survived!
                 
                 // Epic victory celebration!
+                if (typeof audioManager !== 'undefined' && audioManager) {
                 audioManager.play('powerup');
+            }
                 
                 // Massive fireworks effect
                 for (let i = 0; i < 10; i++) {
@@ -5082,7 +5121,9 @@
             gameState.activeCollectibles.forEach(c => c.paused = false);
             
             // Play round start sound
-            audioManager.play('powerup');
+            if (typeof audioManager !== 'undefined' && audioManager) {
+                audioManager.play('powerup');
+            }
         }
         
         function setRoundSpeedParameters(round) {
@@ -5254,7 +5295,9 @@
                 timerElement.className = 'timer-critical';
                 // Final countdown beeps
                 if (timeLeft <= 5 && timeLeft > 0 && Math.ceil(gameState.timeRemaining) !== Math.ceil(gameState.timeRemaining + 0.016)) {
-                    audioManager.play('coin'); // High pitched beep
+                    if (typeof audioManager !== 'undefined' && audioManager) {
+                        audioManager.play('coin'); // High pitched beep
+                    }
                 }
             } else if (timeLeft <= 20) {
                 timerElement.className = 'timer-warning';
@@ -5373,8 +5416,19 @@
         window.skipHighscore = skipHighscoreInternal;
 
         function handleKeyDown(event) {
+            // ULTRA FIX: Force focus to game canvas
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas && document.activeElement !== canvas) {
+                canvas.focus();
+            }
+            
             // FIXED: More robust check for game state
             if (!gameState.isPlaying || gameState.isGameOver || gameState.roundTransition) {
+                console.warn('🚫 Controls blocked - State:', {
+                    isPlaying: gameState.isPlaying,
+                    isGameOver: gameState.isGameOver,
+                    roundTransition: gameState.roundTransition
+                });
                 return;
             }
             
@@ -5390,8 +5444,11 @@
                     event.preventDefault();
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        // FIXED: Check if audioManager exists before using it
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                            audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        }
                         console.log('⌨️ Q/A/← Lane left:', gameState.playerLane);
                     }
                     break;
@@ -5401,8 +5458,11 @@
                     event.preventDefault();
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        // FIXED: Check if audioManager exists before using it
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                            audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        }
                         console.log('⌨️ E/D/→ Lane right:', gameState.playerLane);
                     }
                     break;
@@ -5418,16 +5478,22 @@
                         gameState.jumpCount = 1;
                         
                         // Audio & Visual Feedback
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                        audioManager.resume();
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                            audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                            if (typeof audioManager !== 'undefined' && audioManager) {
+                            audioManager.resume();
+                        }
+                        }
                         
                         // Jump particles - color based on jump number
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00, // Yellow for first jump
-                            'jump'
-                        );
+                        if (typeof createParticleEffect === 'function') {
+                            createParticleEffect(
+                                new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                                0xFFFF00, // Yellow for first jump
+                                'jump'
+                            );
+                        }
                     } else if (gameState.playerAction === 'jumping' && 
                                gameState.jumpCount < gameState.maxJumps && 
                                gameState.playerY > 0.5) {
@@ -5444,16 +5510,22 @@
                         const particleColor = jumpColors[Math.min(gameState.jumpCount - 1, 4)];
                         
                         // Audio pitch increases with jump count
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                        audioManager.resume(); // Resume audio context if needed
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                            audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                            if (typeof audioManager !== 'undefined' && audioManager) {
+                            audioManager.resume();
+                        } // Resume audio context if needed
+                        }
                         
                         // Sprung-Partikel
-                        createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
-                            'jump'
-                        );
+                        if (typeof createParticleEffect === 'function') {
+                            createParticleEffect(
+                                new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                                0xFFFF00,
+                                'jump'
+                            );
+                        }
                     }
                     break;
                 case 'ArrowDown':
@@ -5461,8 +5533,14 @@
                     event.preventDefault();
                     if (gameState.playerAction === 'running') {
                         gameState.playerAction = 'ducking';
-                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        // FIXED: Check if audioManager exists before using it
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                            // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
                         audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                    }
+                        }
                     }
                     break;
             }
@@ -6955,7 +7033,10 @@
                     if (!gameState.isDucking && !gameState.isJumping) {
                         gameState.isDucking = true;
                         const speedMultiplier = gameState.score / 5000;
+                        // FIXED: Check if audioManager exists before using it
+                    if (typeof audioManager !== 'undefined' && audioManager) {
                         audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                    }
                     }
                     break;
                     
