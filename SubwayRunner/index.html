@@ -642,7 +642,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.6-STABLE</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.7-CONTROL-FIX</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -5071,9 +5071,11 @@
             // Set round-specific speed parameters
             setRoundSpeedParameters(gameState.currentRound);
             
-            // Resume game
+            // Resume game - ENSURE controls work
             gameState.roundTransition = false;
             gameState.isPlaying = true;
+            gameState.isGameOver = false; // Make sure game over flag is clear
+            console.log('✅ Round', gameState.currentRound, 'started - Controls ACTIVE');
             
             // Unpause game elements
             obstacles.forEach(o => o.paused = false);
@@ -5371,7 +5373,15 @@
         window.skipHighscore = skipHighscoreInternal;
 
         function handleKeyDown(event) {
-            if (!gameState.isPlaying) return;
+            // FIXED: More robust check for game state
+            if (!gameState.isPlaying || gameState.isGameOver || gameState.roundTransition) {
+                return;
+            }
+            
+            // Prevent default for game keys
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(event.code)) {
+                event.preventDefault();
+            }
             
             switch (event.code) {
                 case 'ArrowLeft':
@@ -5459,7 +5469,10 @@
         }
 
         function handleKeyUp(event) {
-            if (!gameState.isPlaying) return;
+            // FIXED: More robust check
+            if (!gameState.isPlaying || gameState.isGameOver || gameState.roundTransition) {
+                return;
+            }
             
             switch (event.code) {
                 case 'ArrowDown':
@@ -6711,6 +6724,11 @@
                 const currentTime = Date.now();
                 const elapsedTime = (currentTime - gameState.gameStartTime) / 1000;
                 gameState.timeRemaining = Math.max(0, gameState.gameTime - elapsedTime);
+                
+                // SAFETY CHECK: Ensure controls stay active
+                if (gameState.timeRemaining > 0 && !gameState.isGameOver) {
+                    gameState.isPlaying = true; // Force playing state
+                }
                 
                 // Check for victory (survived 60 seconds!)
                 if (gameState.timeRemaining <= 0 && !gameState.isVictory && !gameState.isGameOver) {
