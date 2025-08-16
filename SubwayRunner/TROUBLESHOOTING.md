@@ -1,5 +1,22 @@
 # 🚨 SUBWAY RUNNER - CRITICAL BUG TROUBLESHOOTING LOG
 
+## 🔴 KRITISCHER BUG: SyntaxError - currentTime bereits deklariert (16.08.2025)
+
+### **PROBLEM:**
+`Uncaught SyntaxError: Identifier 'currentTime' has already been declared`
+- Spiel startet nicht
+- Variable `currentTime` wurde mehrfach im selben Scope deklariert
+
+### **URSACHE:**
+- Zeile 6938: `const currentTime = performance.now();` (animate scope)
+- Zeile 7169: `const currentTime = Date.now();` (innerhalb if-block)
+- JavaScript erlaubt keine doppelte const-Deklaration
+
+### **LÖSUNG:**
+Zeile 7169 umbenennen zu: `const powerUpTime = Date.now();`
+
+---
+
 ## ✅✅✅ GROSSER ERFOLG: RAINBOW WORLD LEVEL SYSTEM FUNKTIONIERT! (16.08.2025) ✅✅✅
 
 ### **ENDLICH GESCHAFFT NACH 6 WOCHEN!**
