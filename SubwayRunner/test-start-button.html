@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Start Button Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #111;
+            color: #0f0;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #0f0;
+        }
+        .error {
+            color: #f00;
+            border-color: #f00;
+        }
+        .success {
+            color: #0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Start Button Diagnostic Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(test, status, details = '') {
+            const div = document.createElement('div');
+            div.className = `test-result ${status ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${status ? '✅' : '❌'} ${test}:</strong> ${details}`;
+            results.appendChild(div);
+        }
+        
+        // Test 1: Check if index.html loads
+        fetch('/index.html')
+            .then(response => {
+                addResult('Index.html loads', response.ok, `Status: ${response.status}`);
+                return response.text();
+            })
+            .then(html => {
+                // Test 2: Check for syntax errors
+                const scriptMatch = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+                if (scriptMatch) {
+                    let syntaxError = false;
+                    scriptMatch.forEach((script, i) => {
+                        try {
+                            // Extract script content
+                            const content = script.replace(/<\/?script[^>]*>/gi, '');
+                            // Try to parse (basic check)
+                            new Function(content);
+                        } catch (e) {
+                            syntaxError = true;
+                            addResult(`Script Block ${i}`, false, `Syntax Error: ${e.message.substring(0, 100)}`);
+                        }
+                    });
+                    if (!syntaxError) {
+                        addResult('JavaScript Syntax', true, 'No syntax errors detected');
+                    }
+                }
+                
+                // Test 3: Check if startGame function exists
+                const hasStartGame = html.includes('function startGame') || html.includes('window.startGame');
+                addResult('startGame Function Defined', hasStartGame, 
+                    hasStartGame ? 'Function found in code' : 'Function NOT found!');
+                
+                // Test 4: Check button onclick
+                const buttonMatch = html.match(/onclick="startGame\(\)"/);
+                addResult('Start Button onclick', buttonMatch, 
+                    buttonMatch ? 'onclick handler found' : 'onclick NOT found!');
+                
+                // Test 5: Check for common errors
+                const errors = [];
+                if (html.includes('startGame is not defined')) errors.push('startGame not defined error found');
+                if (html.includes('Uncaught')) errors.push('Uncaught errors found');
+                if (html.includes('SyntaxError')) errors.push('SyntaxError found');
+                
+                addResult('Common Errors Check', errors.length === 0, 
+                    errors.length > 0 ? errors.join(', ') : 'No common errors found');
+                
+                // Test 6: Load the actual page in iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = '/index.html';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        try {
+                            // Check if startGame is available in iframe
+                            const hasFunction = typeof iframe.contentWindow.startGame === 'function';
+                            addResult('startGame Available in Window', hasFunction, 
+                                hasFunction ? 'Function is available' : 'Function NOT available in global scope!');
+                            
+                            // Try to get console errors
+                            if (iframe.contentWindow.console && iframe.contentWindow.console.error) {
+                                addResult('Console Errors', false, 'Check browser console for errors');
+                            }
+                        } catch (e) {
+                            addResult('Window Access', false, `Error: ${e.message}`);
+                        }
+                    }, 1000);
+                };
+            })
+            .catch(error => {
+                addResult('Page Load', false, `Error: ${error.message}`);
+            });
+    </script>
+</body>
+</html>

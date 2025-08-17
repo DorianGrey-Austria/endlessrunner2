@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.1-POWER-UPS</title>
+    <title>Subway Runner 3D - V5.2.2-START-BUTTON-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -699,7 +699,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.1-POWER-UPS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.2.2-START-BUTTON-FIX</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -786,6 +786,45 @@
     </div>
 
     <script>
+        // ============================================
+        // CRITICAL: Define startGame IMMEDIATELY to ensure availability
+        // ============================================
+        window.startGame = function() {
+            console.log('startGame called (fallback version)');
+            // This will be overwritten with the real implementation later
+            // But ensures the button always has something to call
+            alert('Das Spiel wird geladen... Bitte einen Moment Geduld.');
+            
+            // Try to call the real implementation if it exists
+            if (typeof startGameInternal === 'function') {
+                startGameInternal().catch(error => {
+                    console.error('Error starting game:', error);
+                    alert('Fehler beim Starten des Spiels. Bitte Seite neu laden.');
+                });
+            } else {
+                console.error('Game not fully loaded yet. Please wait...');
+                setTimeout(() => {
+                    if (typeof startGameInternal === 'function') {
+                        startGameInternal().catch(error => {
+                            console.error('Error starting game:', error);
+                            alert('Fehler beim Starten des Spiels. Bitte Seite neu laden.');
+                        });
+                    } else {
+                        alert('Das Spiel konnte nicht geladen werden. Bitte Seite neu laden (F5).');
+                    }
+                }, 2000);
+            }
+        };
+        
+        // Also define placeholders for other button functions
+        window.submitHighscore = function() {
+            console.log('submitHighscore called (placeholder)');
+        };
+        
+        window.skipHighscore = function() {
+            console.log('skipHighscore called (placeholder)');
+        };
+        
         // ============================================
         // ONE-EURO FILTER - Smoothing ohne Lag
         // Based on: https://gery.casiez.net/1euro/
@@ -3362,23 +3401,55 @@
         }
 
         // Make functions globally available for onclick handlers
+        // This overwrites the fallback versions defined at the beginning
         window.startGame = async function() {
-            console.log('startGame called');
+            console.log('startGame called (real implementation)');
             try {
+                // Check if game is properly initialized
+                if (typeof scene === 'undefined' || !scene) {
+                    console.error('Game not properly initialized. Scene is undefined.');
+                    alert('Das Spiel ist noch nicht vollständig geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut.');
+                    return;
+                }
+                
+                if (typeof startGameInternal !== 'function') {
+                    console.error('startGameInternal function not found');
+                    alert('Spielfunktion nicht gefunden. Bitte Seite neu laden.');
+                    return;
+                }
+                
                 await startGameInternal();
+                console.log('Game started successfully');
             } catch (error) {
                 console.error('Error in startGame:', error);
+                alert('Fehler beim Starten: ' + error.message);
             }
         };
 
         window.submitHighscore = function() {
             console.log('submitHighscore called');
-            submitHighscoreInternal();
+            try {
+                if (typeof submitHighscoreInternal === 'function') {
+                    submitHighscoreInternal();
+                } else {
+                    console.error('submitHighscoreInternal not defined');
+                }
+            } catch (error) {
+                console.error('Error in submitHighscore:', error);
+            }
         };
 
         window.skipHighscore = function() {
             console.log('skipHighscore called');
-            skipHighscoreInternal();
+            try {
+                if (typeof skipHighscoreInternal === 'function') {
+                    skipHighscoreInternal();
+                } else {
+                    console.error('skipHighscoreInternal not defined');
+                }
+            } catch (error) {
+                console.error('Error in skipHighscore:', error);
+            }
         };
 
         // Game state
