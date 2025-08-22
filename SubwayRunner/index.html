@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.1-GESTURE-TENSORFLOW</title>
+    <title>Subway Runner 3D - V5.3.2-GESTURE-TENSORFLOW</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.1-GESTURE-TENSORFLOW</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.2-GESTURE-TENSORFLOW</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -1263,13 +1263,9 @@
         window.GestureController = GestureController;
         
         // ============================================
-        // CRITICAL: Define startGame IMMEDIATELY to ensure availability
-        // This will be overwritten with the full version later
+        // Note: startGame will be defined later in the code
+        // This comment marks where it was previously defined as placeholder
         // ============================================
-        window.startGame = function() {
-            console.log('startGame called (initial placeholder)');
-            alert('Das Spiel wird geladen... Bitte einen Moment warten und erneut versuchen.');
-        };
         
         // Also define placeholders for other button functions
         window.submitHighscore = function() {
@@ -8089,11 +8085,11 @@
                 
                 // Spawn power-ups
                 // Spawn power-ups at specific times (max 2 per round)
-                const elapsedTime = Date.now() - gameState.roundStartTime;
+                const roundElapsedTime = Date.now() - gameState.roundStartTime;
                 const powerUpTime = Date.now();
                 
                 // Spawn first power-up around 20 seconds
-                if (elapsedTime > 20000 && elapsedTime < 25000 && 
+                if (roundElapsedTime > 20000 && roundElapsedTime < 25000 && 
                     gameState.powerUpsSpawnedThisRound === 0 && 
                     powerUpTime - gameState.lastPowerUpSpawn > gameState.powerUpCooldown) {
                     const lane = Math.floor(Math.random() * 3);
@@ -8104,7 +8100,7 @@
                 }
                 
                 // Spawn second power-up around 45 seconds
-                if (elapsedTime > 45000 && elapsedTime < 50000 && 
+                if (roundElapsedTime > 45000 && roundElapsedTime < 50000 && 
                     gameState.powerUpsSpawnedThisRound === 1 && 
                     powerUpTime - gameState.lastPowerUpSpawn > gameState.powerUpCooldown) {
                     const lane = Math.floor(Math.random() * 3);
