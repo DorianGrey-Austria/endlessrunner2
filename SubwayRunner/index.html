@@ -5,34 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.2.2-START-BUTTON-FIX</title>
+    <title>Subway Runner 3D - V5.3.1-GESTURE-TENSORFLOW</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
-    <!-- Headtrackr.js for stable head tracking -->
-    <script src="https://cdn.jsdelivr.net/gh/auduno/headtrackr/headtrackr.min.js"></script>
+    <!-- TensorFlow.js and FaceMesh for professional gesture control -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.5/dist/face-landmarks-detection.min.js"></script>
     
-    <script type="module">
-        // Pre-load Gesture Control Module with better fallback
-        import('./js/GestureControllerProjector.js')
-            .then(module => {
-                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
-                console.log('✅ Gesture Module pre-loaded successfully');
-            })
-            .catch(error => {
-                console.warn('⚠️ Gesture Module not found, using stub:', error.message);
-                // Create a stub to prevent errors
-                window.GestureControllerProjector = class {
-                    constructor() {
-                        console.log('Using gesture control stub');
-                    }
-                    init() { return Promise.resolve(); }
-                    start() { }
-                    stop() { }
-                    isActive() { return false; }
-                };
-            });
-    </script>
+    <!-- Remove old headtrackr.js as we're using TensorFlow now -->
     <style>
         * {
             margin: 0;
@@ -156,7 +137,7 @@
         }
         
         #gestureCanvas {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 20px;
             width: 180px;
@@ -166,10 +147,61 @@
             display: none;
             z-index: 150;
             background: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
         }
         
         #gestureCanvas.active {
             display: block;
+        }
+        
+        #gestureDebugPanel {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px;
+            color: white;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 201;
+            display: none;
+        }
+        
+        #gestureDebugPanel.active {
+            display: block;
+        }
+        
+        .debug-row {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .debug-label {
+            color: #00ff88;
+        }
+        
+        .debug-value {
+            color: white;
+        }
+        
+        .calibration-progress {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .calibration-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00cc70);
+            width: 0%;
+            transition: width 0.3s;
         }
         
         #gestureStatus {
@@ -699,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.2.2-START-BUTTON-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.1-GESTURE-TENSORFLOW</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -738,6 +770,41 @@
         
         <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
         <canvas id="gestureCanvas"></canvas>
+        
+        <div id="gestureDebugPanel">
+            <h3 style="color: #00ff88; margin: 0 0 10px 0;">🎮 Gesture Debug</h3>
+            <div class="debug-row">
+                <span class="debug-label">FPS:</span>
+                <span class="debug-value" id="debugFPS">0</span>
+            </div>
+            <div class="debug-row">
+                <span class="debug-label">Face Detected:</span>
+                <span class="debug-value" id="debugFaceDetected">No</span>
+            </div>
+            <div class="debug-row">
+                <span class="debug-label">Confidence:</span>
+                <span class="debug-value" id="debugConfidence">0%</span>
+            </div>
+            <div class="debug-row">
+                <span class="debug-label">Yaw (L/R):</span>
+                <span class="debug-value" id="debugYaw">0°</span>
+            </div>
+            <div class="debug-row">
+                <span class="debug-label">Pitch (U/D):</span>
+                <span class="debug-value" id="debugPitch">0°</span>
+            </div>
+            <div class="debug-row">
+                <span class="debug-label">Roll:</span>
+                <span class="debug-value" id="debugRoll">0°</span>
+            </div>
+            <div class="debug-row">
+                <span class="debug-label">Gesture:</span>
+                <span class="debug-value" id="debugGesture" style="font-weight: bold;">NONE</span>
+            </div>
+            <div class="calibration-progress" id="calibrationProgress" style="display: none;">
+                <div class="calibration-fill" id="calibrationFill"></div>
+            </div>
+        </div>
         
         <div id="menu">
             <h1>🚇 Subway Runner 3D</h1>
@@ -787,33 +854,421 @@
 
     <script>
         // ============================================
+        // Professional Gesture Controller with TensorFlow.js FaceMesh
+        // ============================================
+        class GestureController {
+            constructor(options = {}) {
+                this.options = {
+                    onGestureDetected: options.onGestureDetected || (() => {}),
+                    onStatsUpdate: options.onStatsUpdate || (() => {}),
+                    onError: options.onError || (() => {}),
+                    onCalibrationComplete: options.onCalibrationComplete || (() => {}),
+                    videoElement: options.videoElement || null,
+                    canvasElement: options.canvasElement || null,
+                    debugMode: options.debugMode || false,
+                    sensitivity: options.sensitivity || 1.0
+                };
+                
+                this.isRunning = false;
+                this.model = null;
+                this.video = null;
+                this.canvas = null;
+                this.ctx = null;
+                
+                // Calibration data
+                this.calibrationData = {
+                    neutralYaw: 0,
+                    neutralPitch: 0,
+                    neutralRoll: 0,
+                    isCalibrated: false,
+                    samples: [],
+                    sampleCount: 30
+                };
+                
+                // Gesture thresholds (in degrees)
+                this.thresholds = {
+                    yawLeft: -15,    // Head turn left
+                    yawRight: 15,    // Head turn right
+                    pitchUp: 20,     // Head tilt up
+                    pitchDown: -20,  // Head tilt down
+                    eyeGazeLateral: 0.3,  // Eye gaze threshold
+                    confidenceMin: 0.7
+                };
+                
+                // Gesture history for smoothing
+                this.gestureHistory = [];
+                this.historySize = 3;
+                this.lastGesture = 'NONE';
+                this.gestureCooldown = 0;
+                
+                // Performance stats
+                this.stats = {
+                    fps: 0,
+                    faceDetected: false,
+                    confidence: 0,
+                    yaw: 0,
+                    pitch: 0,
+                    roll: 0,
+                    lastTime: performance.now()
+                };
+            }
+            
+            async init() {
+                try {
+                    // Load FaceMesh model with iris tracking
+                    this.model = await faceLandmarksDetection.createDetector(
+                        faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
+                        {
+                            runtime: 'tfjs',
+                            maxFaces: 1,
+                            refineLandmarks: true, // Enables iris tracking
+                            modelType: 'full'
+                        }
+                    );
+                    
+                    // Setup video element
+                    this.video = this.options.videoElement || document.createElement('video');
+                    this.video.width = 640;
+                    this.video.height = 480;
+                    
+                    // Setup canvas for visualization
+                    this.canvas = this.options.canvasElement || document.createElement('canvas');
+                    this.canvas.width = 180;
+                    this.canvas.height = 135;
+                    this.ctx = this.canvas.getContext('2d');
+                    
+                    console.log('✅ Gesture Controller initialized with TensorFlow.js');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Failed to initialize Gesture Controller:', error);
+                    this.options.onError(error);
+                    return false;
+                }
+            }
+            
+            async start() {
+                if (this.isRunning) return;
+                
+                try {
+                    // Initialize model if not already done
+                    if (!this.model) {
+                        await this.init();
+                    }
+                    
+                    // Request camera access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: 640,
+                            height: 480,
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    this.video.srcObject = stream;
+                    await this.video.play();
+                    
+                    this.isRunning = true;
+                    
+                    // Start calibration
+                    this.startCalibration();
+                    
+                    // Start detection loop
+                    this.detectLoop();
+                    
+                    console.log('✅ Gesture tracking started');
+                } catch (error) {
+                    console.error('❌ Failed to start gesture tracking:', error);
+                    this.options.onError(error);
+                    throw error;
+                }
+            }
+            
+            stop() {
+                this.isRunning = false;
+                
+                if (this.video && this.video.srcObject) {
+                    const tracks = this.video.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.video.srcObject = null;
+                }
+                
+                console.log('🛑 Gesture tracking stopped');
+            }
+            
+            startCalibration() {
+                this.calibrationData.samples = [];
+                this.calibrationData.isCalibrated = false;
+                
+                setTimeout(() => {
+                    console.log('📐 Starting calibration - look straight ahead');
+                }, 1000);
+            }
+            
+            async detectLoop() {
+                if (!this.isRunning) return;
+                
+                const startTime = performance.now();
+                
+                try {
+                    // Detect faces
+                    const predictions = await this.model.estimateFaces(this.video);
+                    
+                    if (predictions.length > 0) {
+                        const face = predictions[0];
+                        this.stats.faceDetected = true;
+                        this.stats.confidence = face.box ? 
+                            (face.box.width * face.box.height) / (640 * 480) : 0;
+                        
+                        // Calculate head pose
+                        const pose = this.calculateHeadPose(face.keypoints);
+                        
+                        // Calculate eye gaze
+                        const eyeGaze = this.calculateEyeGaze(face.keypoints);
+                        
+                        // Update stats
+                        this.stats.yaw = pose.yaw;
+                        this.stats.pitch = pose.pitch;
+                        this.stats.roll = pose.roll;
+                        
+                        // Handle calibration
+                        if (!this.calibrationData.isCalibrated) {
+                            this.updateCalibration(pose);
+                        } else {
+                            // Detect gesture based on calibrated pose
+                            const gesture = this.detectGesture(pose, eyeGaze);
+                            if (gesture !== this.lastGesture) {
+                                this.handleGesture(gesture);
+                            }
+                        }
+                        
+                        // Draw visualization
+                        if (this.options.debugMode || this.canvas.style.display !== 'none') {
+                            this.drawVisualization(face, pose, eyeGaze);
+                        }
+                    } else {
+                        this.stats.faceDetected = false;
+                    }
+                    
+                    // Calculate FPS
+                    const deltaTime = performance.now() - startTime;
+                    this.stats.fps = Math.round(1000 / deltaTime);
+                    
+                    // Update stats callback
+                    this.options.onStatsUpdate(this.stats);
+                    
+                } catch (error) {
+                    console.error('Detection error:', error);
+                }
+                
+                // Continue loop
+                requestAnimationFrame(() => this.detectLoop());
+            }
+            
+            calculateHeadPose(keypoints) {
+                // Key facial landmarks for pose estimation
+                const noseTip = keypoints[1];
+                const leftEye = keypoints[33];
+                const rightEye = keypoints[263];
+                const leftMouth = keypoints[61];
+                const rightMouth = keypoints[291];
+                
+                // Calculate yaw (left-right rotation)
+                const eyeDistance = Math.abs(rightEye.x - leftEye.x);
+                const noseOffset = noseTip.x - (leftEye.x + rightEye.x) / 2;
+                const yaw = (noseOffset / eyeDistance) * 90;
+                
+                // Calculate pitch (up-down rotation)
+                const eyeY = (leftEye.y + rightEye.y) / 2;
+                const mouthY = (leftMouth.y + rightMouth.y) / 2;
+                const faceHeight = Math.abs(mouthY - eyeY);
+                const pitchRatio = (noseTip.y - eyeY) / faceHeight;
+                const pitch = (pitchRatio - 0.5) * 60;
+                
+                // Calculate roll (head tilt)
+                const roll = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * (180 / Math.PI);
+                
+                return { yaw, pitch, roll };
+            }
+            
+            calculateEyeGaze(keypoints) {
+                // Iris landmarks (if available with refineLandmarks)
+                const leftIris = keypoints[468]; // Left iris center
+                const rightIris = keypoints[473]; // Right iris center
+                
+                if (!leftIris || !rightIris) {
+                    return { x: 0, y: 0 };
+                }
+                
+                // Calculate gaze direction relative to eye centers
+                const leftEyeCenter = keypoints[159];
+                const rightEyeCenter = keypoints[386];
+                
+                const leftGazeX = (leftIris.x - leftEyeCenter.x) * 2;
+                const rightGazeX = (rightIris.x - rightEyeCenter.x) * 2;
+                
+                return {
+                    x: (leftGazeX + rightGazeX) / 2,
+                    y: 0 // Simplified for now
+                };
+            }
+            
+            updateCalibration(pose) {
+                this.calibrationData.samples.push({
+                    yaw: pose.yaw,
+                    pitch: pose.pitch,
+                    roll: pose.roll
+                });
+                
+                // Update calibration progress bar
+                const progress = (this.calibrationData.samples.length / this.calibrationData.sampleCount) * 100;
+                const calibFill = document.getElementById('calibrationFill');
+                if (calibFill) {
+                    calibFill.style.width = `${progress}%`;
+                }
+                
+                if (this.calibrationData.samples.length >= this.calibrationData.sampleCount) {
+                    // Calculate average neutral position
+                    const avgYaw = this.calibrationData.samples.reduce((sum, s) => sum + s.yaw, 0) / this.calibrationData.samples.length;
+                    const avgPitch = this.calibrationData.samples.reduce((sum, s) => sum + s.pitch, 0) / this.calibrationData.samples.length;
+                    const avgRoll = this.calibrationData.samples.reduce((sum, s) => sum + s.roll, 0) / this.calibrationData.samples.length;
+                    
+                    this.calibrationData.neutralYaw = avgYaw;
+                    this.calibrationData.neutralPitch = avgPitch;
+                    this.calibrationData.neutralRoll = avgRoll;
+                    this.calibrationData.isCalibrated = true;
+                    
+                    // Hide calibration progress
+                    const calibProgress = document.getElementById('calibrationProgress');
+                    if (calibProgress) {
+                        setTimeout(() => {
+                            calibProgress.style.display = 'none';
+                        }, 500);
+                    }
+                    
+                    console.log('✅ Calibration complete');
+                    this.options.onCalibrationComplete();
+                }
+            }
+            
+            detectGesture(pose, eyeGaze) {
+                // Apply calibration offset
+                const calibratedYaw = pose.yaw - this.calibrationData.neutralYaw;
+                const calibratedPitch = pose.pitch - this.calibrationData.neutralPitch;
+                
+                // Apply sensitivity
+                const yaw = calibratedYaw * this.options.sensitivity;
+                const pitch = calibratedPitch * this.options.sensitivity;
+                
+                // Detect gesture with eye gaze confirmation
+                let gesture = 'NONE';
+                
+                // Head left + eye gaze left = Move left
+                if (yaw < this.thresholds.yawLeft && eyeGaze.x < -this.thresholds.eyeGazeLateral) {
+                    gesture = 'MOVE_LEFT';
+                }
+                // Head right + eye gaze right = Move right
+                else if (yaw > this.thresholds.yawRight && eyeGaze.x > this.thresholds.eyeGazeLateral) {
+                    gesture = 'MOVE_RIGHT';
+                }
+                // Head up = Jump
+                else if (pitch > this.thresholds.pitchUp) {
+                    gesture = 'JUMP';
+                }
+                // Head down = Duck
+                else if (pitch < this.thresholds.pitchDown) {
+                    gesture = 'DUCK';
+                }
+                
+                // Smooth gesture with history
+                this.gestureHistory.push(gesture);
+                if (this.gestureHistory.length > this.historySize) {
+                    this.gestureHistory.shift();
+                }
+                
+                // Return most common gesture in history
+                const gestureCounts = {};
+                this.gestureHistory.forEach(g => {
+                    gestureCounts[g] = (gestureCounts[g] || 0) + 1;
+                });
+                
+                let maxCount = 0;
+                let finalGesture = 'NONE';
+                for (const [g, count] of Object.entries(gestureCounts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        finalGesture = g;
+                    }
+                }
+                
+                return finalGesture;
+            }
+            
+            handleGesture(gesture) {
+                if (this.gestureCooldown > 0) return;
+                
+                this.lastGesture = gesture;
+                this.options.onGestureDetected(gesture);
+                
+                // Set cooldown based on gesture type
+                const cooldowns = {
+                    'MOVE_LEFT': 300,
+                    'MOVE_RIGHT': 300,
+                    'JUMP': 500,
+                    'DUCK': 400
+                };
+                
+                this.gestureCooldown = cooldowns[gesture] || 0;
+                setTimeout(() => {
+                    this.gestureCooldown = 0;
+                }, this.gestureCooldown);
+            }
+            
+            drawVisualization(face, pose, eyeGaze) {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw video feed (scaled down)
+                this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw face box
+                if (face.box) {
+                    const scaleX = this.canvas.width / 640;
+                    const scaleY = this.canvas.height / 480;
+                    
+                    this.ctx.strokeStyle = this.calibrationData.isCalibrated ? '#00ff88' : '#ffaa00';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(
+                        face.box.xMin * scaleX,
+                        face.box.yMin * scaleY,
+                        face.box.width * scaleX,
+                        face.box.height * scaleY
+                    );
+                }
+                
+                // Draw status text
+                this.ctx.fillStyle = '#00ff88';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(`FPS: ${this.stats.fps}`, 5, 15);
+                this.ctx.fillText(`Gesture: ${this.lastGesture}`, 5, 30);
+                
+                if (!this.calibrationData.isCalibrated) {
+                    this.ctx.fillStyle = '#ffaa00';
+                    this.ctx.fillText('Calibrating...', 5, 45);
+                    this.ctx.fillText(`${this.calibrationData.samples.length}/${this.calibrationData.sampleCount}`, 5, 60);
+                }
+            }
+        }
+        
+        // Make GestureController globally available
+        window.GestureController = GestureController;
+        
+        // ============================================
         // CRITICAL: Define startGame IMMEDIATELY to ensure availability
+        // This will be overwritten with the full version later
         // ============================================
         window.startGame = function() {
-            console.log('startGame called (fallback version)');
-            // This will be overwritten with the real implementation later
-            // But ensures the button always has something to call
-            alert('Das Spiel wird geladen... Bitte einen Moment Geduld.');
-            
-            // Try to call the real implementation if it exists
-            if (typeof startGameInternal === 'function') {
-                startGameInternal().catch(error => {
-                    console.error('Error starting game:', error);
-                    alert('Fehler beim Starten des Spiels. Bitte Seite neu laden.');
-                });
-            } else {
-                console.error('Game not fully loaded yet. Please wait...');
-                setTimeout(() => {
-                    if (typeof startGameInternal === 'function') {
-                        startGameInternal().catch(error => {
-                            console.error('Error starting game:', error);
-                            alert('Fehler beim Starten des Spiels. Bitte Seite neu laden.');
-                        });
-                    } else {
-                        alert('Das Spiel konnte nicht geladen werden. Bitte Seite neu laden (F5).');
-                    }
-                }, 2000);
-            }
+            console.log('startGame called (initial placeholder)');
+            alert('Das Spiel wird geladen... Bitte einen Moment warten und erneut versuchen.');
         };
         
         // Also define placeholders for other button functions
@@ -824,6 +1279,292 @@
         window.skipHighscore = function() {
             console.log('skipHighscore called (placeholder)');
         };
+        
+        // ============================================
+        // CRITICAL: CORE GAME FUNCTIONS - MUST BE DEFINED EARLY
+        // ============================================
+        console.log('Defining core game functions early...');
+        
+        // Global game core object to track initialization
+        window.gameCore = {
+            initialized: false,
+            scene: null,
+            camera: null,
+            renderer: null,
+            player: null,
+            gameState: null
+        };
+        
+        // Minimal startGameInternal - defined EARLY to ensure availability
+        window.startGameInternal = async function() {
+            console.log('startGameInternal called (early definition)');
+            
+            try {
+                // Check if game is initialized
+                if (!window.gameCore.initialized) {
+                    console.log('Game not initialized, attempting minimal init...');
+                    await initMinimal();
+                }
+                
+                // Check if we have a scene
+                if (!window.gameCore.scene) {
+                    throw new Error('Scene not created');
+                }
+                
+                // Minimal game start logic
+                console.log('Starting game with minimal logic...');
+                
+                // Initialize minimal game state if not exists
+                if (!window.gameCore.gameState) {
+                    window.gameCore.gameState = {
+                        isPlaying: true,
+                        score: 0,
+                        lives: 3
+                    };
+                }
+                
+                // Hide menu
+                const menu = document.getElementById('menu');
+                if (menu) {
+                    menu.style.display = 'none';
+                    console.log('Menu hidden');
+                }
+                
+                // Start animation loop if not already running
+                if (!window.gameCore.animationId) {
+                    animateMinimal();
+                }
+                
+                console.log('Game started successfully (minimal version)');
+                return true;
+                
+            } catch (error) {
+                console.error('Error in startGameInternal:', error);
+                throw error;
+            }
+        };
+        
+        // Minimal init function - defined EARLY
+        async function initMinimal() {
+            console.log('initMinimal: Starting minimal initialization...');
+            
+            try {
+                // Check if Three.js is loaded
+                if (typeof THREE === 'undefined') {
+                    console.error('Three.js not loaded!');
+                    // Try to load it
+                    await loadThreeJS();
+                    
+                    // Check again
+                    if (typeof THREE === 'undefined') {
+                        throw new Error('Failed to load Three.js');
+                    }
+                }
+                
+                console.log('Three.js available, version:', THREE.REVISION);
+                
+                // Get canvas
+                const canvas = document.getElementById('gameCanvas');
+                if (!canvas) {
+                    throw new Error('Canvas element not found');
+                }
+                
+                // Create minimal scene
+                window.gameCore.scene = new THREE.Scene();
+                window.gameCore.scene.fog = new THREE.FogExp2(0x101020, 0.025);
+                console.log('Scene created');
+                
+                // Create camera
+                window.gameCore.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+                window.gameCore.camera.position.set(0, 3, 8);
+                console.log('Camera created');
+                
+                // Create renderer
+                try {
+                    window.gameCore.renderer = new THREE.WebGLRenderer({
+                        canvas: canvas,
+                        antialias: true,
+                        alpha: false
+                    });
+                    window.gameCore.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+                    window.gameCore.renderer.setClearColor(0x0a0a0f);
+                    console.log('Renderer created');
+                } catch (rendererError) {
+                    console.error('Failed to create WebGL renderer:', rendererError);
+                    throw new Error('WebGL not supported');
+                }
+                
+                // Add basic lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                window.gameCore.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                window.gameCore.scene.add(directionalLight);
+                console.log('Lighting added');
+                
+                // Create minimal player (just a cube for now)
+                const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
+                const playerMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+                window.gameCore.player = new THREE.Mesh(playerGeometry, playerMaterial);
+                window.gameCore.player.position.set(0, 0, 0);
+                window.gameCore.scene.add(window.gameCore.player);
+                console.log('Player created');
+                
+                // Create ground
+                const groundGeometry = new THREE.PlaneGeometry(20, 100);
+                const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -1;
+                window.gameCore.scene.add(ground);
+                console.log('Ground created');
+                
+                window.gameCore.initialized = true;
+                console.log('Minimal initialization complete!');
+                
+            } catch (error) {
+                console.error('Failed to initialize minimal game:', error);
+                window.gameCore.initialized = false;
+                throw error;
+            }
+        }
+        
+        // Minimal animation loop
+        function animateMinimal() {
+            window.gameCore.animationId = requestAnimationFrame(animateMinimal);
+            
+            // Rotate player for visual feedback
+            if (window.gameCore.player) {
+                window.gameCore.player.rotation.y += 0.01;
+            }
+            
+            // Render
+            if (window.gameCore.renderer && window.gameCore.scene && window.gameCore.camera) {
+                window.gameCore.renderer.render(window.gameCore.scene, window.gameCore.camera);
+            }
+        }
+        
+        // Helper function to load Three.js
+        async function loadThreeJS() {
+            return new Promise((resolve, reject) => {
+                console.log('Attempting to load Three.js...');
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/three@0.158.0/build/three.min.js';
+                script.onload = () => {
+                    console.log('Three.js loaded successfully');
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.error('Failed to load Three.js');
+                    reject(new Error('Failed to load Three.js'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Error recovery function
+        function showErrorRecovery(error) {
+            console.error('Showing error recovery UI:', error);
+            
+            // Remove any existing recovery UI
+            const existing = document.getElementById('errorRecovery');
+            if (existing) {
+                existing.remove();
+            }
+            
+            const recovery = document.createElement('div');
+            recovery.id = 'errorRecovery';
+            recovery.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 10px;
+                z-index: 99999;
+                text-align: center;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                max-width: 400px;
+            `;
+            
+            recovery.innerHTML = `
+                <h2 style="margin: 0 0 15px 0;">⚠️ Spiel konnte nicht gestartet werden</h2>
+                <p style="margin: 10px 0;">Fehler: ${error.message}</p>
+                <div style="margin-top: 20px;">
+                    <button onclick="location.reload()" style="
+                        padding: 10px 20px;
+                        margin: 5px;
+                        background: #4CAF50;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 16px;
+                    ">🔄 Seite neu laden</button>
+                    <button onclick="tryMinimalGame()" style="
+                        padding: 10px 20px;
+                        margin: 5px;
+                        background: #2196F3;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 16px;
+                    ">🎮 Minimal-Version</button>
+                </div>
+                <p style="margin-top: 15px; font-size: 12px; opacity: 0.8;">
+                    Tipp: Verwenden Sie Chrome für beste Kompatibilität
+                </p>
+            `;
+            
+            document.body.appendChild(recovery);
+        }
+        
+        // Try minimal game function
+        window.tryMinimalGame = async function() {
+            console.log('Trying minimal game...');
+            const recovery = document.getElementById('errorRecovery');
+            if (recovery) recovery.remove();
+            
+            try {
+                await initMinimal();
+                await window.startGameInternal();
+            } catch (error) {
+                alert('Auch die Minimal-Version konnte nicht gestartet werden. Bitte laden Sie die Seite neu (F5).');
+            }
+        };
+        
+        // Override the original startGame with enhanced version
+        window.startGame = async function() {
+            console.log('=== START GAME BUTTON CLICKED ===');
+            console.log('Time:', new Date().toISOString());
+            
+            try {
+                // First check if Three.js is available
+                if (typeof THREE === 'undefined') {
+                    console.warn('Three.js not loaded, attempting to load...');
+                    await loadThreeJS();
+                }
+                
+                // Try to call startGameInternal
+                if (typeof window.startGameInternal === 'function') {
+                    console.log('Calling startGameInternal...');
+                    const result = await window.startGameInternal();
+                    console.log('startGameInternal completed:', result);
+                } else {
+                    throw new Error('startGameInternal function not found');
+                }
+                
+            } catch (error) {
+                console.error('CRITICAL ERROR in startGame:', error);
+                showErrorRecovery(error);
+            }
+        };
+        
+        console.log('Core game functions defined successfully');
         
         // ============================================
         // ONE-EURO FILTER - Smoothing ohne Lag
@@ -7539,46 +8280,15 @@
             }
         });
         
-        // Gesture Control Integration with Dynamic Loading
+        // Gesture Control Integration with TensorFlow.js
         let gestureController = null;
         let gestureEnabled = false;
-        let gestureModuleLoaded = false;
         
         const gestureBtn = document.getElementById('gestureControlBtn');
         const gestureCanvas = document.getElementById('gestureCanvas');
         const gestureStatus = document.getElementById('gestureStatus');
         const gestureStatusText = document.getElementById('gestureStatusText');
         const gestureCurrentText = document.getElementById('gestureCurrentText');
-        
-        // Check if gesture module is already loaded
-        async function loadGestureModule() {
-            if (gestureModuleLoaded || window.GestureControllerProjector) {
-                gestureModuleLoaded = true;
-                return true;
-            }
-            
-            // Wait a bit for pre-loaded module
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            if (window.GestureControllerProjector) {
-                gestureModuleLoaded = true;
-                console.log('✅ Gesture Module already loaded');
-                return true;
-            }
-            
-            // Try loading again if not available
-            try {
-                console.log('🎮 Attempting to load Gesture Control Module...');
-                const module = await import('./js/GestureControllerProjector.js');
-                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
-                gestureModuleLoaded = true;
-                console.log('✅ Gesture Module loaded on demand');
-                return true;
-            } catch (error) {
-                console.error('❌ Module loading failed:', error);
-                return false;
-            }
-        }
         
         // Initialize gesture control button
         if (gestureBtn) {
@@ -7588,17 +8298,10 @@
             gestureBtn.addEventListener('click', async () => {
                 if (!gestureEnabled) {
                     try {
-                        // First ensure module is loaded
-                        const moduleLoaded = await loadGestureModule();
-                        if (!moduleLoaded) {
-                            alert('Gestensteuerung konnte nicht geladen werden. Bitte Seite neu laden und erneut versuchen.');
-                            return;
-                        }
-                        
-                        // Initialize gesture controller
-                        if (!gestureController && window.GestureControllerProjector) {
-                            console.log('🎮 Initializing Gesture Controller...');
-                            gestureController = new window.GestureControllerProjector({
+                        // Initialize gesture controller with our new TensorFlow.js implementation
+                        if (!gestureController) {
+                            console.log('🎮 Initializing TensorFlow.js Gesture Controller...');
+                            gestureController = new GestureController({
                                 videoElement: document.getElementById('gestureVideo'),
                                 canvasElement: gestureCanvas,
                                 onGestureDetected: handleGestureInput,
@@ -7606,11 +8309,20 @@
                                 onError: handleGestureError,
                                 onCalibrationComplete: () => {
                                     console.log('✅ Gesture calibration complete');
-                                    gestureStatusText.textContent = 'Kalibriert';
+                                    gestureStatusText.textContent = 'Kalibriert - Bewege deinen Kopf!';
                                 },
-                                debugMode: false,
-                                projectorMode: true
+                                debugMode: true, // Enable debug for testing
+                                sensitivity: 1.0
                             });
+                        }
+                        
+                        // Show canvas for visual feedback
+                        gestureCanvas.style.display = 'block';
+                        
+                        // Show debug panel
+                        const debugPanel = document.getElementById('gestureDebugPanel');
+                        if (debugPanel) {
+                            debugPanel.classList.add('active');
                         }
                         
                         await gestureController.start();
@@ -7619,7 +8331,14 @@
                         gestureBtn.classList.add('active');
                         gestureCanvas.classList.add('active');
                         gestureStatus.classList.add('active');
-                        gestureStatusText.textContent = 'Aktiv';
+                        gestureStatusText.textContent = 'Kalibrierung läuft...';
+                        
+                        // Show calibration progress
+                        const calibProgress = document.getElementById('calibrationProgress');
+                        if (calibProgress) {
+                            calibProgress.style.display = 'block';
+                        }
+                        
                         console.log('✅ Gesture Control activated successfully');
                         
                     } catch (error) {
@@ -7635,21 +8354,34 @@
                     gestureBtn.textContent = '🎮 Gestensteuerung aktivieren';
                     gestureBtn.classList.remove('active');
                     gestureCanvas.classList.remove('active');
+                    gestureCanvas.style.display = 'none';
                     gestureStatus.classList.remove('active');
                     gestureStatusText.textContent = 'Gestoppt';
                     gestureCurrentText.textContent = 'NONE';
+                    
+                    // Hide debug panel
+                    const debugPanel = document.getElementById('gestureDebugPanel');
+                    if (debugPanel) {
+                        debugPanel.classList.remove('active');
+                    }
                 }
             });
         } else {
-            console.warn('⚠️ Gesture Control Button not found or module not available');
+            console.warn('⚠️ Gesture Control Button not found');
             console.log('Button element:', gestureBtn);
-            console.log('Module loaded:', window.GestureControllerProjector);
         }
         
         function handleGestureInput(gesture) {
             if (!gameState.isPlaying) return;
             
             gestureCurrentText.textContent = gesture;
+            
+            // Update debug panel
+            const debugGesture = document.getElementById('debugGesture');
+            if (debugGesture) {
+                debugGesture.textContent = gesture;
+                debugGesture.style.color = gesture === 'NONE' ? 'white' : '#00ff88';
+            }
             
             switch (gesture) {
                 case 'MOVE_LEFT':
@@ -7700,10 +8432,25 @@
         }
         
         function updateGestureStats(stats) {
-            // Optional: Update UI with gesture tracking stats
+            // Update status text
             if (stats.faceDetected && gestureStatusText) {
                 gestureStatusText.textContent = `Aktiv (${stats.confidence ? (stats.confidence * 100).toFixed(0) : 0}%)`;
             }
+            
+            // Update debug panel
+            const debugFPS = document.getElementById('debugFPS');
+            const debugFaceDetected = document.getElementById('debugFaceDetected');
+            const debugConfidence = document.getElementById('debugConfidence');
+            const debugYaw = document.getElementById('debugYaw');
+            const debugPitch = document.getElementById('debugPitch');
+            const debugRoll = document.getElementById('debugRoll');
+            
+            if (debugFPS) debugFPS.textContent = stats.fps || 0;
+            if (debugFaceDetected) debugFaceDetected.textContent = stats.faceDetected ? 'Yes' : 'No';
+            if (debugConfidence) debugConfidence.textContent = `${(stats.confidence * 100).toFixed(0)}%`;
+            if (debugYaw) debugYaw.textContent = `${stats.yaw.toFixed(1)}°`;
+            if (debugPitch) debugPitch.textContent = `${stats.pitch.toFixed(1)}°`;
+            if (debugRoll) debugRoll.textContent = `${stats.roll.toFixed(1)}°`;
         }
         
         function handleGestureError(error) {
