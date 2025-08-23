@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.18-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.19-THREE-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.18-DEPLOYED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.19-DEPLOYED</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -8347,7 +8347,32 @@
         }
         
         function handleGestureInput(gesture) {
-            if (!gameState.isPlaying) return;
+            // 🧪 TEMPORÄRER TEST-MODUS: gameState Blockade entfernt
+            // if (!gameState.isPlaying) return;  // ← AUSKOMMENTIERT FÜR TEST!
+            
+            // 🎯 SOFORTIGER VISUAL FEEDBACK FÜR TEST:
+            console.log('🎯 GESTURE DETECTED:', gesture, 'at', new Date().toLocaleTimeString());
+            
+            // Änder Bildschirm-Farbe je nach Gesture
+            if (gesture !== 'NONE') {
+                const colors = {
+                    'MOVE_LEFT': 'linear-gradient(45deg, #0066ff, #004499)',
+                    'MOVE_RIGHT': 'linear-gradient(45deg, #ff3300, #cc2200)', 
+                    'JUMP': 'linear-gradient(45deg, #00ff66, #00cc44)',
+                    'DUCK': 'linear-gradient(45deg, #ffdd00, #ccaa00)'
+                };
+                document.body.style.background = colors[gesture] || 'white';
+                
+                // Kurzer Alert für eindeutigen Beweis
+                setTimeout(() => {
+                    alert('🎯 GESTURE ERKANNT: ' + gesture + '\n\nWenn du das siehst, funktioniert das Eye-Tracking!');
+                }, 100);
+                
+                // Reset nach 2 Sekunden
+                setTimeout(() => {
+                    document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
+                }, 2000);
+            }
             
             gestureCurrentText.textContent = gesture;
             
