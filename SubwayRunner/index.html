@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.40-MENU-FIX</title>
-    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <!-- Cache-Busting für V5.3.42 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Subway Runner 3D - V5.3.42-GAME-FIX</title>
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js?v=5.3.41"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <!-- MediaPipe Face Mesh for gesture control -->
@@ -731,7 +735,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.26-ULTRA-GESTURE-SYSTEM</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.42-GAME-FIX</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -1160,7 +1164,7 @@
             // updateCalibration removed - no calibration needed!
             
             detectGesture(landmarks) {
-                // 🚀 V5.3.37 - ULTRA-SIMPLE Y-AXIS TEST VERSION
+                // 🚀 V5.3.42 - GAME-FIX VERSION
                 
                 // Check if landmarks exist
                 if (!landmarks || landmarks.length === 0) {
@@ -1187,7 +1191,7 @@
                 const avgEyeX = (leftEye.x + rightEye.x) / 2;
                 const avgEyeY = (leftEye.y + rightEye.y) / 2;
                 
-                // 🎯 Y-COORDINATE VERIFICATION - V5.3.37
+                // 🎯 Y-COORDINATE VERIFICATION - V5.3.42
                 // MediaPipe standard: Y=0 is top, Y=1 is bottom
                 // Head UP = Y gets smaller, Head DOWN = Y gets bigger
                 const effectiveY = avgEyeY; // Using standard MediaPipe coordinates
@@ -1818,7 +1822,19 @@
         window.startGameWithGestures = async function() {
             console.log('🚀 Starting game with gestures enabled');
             
-            // Gesture controller already initialized and running
+            // Check if gesture controller is actually working
+            if (!window.globalGestureController || !window.gesturePreviewActive) {
+                console.warn('⚠️ Gesture controller not working, falling back to classic controls');
+                alert('Gestensteuerung konnte nicht aktiviert werden.\nWechsle zu klassischer Steuerung...');
+                
+                // Fallback to classic mode
+                gestureEnabled = false;
+                document.getElementById('menu').style.display = 'none';
+                await startGame();
+                return;
+            }
+            
+            // Gesture controller working - proceed normally
             gestureEnabled = true;
             
             // Show gesture status during game
@@ -1841,34 +1857,56 @@
             await startGame();
         };
         
-        // Override the original startGame with enhanced version
+        // Enhanced startGame with better error handling - V5.3.42
         window.startGame = async function() {
-            console.log('=== START GAME BUTTON CLICKED ===');
+            console.log('=== START GAME V5.3.42 ===');
             console.log('Time:', new Date().toISOString());
             console.log('Three.js available:', typeof THREE !== 'undefined');
-            console.log('Scene exists:', typeof scene !== 'undefined');
-            console.log('startGameInternal exists:', typeof window.startGameInternal === 'function');
+            console.log('Gesture enabled:', gestureEnabled);
             
             try {
-                // First check if Three.js is available
+                // Clear any previous game state
+                if (window.gameState) {
+                    window.gameState.isPlaying = false;
+                    window.gameState.isPaused = false;
+                }
+                
+                // Check Three.js availability
                 if (typeof THREE === 'undefined') {
                     console.error('Three.js not loaded! Please refresh the page.');
-                    alert('Three.js konnte nicht geladen werden. Bitte Seite neu laden (F5).');
+                    alert('🚨 Three.js konnte nicht geladen werden.\n\nBitte:\n1. Seite neu laden (F5)\n2. Chrome/Edge verwenden\n3. Internet-Verbindung prüfen');
                     return;
                 }
                 
                 // Try to call startGameInternal
                 if (typeof window.startGameInternal === 'function') {
-                    console.log('Calling startGameInternal...');
+                    console.log('✅ Starting game internal...');
                     const result = await window.startGameInternal();
-                    console.log('startGameInternal completed:', result);
+                    console.log('✅ Game started successfully:', result);
                 } else {
-                    throw new Error('startGameInternal function not found');
+                    // Fallback: Try to initialize game manually
+                    console.warn('⚠️ startGameInternal not found, trying manual init...');
+                    if (typeof init === 'function') {
+                        await init();
+                        console.log('✅ Manual game init successful');
+                    } else {
+                        throw new Error('No game initialization functions found');
+                    }
                 }
                 
+                console.log('🎮 Game startup completed successfully');
+                
             } catch (error) {
-                console.error('CRITICAL ERROR in startGame:', error);
-                showErrorRecovery(error);
+                console.error('❌ CRITICAL ERROR in startGame:', error);
+                
+                // User-friendly error message
+                const errorMsg = `🚨 SPIEL KONNTE NICHT GESTARTET WERDEN\n\nFehler: ${error.message}\n\nLösungen:\n• F5 drücken (Seite neu laden)\n• Chrome oder Edge verwenden\n• Cache leeren (Ctrl+Shift+R)\n• Internet-Verbindung prüfen`;
+                alert(errorMsg);
+                
+                // Show error recovery if function exists
+                if (typeof showErrorRecovery === 'function') {
+                    showErrorRecovery(error);
+                }
             }
         };
         

@@ -10,6 +10,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **BROWSER**: Chrome verwenden (NIEMALS Safari)
 - **NACH DEPLOYMENT**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
 
+### ⚠️ VERSIONSVERWALTUNG IST PFLICHT!
+**BEI JEDER CODE-ÄNDERUNG MUSS DIE VERSION AKTUALISIERT WERDEN:**
+1. **HTML Title Tag**: `<title>Subway Runner 3D - VX.Y.Z-FEATURE</title>`
+2. **UI Version Display**: Im Spiel-UI (Zeile ~734)
+3. **Alle Kommentare**: Versions-Referenzen in Code-Kommentaren
+4. **Cache-Busting**: URLs mit ?v=X.Y.Z Parameter
+5. **Format**: MAJOR.MINOR.PATCH-DESCRIPTION
+6. **IMMER erhöhen**: Niemals alte Versionsnummern behalten!
+7. **CHECK COMMAND**: `grep -n "V5\.3\.[0-9]" SubwayRunner/index.html` vor Deployment
+
 ## Repository Overview
 
 Endless runner game collection with **SubwayRunner** as primary production project (vanilla JS + Three.js).
