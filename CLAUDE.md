@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 📚 ADDITIONAL RESOURCES
+
+- **[MCP_TIPS.md](./MCP_TIPS.md)** - Comprehensive guide for MCP Server configuration and best practices
+- **[claude_desktop_config.json](./claude_desktop_config.json)** - Optimized MCP configuration for this project
+
 ## 🚨 CRITICAL DEPLOYMENT & WORKFLOW RULES
 
 ### AUTO-DEPLOYMENT IST PFLICHT!
