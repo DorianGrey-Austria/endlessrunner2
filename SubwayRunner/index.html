@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.37-Y-AXIS-FIX</title>
+    <title>Subway Runner 3D - V5.3.39-ENHANCED-MENU</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -760,8 +760,9 @@
             <div>🔴 Stacheln: Beides möglich!</div>
         </div>
         
-        <div id="gestureControl">
-            <button id="gestureControlBtn">🎮 Gestensteuerung aktivieren</button>
+        <div id="gestureControl" style="display: none;">
+            <!-- Old gesture control button - now hidden, replaced by menu selection -->
+            <button id="gestureControlBtn" style="display: none;">🎮 Gestensteuerung aktivieren</button>
             <div id="gestureStatus">
                 <div>Status: <span id="gestureStatusText">Bereit</span></div>
                 <div>Geste: <span id="gestureCurrentText">NONE</span></div>
@@ -807,27 +808,92 @@
         </div>
         
         <div id="menu">
-            <h1>🚇 Subway Runner 3D</h1>
-            <h2>⏱️ 60-Sekunden Challenge!</h2>
-            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
-            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
-            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            
-            <!-- Desktop Instructions -->
-            <div class="desktop-instructions">
-                <p><strong>🎮 Steuerung:</strong></p>
-                <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
+            <!-- STEP 1: Choose Control Method -->
+            <div id="menuStep1" class="menu-step">
+                <h1>🚇 Subway Runner 3D</h1>
+                <h2>⏱️ 60-Sekunden Challenge!</h2>
+                <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
+                
+                <div style="margin: 30px 0;">
+                    <h3>🎮 Wähle deine Steuerung:</h3>
+                </div>
+                
+                <button class="control-select-btn gesture-btn" onclick="selectGestureMode()" style="display: block; margin: 15px auto; padding: 20px 30px; font-size: 18px; background: linear-gradient(135deg, #00ff88, #00cc66); color: black; border: none; border-radius: 10px; cursor: pointer; min-width: 300px;">
+                    <span style="font-size: 24px;">📹</span><br>
+                    <strong>MIT GESTENSTEUERUNG</strong><br>
+                    <small>Steuere mit Kopfbewegungen</small>
+                </button>
+                
+                <button class="control-select-btn classic-btn" onclick="selectClassicMode()" style="display: block; margin: 15px auto; padding: 20px 30px; font-size: 18px; background: linear-gradient(135deg, #4444ff, #2222cc); color: white; border: none; border-radius: 10px; cursor: pointer; min-width: 300px;">
+                    <span style="font-size: 24px;">⌨️</span><br>
+                    <strong>KLASSISCHE STEUERUNG</strong><br>
+                    <small>Tastatur / Touch</small>
+                </button>
+                
+                <div style="margin-top: 20px; font-size: 12px; opacity: 0.7;">
+                    💡 Tipp: Gestensteuerung funktioniert am besten mit Chrome/Edge
+                </div>
             </div>
             
-            <!-- Mobile Instructions -->
-            <div class="mobile-instructions">
-                <p><strong>📱 Touch-Steuerung:</strong></p>
-                <p>◀️ Wisch Links/Rechts ▶️ Lane wechseln</p>
-                <p>⬆️ Wisch Hoch: Springen (mehrfach für Multi-Jump)</p>
-                <p>⬇️ Wisch Runter: Ducken (Wisch hoch zum Aufstehen)</p>
+            <!-- STEP 2: Gesture Setup (hidden initially) -->
+            <div id="menuStep2" class="menu-step" style="display: none;">
+                <h1>📹 Gestensteuerung einrichten</h1>
+                
+                <div id="gestureSetupContainer">
+                    <video id="gesturePreview" style="display: none; width: 320px; height: 240px; margin: 0 auto;"></video>
+                    <canvas id="gesturePreviewCanvas" style="width: 320px; height: 240px; border: 3px solid #00ff88; border-radius: 8px; margin: 0 auto; display: block;"></canvas>
+                    
+                    <div id="cameraStatus" style="margin: 20px 0; font-size: 18px;">
+                        🔄 Initialisiere Kamera...
+                    </div>
+                    
+                    <div id="gestureTestHint" style="display: none; margin: 15px auto; padding: 15px; background: rgba(0,255,136,0.1); border-radius: 8px; max-width: 400px;">
+                        <p><strong>✅ Kamera bereit!</strong></p>
+                        <p>Teste die Steuerung:</p>
+                        <p>👈 Kopf nach links = Spieler nach rechts</p>
+                        <p>👉 Kopf nach rechts = Spieler nach links</p>
+                        <p>👆 Kopf hoch = Springen</p>
+                        <p>👇 Kopf runter = Ducken</p>
+                    </div>
+                    
+                    <button id="startWithGesturesBtn" onclick="startGameWithGestures()" style="display: none; margin: 20px auto; padding: 15px 30px; font-size: 18px; background: #00ff88; color: black; border: none; border-radius: 8px; cursor: pointer;">
+                        ✅ SPIEL STARTEN
+                    </button>
+                    
+                    <button onclick="backToMenu()" style="display: block; margin: 10px auto; padding: 10px 20px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        ← Zurück zur Auswahl
+                    </button>
+                </div>
             </div>
             
-            <button onclick="startGame()">🎮 Challenge starten!</button>
+            <!-- STEP 3: Classic Controls Info (hidden initially) -->
+            <div id="menuStep3" class="menu-step" style="display: none;">
+                <h1>🎮 Klassische Steuerung</h1>
+                
+                <!-- Desktop Instructions -->
+                <div class="desktop-instructions">
+                    <p><strong>⌨️ Tastatur:</strong></p>
+                    <p>A/D oder ←/→: Spurwechsel</p>
+                    <p>W/Space: Springen (bis zu 3x)</p>
+                    <p>S oder ↓: Ducken</p>
+                </div>
+                
+                <!-- Mobile Instructions -->
+                <div class="mobile-instructions">
+                    <p><strong>📱 Touch:</strong></p>
+                    <p>◀️ Wisch Links/Rechts ▶️</p>
+                    <p>⬆️ Wisch Hoch: Springen</p>
+                    <p>⬇️ Wisch Runter: Ducken</p>
+                </div>
+                
+                <button onclick="startGameClassic()" style="display: block; margin: 20px auto; padding: 15px 30px; font-size: 18px; background: #4444ff; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    🎮 SPIEL STARTEN
+                </button>
+                
+                <button onclick="backToMenu()" style="display: block; margin: 10px auto; padding: 10px 20px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    ← Zurück zur Auswahl
+                </button>
+            </div>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -1620,6 +1686,126 @@
             } catch (error) {
                 alert('Auch die Minimal-Version konnte nicht gestartet werden. Bitte laden Sie die Seite neu (F5).');
             }
+        };
+        
+        // ============================================
+        // ENHANCED MENU SYSTEM WITH GESTURE CONTROL SELECTION
+        // ============================================
+        
+        // Menu navigation functions
+        window.selectGestureMode = async function() {
+            console.log('🎮 Gesture mode selected');
+            
+            // Hide step 1, show step 2
+            document.getElementById('menuStep1').style.display = 'none';
+            document.getElementById('menuStep2').style.display = 'block';
+            
+            // Initialize gesture control preview
+            await initializeGesturePreview();
+        };
+        
+        window.selectClassicMode = function() {
+            console.log('⌨️ Classic mode selected');
+            
+            // Hide step 1, show step 3
+            document.getElementById('menuStep1').style.display = 'none';
+            document.getElementById('menuStep3').style.display = 'block';
+        };
+        
+        window.backToMenu = function() {
+            console.log('↩️ Back to menu');
+            
+            // Hide all steps except step 1
+            document.getElementById('menuStep1').style.display = 'block';
+            document.getElementById('menuStep2').style.display = 'none';
+            document.getElementById('menuStep3').style.display = 'none';
+            
+            // Stop gesture preview if running
+            if (window.gesturePreviewActive) {
+                stopGesturePreview();
+            }
+        };
+        
+        window.initializeGesturePreview = async function() {
+            const cameraStatus = document.getElementById('cameraStatus');
+            const gestureTestHint = document.getElementById('gestureTestHint');
+            const startBtn = document.getElementById('startWithGesturesBtn');
+            
+            try {
+                cameraStatus.innerHTML = '🔄 Kamera-Zugriff anfordern...';
+                
+                // Initialize gesture controller for preview
+                if (!gestureController) {
+                    console.log('🎮 Initializing Gesture Controller for preview...');
+                    gestureController = new GestureController({
+                        videoElement: document.getElementById('gesturePreview'),
+                        canvasElement: document.getElementById('gesturePreviewCanvas'),
+                        onGestureDetected: (gesture) => {
+                            // Just show gesture during preview, don't affect game
+                            if (gesture !== 'NONE') {
+                                console.log('Preview gesture:', gesture);
+                            }
+                        },
+                        onStatsUpdate: updateGestureStats,
+                        onError: (error) => {
+                            console.error('Gesture preview error:', error);
+                            cameraStatus.innerHTML = '❌ Kamera-Fehler: ' + error.message;
+                        },
+                        debugMode: false,
+                        sensitivity: 1.0
+                    });
+                }
+                
+                // Start gesture detection for preview
+                await gestureController.start();
+                window.gesturePreviewActive = true;
+                gestureEnabled = true;
+                
+                // Update UI
+                cameraStatus.innerHTML = '✅ Kamera bereit!';
+                gestureTestHint.style.display = 'block';
+                startBtn.style.display = 'block';
+                
+                console.log('✅ Gesture preview initialized successfully');
+                
+            } catch (error) {
+                console.error('Failed to initialize gesture preview:', error);
+                cameraStatus.innerHTML = '❌ Kamera konnte nicht aktiviert werden. Bitte Berechtigungen prüfen.';
+            }
+        };
+        
+        window.stopGesturePreview = function() {
+            if (gestureController && window.gesturePreviewActive) {
+                // Keep controller but mark preview as inactive
+                window.gesturePreviewActive = false;
+                console.log('Gesture preview stopped (controller kept for game)');
+            }
+        };
+        
+        window.startGameWithGestures = async function() {
+            console.log('🚀 Starting game with gestures enabled');
+            
+            // Gesture controller already initialized and running
+            gestureEnabled = true;
+            
+            // Show gesture status during game
+            document.getElementById('gestureControl').style.display = 'block';
+            document.getElementById('gestureStatus').style.display = 'block';
+            
+            // Hide menu and start game
+            document.getElementById('menu').style.display = 'none';
+            await startGame();
+        };
+        
+        window.startGameClassic = async function() {
+            console.log('🚀 Starting game with classic controls');
+            
+            // Ensure gestures are disabled
+            gestureEnabled = false;
+            
+            // Hide menu and start game
+            document.getElementById('menu').style.display = 'none';
+            await startGame();
         };
         
         // Override the original startGame with enhanced version
