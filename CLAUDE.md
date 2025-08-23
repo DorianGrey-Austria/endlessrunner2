@@ -39,14 +39,22 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.3.23-DEPLOYED (Latest)
+### V5.3.25-ULTRA-GESTURE-SYSTEM (Latest - NEEDS FIXES)
 - **Three.js v0.150.0**: Stable version with WebGL compatibility
-- **MediaPipe Gesture Control**: Face-based gesture detection for all 6 movements
-- **Shield Power-Up**: 3 seconds protection with visual dome
+- **MediaPipe 3-Spur-System**: 3-Lane detection implemented BUT BUGGY
+- **Current Issues**: Spiegelverkehrt + Jump/Duck nicht funktional
+- **Shield Power-Up**: 3 seconds protection with visual dome  
 - **Magnet Power-Up**: Attracts collectibles from all lanes (golden ring)
 - **Rainbow World**: Round 2 with psychedelic portal
 - **10 Unique Levels**: City, Space, Jungle, Ice, Crystal, etc.
 - **5 Characters**: NEON-7, Commander Void, Lara Thornwood, Bjorn Frostbeard, Seraphina Prism
+
+### CRITICAL: GESTURE CONTROL STATUS
+- **3-Spur-Detection**: ✅ Funktional (Links/Mitte/Rechts erkannt)
+- **Mirror-Bug**: ❌ Kopf links → Spieler links (falsch, sollte rechts sein)  
+- **Jump/Duck**: ❌ Funktioniert nicht (Boundaries zu extrem)
+- **Debug-Status**: PRODUCTION_MODE = false (Logs aktiv)
+- **Next Steps**: Mirror-Korrektur + Boundary-Tuning (siehe GESTURE_ROADMAP_V5.3.25.md)
 
 ## Architecture
 
@@ -65,33 +73,39 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 - **Score Cap**: 999,999
 - **Win Condition**: 30 kiwis collected
 
-## Gesture Control System
+## Gesture Control System - V5.3.25 STATUS
 
 ### MediaPipe Integration
 - **Face Mesh Detection**: Uses MediaPipe FaceMesh for real-time gesture recognition
-- **6 Movement Types**: MOVE_LEFT, MOVE_RIGHT, JUMP, DUCK, NONE, with intelligent smoothing
+- **3-Spur System**: Revolutionäres 3-Lane-Detection (Links/Mitte/Rechts)
 - **Camera Requirements**: HTTPS required, Chrome/Edge preferred
-- **Boundaries**: Configurable detection thresholds for optimal responsiveness
-- **Debug Panel**: Visual feedback for gesture detection and calibration
+- **Current Status**: BUGGY - needs Mirror-Korrektur + Boundary-Fixes
 
-### Gesture Control Commands
+### KNOWN ISSUES (V5.3.25):
+- **Mirror-Bug**: Kopf links → Spieler links (falsch, sollte rechts)
+- **Jump/Duck broken**: Boundaries zu extrem (0.25/0.75 statt 0.35/0.65)
+- **Root Cause**: Kamera-Spiegelung beim 3-Spur-Upgrade entfernt
+
+### Current Gesture Boundaries (BUGGY)
 ```javascript
-// Toggle gesture control
-gestureController.start();  // Initialize MediaPipe and camera
-gestureController.stop();   // Stop tracking and release camera
+// 3-SPUR BOUNDARIES (funktional):
+LEFT_LANE_BOUNDARY: 0.35   // 0%-35% = LEFT LANE
+RIGHT_LANE_BOUNDARY: 0.65  // 65%-100% = RIGHT LANE (35%-65% = MIDDLE)
 
-// Gesture detection boundaries (normalized coordinates 0-1)
-LEFT_BOUNDARY: 0.35   // Head right = player moves left (mirrored)
-RIGHT_BOUNDARY: 0.65  // Head left = player moves right (mirrored) 
-UP_BOUNDARY: 0.55     // Head up = jump
-DOWN_BOUNDARY: 0.7    // Head down = duck
+// VERTICAL BOUNDARIES (ZU EXTREM):
+UP_BOUNDARY: 0.25     // Zu schwer erreichbar (sollte 0.35)
+DOWN_BOUNDARY: 0.75   // Zu schwer erreichbar (sollte 0.65)
 ```
 
-### Troubleshooting Gesture Control
-- **Camera Permission**: Check browser allows camera access
-- **HTTPS Required**: Local dev needs `https://` or use deployed version
-- **Detection Issues**: Adjust boundaries in GestureController class
-- **Performance**: Uses intelligent smoothing to prevent gesture flicker
+### URGENT FIXES NEEDED (Next Chat):
+1. **Mirror-Korrektur**: avgEyeX → (1.0 - avgEyeX) für intuitive Steuerung
+2. **Boundary-Tuning**: UP: 0.25→0.35, DOWN: 0.75→0.65
+3. **Testing**: Alle 6 Bewegungen systematisch verifizieren
+
+### Debug Status
+- **PRODUCTION_MODE**: false (Ultra-verbose Logs aktiv)
+- **Console Logging**: Komplette Gesture-Analyse verfügbar
+- **Test Documentation**: Siehe GESTURE_ROADMAP_V5.3.25.md
 
 ## Quick Task Reference
 
@@ -101,11 +115,16 @@ DOWN_BOUNDARY: 0.7    // Head down = duck
 3. Add collision detection case
 4. Test spawn patterns
 
-### Version Update Process
-1. Search for current version (e.g., `V5.3.23`) in `SubwayRunner/index.html`
+### Version Update Process  
+1. Search for current version (e.g., `V5.3.25`) in `SubwayRunner/index.html`
 2. Update version string in HTML (both title and UI element)
 3. Update CLAUDE.md version tracking
 4. Commit with format: `🎮 Version X.Y.Z: [feature]`
+
+### Current Version Issues (V5.3.25):
+- **Status**: 3-Spur System funktional aber spiegelverkehrt + Jump/Duck broken
+- **Next Version**: V5.3.26 (Mirror-Fix + Boundary-Tuning)
+- **Critical Docs**: GESTURE_ROADMAP_V5.3.25.md contains complete fix-plan
 
 ### Emergency Rollback
 ```bash
