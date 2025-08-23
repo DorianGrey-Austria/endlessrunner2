@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.14-DEBUG</title>
-    <script src="https://unpkg.com/three@0.158.0/dist/three.min.js"></script>
+    <title>Subway Runner 3D - V5.3.16-THREE-FIX</title>
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <!-- MediaPipe Face Mesh for gesture control -->
@@ -1534,12 +1534,16 @@
         window.startGame = async function() {
             console.log('=== START GAME BUTTON CLICKED ===');
             console.log('Time:', new Date().toISOString());
+            console.log('Three.js available:', typeof THREE !== 'undefined');
+            console.log('Scene exists:', typeof scene !== 'undefined');
+            console.log('startGameInternal exists:', typeof window.startGameInternal === 'function');
             
             try {
                 // First check if Three.js is available
                 if (typeof THREE === 'undefined') {
-                    console.warn('Three.js not loaded, attempting to load...');
-                    await loadThreeJS();
+                    console.error('Three.js not loaded! Please refresh the page.');
+                    alert('Three.js konnte nicht geladen werden. Bitte Seite neu laden (F5).');
+                    return;
                 }
                 
                 // Try to call startGameInternal
@@ -4137,13 +4141,26 @@
         // Make functions globally available for onclick handlers
         // This overwrites the fallback versions defined at the beginning
         window.startGame = async function() {
-            console.log('startGame called (real implementation)');
+            console.log('🎮 START BUTTON CLICKED (real implementation)');
+            console.log('Debug Info:');
+            console.log('- Three.js loaded:', typeof THREE !== 'undefined');
+            console.log('- Scene exists:', typeof scene !== 'undefined', scene);
+            console.log('- Camera exists:', typeof camera !== 'undefined');
+            console.log('- Renderer exists:', typeof renderer !== 'undefined');
+            console.log('- startGameInternal type:', typeof startGameInternal);
+            
             try {
                 // Check if game is properly initialized
                 if (typeof scene === 'undefined' || !scene) {
                     console.error('Game not properly initialized. Scene is undefined.');
-                    alert('Das Spiel ist noch nicht vollständig geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut.');
-                    return;
+                    console.log('Attempting to initialize now...');
+                    init(); // Try to initialize
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                    
+                    if (typeof scene === 'undefined' || !scene) {
+                        alert('Das Spiel ist noch nicht vollständig geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut.');
+                        return;
+                    }
                 }
                 
                 if (typeof startGameInternal !== 'function') {

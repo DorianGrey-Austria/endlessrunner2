@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "test": "node test-runner.js",
     "test:watch": "nodemon test-runner.js",
+    "test:browser": "node test-live-game.js",
+    "test:playwright": "npx playwright test",
     "serve": "live-server --port=8001 --watch=. --ignore=node_modules",
     "pretest": "echo '🧪 Running pre-deployment tests...'",
     "predeploy": "npm run test && echo '✅ Tests passed - ready for deployment'"
