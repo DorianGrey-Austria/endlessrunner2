@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.37-Y-AXIS-TEST</title>
+    <title>Subway Runner 3D - V5.3.37-Y-AXIS-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -1112,30 +1112,26 @@
                 const LEFT_LANE_BOUNDARY = 0.35;    // 0% - 35% = LEFT LANE
                 const RIGHT_LANE_BOUNDARY = 0.65;   // 65% - 100% = RIGHT LANE
                 
-                // 🎯 ULTRA-SENSITIVE VERTICAL BOUNDARIES - TEST VERSION
-                const UP_BOUNDARY = 0.49;      // Just 1% above center for JUMP
-                const DOWN_BOUNDARY = 0.51;    // Just 1% below center for DUCK
+                // 🎯 OPTIMIZED VERTICAL BOUNDARIES - MORE RESPONSIVE
+                const UP_BOUNDARY = 0.45;      // 45% - More room for head up movement
+                const DOWN_BOUNDARY = 0.55;    // 55% - More room for head down movement
                 
                 // Calculate average positions
                 const avgEyeX = (leftEye.x + rightEye.x) / 2;
                 const avgEyeY = (leftEye.y + rightEye.y) / 2;
                 
-                // 🎯 Y-COORDINATE REALITY CHECK - TESTING INVERSION
+                // 🎯 Y-COORDINATE VERIFICATION - V5.3.37
                 // MediaPipe standard: Y=0 is top, Y=1 is bottom
-                // So head UP should make Y smaller, head DOWN should make Y bigger
+                // Head UP = Y gets smaller, Head DOWN = Y gets bigger
+                const effectiveY = avgEyeY; // Using standard MediaPipe coordinates
                 
-                // Test if Y-axis might need inversion
-                const effectiveY = avgEyeY; // Try without inversion first
-                // const effectiveY = 1.0 - avgEyeY; // Uncomment to test with inversion
-                
-                // Only log Y value changes for debugging (not every frame!)
-                if (!this.lastLoggedY || Math.abs(effectiveY - this.lastLoggedY) > 0.03) {
-                    const direction = this.lastLoggedY ? 
-                        (effectiveY < this.lastLoggedY ? '↑ UP' : '↓ DOWN') : '';
-                    console.log('Y-Test:', effectiveY.toFixed(3), direction,
-                               '| Head movement:', direction === '↑ UP' ? 'Moving UP' : 
-                               direction === '↓ DOWN' ? 'Moving DOWN' : 'Starting');
-                    this.lastLoggedY = effectiveY;
+                // Smart debug logging - only significant changes
+                if (!PRODUCTION_MODE && Math.abs(avgEyeY - (this.lastLoggedY || 0.5)) > 0.05) {
+                    console.log('👁️ Y-AXIS:', {
+                        y: avgEyeY.toFixed(3),
+                        pos: avgEyeY < 0.45 ? 'UP' : avgEyeY > 0.55 ? 'DOWN' : 'NEUTRAL',
+                        willTrigger: avgEyeY < UP_BOUNDARY ? 'JUMP' : avgEyeY > DOWN_BOUNDARY ? 'DUCK' : 'NONE'
+                    });
                 }
                 
                 // 🎯 MIRROR CORRECTION for horizontal (working perfectly)
@@ -1149,14 +1145,14 @@
                     targetLane = 2; // RIGHT
                 }
                 
-                // 🎯 ULTRA-SIMPLE VERTICAL DETECTION - Testing with effectiveY
+                // 🎯 VERTICAL DETECTION - SIMPLIFIED & DIRECT
                 let verticalAction = 'NONE';
                 if (effectiveY < UP_BOUNDARY) {
                     verticalAction = 'JUMP';
-                    console.log('🚀 JUMP DETECTED! Y =', effectiveY.toFixed(3), '< 0.49');
+                    if (!PRODUCTION_MODE) console.log('🚀 JUMP DETECTED! Y =', effectiveY.toFixed(3), '< 0.45');
                 } else if (effectiveY > DOWN_BOUNDARY) {
                     verticalAction = 'DUCK';
-                    console.log('🦆 DUCK DETECTED! Y =', effectiveY.toFixed(3), '> 0.51');
+                    if (!PRODUCTION_MODE) console.log('🦆 DUCK DETECTED! Y =', effectiveY.toFixed(3), '> 0.55');
                 }
                 
                 // 🚀 DIRECT GESTURE RETURN - NO COMPLEX STATE MANAGEMENT!
@@ -8634,19 +8630,28 @@
                     
                 case 'JUMP':
                     console.log('🦘 JUMP RECEIVED - EXECUTING!', {
-                        isJumping: gameState.isJumping,
+                        playerAction: gameState.playerAction,
                         jumpCount: gameState.jumpCount,
-                        canJump: !gameState.isJumping && gameState.jumpCount < 2,
+                        canJump: gameState.playerAction === 'running',
                         timestamp: performance.now()
                     });
                     
-                    if (!gameState.isJumping && gameState.jumpCount < 2) {
-                        gameState.isJumping = true;
-                        gameState.jumpCount++;
-                        gameState.jumpVelocity = config.jumpPower;
-                        console.log('✅ JUMP EXECUTED! velocity:', config.jumpPower);
+                    // FIXED: Use playerAction system instead of isJumping!
+                    if (gameState.playerAction === 'running') {
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 10; // Standard jump velocity
+                        gameState.jumpStartTime = performance.now();
+                        gameState.jumpCount = 1;
+                        console.log('✅ JUMP EXECUTED! Action:', gameState.playerAction, 'Velocity:', gameState.jumpVelocity);
                         const speedMultiplier = gameState.score / 5000;
-                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        }
+                    } else if (gameState.playerAction === 'jumping' && gameState.jumpCount < 2) {
+                        // Double jump support
+                        gameState.jumpVelocity = 12;
+                        gameState.jumpCount = 2;
+                        console.log('✅ DOUBLE JUMP EXECUTED!');
                     } else {
                         console.log('❌ CANNOT JUMP - already jumping or max jumps reached');
                     }
@@ -8664,28 +8669,30 @@
                     
                 case 'DUCK':
                     console.log('🦆 DUCK RECEIVED - EXECUTING!', {
-                        isDucking: gameState.isDucking,
-                        isJumping: gameState.isJumping,
-                        canDuck: !gameState.isDucking && !gameState.isJumping,
+                        playerAction: gameState.playerAction,
+                        canDuck: gameState.playerAction === 'running',
                         timestamp: performance.now()
                     });
                     
-                    if (!gameState.isDucking && !gameState.isJumping) {
-                        gameState.isDucking = true;
-                        console.log('✅ DUCK EXECUTED!');
+                    // FIXED: Use playerAction system instead of isDucking!
+                    if (gameState.playerAction === 'running') {
+                        gameState.playerAction = 'ducking';
+                        console.log('✅ DUCK EXECUTED! Action:', gameState.playerAction);
                         const speedMultiplier = gameState.score / 5000;
                         // FIXED: Check if audioManager exists before using it
                         if (typeof audioManager !== 'undefined' && audioManager) {
                             audioManager.playSpeedDependentSound('duck', speedMultiplier);
                         }
                     } else {
-                        console.log('❌ CANNOT DUCK - already ducking or jumping');
+                        console.log('❌ CANNOT DUCK - not in running state');
                     }
                     break;
                     
                 case 'NONE':
-                    if (gameState.isDucking) {
-                        gameState.isDucking = false;
+                    // Return to running when no gesture detected
+                    if (gameState.playerAction === 'ducking' && gameState.playerY === 0) {
+                        gameState.playerAction = 'running';
+                        console.log('🏃 STAND UP - Back to running');
                     }
                     break;
             }
