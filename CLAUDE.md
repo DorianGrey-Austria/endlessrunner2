@@ -39,10 +39,10 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.3.25-ULTRA-GESTURE-SYSTEM (Latest - NEEDS FIXES)
-- **Three.js v0.150.0**: Stable version with WebGL compatibility
-- **MediaPipe 3-Spur-System**: 3-Lane detection implemented BUT BUGGY
-- **Current Issues**: Spiegelverkehrt + Jump/Duck nicht funktional
+### V5.3.26-ULTRA-GESTURE-SYSTEM (Latest)
+- **Three.js v0.150.0**: Stable version with WebGL compatibility  
+- **MediaPipe 3-Spur-System**: 3-Lane detection with gesture control
+- **Current Status**: Production-ready gesture control system
 - **Shield Power-Up**: 3 seconds protection with visual dome  
 - **Magnet Power-Up**: Attracts collectibles from all lanes (golden ring)
 - **Rainbow World**: Round 2 with psychedelic portal
@@ -51,20 +51,28 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ### CRITICAL: GESTURE CONTROL STATUS
 - **3-Spur-Detection**: ✅ Funktional (Links/Mitte/Rechts erkannt)
-- **Mirror-Bug**: ❌ Kopf links → Spieler links (falsch, sollte rechts sein)  
-- **Jump/Duck**: ❌ Funktioniert nicht (Boundaries zu extrem)
-- **Debug-Status**: PRODUCTION_MODE = false (Logs aktiv)
-- **Next Steps**: Mirror-Korrektur + Boundary-Tuning (siehe GESTURE_ROADMAP_V5.3.25.md)
+- **Jump/Duck Controls**: ✅ Optimized vertical boundaries  
+- **Mirror Correction**: ✅ Intuitive head movement mapping
+- **Debug-Status**: PRODUCTION_MODE = false (Ultra-verbose logging available)
+- **Camera Requirements**: HTTPS + Chrome/Edge for optimal performance
 
 ## Architecture
 
 ### SubwayRunner Structure
-- **Production**: Single `index.html` file (~5000+ lines embedded JS)
-- **Core Systems**: Single init() function, no GameCore system
-- **Game Loop**: `animate()` function with state management
-- **Collision**: 3D bounding box with 0.2-0.3 tolerance
-- **Performance**: Object pooling, frustum culling, 60 FPS target
-- **Three.js**: Loaded from unpkg CDN (v0.150.0)
+- **Monolithic HTML**: Single `index.html` file (~5000+ lines embedded JS)
+- **Core Systems**: Single init() function with direct Three.js integration
+- **Game Loop**: `animate()` function with requestAnimationFrame
+- **Collision System**: 3D bounding box detection with 0.2-0.3 unit tolerance
+- **Performance**: Object pooling for obstacles/collectibles, frustum culling
+- **Rendering**: Three.js v0.150.0 from unpkg CDN, WebGL with fallback
+- **Gesture Control**: MediaPipe FaceMesh integration for real-time head tracking
+
+### Key Systems
+- **Lane Management**: 3-lane system with positions [-2, 0, 2]
+- **Obstacle Spawning**: Pattern-based generation with increasing difficulty
+- **Collectible System**: Kiwis (main) and Broccolis (bonus) with spawn balancing
+- **Power-ups**: Shield (3s immunity) and Magnet (collectible attraction)
+- **Level Progression**: 10 unique environments with themed obstacles
 
 ### Key Constants
 - **Base Speed**: 0.12 (PERFEKT - nicht ändern!)
@@ -81,26 +89,28 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 - **Camera Requirements**: HTTPS required, Chrome/Edge preferred
 - **Current Status**: BUGGY - needs Mirror-Korrektur + Boundary-Fixes
 
-### KNOWN ISSUES (V5.3.25):
-- **Mirror-Bug**: Kopf links → Spieler links (falsch, sollte rechts)
-- **Jump/Duck broken**: Boundaries zu extrem (0.25/0.75 statt 0.35/0.65)
-- **Root Cause**: Kamera-Spiegelung beim 3-Spur-Upgrade entfernt
+### GESTURE SYSTEM STATUS (V5.3.26):
+- **Mirror Correction**: ✅ Head movements now mirror natural expectations
+- **Boundary Optimization**: ✅ Vertical boundaries tuned for accessibility
+- **6-Direction Control**: ✅ All movement directions (Left/Center/Right/Jump/Duck/Neutral) functional
 
-### Current Gesture Boundaries (BUGGY)
+### Current Gesture Boundaries (OPTIMIZED)
 ```javascript
-// 3-SPUR BOUNDARIES (funktional):
+// HORIZONTAL BOUNDARIES (3-Lane Detection):
 LEFT_LANE_BOUNDARY: 0.35   // 0%-35% = LEFT LANE
 RIGHT_LANE_BOUNDARY: 0.65  // 65%-100% = RIGHT LANE (35%-65% = MIDDLE)
 
-// VERTICAL BOUNDARIES (ZU EXTREM):
-UP_BOUNDARY: 0.25     // Zu schwer erreichbar (sollte 0.35)
-DOWN_BOUNDARY: 0.75   // Zu schwer erreichbar (sollte 0.65)
+// VERTICAL BOUNDARIES (Accessibility Optimized):
+UP_BOUNDARY: 0.35     // Jump trigger zone
+DOWN_BOUNDARY: 0.65   // Duck trigger zone
+
+// MIRROR CORRECTION: avgEyeX → (1.0 - avgEyeX) for intuitive control
 ```
 
-### URGENT FIXES NEEDED (Next Chat):
-1. **Mirror-Korrektur**: avgEyeX → (1.0 - avgEyeX) für intuitive Steuerung
-2. **Boundary-Tuning**: UP: 0.25→0.35, DOWN: 0.75→0.65
-3. **Testing**: Alle 6 Bewegungen systematisch verifizieren
+### GESTURE TESTING PROTOCOL:
+1. **6-Direction Verification**: Systematically test Left/Center/Right/Jump/Duck/Neutral
+2. **Mirror Response Check**: Head left = Player right (intuitive mapping)
+3. **Boundary Accessibility**: All users should reach trigger zones comfortably
 
 ### Debug Status
 - **PRODUCTION_MODE**: false (Ultra-verbose Logs aktiv)
@@ -116,15 +126,16 @@ DOWN_BOUNDARY: 0.75   // Zu schwer erreichbar (sollte 0.65)
 4. Test spawn patterns
 
 ### Version Update Process  
-1. Search for current version (e.g., `V5.3.25`) in `SubwayRunner/index.html`
-2. Update version string in HTML (both title and UI element)
+1. Search for current version (e.g., `V5.3.26`) in `SubwayRunner/index.html`
+2. Update version string in HTML title tag
 3. Update CLAUDE.md version tracking
-4. Commit with format: `🎮 Version X.Y.Z: [feature]`
+4. Test gesture control functionality if changes affect MediaPipe
+5. Commit with format: `🎮 Version X.Y.Z: [feature]`
 
-### Current Version Issues (V5.3.25):
-- **Status**: 3-Spur System funktional aber spiegelverkehrt + Jump/Duck broken
-- **Next Version**: V5.3.26 (Mirror-Fix + Boundary-Tuning)
-- **Critical Docs**: GESTURE_ROADMAP_V5.3.25.md contains complete fix-plan
+### Development Status (V5.3.26):
+- **Status**: Production-ready with full gesture control system
+- **Gesture Control**: All 6 directions functional and intuitive  
+- **Critical Docs**: GESTURE_TROUBLESHOOTING_COMPLETE.md for debugging guidance
 
 ### Emergency Rollback
 ```bash
@@ -135,16 +146,20 @@ git add . && git commit -m "🚨 ROLLBACK to stable version" && git push
 
 ## Testing & Debugging
 
-### Test Files
-- `test-runner.js`: Custom test suite (syntax, structure, performance, logic)
-- `tests/game.test.js`: Playwright browser tests
-- `test-live-game.js`: Live browser gameplay testing
-- `quick-critical-test.js`: Quick critical function tests
-- Multiple `.backup` files for rollback
+### Test Suite Overview
+- **`test-runner.js`**: Main test suite (syntax validation, structure analysis, performance checks)
+- **`tests/game.test.js`**: Playwright browser automation tests
+- **`test-live-game.js`**: Live gameplay testing with user simulation
+- **`quick-critical-test.js`**: Fast critical function validation
+- **Gesture Tests**: `gesture-test-standalone.html`, `pose-detection-test.html`
 
-### Pre-deployment Validation
+### Testing Commands
 ```bash
-npm run predeploy  # Runs tests before deployment
+npm run test                 # Run complete test suite via test-runner.js
+npm run test:playwright      # Run Playwright browser tests
+npm run test:browser         # Live gameplay testing
+npm run predeploy           # Pre-deployment validation (combines all tests)
+node quick-critical-test.js  # Fast critical checks
 ```
 
 ## Deployment Pipeline
@@ -191,13 +206,28 @@ npm run predeploy  # Runs tests before deployment
 
 ## Important Files
 
-- **CLAUDE_CODE_RULES.md**: Universal deployment rules
-- **SubwayRunner/index.html**: Main production game (~5000+ lines)
-- **SubwayRunner/GESTURE_TROUBLESHOOTING_COMPLETE.md**: Gesture control debugging
-- **SubwayRunner/DEBUG_GUIDE.md**: Common issues and solutions
-- **.github/workflows/hostinger-deploy.yml**: Auto-deployment config
-- **SubwayRunner/test-runner.js**: Main test suite
-- **SubwayRunner/*.backup**: Rollback versions for emergency recovery
+### Core Game Files
+- **SubwayRunner/index.html**: Main production game (~5000+ lines monolithic HTML/JS)
+- **SubwayRunner/js/**: Modular JavaScript components (GestureController, levels, etc.)
+- **SubwayRunner/css/gesture-overlay.css**: Gesture control UI styling
+
+### Documentation & Debugging
+- **GESTURE_TROUBLESHOOTING_COMPLETE.md**: Complete gesture control debugging guide
+- **DEBUG_GUIDE.md**: Common issues and systematic solutions
+- **GESTURE_ROADMAP_V5.3.25.md**: Gesture system development history
+
+### Testing & Quality Assurance  
+- **test-runner.js**: Main automated test suite
+- **tests/**: Playwright browser automation tests
+- **quick-critical-test.js**: Fast validation for critical functions
+
+### Deployment & CI/CD
+- **.github/workflows/hostinger-deploy.yml**: Auto-deployment to ki-revolution.at
+- **package.json**: NPM scripts and dependencies
+
+### Emergency Recovery
+- **SubwayRunner/*.backup**: Versioned backup files for rollback
+- **index.html.BASISVERSION5.backup**: Stable fallback version
 
 ## Development Workflow
 

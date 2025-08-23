@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.26-ULTRA-GESTURE-SYSTEM</title>
+    <title>Subway Runner 3D - V5.3.28-INTELLIGENT-GESTURE-SYSTEM</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -892,6 +892,16 @@
                 this.verticalGestureBuffer = null;
                 this.verticalGestureCount = 0;
                 
+                // 🎯 PLAYER STATE MANAGEMENT für intelligente Bewegungen
+                this.playerState = {
+                    verticalState: 'NEUTRAL',   // 'NEUTRAL' | 'JUMPING' | 'DUCKING'
+                    lastVerticalAction: 'NONE',
+                    lastVerticalTime: 0,
+                    isInNeutralZone: true,
+                    jumpCount: 0,               // Für Super Jump tracking
+                    lastEyeY: 0.5               // Letzte Y-Position für Trend-Detection
+                };
+                
                 // Performance stats
                 this.stats = {
                     fps: 0,
@@ -1100,29 +1110,31 @@
                 const RIGHT_LANE_BOUNDARY = 0.65;   // 65% - 100% = RIGHT LANE
                                                      // 35% - 65% = MIDDLE LANE (30% breit!)
                 
-                // 🎯 VERTIKALE BOUNDARIES (Jump/Duck unabhängig von Spur!)
-                const UP_BOUNDARY = 0.25;      // 25% - mehr Sensitivität für Jump
-                const DOWN_BOUNDARY = 0.75;    // 75% - mehr Sensitivität für Duck
+                // 🎯 VERTIKALE BOUNDARIES (ACCESSIBILITY OPTIMIZED!)
+                const UP_BOUNDARY = 0.35;      // 35% - zugänglicher für natürliche Kopfbewegung (JUMP)
+                const DOWN_BOUNDARY = 0.65;    // 65% - zugänglicher für natürliche Kopfbewegung (DUCK)
+                
+                // 🎯 TOLERANCE ZONES für smooth state transitions
+                const NEUTRAL_ZONE_MIN = 0.40;  // Neutral-Bereich beginnt bei 40%
+                const NEUTRAL_ZONE_MAX = 0.60;  // Neutral-Bereich endet bei 60%
                 
                 // Calculate average positions
                 const avgEyeX = (leftEye.x + rightEye.x) / 2;  // Horizontale Position
                 const avgEyeY = (leftEye.y + rightEye.y) / 2;  // Vertikale Position
                 
+                // 🎯 MIRROR-KORREKTUR: Intuitive Steuerung (Kopf links = Spieler rechts!)
+                const mirroredEyeX = 1.0 - avgEyeX;  // KRITISCHER FIX für natürliche Steuerung!
+                
                 // 🚀 STEP 1: BESTIMME TARGET LANE (0=Links, 1=Mitte, 2=Rechts)
                 let targetLane = 1; // Default: Middle Lane
-                if (avgEyeX < LEFT_LANE_BOUNDARY) {
-                    targetLane = 0; // Left Lane
-                } else if (avgEyeX > RIGHT_LANE_BOUNDARY) {
-                    targetLane = 2; // Right Lane
+                if (mirroredEyeX < LEFT_LANE_BOUNDARY) {
+                    targetLane = 0; // Kopf links → Lane 0 (LEFT) → Spieler rechts!
+                } else if (mirroredEyeX > RIGHT_LANE_BOUNDARY) {
+                    targetLane = 2; // Kopf rechts → Lane 2 (RIGHT) → Spieler links!
                 }
                 
-                // 🚀 STEP 2: BESTIMME VERTIKALE ACTION (unabhängig von Spur!)
-                let verticalAction = 'NONE';
-                if (avgEyeY < UP_BOUNDARY) {
-                    verticalAction = 'JUMP';
-                } else if (avgEyeY > DOWN_BOUNDARY) {
-                    verticalAction = 'DUCK';
-                }
+                // 🚀 STEP 2: INTELLIGENTE VERTIKALE STATE MANAGEMENT 
+                let verticalAction = this.calculateVerticalAction(avgEyeY, UP_BOUNDARY, DOWN_BOUNDARY, NEUTRAL_ZONE_MIN, NEUTRAL_ZONE_MAX);
                 
                 // 🚀 STEP 3: BESTIMME AKTUELLE SPIELER LANE
                 const currentLane = gameState ? gameState.playerLane : 1; // Default Middle
@@ -1133,14 +1145,15 @@
                 // 🔍 ULTRA-VERBOSE DEBUG LOGGING
                 console.log('🎯 GESTURE ANALYSIS:', {
                     avgEyeX: avgEyeX.toFixed(3),
+                    mirroredEyeX: mirroredEyeX.toFixed(3),
                     avgEyeY: avgEyeY.toFixed(3),
                     targetLane: targetLane,
                     currentLane: currentLane,
                     verticalAction: verticalAction,
                     finalGesture: finalGesture,
                     boundaries: {
-                        leftLane: avgEyeX < LEFT_LANE_BOUNDARY,
-                        rightLane: avgEyeX > RIGHT_LANE_BOUNDARY,
+                        leftLane: mirroredEyeX < LEFT_LANE_BOUNDARY,
+                        rightLane: mirroredEyeX > RIGHT_LANE_BOUNDARY,
                         jump: avgEyeY < UP_BOUNDARY,
                         duck: avgEyeY > DOWN_BOUNDARY
                     }
@@ -1157,10 +1170,74 @@
                 return smoothedGesture;
             }
             
+            // 🎯 INTELLIGENTE VERTIKALE STATE MANAGEMENT
+            calculateVerticalAction(avgEyeY, UP_BOUNDARY, DOWN_BOUNDARY, NEUTRAL_MIN, NEUTRAL_MAX) {
+                const currentTime = performance.now();
+                const state = this.playerState;
+                
+                // Update letzte Eye-Position für Trend-Detection
+                const eyeMovementTrend = avgEyeY - state.lastEyeY;
+                state.lastEyeY = avgEyeY;
+                
+                // Check ob wir in der neutralen Zone sind
+                const inNeutralZone = (avgEyeY >= NEUTRAL_MIN && avgEyeY <= NEUTRAL_MAX);
+                
+                // 🎯 STATE MACHINE für intelligente Übergänge
+                switch (state.verticalState) {
+                    case 'NEUTRAL':
+                        // Von NEUTRAL zu JUMP: Kopf deutlich nach oben
+                        if (avgEyeY < UP_BOUNDARY) {
+                            state.verticalState = 'JUMPING';
+                            state.lastVerticalTime = currentTime;
+                            state.jumpCount = (state.lastVerticalAction === 'JUMP' && currentTime - state.lastVerticalTime < 500) ? 
+                                              state.jumpCount + 1 : 1;
+                            state.lastVerticalAction = 'JUMP';
+                            
+                            // SUPER JUMP bei wiederholten Sprüngen
+                            return state.jumpCount > 1 ? 'SUPER_JUMP' : 'JUMP';
+                        }
+                        // Von NEUTRAL zu DUCK: Kopf deutlich nach unten
+                        else if (avgEyeY > DOWN_BOUNDARY) {
+                            state.verticalState = 'DUCKING';
+                            state.lastVerticalTime = currentTime;
+                            state.lastVerticalAction = 'DUCK';
+                            return 'DUCK';
+                        }
+                        break;
+                        
+                    case 'JUMPING':
+                        // Im Sprung: Warten auf Rückkehr in neutrale Zone
+                        if (inNeutralZone) {
+                            state.verticalState = 'NEUTRAL';
+                            return 'LAND'; // Spezielle Landing-Action
+                        }
+                        // Erneuter Sprung während Jump (Super Jump)
+                        else if (avgEyeY < UP_BOUNDARY && eyeMovementTrend < -0.02) {
+                            state.jumpCount++;
+                            state.lastVerticalTime = currentTime;
+                            return 'SUPER_JUMP';
+                        }
+                        break;
+                        
+                    case 'DUCKING':
+                        // Im Ducken: Warten auf Rückkehr über neutrale Zone
+                        if (avgEyeY < NEUTRAL_MAX) {
+                            state.verticalState = 'NEUTRAL';
+                            return 'STAND_UP'; // Spezielle Stand-Up-Action
+                        }
+                        break;
+                }
+                
+                // Default: Keine vertikale Aktion
+                return 'NONE';
+            }
+            
             calculateFinalGesture(targetLane, currentLane, verticalAction) {
                 // 🎯 PRIORITÄTS-SYSTEM: Vertikale Aktionen haben Vorrang!
-                if (verticalAction === 'JUMP' || verticalAction === 'DUCK') {
-                    return verticalAction; // Jump/Duck sofort ausführen!
+                if (verticalAction === 'JUMP' || verticalAction === 'DUCK' || 
+                    verticalAction === 'SUPER_JUMP' || verticalAction === 'LAND' || 
+                    verticalAction === 'STAND_UP') {
+                    return verticalAction; // Alle vertikalen Aktionen sofort ausführen!
                 }
                 
                 // 🎯 HORIZONTALE BEWEGUNG: Nur wenn unterschiedliche Lane
@@ -8582,6 +8659,52 @@
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                     } else {
                         if (!PRODUCTION_MODE) console.log('❌ CANNOT JUMP - already jumping or max jumps reached');
+                    }
+                    break;
+                    
+                case 'SUPER_JUMP':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🚀 SUPER JUMP DEBUG:', {
+                            isJumping: gameState.isJumping,
+                            jumpCount: gameState.jumpCount,
+                            superJumpHeight: config.jumpPower * 1.5
+                        });
+                    }
+                    
+                    // SUPER JUMP: Höherer Sprung bei wiederholten Bewegungen
+                    if (!gameState.isJumping) {
+                        gameState.isJumping = true;
+                        gameState.jumpCount = Math.min(gameState.jumpCount + 1, 2);
+                        gameState.jumpVelocity = config.jumpPower * 1.5; // 50% höher!
+                        if (!PRODUCTION_MODE) console.log('✅ SUPER JUMPING! velocity:', config.jumpPower * 1.5);
+                        
+                        // Visual feedback für Super Jump (Golden background)
+                        document.body.style.background = 'linear-gradient(to bottom, #FFD700 0%, #87CEEB 50%, #98FB98 100%)';
+                        setTimeout(() => {
+                            document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
+                        }, 200);
+                        
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'LAND':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🛬 LANDING DEBUG - Spieler kehrt zu normaler Haltung zurück');
+                    }
+                    // Landing wird automatisch im Game Loop gehandhabt - hier nur Debug
+                    break;
+                    
+                case 'STAND_UP':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🧍 STAND UP DEBUG - Spieler steht von Duck-Position auf');
+                    }
+                    
+                    // Sofortiges Aufstehen aus Duck-Position
+                    if (gameState.isDucking) {
+                        gameState.isDucking = false;
+                        if (!PRODUCTION_MODE) console.log('✅ STANDING UP from duck position');
                     }
                     break;
                     
