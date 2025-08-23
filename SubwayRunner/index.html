@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.20-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.21-THREE-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.20-DEPLOYED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.21-DEPLOYED</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -879,10 +879,13 @@
                 
                 // No complex thresholds needed for simple eye tracking!
                 
-                // Simple gesture tracking  
+                // Intelligentes Smoothing System
                 this.lastGesture = 'NONE';
-                this.pendingGesture = 'NONE'; // For simple gesture smoothing
                 this.gestureCooldown = 0;
+                
+                // Buffer für vertikale Gesten (Jump/Duck) - verhindert Flackern
+                this.verticalGestureBuffer = null;
+                this.verticalGestureCount = 0;
                 
                 // Performance stats
                 this.stats = {
@@ -1078,65 +1081,99 @@
                     return 'NONE';
                 }
                 
-                console.log('✅ Landmarks count:', landmarks.length);
-                
                 // MediaPipe face landmarks - check if eyes exist
                 const leftEye = landmarks[33];   // Left eye landmark
                 const rightEye = landmarks[263]; // Right eye landmark
                 
                 if (!leftEye || !rightEye) {
-                    console.log('❌ EYES NOT FOUND! leftEye:', !!leftEye, 'rightEye:', !!rightEye);
+                    console.log('❌ Eyes not found in landmarks');
                     return 'NONE';
                 }
                 
-                // Log current eye positions with high precision
-                console.log('👁️ EYE POSITIONS:', {
-                    leftEye: { x: leftEye.x.toFixed(4), y: leftEye.y.toFixed(4) },
-                    rightEye: { x: rightEye.x.toFixed(4), y: rightEye.y.toFixed(4) },
-                    timestamp: new Date().toLocaleTimeString()
-                });
-                
-                // EXTREM WEITE BOUNDARIES FÜR INITIAL TEST
-                const LEFT_BOUNDARY = 0.4;   // 40% from left (was 25%)
-                const RIGHT_BOUNDARY = 0.6;  // 60% from right (was 75%)  
-                const UP_BOUNDARY = 0.4;     // 40% from top (was 35%)
-                const DOWN_BOUNDARY = 0.6;   // 60% from bottom (was 65%)
-                
-                console.log('📏 BOUNDARIES:', { LEFT_BOUNDARY, RIGHT_BOUNDARY, UP_BOUNDARY, DOWN_BOUNDARY });
+                // 🎯 PERFEKTE BOUNDARIES FÜR INTUITIVE STEUERUNG
+                const LEFT_BOUNDARY = 0.45;   // 45% - gut erreichbar
+                const RIGHT_BOUNDARY = 0.55;  // 55% - gut erreichbar  
+                const UP_BOUNDARY = 0.35;     // 35% - natürliche Kopfbewegung nach oben
+                const DOWN_BOUNDARY = 0.65;   // 65% - natürliche Kopfbewegung nach unten
                 
                 let gesture = 'NONE';
                 const avgEyeY = (leftEye.y + rightEye.y) / 2;
                 
-                // Test each condition separately with detailed logging
-                console.log('🔍 CONDITION TESTS:');
-                
+                // 🎯 KAMERA-SPIEGEL-KORREKTUR: Intuitive Richtungen!
                 if (leftEye.x < LEFT_BOUNDARY) {
-                    console.log(`✅ LEFT CONDITION MET: leftEye.x (${leftEye.x.toFixed(4)}) < LEFT_BOUNDARY (${LEFT_BOUNDARY})`);
-                    gesture = 'MOVE_LEFT';
+                    gesture = 'MOVE_RIGHT';  // 🔄 Kopf links = Spieler rechts (intuitiv!)
                 }
                 else if (rightEye.x > RIGHT_BOUNDARY) {
-                    console.log(`✅ RIGHT CONDITION MET: rightEye.x (${rightEye.x.toFixed(4)}) > RIGHT_BOUNDARY (${RIGHT_BOUNDARY})`);
-                    gesture = 'MOVE_RIGHT';
+                    gesture = 'MOVE_LEFT';   // 🔄 Kopf rechts = Spieler links (intuitiv!)
                 }
                 else if (avgEyeY < UP_BOUNDARY) {
-                    console.log(`✅ UP CONDITION MET: avgEyeY (${avgEyeY.toFixed(4)}) < UP_BOUNDARY (${UP_BOUNDARY})`);
                     gesture = 'JUMP';
                 }
                 else if (avgEyeY > DOWN_BOUNDARY) {
-                    console.log(`✅ DOWN CONDITION MET: avgEyeY (${avgEyeY.toFixed(4)}) > DOWN_BOUNDARY (${DOWN_BOUNDARY})`);
                     gesture = 'DUCK';
                 }
-                else {
-                    console.log(`ℹ️ NO CONDITIONS MET:
-                        leftEye.x (${leftEye.x.toFixed(4)}) >= LEFT_BOUNDARY (${LEFT_BOUNDARY})
-                        rightEye.x (${rightEye.x.toFixed(4)}) <= RIGHT_BOUNDARY (${RIGHT_BOUNDARY})
-                        avgEyeY (${avgEyeY.toFixed(4)}) between ${UP_BOUNDARY} and ${DOWN_BOUNDARY}`);
+                
+                // Log nur wenn Gesture erkannt wird
+                if (gesture !== 'NONE') {
+                    console.log('🎯 RAW GESTURE:', gesture, {
+                        leftEye: leftEye.x.toFixed(3),
+                        rightEye: rightEye.x.toFixed(3), 
+                        avgEyeY: avgEyeY.toFixed(3)
+                    });
                 }
                 
-                console.log('🎯 FINAL GESTURE:', gesture);
+                // 🎯 INTELLIGENTES SMOOTHING SYSTEM
+                const finalGesture = this.applySmoothing(gesture);
                 
-                // NO SMOOTHING FOR DEBUG - DIRECT RETURN!
-                return gesture;
+                // Log nur wenn Final-Gesture sich ändert
+                if (finalGesture !== this.lastGesture && finalGesture !== 'NONE') {
+                    console.log('✨ FINAL GESTURE:', finalGesture);
+                }
+                
+                return finalGesture;
+            }
+            
+            applySmoothing(rawGesture) {
+                // 🎯 INTELLIGENTES SMOOTHING SYSTEM
+                
+                // Bewegungen (MOVE_LEFT/RIGHT): Sofortige Reaktion für responsive Steuerung
+                if (rawGesture === 'MOVE_LEFT' || rawGesture === 'MOVE_RIGHT') {
+                    // Reset vertical gesture buffer wenn horizontale Bewegung erkannt
+                    this.verticalGestureBuffer = null;
+                    this.verticalGestureCount = 0;
+                    return rawGesture; // Sofort ohne Delay!
+                }
+                
+                // Jump/Duck: 2-Frame Bestätigung um Flackern zu verhindern
+                if (rawGesture === 'JUMP' || rawGesture === 'DUCK') {
+                    if (this.verticalGestureBuffer === rawGesture) {
+                        this.verticalGestureCount++;
+                        
+                        if (this.verticalGestureCount >= 2) {
+                            // 2 consecutive frames confirmed - send gesture!
+                            this.verticalGestureBuffer = null;
+                            this.verticalGestureCount = 0;
+                            console.log(`✅ ${rawGesture} CONFIRMED (2-frame smoothing)`);
+                            return rawGesture;
+                        } else {
+                            return 'NONE'; // Still buffering
+                        }
+                    } else {
+                        // New vertical gesture - start buffer
+                        this.verticalGestureBuffer = rawGesture;
+                        this.verticalGestureCount = 1;
+                        return 'NONE'; // Don't send until confirmed
+                    }
+                }
+                
+                // NONE: Reset buffers
+                if (rawGesture === 'NONE') {
+                    this.verticalGestureBuffer = null;
+                    this.verticalGestureCount = 0;
+                    return 'NONE';
+                }
+                
+                return rawGesture; // Fallback
             }
             
             handleGesture(gesture) {
@@ -8376,14 +8413,14 @@
         }
         
         function handleGestureInput(gesture) {
-            // 🧪 TEMPORÄRER TEST-MODUS: gameState Blockade entfernt
-            // if (!gameState.isPlaying) return;  // ← AUSKOMMENTIERT FÜR TEST!
+            // 🎯 INTELLIGENTE GAME-STATE INTEGRATION
+            const isInGame = gameState && gameState.isPlaying;
+            const isGestureTestMode = !isInGame; // Test-Mode wenn Spiel nicht läuft
             
-            // 🎯 SOFORTIGER VISUAL FEEDBACK FÜR TEST:
-            console.log('🎯 GESTURE DETECTED:', gesture, 'at', new Date().toLocaleTimeString());
+            console.log('🎯 GESTURE DETECTED:', gesture, 'GameState:', isInGame ? 'PLAYING' : 'TEST_MODE');
             
-            // Änder Bildschirm-Farbe je nach Gesture
-            if (gesture !== 'NONE') {
+            // 🧪 TEST-MODE: Visual Feedback für Gesture Testing
+            if (isGestureTestMode && gesture !== 'NONE') {
                 const colors = {
                     'MOVE_LEFT': 'linear-gradient(45deg, #0066ff, #004499)',
                     'MOVE_RIGHT': 'linear-gradient(45deg, #ff3300, #cc2200)', 
@@ -8392,9 +8429,13 @@
                 };
                 document.body.style.background = colors[gesture] || 'white';
                 
-                // Kurzer Alert für eindeutigen Beweis
+                // Kurzer Alert für Test-Beweis
                 setTimeout(() => {
-                    alert('🎯 GESTURE ERKANNT: ' + gesture + '\n\nWenn du das siehst, funktioniert das Eye-Tracking!');
+                    alert('🎯 GESTURE TEST: ' + gesture + '\n\n' +
+                          (gesture === 'MOVE_LEFT' ? 'Kopf RECHTS → Spieler LINKS (intuitiv!)' :
+                           gesture === 'MOVE_RIGHT' ? 'Kopf LINKS → Spieler RECHTS (intuitiv!)' :
+                           gesture === 'JUMP' ? 'Kopf HOCH → SPRUNG' :
+                           gesture === 'DUCK' ? 'Kopf RUNTER → DUCKEN' : gesture));
                 }, 100);
                 
                 // Reset nach 2 Sekunden
@@ -8402,6 +8443,9 @@
                     document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
                 }, 2000);
             }
+            
+            // 🎮 GAME-MODE: Normal game integration (only when playing)
+            if (!isInGame) return; // Exit here if not in game
             
             gestureCurrentText.textContent = gesture;
             
