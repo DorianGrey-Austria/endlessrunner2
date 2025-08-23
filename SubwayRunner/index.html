@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.19-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.20-THREE-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.19-DEPLOYED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.20-DEPLOYED</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -1070,44 +1070,73 @@
             // updateCalibration removed - no calibration needed!
             
             detectGesture(landmarks) {
-                // 🎯 ULTRA-SIMPLE EYE TRACKING LOGIC
-                // MediaPipe landmarks are normalized [0,1]
+                // 🔍 ULTRA-VERBOSE DEBUG VERSION - SENIOR DEVELOPER ULTRA-THINK!
+                
+                // Check if landmarks exist
+                if (!landmarks || landmarks.length === 0) {
+                    console.log('❌ NO LANDMARKS DETECTED');
+                    return 'NONE';
+                }
+                
+                console.log('✅ Landmarks count:', landmarks.length);
+                
+                // MediaPipe face landmarks - check if eyes exist
                 const leftEye = landmarks[33];   // Left eye landmark
                 const rightEye = landmarks[263]; // Right eye landmark
                 
-                // Eye-based boundary detection (no calibration needed!)
-                const LEFT_BOUNDARY = 0.25;   // 25% from left edge  
-                const RIGHT_BOUNDARY = 0.75;  // 25% from right edge
-                const UP_BOUNDARY = 0.35;     // 35% from top
-                const DOWN_BOUNDARY = 0.65;   // 35% from bottom
+                if (!leftEye || !rightEye) {
+                    console.log('❌ EYES NOT FOUND! leftEye:', !!leftEye, 'rightEye:', !!rightEye);
+                    return 'NONE';
+                }
+                
+                // Log current eye positions with high precision
+                console.log('👁️ EYE POSITIONS:', {
+                    leftEye: { x: leftEye.x.toFixed(4), y: leftEye.y.toFixed(4) },
+                    rightEye: { x: rightEye.x.toFixed(4), y: rightEye.y.toFixed(4) },
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                
+                // EXTREM WEITE BOUNDARIES FÜR INITIAL TEST
+                const LEFT_BOUNDARY = 0.4;   // 40% from left (was 25%)
+                const RIGHT_BOUNDARY = 0.6;  // 60% from right (was 75%)  
+                const UP_BOUNDARY = 0.4;     // 40% from top (was 35%)
+                const DOWN_BOUNDARY = 0.6;   // 60% from bottom (was 65%)
+                
+                console.log('📏 BOUNDARIES:', { LEFT_BOUNDARY, RIGHT_BOUNDARY, UP_BOUNDARY, DOWN_BOUNDARY });
                 
                 let gesture = 'NONE';
-                
-                // Calculate average eye Y position for vertical movement
                 const avgEyeY = (leftEye.y + rightEye.y) / 2;
                 
-                // 🎯 SIMPLE LOGIC: Eye position determines movement
-                if (leftEye.x < LEFT_BOUNDARY || rightEye.x < LEFT_BOUNDARY) {
+                // Test each condition separately with detailed logging
+                console.log('🔍 CONDITION TESTS:');
+                
+                if (leftEye.x < LEFT_BOUNDARY) {
+                    console.log(`✅ LEFT CONDITION MET: leftEye.x (${leftEye.x.toFixed(4)}) < LEFT_BOUNDARY (${LEFT_BOUNDARY})`);
                     gesture = 'MOVE_LEFT';
                 }
-                else if (leftEye.x > RIGHT_BOUNDARY || rightEye.x > RIGHT_BOUNDARY) {
-                    gesture = 'MOVE_RIGHT'; 
+                else if (rightEye.x > RIGHT_BOUNDARY) {
+                    console.log(`✅ RIGHT CONDITION MET: rightEye.x (${rightEye.x.toFixed(4)}) > RIGHT_BOUNDARY (${RIGHT_BOUNDARY})`);
+                    gesture = 'MOVE_RIGHT';
                 }
                 else if (avgEyeY < UP_BOUNDARY) {
+                    console.log(`✅ UP CONDITION MET: avgEyeY (${avgEyeY.toFixed(4)}) < UP_BOUNDARY (${UP_BOUNDARY})`);
                     gesture = 'JUMP';
                 }
                 else if (avgEyeY > DOWN_BOUNDARY) {
+                    console.log(`✅ DOWN CONDITION MET: avgEyeY (${avgEyeY.toFixed(4)}) > DOWN_BOUNDARY (${DOWN_BOUNDARY})`);
                     gesture = 'DUCK';
                 }
-                
-                // Simple smoothing: only change gesture if different for 2 consecutive frames
-                if (gesture === this.lastGesture || gesture === 'NONE') {
-                    return gesture;
-                } else {
-                    // Store potential new gesture for next frame verification
-                    this.pendingGesture = gesture;
-                    return this.lastGesture;
+                else {
+                    console.log(`ℹ️ NO CONDITIONS MET:
+                        leftEye.x (${leftEye.x.toFixed(4)}) >= LEFT_BOUNDARY (${LEFT_BOUNDARY})
+                        rightEye.x (${rightEye.x.toFixed(4)}) <= RIGHT_BOUNDARY (${RIGHT_BOUNDARY})
+                        avgEyeY (${avgEyeY.toFixed(4)}) between ${UP_BOUNDARY} and ${DOWN_BOUNDARY}`);
                 }
+                
+                console.log('🎯 FINAL GESTURE:', gesture);
+                
+                // NO SMOOTHING FOR DEBUG - DIRECT RETURN!
+                return gesture;
             }
             
             handleGesture(gesture) {
