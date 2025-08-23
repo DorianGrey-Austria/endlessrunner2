@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.30-SIMPLIFIED-VERTICAL-DEBUG</title>
+    <title>Subway Runner 3D - V5.3.32-PERFECT-GESTURE-OPUS</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -1028,7 +1028,18 @@
                         
                         // 🎯 Direct eye tracking - no calibration needed!
                         const gesture = this.detectGesture(landmarks);
-                        if (gesture !== this.lastGesture) {
+                        
+                        // 🚀 OPUS FIX: Always handle vertical gestures, check change only for horizontal
+                        if (gesture === 'JUMP' || gesture === 'DUCK') {
+                            console.log('🎯 VERTICAL GESTURE FLOW:', {
+                                detected: gesture,
+                                lastGesture: this.lastGesture,
+                                cooldown: this.gestureCooldown,
+                                willHandle: true,
+                                timestamp: performance.now()
+                            });
+                            this.handleGesture(gesture);
+                        } else if (gesture !== this.lastGesture) {
                             this.handleGesture(gesture);
                         }
                         
@@ -1284,26 +1295,10 @@
                     return rawGesture; // Sofort ohne Delay!
                 }
                 
-                // Jump/Duck: 2-Frame Bestätigung um Flackern zu verhindern
+                // 🚀 OPUS FIX: Direct pass-through for vertical gestures - NO BUFFERING!
                 if (rawGesture === 'JUMP' || rawGesture === 'DUCK') {
-                    if (this.verticalGestureBuffer === rawGesture) {
-                        this.verticalGestureCount++;
-                        
-                        if (this.verticalGestureCount >= 1) {
-                            // 1 frame confirmed - send gesture! (reduced from 2 for better responsiveness)
-                            this.verticalGestureBuffer = null;
-                            this.verticalGestureCount = 0;
-                            console.log(`✅ ${rawGesture} CONFIRMED (1-frame smoothing)`);
-                            return rawGesture;
-                        } else {
-                            return 'NONE'; // Still buffering
-                        }
-                    } else {
-                        // New vertical gesture - start buffer
-                        this.verticalGestureBuffer = rawGesture;
-                        this.verticalGestureCount = 1;
-                        return 'NONE'; // Don't send until confirmed
-                    }
+                    console.log(`✅ ${rawGesture} INSTANT DETECTION - NO BUFFERING!`);
+                    return rawGesture;  // IMMEDIATE RESPONSE!
                 }
                 
                 // NONE: Reset buffers
@@ -1326,8 +1321,8 @@
                 const cooldowns = {
                     'MOVE_LEFT': 100,    // 🔧 REDUCED: 300ms → 100ms für schnellere Spurwechsel
                     'MOVE_RIGHT': 100,   // 🔧 REDUCED: 300ms → 100ms für schnellere Spurwechsel  
-                    'JUMP': 400,         // 🔧 REDUCED: 500ms → 400ms
-                    'DUCK': 300          // 🔧 REDUCED: 400ms → 300ms
+                    'JUMP': 0,           // 🚀 OPUS FIX: NO COOLDOWN for instant response!
+                    'DUCK': 0            // 🚀 OPUS FIX: NO COOLDOWN for instant response!
                 };
                 
                 this.gestureCooldown = cooldowns[gesture] || 0;
@@ -8663,22 +8658,22 @@
                     break;
                     
                 case 'JUMP':
-                    if (!PRODUCTION_MODE) {
-                        console.log('🦘 JUMP DEBUG:', {
-                            isJumping: gameState.isJumping,
-                            jumpCount: gameState.jumpCount,
-                            canJump: !gameState.isJumping && gameState.jumpCount < 2
-                        });
-                    }
+                    console.log('🦘 JUMP RECEIVED - EXECUTING!', {
+                        isJumping: gameState.isJumping,
+                        jumpCount: gameState.jumpCount,
+                        canJump: !gameState.isJumping && gameState.jumpCount < 2,
+                        timestamp: performance.now()
+                    });
+                    
                     if (!gameState.isJumping && gameState.jumpCount < 2) {
                         gameState.isJumping = true;
                         gameState.jumpCount++;
                         gameState.jumpVelocity = config.jumpPower;
-                        if (!PRODUCTION_MODE) console.log('✅ JUMPING! velocity:', config.jumpPower);
+                        console.log('✅ JUMP EXECUTED! velocity:', config.jumpPower);
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                     } else {
-                        if (!PRODUCTION_MODE) console.log('❌ CANNOT JUMP - already jumping or max jumps reached');
+                        console.log('❌ CANNOT JUMP - already jumping or max jumps reached');
                     }
                     break;
                     
@@ -8693,23 +8688,23 @@
                 */
                     
                 case 'DUCK':
-                    if (!PRODUCTION_MODE) {
-                        console.log('🦆 DUCK DEBUG:', {
-                            isDucking: gameState.isDucking,
-                            isJumping: gameState.isJumping,
-                            canDuck: !gameState.isDucking && !gameState.isJumping
-                        });
-                    }
+                    console.log('🦆 DUCK RECEIVED - EXECUTING!', {
+                        isDucking: gameState.isDucking,
+                        isJumping: gameState.isJumping,
+                        canDuck: !gameState.isDucking && !gameState.isJumping,
+                        timestamp: performance.now()
+                    });
+                    
                     if (!gameState.isDucking && !gameState.isJumping) {
                         gameState.isDucking = true;
-                        if (!PRODUCTION_MODE) console.log('✅ DUCKING!');
+                        console.log('✅ DUCK EXECUTED!');
                         const speedMultiplier = gameState.score / 5000;
                         // FIXED: Check if audioManager exists before using it
                         if (typeof audioManager !== 'undefined' && audioManager) {
                             audioManager.playSpeedDependentSound('duck', speedMultiplier);
                         }
                     } else {
-                        if (!PRODUCTION_MODE) console.log('❌ CANNOT DUCK - already ducking or jumping');
+                        console.log('❌ CANNOT DUCK - already ducking or jumping');
                     }
                     break;
                     
