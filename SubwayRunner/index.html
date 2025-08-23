@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.12-GAMECORE-REMOVED</title>
+    <title>Subway Runner 3D - V5.3.14-DEBUG</title>
     <script src="https://unpkg.com/three@0.158.0/dist/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -4654,7 +4654,8 @@
         const SPEED_LERP_FACTOR = 0.05;
 
         function init() {
-            console.log('Initializing Three.js scene...');
+            console.log('🚀 INIT START - Initializing Three.js scene...');
+            console.log('Three.js status:', typeof THREE !== 'undefined' ? 'LOADED' : 'NOT LOADED');
             
             // Check if Three.js is loaded
             if (typeof THREE === 'undefined') {
@@ -4662,6 +4663,8 @@
                 setTimeout(init, 100);
                 return;
             }
+            
+            console.log('Three.js Version:', THREE.REVISION);
             
             // Clean up any existing renderer
             if (renderer) {
@@ -4671,13 +4674,17 @@
             }
             
             try {
+                console.log('Creating scene...');
                 // Enhanced Scene
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x101020, 0.025); // Better fog
+                console.log('✅ Scene created');
 
                 // Camera (Subway Surfers perspective)
+                console.log('Creating camera...');
                 camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
                 camera.position.set(0, 3, 8);
+                console.log('✅ Camera created');
 
                 // Enhanced Renderer (SAFE improvements only)
                 const canvas = document.getElementById('gameCanvas');
@@ -4695,6 +4702,7 @@
                 }
                 
                 // Create renderer with error handling
+                console.log('Creating WebGL renderer...');
                 try {
                     renderer = new THREE.WebGLRenderer({ 
                         canvas: canvas, 
@@ -8529,7 +8537,21 @@
         // Initialize game when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM ready, starting game initialization...');
-            init();
+            try {
+                init();
+                console.log('✅ Init completed successfully');
+            } catch (error) {
+                console.error('❌ INIT ERROR:', error);
+                console.error('Stack:', error.stack);
+                // Try to show error to user
+                const menu = document.getElementById('menu');
+                if (menu) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.style.cssText = 'position: absolute; top: 10px; left: 10px; color: red; background: white; padding: 10px; z-index: 10000;';
+                    errorDiv.textContent = 'Init Error: ' + error.message;
+                    menu.appendChild(errorDiv);
+                }
+            }
         });
     </script>
 </body>
