@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.23-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.25-ULTRA-GESTURE-SYSTEM</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.23-DEPLOYED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.25-ULTRA-GESTURE-SYSTEM</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -856,7 +856,7 @@
         // ============================================
         // Production Mode Configuration
         // ============================================
-        const PRODUCTION_MODE = true; // 🔧 Set to true to disable debug alerts & reduce logging
+        const PRODUCTION_MODE = false; // 🔧 DEBUGGING AKTIVIERT für Gesture-Troubleshooting
         
         // ============================================
         // Gesture Controller with MediaPipe FaceMesh
@@ -1078,7 +1078,7 @@
             // updateCalibration removed - no calibration needed!
             
             detectGesture(landmarks) {
-                // 🔍 ULTRA-VERBOSE DEBUG VERSION - SENIOR DEVELOPER ULTRA-THINK!
+                // 🚀 SENIOR DEVELOPER ULTRA-THINK MASTERPIECE - 3-SPUR + JUMP/DUCK SYSTEM!
                 
                 // Check if landmarks exist
                 if (!landmarks || landmarks.length === 0) {
@@ -1095,47 +1095,85 @@
                     return 'NONE';
                 }
                 
-                // 🎯 PERFEKTE BOUNDARIES FÜR INTUITIVE STEUERUNG
-                const LEFT_BOUNDARY = 0.45;   // 45% - gut erreichbar
-                const RIGHT_BOUNDARY = 0.55;  // 55% - gut erreichbar  
-                const UP_BOUNDARY = 0.3;      // 30% - ERWEITERT für besseres Jump (war 35%)
-                const DOWN_BOUNDARY = 0.7;    // 70% - ERWEITERT für besseres Duck (war 65%)
+                // 🎯 REVOLUTIONÄRES 3-SPUR BOUNDARY SYSTEM
+                const LEFT_LANE_BOUNDARY = 0.35;    // 0% - 35% = LEFT LANE
+                const RIGHT_LANE_BOUNDARY = 0.65;   // 65% - 100% = RIGHT LANE
+                                                     // 35% - 65% = MIDDLE LANE (30% breit!)
                 
-                let gesture = 'NONE';
-                const avgEyeY = (leftEye.y + rightEye.y) / 2;
+                // 🎯 VERTIKALE BOUNDARIES (Jump/Duck unabhängig von Spur!)
+                const UP_BOUNDARY = 0.25;      // 25% - mehr Sensitivität für Jump
+                const DOWN_BOUNDARY = 0.75;    // 75% - mehr Sensitivität für Duck
                 
-                // 🎯 KAMERA-SPIEGEL-KORREKTUR: Intuitive Richtungen!
-                if (leftEye.x < LEFT_BOUNDARY) {
-                    gesture = 'MOVE_RIGHT';  // 🔄 Kopf links = Spieler rechts (intuitiv!)
-                }
-                else if (rightEye.x > RIGHT_BOUNDARY) {
-                    gesture = 'MOVE_LEFT';   // 🔄 Kopf rechts = Spieler links (intuitiv!)
-                }
-                else if (avgEyeY < UP_BOUNDARY) {
-                    gesture = 'JUMP';
-                }
-                else if (avgEyeY > DOWN_BOUNDARY) {
-                    gesture = 'DUCK';
+                // Calculate average positions
+                const avgEyeX = (leftEye.x + rightEye.x) / 2;  // Horizontale Position
+                const avgEyeY = (leftEye.y + rightEye.y) / 2;  // Vertikale Position
+                
+                // 🚀 STEP 1: BESTIMME TARGET LANE (0=Links, 1=Mitte, 2=Rechts)
+                let targetLane = 1; // Default: Middle Lane
+                if (avgEyeX < LEFT_LANE_BOUNDARY) {
+                    targetLane = 0; // Left Lane
+                } else if (avgEyeX > RIGHT_LANE_BOUNDARY) {
+                    targetLane = 2; // Right Lane
                 }
                 
-                // Log nur wenn Gesture erkannt wird
-                if (gesture !== 'NONE') {
-                    console.log('🎯 RAW GESTURE:', gesture, {
-                        leftEye: leftEye.x.toFixed(3),
-                        rightEye: rightEye.x.toFixed(3), 
-                        avgEyeY: avgEyeY.toFixed(3)
-                    });
+                // 🚀 STEP 2: BESTIMME VERTIKALE ACTION (unabhängig von Spur!)
+                let verticalAction = 'NONE';
+                if (avgEyeY < UP_BOUNDARY) {
+                    verticalAction = 'JUMP';
+                } else if (avgEyeY > DOWN_BOUNDARY) {
+                    verticalAction = 'DUCK';
                 }
+                
+                // 🚀 STEP 3: BESTIMME AKTUELLE SPIELER LANE
+                const currentLane = gameState ? gameState.playerLane : 1; // Default Middle
+                
+                // 🚀 STEP 4: BERECHNE FINALE GESTURE
+                let finalGesture = this.calculateFinalGesture(targetLane, currentLane, verticalAction);
+                
+                // 🔍 ULTRA-VERBOSE DEBUG LOGGING
+                console.log('🎯 GESTURE ANALYSIS:', {
+                    avgEyeX: avgEyeX.toFixed(3),
+                    avgEyeY: avgEyeY.toFixed(3),
+                    targetLane: targetLane,
+                    currentLane: currentLane,
+                    verticalAction: verticalAction,
+                    finalGesture: finalGesture,
+                    boundaries: {
+                        leftLane: avgEyeX < LEFT_LANE_BOUNDARY,
+                        rightLane: avgEyeX > RIGHT_LANE_BOUNDARY,
+                        jump: avgEyeY < UP_BOUNDARY,
+                        duck: avgEyeY > DOWN_BOUNDARY
+                    }
+                });
                 
                 // 🎯 INTELLIGENTES SMOOTHING SYSTEM
-                const finalGesture = this.applySmoothing(gesture);
+                const smoothedGesture = this.applySmoothing(finalGesture);
                 
-                // Log nur wenn Final-Gesture sich ändert
-                if (finalGesture !== this.lastGesture && finalGesture !== 'NONE') {
-                    console.log('✨ FINAL GESTURE:', finalGesture);
+                // Log final result
+                if (smoothedGesture !== this.lastGesture && smoothedGesture !== 'NONE') {
+                    console.log('✨ FINAL SMOOTHED GESTURE:', smoothedGesture);
                 }
                 
-                return finalGesture;
+                return smoothedGesture;
+            }
+            
+            calculateFinalGesture(targetLane, currentLane, verticalAction) {
+                // 🎯 PRIORITÄTS-SYSTEM: Vertikale Aktionen haben Vorrang!
+                if (verticalAction === 'JUMP' || verticalAction === 'DUCK') {
+                    return verticalAction; // Jump/Duck sofort ausführen!
+                }
+                
+                // 🎯 HORIZONTALE BEWEGUNG: Nur wenn unterschiedliche Lane
+                if (targetLane !== currentLane) {
+                    if (targetLane < currentLane) {
+                        return 'MOVE_LEFT';   // Zu linker Lane
+                    } else if (targetLane > currentLane) {
+                        return 'MOVE_RIGHT';  // Zu rechter Lane
+                    }
+                }
+                
+                // 🎯 KEINE BEWEGUNG NÖTIG
+                return 'NONE'; // Bereits in korrekter Lane
             }
             
             applySmoothing(rawGesture) {
@@ -8418,13 +8456,20 @@
         }
         
         function handleGestureInput(gesture) {
-            // 🎯 INTELLIGENTE GAME-STATE INTEGRATION
+            // 🎯 INTELLIGENTE GAME-STATE INTEGRATION mit 3-SPUR-SYSTEM
             const isInGame = gameState && gameState.isPlaying;
             const isGestureTestMode = !isInGame; // Test-Mode wenn Spiel nicht läuft
+            const currentLane = gameState ? gameState.playerLane : 1;
+            const laneNames = ['LEFT', 'MIDDLE', 'RIGHT'];
             
-            console.log('🎯 GESTURE DETECTED:', gesture, 'GameState:', isInGame ? 'PLAYING' : 'TEST_MODE');
+            console.log('🚀 3-SPUR GESTURE SYSTEM:', {
+                gesture: gesture,
+                gameState: isInGame ? 'PLAYING' : 'TEST_MODE',
+                currentLane: currentLane,
+                currentLaneName: laneNames[currentLane] || 'UNKNOWN'
+            });
             
-            // 🧪 TEST-MODE: Visual Feedback für Gesture Testing
+            // 🧪 TEST-MODE: Erweiterte Visual Feedback für 3-Spur Testing
             if (isGestureTestMode && gesture !== 'NONE') {
                 const colors = {
                     'MOVE_LEFT': 'linear-gradient(45deg, #0066ff, #004499)',
@@ -8434,14 +8479,18 @@
                 };
                 document.body.style.background = colors[gesture] || 'white';
                 
-                // Alert nur im Debug-Mode
+                // Enhanced Alert mit Lane-Info im Debug-Mode
                 if (!PRODUCTION_MODE) {
                     setTimeout(() => {
-                        alert('🎯 GESTURE TEST: ' + gesture + '\n\n' +
-                              (gesture === 'MOVE_LEFT' ? 'Kopf RECHTS → Spieler LINKS (intuitiv!)' :
-                               gesture === 'MOVE_RIGHT' ? 'Kopf LINKS → Spieler RECHTS (intuitiv!)' :
-                               gesture === 'JUMP' ? 'Kopf HOCH → SPRUNG' :
-                               gesture === 'DUCK' ? 'Kopf RUNTER → DUCKEN' : gesture));
+                        const gestureDescriptions = {
+                            'MOVE_LEFT': `🎯 SPURWECHSEL NACH LINKS!\nVon ${laneNames[currentLane]} → ${laneNames[Math.max(0, currentLane-1)]}`,
+                            'MOVE_RIGHT': `🎯 SPURWECHSEL NACH RECHTS!\nVon ${laneNames[currentLane]} → ${laneNames[Math.min(2, currentLane+1)]}`,
+                            'JUMP': '🦘 SPRUNG! (funktioniert in jeder Spur)',
+                            'DUCK': '🦆 DUCKEN! (funktioniert in jeder Spur)'
+                        };
+                        
+                        alert('🚀 3-SPUR GESTURE TEST: ' + gesture + '\n\n' + 
+                              (gestureDescriptions[gesture] || gesture));
                     }, 100);
                 }
                 
@@ -8466,39 +8515,53 @@
             switch (gesture) {
                 case 'MOVE_LEFT':
                     if (!PRODUCTION_MODE) {
-                        console.log('🚗 SPURWECHSEL DEBUG - MOVE_LEFT:', {
+                        const laneNames = ['LEFT', 'MIDDLE', 'RIGHT'];
+                        console.log('🚗 3-SPUR SPURWECHSEL DEBUG - MOVE_LEFT:', {
                             currentLane: gameState.playerLane,
+                            currentLaneName: laneNames[gameState.playerLane],
                             canMoveLeft: gameState.playerLane > 0,
-                            targetLane: gameState.playerLane - 1
+                            targetLane: gameState.playerLane - 1,
+                            targetLaneName: laneNames[Math.max(0, gameState.playerLane - 1)]
                         });
                     }
                     if (gameState.playerLane > 0) {
+                        const oldLane = gameState.playerLane;
                         gameState.playerLane--;
                         updatePlayerPosition();
-                        if (!PRODUCTION_MODE) console.log('✅ MOVED LEFT to lane:', gameState.playerLane);
+                        if (!PRODUCTION_MODE) {
+                            const laneNames = ['LEFT', 'MIDDLE', 'RIGHT'];
+                            console.log(`✅ 3-SPUR SUCCESS: ${laneNames[oldLane]} → ${laneNames[gameState.playerLane]} (Lane ${gameState.playerLane})`);
+                        }
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     } else {
-                        if (!PRODUCTION_MODE) console.log('❌ CANNOT MOVE LEFT - already at leftmost lane');
+                        if (!PRODUCTION_MODE) console.log('❌ CANNOT MOVE LEFT - already at leftmost lane (LEFT)');
                     }
                     break;
                     
                 case 'MOVE_RIGHT':
                     if (!PRODUCTION_MODE) {
-                        console.log('🚗 SPURWECHSEL DEBUG - MOVE_RIGHT:', {
+                        const laneNames = ['LEFT', 'MIDDLE', 'RIGHT'];
+                        console.log('🚗 3-SPUR SPURWECHSEL DEBUG - MOVE_RIGHT:', {
                             currentLane: gameState.playerLane,
+                            currentLaneName: laneNames[gameState.playerLane],
                             canMoveRight: gameState.playerLane < 2,
-                            targetLane: gameState.playerLane + 1
+                            targetLane: gameState.playerLane + 1,
+                            targetLaneName: laneNames[Math.min(2, gameState.playerLane + 1)]
                         });
                     }
                     if (gameState.playerLane < 2) {
+                        const oldLane = gameState.playerLane;
                         gameState.playerLane++;
                         updatePlayerPosition();
-                        if (!PRODUCTION_MODE) console.log('✅ MOVED RIGHT to lane:', gameState.playerLane);
+                        if (!PRODUCTION_MODE) {
+                            const laneNames = ['LEFT', 'MIDDLE', 'RIGHT'];
+                            console.log(`✅ 3-SPUR SUCCESS: ${laneNames[oldLane]} → ${laneNames[gameState.playerLane]} (Lane ${gameState.playerLane})`);
+                        }
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     } else {
-                        if (!PRODUCTION_MODE) console.log('❌ CANNOT MOVE RIGHT - already at rightmost lane');
+                        if (!PRODUCTION_MODE) console.log('❌ CANNOT MOVE RIGHT - already at rightmost lane (RIGHT)');
                     }
                     break;
                     

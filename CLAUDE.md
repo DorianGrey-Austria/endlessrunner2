@@ -39,8 +39,9 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.3.16-DEPLOYED (Latest)
+### V5.3.23-DEPLOYED (Latest)
 - **Three.js v0.150.0**: Stable version with WebGL compatibility
+- **MediaPipe Gesture Control**: Face-based gesture detection for all 6 movements
 - **Shield Power-Up**: 3 seconds protection with visual dome
 - **Magnet Power-Up**: Attracts collectibles from all lanes (golden ring)
 - **Rainbow World**: Round 2 with psychedelic portal
@@ -64,6 +65,34 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 - **Score Cap**: 999,999
 - **Win Condition**: 30 kiwis collected
 
+## Gesture Control System
+
+### MediaPipe Integration
+- **Face Mesh Detection**: Uses MediaPipe FaceMesh for real-time gesture recognition
+- **6 Movement Types**: MOVE_LEFT, MOVE_RIGHT, JUMP, DUCK, NONE, with intelligent smoothing
+- **Camera Requirements**: HTTPS required, Chrome/Edge preferred
+- **Boundaries**: Configurable detection thresholds for optimal responsiveness
+- **Debug Panel**: Visual feedback for gesture detection and calibration
+
+### Gesture Control Commands
+```javascript
+// Toggle gesture control
+gestureController.start();  // Initialize MediaPipe and camera
+gestureController.stop();   // Stop tracking and release camera
+
+// Gesture detection boundaries (normalized coordinates 0-1)
+LEFT_BOUNDARY: 0.35   // Head right = player moves left (mirrored)
+RIGHT_BOUNDARY: 0.65  // Head left = player moves right (mirrored) 
+UP_BOUNDARY: 0.55     // Head up = jump
+DOWN_BOUNDARY: 0.7    // Head down = duck
+```
+
+### Troubleshooting Gesture Control
+- **Camera Permission**: Check browser allows camera access
+- **HTTPS Required**: Local dev needs `https://` or use deployed version
+- **Detection Issues**: Adjust boundaries in GestureController class
+- **Performance**: Uses intelligent smoothing to prevent gesture flicker
+
 ## Quick Task Reference
 
 ### Adding New Obstacles
@@ -73,8 +102,8 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 4. Test spawn patterns
 
 ### Version Update Process
-1. Search for current version (e.g., `V5.3.16`) in `SubwayRunner/index.html`
-2. Update version string in HTML
+1. Search for current version (e.g., `V5.3.23`) in `SubwayRunner/index.html`
+2. Update version string in HTML (both title and UI element)
 3. Update CLAUDE.md version tracking
 4. Commit with format: `🎮 Version X.Y.Z: [feature]`
 
@@ -144,10 +173,12 @@ npm run predeploy  # Runs tests before deployment
 ## Important Files
 
 - **CLAUDE_CODE_RULES.md**: Universal deployment rules
-- **SubwayRunner/index.html**: Main production game
+- **SubwayRunner/index.html**: Main production game (~5000+ lines)
+- **SubwayRunner/GESTURE_TROUBLESHOOTING_COMPLETE.md**: Gesture control debugging
 - **SubwayRunner/DEBUG_GUIDE.md**: Common issues and solutions
 - **.github/workflows/hostinger-deploy.yml**: Auto-deployment config
 - **SubwayRunner/test-runner.js**: Main test suite
+- **SubwayRunner/*.backup**: Rollback versions for emergency recovery
 
 ## Development Workflow
 
@@ -159,7 +190,9 @@ npm run predeploy  # Runs tests before deployment
 ### NEVER
 - ❌ Deploy without testing
 - ❌ Deploy with known errors
-- ❌ Use Safari for testing
+- ❌ Use Safari for testing (breaks MediaPipe)
 - ❌ Skip version increments
 - ❌ Modify GameCore system (removed in V5.3.9)
 - ❌ Change Three.js version from v0.150.0
+- ❌ Change MediaPipe gesture detection boundaries without testing
+- ❌ Remove HTTPS requirement (breaks camera access)
