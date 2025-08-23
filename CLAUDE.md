@@ -27,6 +27,11 @@ python -m http.server 8001  # Serve locally at localhost:8001
 # Testing
 npm run test                 # Run test-runner.js (syntax, structure, performance, logic)
 npx playwright test         # Run browser automation tests
+node test-live-game.js      # Test live browser gameplay
+
+# Linting & Type Checking (if available)
+npm run lint                # ESLint checks
+npm run typecheck           # TypeScript type checking (for React components)
 
 # Deployment (automatic via GitHub Actions)
 git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
@@ -34,10 +39,11 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.2.1-POWER-UPS-PERFECTED (Latest)
-- **Shield Power-Up**: 3 Sekunden Schutz mit visueller Kuppel
-- **Magnet Power-Up**: Zieht Collectibles aus allen Lanes an (goldener Ring)
-- **Rainbow World**: Round 2 mit psychedelischem Portal
+### V5.3.16-DEPLOYED (Latest)
+- **Three.js v0.150.0**: Stable version with WebGL compatibility
+- **Shield Power-Up**: 3 seconds protection with visual dome
+- **Magnet Power-Up**: Attracts collectibles from all lanes (golden ring)
+- **Rainbow World**: Round 2 with psychedelic portal
 - **10 Unique Levels**: City, Space, Jungle, Ice, Crystal, etc.
 - **5 Characters**: NEON-7, Commander Void, Lara Thornwood, Bjorn Frostbeard, Seraphina Prism
 
@@ -45,10 +51,11 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ### SubwayRunner Structure
 - **Production**: Single `index.html` file (~5000+ lines embedded JS)
-- **Core Systems**: GameCore, LevelManager, Level modules
+- **Core Systems**: Single init() function, no GameCore system
 - **Game Loop**: `animate()` function with state management
 - **Collision**: 3D bounding box with 0.2-0.3 tolerance
 - **Performance**: Object pooling, frustum culling, 60 FPS target
+- **Three.js**: Loaded from unpkg CDN (v0.150.0)
 
 ### Key Constants
 - **Base Speed**: 0.12 (PERFEKT - nicht ändern!)
@@ -66,7 +73,7 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 4. Test spawn patterns
 
 ### Version Update Process
-1. Search for current version (e.g., `V5.2.1`) in `SubwayRunner/index.html`
+1. Search for current version (e.g., `V5.3.16`) in `SubwayRunner/index.html`
 2. Update version string in HTML
 3. Update CLAUDE.md version tracking
 4. Commit with format: `🎮 Version X.Y.Z: [feature]`
@@ -74,15 +81,17 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 ### Emergency Rollback
 ```bash
 ls SubwayRunner/*.backup  # Find backup version
-cp SubwayRunner/index.html.V5.1.backup SubwayRunner/index.html
-git add . && git commit -m "🚨 ROLLBACK to V5.1" && git push
+cp SubwayRunner/index.html.BASISVERSION5.backup SubwayRunner/index.html
+git add . && git commit -m "🚨 ROLLBACK to stable version" && git push
 ```
 
 ## Testing & Debugging
 
 ### Test Files
-- `test-runner.js`: Custom test suite
+- `test-runner.js`: Custom test suite (syntax, structure, performance, logic)
 - `tests/game.test.js`: Playwright browser tests
+- `test-live-game.js`: Live browser gameplay testing
+- `quick-critical-test.js`: Quick critical function tests
 - Multiple `.backup` files for rollback
 
 ### Pre-deployment Validation
@@ -97,6 +106,7 @@ npm run predeploy  # Runs tests before deployment
 - **Workflow**: `.github/workflows/hostinger-deploy.yml`
 - **Process**: Copies index.html → deploy/ → FTP to Hostinger
 - **Secrets**: FTP_SERVER, FTP_USERNAME, FTP_PASSWORD (in repo settings)
+- **Security**: HTTPS forced, CSP headers, compression enabled
 
 ## Critical Lessons Learned
 
@@ -137,6 +147,7 @@ npm run predeploy  # Runs tests before deployment
 - **SubwayRunner/index.html**: Main production game
 - **SubwayRunner/DEBUG_GUIDE.md**: Common issues and solutions
 - **.github/workflows/hostinger-deploy.yml**: Auto-deployment config
+- **SubwayRunner/test-runner.js**: Main test suite
 
 ## Development Workflow
 
@@ -150,3 +161,5 @@ npm run predeploy  # Runs tests before deployment
 - ❌ Deploy with known errors
 - ❌ Use Safari for testing
 - ❌ Skip version increments
+- ❌ Modify GameCore system (removed in V5.3.9)
+- ❌ Change Three.js version from v0.150.0

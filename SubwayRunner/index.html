@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.17-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.18-THREE-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.17-DEPLOYED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.18-DEPLOYED</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -862,7 +862,7 @@
                     onGestureDetected: options.onGestureDetected || (() => {}),
                     onStatsUpdate: options.onStatsUpdate || (() => {}),
                     onError: options.onError || (() => {}),
-                    onCalibrationComplete: options.onCalibrationComplete || (() => {}),
+                    // No calibration callbacks needed for simple eye tracking
                     videoElement: options.videoElement || null,
                     canvasElement: options.canvasElement || null,
                     debugMode: options.debugMode || false,
@@ -875,30 +875,13 @@
                 this.canvas = null;
                 this.ctx = null;
                 
-                // Calibration data
-                this.calibrationData = {
-                    neutralYaw: 0,
-                    neutralPitch: 0,
-                    neutralRoll: 0,
-                    isCalibrated: false,
-                    samples: [],
-                    sampleCount: 30
-                };
+                // No calibration needed for simple eye tracking!
                 
-                // Gesture thresholds (in degrees)
-                this.thresholds = {
-                    yawLeft: -15,    // Head turn left
-                    yawRight: 15,    // Head turn right
-                    pitchUp: 20,     // Head tilt up
-                    pitchDown: -20,  // Head tilt down
-                    eyeGazeLateral: 0.3,  // Eye gaze threshold
-                    confidenceMin: 0.7
-                };
+                // No complex thresholds needed for simple eye tracking!
                 
-                // Gesture history for smoothing
-                this.gestureHistory = [];
-                this.historySize = 3;
+                // Simple gesture tracking  
                 this.lastGesture = 'NONE';
+                this.pendingGesture = 'NONE'; // For simple gesture smoothing
                 this.gestureCooldown = 0;
                 
                 // Performance stats
@@ -1001,14 +984,7 @@
                 console.log('🛑 Gesture tracking stopped');
             }
             
-            startCalibration() {
-                this.calibrationData.samples = [];
-                this.calibrationData.isCalibrated = false;
-                
-                setTimeout(() => {
-                    console.log('📐 Starting calibration - look straight ahead');
-                }, 1000);
-            }
+            // No calibration needed for simple eye tracking!
             
             onResults(results) {
                 if (!this.isRunning) return;
@@ -1032,15 +1008,10 @@
                         this.stats.pitch = pose.pitch;
                         this.stats.roll = pose.roll;
                         
-                        // Handle calibration
-                        if (!this.calibrationData.isCalibrated) {
-                            this.updateCalibration(pose);
-                        } else {
-                            // Detect gesture based on calibrated pose
-                            const gesture = this.detectGesture(pose, eyeGaze);
-                            if (gesture !== this.lastGesture) {
-                                this.handleGesture(gesture);
-                            }
+                        // 🎯 Direct eye tracking - no calibration needed!
+                        const gesture = this.detectGesture(landmarks);
+                        if (gesture !== this.lastGesture) {
+                            this.handleGesture(gesture);
                         }
                         
                         // Draw visualization
@@ -1096,95 +1067,47 @@
                 return { x: 0, y: 0 };
             }
             
-            updateCalibration(pose) {
-                this.calibrationData.samples.push({
-                    yaw: pose.yaw,
-                    pitch: pose.pitch,
-                    roll: pose.roll
-                });
-                
-                // Update calibration progress bar
-                const progress = (this.calibrationData.samples.length / this.calibrationData.sampleCount) * 100;
-                const calibFill = document.getElementById('calibrationFill');
-                if (calibFill) {
-                    calibFill.style.width = `${progress}%`;
-                }
-                
-                if (this.calibrationData.samples.length >= this.calibrationData.sampleCount) {
-                    // Calculate average neutral position
-                    const avgYaw = this.calibrationData.samples.reduce((sum, s) => sum + s.yaw, 0) / this.calibrationData.samples.length;
-                    const avgPitch = this.calibrationData.samples.reduce((sum, s) => sum + s.pitch, 0) / this.calibrationData.samples.length;
-                    const avgRoll = this.calibrationData.samples.reduce((sum, s) => sum + s.roll, 0) / this.calibrationData.samples.length;
-                    
-                    this.calibrationData.neutralYaw = avgYaw;
-                    this.calibrationData.neutralPitch = avgPitch;
-                    this.calibrationData.neutralRoll = avgRoll;
-                    this.calibrationData.isCalibrated = true;
-                    
-                    // Hide calibration progress
-                    const calibProgress = document.getElementById('calibrationProgress');
-                    if (calibProgress) {
-                        setTimeout(() => {
-                            calibProgress.style.display = 'none';
-                        }, 500);
-                    }
-                    
-                    console.log('✅ Calibration complete');
-                    this.options.onCalibrationComplete();
-                }
-            }
+            // updateCalibration removed - no calibration needed!
             
-            detectGesture(pose, eyeGaze) {
-                // Apply calibration offset
-                const calibratedYaw = pose.yaw - this.calibrationData.neutralYaw;
-                const calibratedPitch = pose.pitch - this.calibrationData.neutralPitch;
+            detectGesture(landmarks) {
+                // 🎯 ULTRA-SIMPLE EYE TRACKING LOGIC
+                // MediaPipe landmarks are normalized [0,1]
+                const leftEye = landmarks[33];   // Left eye landmark
+                const rightEye = landmarks[263]; // Right eye landmark
                 
-                // Apply sensitivity
-                const yaw = calibratedYaw * this.options.sensitivity;
-                const pitch = calibratedPitch * this.options.sensitivity;
+                // Eye-based boundary detection (no calibration needed!)
+                const LEFT_BOUNDARY = 0.25;   // 25% from left edge  
+                const RIGHT_BOUNDARY = 0.75;  // 25% from right edge
+                const UP_BOUNDARY = 0.35;     // 35% from top
+                const DOWN_BOUNDARY = 0.65;   // 35% from bottom
                 
-                // Detect gesture based on head movement only (no eye tracking required)
                 let gesture = 'NONE';
                 
-                // Head left = Move left
-                if (yaw < this.thresholds.yawLeft) {
+                // Calculate average eye Y position for vertical movement
+                const avgEyeY = (leftEye.y + rightEye.y) / 2;
+                
+                // 🎯 SIMPLE LOGIC: Eye position determines movement
+                if (leftEye.x < LEFT_BOUNDARY || rightEye.x < LEFT_BOUNDARY) {
                     gesture = 'MOVE_LEFT';
                 }
-                // Head right = Move right
-                else if (yaw > this.thresholds.yawRight) {
-                    gesture = 'MOVE_RIGHT';
+                else if (leftEye.x > RIGHT_BOUNDARY || rightEye.x > RIGHT_BOUNDARY) {
+                    gesture = 'MOVE_RIGHT'; 
                 }
-                // Head up = Jump
-                else if (pitch > this.thresholds.pitchUp) {
+                else if (avgEyeY < UP_BOUNDARY) {
                     gesture = 'JUMP';
                 }
-                // Head down = Duck
-                else if (pitch < this.thresholds.pitchDown) {
+                else if (avgEyeY > DOWN_BOUNDARY) {
                     gesture = 'DUCK';
                 }
                 
-                // Smooth gesture with history
-                this.gestureHistory.push(gesture);
-                if (this.gestureHistory.length > this.historySize) {
-                    this.gestureHistory.shift();
+                // Simple smoothing: only change gesture if different for 2 consecutive frames
+                if (gesture === this.lastGesture || gesture === 'NONE') {
+                    return gesture;
+                } else {
+                    // Store potential new gesture for next frame verification
+                    this.pendingGesture = gesture;
+                    return this.lastGesture;
                 }
-                
-                // Return most common gesture in history
-                const gestureCounts = {};
-                this.gestureHistory.forEach(g => {
-                    gestureCounts[g] = (gestureCounts[g] || 0) + 1;
-                });
-                
-                let maxCount = 0;
-                let finalGesture = 'NONE';
-                for (const [g, count] of Object.entries(gestureCounts)) {
-                    if (count > maxCount) {
-                        maxCount = count;
-                        finalGesture = g;
-                    }
-                }
-                
-                return finalGesture;
             }
             
             handleGesture(gesture) {
@@ -1216,7 +1139,7 @@
                 
                 // Draw face mesh points
                 if (landmarks && landmarks.length > 0) {
-                    this.ctx.fillStyle = this.calibrationData.isCalibrated ? '#00ff88' : '#ffaa00';
+                    this.ctx.fillStyle = '#00ff88'; // Always ready - no calibration needed!
                     
                     // Draw key landmarks
                     const keyPoints = [1, 33, 263, 61, 291]; // Nose, eyes, mouth corners
@@ -1238,11 +1161,8 @@
                 this.ctx.fillText(`FPS: ${this.stats.fps}`, 5, 15);
                 this.ctx.fillText(`Gesture: ${this.lastGesture}`, 5, 30);
                 
-                if (!this.calibrationData.isCalibrated) {
-                    this.ctx.fillStyle = '#ffaa00';
-                    this.ctx.fillText('Calibrating...', 5, 45);
-                    this.ctx.fillText(`${this.calibrationData.samples.length}/${this.calibrationData.sampleCount}`, 5, 60);
-                }
+                this.ctx.fillStyle = '#00ff88';
+                this.ctx.fillText('Eye Tracking: ACTIVE', 5, 45);
             }
         }
         
@@ -8366,10 +8286,6 @@
                                 onGestureDetected: handleGestureInput,
                                 onStatsUpdate: updateGestureStats,
                                 onError: handleGestureError,
-                                onCalibrationComplete: () => {
-                                    console.log('✅ Gesture calibration complete');
-                                    gestureStatusText.textContent = 'Kalibriert - Bewege deinen Kopf!';
-                                },
                                 debugMode: true, // Enable debug for testing
                                 sensitivity: 1.0
                             });
@@ -8529,7 +8445,7 @@
             console.log('Canvas Element:', document.getElementById('gestureCanvas'));
             console.log('Video Element:', document.getElementById('gestureVideo'));
             console.log('Status Element:', document.getElementById('gestureStatus'));
-            console.log('Module Loaded:', !!window.GestureControllerProjector);
+            console.log('Simple Eye Tracking Active:', true);
             console.log('Controller Instance:', gestureController);
             console.log('Gesture Enabled:', gestureEnabled);
             
