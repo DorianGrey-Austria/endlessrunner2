@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.8-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.10-GAMECORE-REMOVED</title>
     <script src="https://unpkg.com/three@0.158.0/dist/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -1271,18 +1271,20 @@
         // ============================================
         console.log('Defining core game functions early...');
         
-        // Global game core object to track initialization
-        // DISABLED to prevent double initialization
+        // GameCore system REMOVED - using single init() only
+        /* DISABLED GameCore to fix WebGL issues
         window.gameCore = {
-            initialized: true, // Mark as true to prevent double init
+            initialized: true,
             scene: null,
             camera: null,
             renderer: null,
             player: null,
             gameState: null
         };
+        */
         
-        // Minimal startGameInternal - defined EARLY to ensure availability
+        // Minimal startGameInternal - DISABLED (using real implementation)
+        /* DISABLED - replaced by real startGameInternal at line 6027
         window.startGameInternal = async function() {
             console.log('startGameInternal called (early definition)');
             
@@ -1328,8 +1330,10 @@
                 throw error;
             }
         };
+        */
         
-        // Minimal init function - defined EARLY
+        // Minimal init function - DISABLED
+        /*
         async function initMinimal() {
             console.log('initMinimal: Starting minimal initialization...');
             
@@ -1415,8 +1419,9 @@
             }
         }
         
-        // Minimal animation loop
+        // Minimal animation loop - DISABLED
         function animateMinimal() {
+        /*
             window.gameCore.animationId = requestAnimationFrame(animateMinimal);
             
             // Rotate player for visual feedback
@@ -1429,13 +1434,15 @@
                 window.gameCore.renderer.render(window.gameCore.scene, window.gameCore.camera);
             }
         }
+        */
         
-        // Helper function to load Three.js
+        // Helper function to load Three.js - DISABLED (Three.js loads via script tag)
+        /*
         async function loadThreeJS() {
             return new Promise((resolve, reject) => {
                 console.log('Attempting to load Three.js...');
                 const script = document.createElement('script');
-                script.src = 'https://unpkg.com/three@0.158.0/build/three.min.js';
+                script.src = 'https://unpkg.com/three@0.158.0/dist/three.min.js';
                 script.onload = () => {
                     console.log('Three.js loaded successfully');
                     resolve();
@@ -1447,6 +1454,7 @@
                 document.head.appendChild(script);
             });
         }
+        */
         
         // Error recovery function
         function showErrorRecovery(error) {
