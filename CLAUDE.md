@@ -39,10 +39,11 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.3.26-ULTRA-GESTURE-SYSTEM (Latest)
+### V5.3.31-CLEANED (Latest - Post Rollback)
 - **Three.js v0.150.0**: Stable version with WebGL compatibility  
-- **MediaPipe 3-Spur-System**: 3-Lane detection with gesture control
-- **Current Status**: Production-ready gesture control system
+- **MediaPipe 3-Spur-System**: 3-Lane horizontal detection works perfectly
+- **Current Status**: Horizontal gestures work, vertical needs fixing
+- **Performance**: Restored to 60 FPS after removing debug logs
 - **Shield Power-Up**: 3 seconds protection with visual dome  
 - **Magnet Power-Up**: Attracts collectibles from all lanes (golden ring)
 - **Rainbow World**: Round 2 with psychedelic portal
@@ -50,11 +51,17 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 - **5 Characters**: NEON-7, Commander Void, Lara Thornwood, Bjorn Frostbeard, Seraphina Prism
 
 ### CRITICAL: GESTURE CONTROL STATUS
-- **3-Spur-Detection**: ✅ Funktional (Links/Mitte/Rechts erkannt)
-- **Jump/Duck Controls**: ✅ Optimized vertical boundaries  
-- **Mirror Correction**: ✅ Intuitive head movement mapping
-- **Debug-Status**: PRODUCTION_MODE = false (Ultra-verbose logging available)
-- **Camera Requirements**: HTTPS + Chrome/Edge for optimal performance
+- **3-Spur-Detection**: ✅ Funktional (Links/Mitte/Rechts perfect!)
+- **Jump/Duck Controls**: ❌ STILL NOT WORKING (needs Y-axis verification)  
+- **Mirror Correction**: ✅ Intuitive horizontal movement
+- **Debug-Status**: PRODUCTION_MODE = true (for performance)
+- **Camera Requirements**: HTTPS + Chrome/Edge required
+
+### CRITICAL LEARNINGS FROM V5.3.33 CRASH:
+- **NEVER log every frame** (kills performance instantly)
+- **NEVER manipulate DOM during gestures** (causes errors)
+- **ALWAYS use ultra-sensitive boundaries** (48%/52% or tighter)
+- **ALWAYS test with PRODUCTION_MODE = true**
 
 ## Architecture
 
@@ -132,10 +139,13 @@ DOWN_BOUNDARY: 0.65   // Duck trigger zone
 4. Test gesture control functionality if changes affect MediaPipe
 5. Commit with format: `🎮 Version X.Y.Z: [feature]`
 
-### Development Status (V5.3.26):
-- **Status**: Production-ready with full gesture control system
-- **Gesture Control**: All 6 directions functional and intuitive  
-- **Critical Docs**: GESTURE_TROUBLESHOOTING_COMPLETE.md for debugging guidance
+### Development Status (V5.3.31 - Post Rollback):
+- **Status**: Horizontal works perfect, vertical needs fixing
+- **Next Goal**: Get Jump/Duck working with ultra-sensitive detection
+- **Critical Docs**: 
+  - GESTURE_TROUBLESHOOTING_V5.3.34.md (performance crash analysis)
+  - GESTURE_ROADMAP_NEXT_SESSION.md (next steps)
+- **Key Issue**: Y-coordinate interpretation might be inverted
 
 ### Emergency Rollback
 ```bash

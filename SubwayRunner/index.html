@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.32-PERFECT-GESTURE-OPUS</title>
+    <title>Subway Runner 3D - V5.3.36-Y-AXIS-TEST</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -856,7 +856,7 @@
         // ============================================
         // Production Mode Configuration
         // ============================================
-        const PRODUCTION_MODE = false; // 🔧 DEBUGGING AKTIVIERT für Gesture-Troubleshooting
+        const PRODUCTION_MODE = true; // 🚀 PRODUCTION MODE - No debug logs for performance
         
         // ============================================
         // Gesture Controller with MediaPipe FaceMesh
@@ -1031,13 +1031,7 @@
                         
                         // 🚀 OPUS FIX: Always handle vertical gestures, check change only for horizontal
                         if (gesture === 'JUMP' || gesture === 'DUCK') {
-                            console.log('🎯 VERTICAL GESTURE FLOW:', {
-                                detected: gesture,
-                                lastGesture: this.lastGesture,
-                                cooldown: this.gestureCooldown,
-                                willHandle: true,
-                                timestamp: performance.now()
-                            });
+                            // REMOVED: Performance-killing debug log that ran 60x/second
                             this.handleGesture(gesture);
                         } else if (gesture !== this.lastGesture) {
                             this.handleGesture(gesture);
@@ -1099,11 +1093,10 @@
             // updateCalibration removed - no calibration needed!
             
             detectGesture(landmarks) {
-                // 🚀 SENIOR DEVELOPER ULTRA-THINK MASTERPIECE - 3-SPUR + JUMP/DUCK SYSTEM!
+                // 🚀 V5.3.36 - ULTRA-SIMPLE Y-AXIS TEST VERSION
                 
                 // Check if landmarks exist
                 if (!landmarks || landmarks.length === 0) {
-                    console.log('❌ NO LANDMARKS DETECTED');
                     return 'NONE';
                 }
                 
@@ -1112,95 +1105,77 @@
                 const rightEye = landmarks[263]; // Right eye landmark
                 
                 if (!leftEye || !rightEye) {
-                    console.log('❌ Eyes not found in landmarks');
                     return 'NONE';
                 }
                 
-                // 🎯 REVOLUTIONÄRES 3-SPUR BOUNDARY SYSTEM
+                // 🎯 3-LANE BOUNDARIES (WORKING PERFECTLY!)
                 const LEFT_LANE_BOUNDARY = 0.35;    // 0% - 35% = LEFT LANE
                 const RIGHT_LANE_BOUNDARY = 0.65;   // 65% - 100% = RIGHT LANE
-                                                     // 35% - 65% = MIDDLE LANE (30% breit!)
                 
-                // 🎯 VERTIKALE BOUNDARIES (ULTRA-ACCESSIBLE!)
-                const UP_BOUNDARY = 0.40;      // 40% - sehr zugänglich für natürliche Kopfbewegung (JUMP)
-                const DOWN_BOUNDARY = 0.60;    // 60% - sehr zugänglich für natürliche Kopfbewegung (DUCK)
-                
-                // 🎯 TOLERANCE ZONES für smooth state transitions
-                const NEUTRAL_ZONE_MIN = 0.40;  // Neutral-Bereich beginnt bei 40%
-                const NEUTRAL_ZONE_MAX = 0.60;  // Neutral-Bereich endet bei 60%
+                // 🎯 ULTRA-SENSITIVE VERTICAL BOUNDARIES - TEST VERSION
+                const UP_BOUNDARY = 0.49;      // Just 1% above center for JUMP
+                const DOWN_BOUNDARY = 0.51;    // Just 1% below center for DUCK
                 
                 // Calculate average positions
-                const avgEyeX = (leftEye.x + rightEye.x) / 2;  // Horizontale Position
-                const avgEyeY = (leftEye.y + rightEye.y) / 2;  // Vertikale Position
+                const avgEyeX = (leftEye.x + rightEye.x) / 2;
+                const avgEyeY = (leftEye.y + rightEye.y) / 2;
                 
-                // 🎯 MIRROR-KORREKTUR: Intuitive Steuerung (Kopf links = Spieler rechts!)
-                const mirroredEyeX = 1.0 - avgEyeX;  // KRITISCHER FIX für natürliche Steuerung!
+                // 🎯 Y-COORDINATE REALITY CHECK - TESTING INVERSION
+                // MediaPipe standard: Y=0 is top, Y=1 is bottom
+                // So head UP should make Y smaller, head DOWN should make Y bigger
                 
-                // 🚀 STEP 1: BESTIMME TARGET LANE (0=Links, 1=Mitte, 2=Rechts)
+                // Test if Y-axis might need inversion
+                const effectiveY = avgEyeY; // Try without inversion first
+                // const effectiveY = 1.0 - avgEyeY; // Uncomment to test with inversion
+                
+                // Only log Y value changes for debugging (not every frame!)
+                if (!this.lastLoggedY || Math.abs(effectiveY - this.lastLoggedY) > 0.03) {
+                    const direction = this.lastLoggedY ? 
+                        (effectiveY < this.lastLoggedY ? '↑ UP' : '↓ DOWN') : '';
+                    console.log('Y-Test:', effectiveY.toFixed(3), direction,
+                               '| Head movement:', direction === '↑ UP' ? 'Moving UP' : 
+                               direction === '↓ DOWN' ? 'Moving DOWN' : 'Starting');
+                    this.lastLoggedY = effectiveY;
+                }
+                
+                // 🎯 MIRROR CORRECTION for horizontal (working perfectly)
+                const mirroredEyeX = 1.0 - avgEyeX;
+                
+                // HORIZONTAL LANE DETECTION (keep as is - works perfectly)
                 let targetLane = 1; // Default: Middle Lane
                 if (mirroredEyeX < LEFT_LANE_BOUNDARY) {
-                    targetLane = 0; // Kopf links → Lane 0 (LEFT) → Spieler rechts!
+                    targetLane = 0; // LEFT
                 } else if (mirroredEyeX > RIGHT_LANE_BOUNDARY) {
-                    targetLane = 2; // Kopf rechts → Lane 2 (RIGHT) → Spieler links!
+                    targetLane = 2; // RIGHT
                 }
                 
-                // 🚀 STEP 2: SIMPLE VERTIKALE DETECTION (BACK TO BASICS!)
+                // 🎯 ULTRA-SIMPLE VERTICAL DETECTION - Testing with effectiveY
                 let verticalAction = 'NONE';
-                if (avgEyeY < UP_BOUNDARY) {
+                if (effectiveY < UP_BOUNDARY) {
                     verticalAction = 'JUMP';
-                } else if (avgEyeY > DOWN_BOUNDARY) {
+                    console.log('🚀 JUMP DETECTED! Y =', effectiveY.toFixed(3), '< 0.49');
+                } else if (effectiveY > DOWN_BOUNDARY) {
                     verticalAction = 'DUCK';
+                    console.log('🦆 DUCK DETECTED! Y =', effectiveY.toFixed(3), '> 0.51');
                 }
                 
-                // 🚀 STEP 3: BESTIMME AKTUELLE SPIELER LANE
-                const currentLane = gameState ? gameState.playerLane : 1; // Default Middle
-                
-                // 🚀 STEP 4: BERECHNE FINALE GESTURE
-                let finalGesture = this.calculateFinalGesture(targetLane, currentLane, verticalAction);
-                
-                // 👁️ ULTRA-VERBOSE Y-COORDINATE DEBUG
+                // 🚀 DIRECT GESTURE RETURN - NO COMPLEX STATE MANAGEMENT!
+                // Vertical actions have priority (for testing)
                 if (verticalAction !== 'NONE') {
-                    console.log('🎯 VERTICAL MOVEMENT DETECTED:', {
-                        rawEyeY: avgEyeY.toFixed(4),
-                        upBoundary: UP_BOUNDARY,
-                        downBoundary: DOWN_BOUNDARY,
-                        isAboveUpBoundary: avgEyeY < UP_BOUNDARY,
-                        isBelowDownBoundary: avgEyeY > DOWN_BOUNDARY,
-                        detectedAction: verticalAction,
-                        distanceFromUp: (avgEyeY - UP_BOUNDARY).toFixed(4),
-                        distanceFromDown: (DOWN_BOUNDARY - avgEyeY).toFixed(4)
-                    });
+                    return verticalAction;
                 }
                 
-                // 🔍 COMPREHENSIVE GESTURE ANALYSIS
-                console.log('🎯 COMPLETE ANALYSIS:', {
-                    horizontal: {
-                        avgEyeX: avgEyeX.toFixed(3),
-                        mirroredEyeX: mirroredEyeX.toFixed(3),
-                        targetLane: targetLane,
-                        currentLane: currentLane
-                    },
-                    vertical: {
-                        avgEyeY: avgEyeY.toFixed(4),
-                        action: verticalAction,
-                        upBoundaryHit: avgEyeY < UP_BOUNDARY,
-                        downBoundaryHit: avgEyeY > DOWN_BOUNDARY,
-                        inNeutralZone: (avgEyeY >= UP_BOUNDARY && avgEyeY <= DOWN_BOUNDARY)
-                    },
-                    result: {
-                        finalGesture: finalGesture
+                // Horizontal movement (only if different lane)
+                const currentLane = gameState ? gameState.playerLane : 1;
+                if (targetLane !== currentLane) {
+                    if (targetLane < currentLane) {
+                        return 'MOVE_LEFT';
+                    } else if (targetLane > currentLane) {
+                        return 'MOVE_RIGHT';
                     }
-                });
-                
-                // 🎯 INTELLIGENTES SMOOTHING SYSTEM
-                const smoothedGesture = this.applySmoothing(finalGesture);
-                
-                // Log final result
-                if (smoothedGesture !== this.lastGesture && smoothedGesture !== 'NONE') {
-                    console.log('✨ FINAL SMOOTHED GESTURE:', smoothedGesture);
                 }
                 
-                return smoothedGesture;
+                return 'NONE';
             }
             
             // 🎯 INTELLIGENTE VERTIKALE STATE MANAGEMENT
