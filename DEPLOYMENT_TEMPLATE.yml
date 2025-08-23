@@ -1,0 +1,90 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Erlaubt manuelles Triggern
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js (optional, nur wenn du Node brauchst)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Prepare Production Files
+      run: |
+        echo "🚀 Preparing files for production..."
+        
+        # Erstelle deployment Ordner
+        mkdir -p deploy
+        
+        # OPTION 1: Wenn deine index.html im Root ist
+        cp index.html deploy/
+        
+        # OPTION 2: Wenn deine Files in einem Unterordner sind
+        # cp MyProject/index.html deploy/
+        
+        # Kopiere weitere benötigte Files (anpassen!)
+        # cp -r css deploy/
+        # cp -r js deploy/
+        # cp -r images deploy/
+        
+        # Erstelle .htaccess für HTTPS und Performance
+        cat > deploy/.htaccess << 'EOF'
+        # Force HTTPS
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+        
+        # Enable compression
+        <ifModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/html
+            AddOutputFilterByType DEFLATE text/css
+            AddOutputFilterByType DEFLATE application/javascript
+        </ifModule>
+        
+        # Cache static assets
+        <ifModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/css "access plus 1 month"
+            ExpiresByType application/javascript "access plus 1 month"
+            ExpiresByType image/png "access plus 1 year"
+            ExpiresByType image/jpg "access plus 1 year"
+        </ifModule>
+        EOF
+        
+        echo "✅ Production files prepared"
+        echo "📁 Files to deploy:"
+        ls -la deploy/
+        
+    - name: Deploy to Hostinger via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./deploy/
+        server-dir: /public_html/  # WICHTIG: Anpassen je nach Hostinger Setup!
+        dry-run: false
+        log-level: verbose
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.DS_Store
+          
+    - name: Verify Deployment
+      run: |
+        echo "🎯 Deployment completed successfully!"
+        echo ""
+        echo "🌐 Your site is now live!"
+        echo "Check: https://your-domain.com/"
+        echo ""
+        echo "✅ Deployment finished at $(date)"
