@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.39-ENHANCED-MENU</title>
+    <title>Subway Runner 3D - V5.3.40-MENU-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -840,7 +840,8 @@
                 <h1>📹 Gestensteuerung einrichten</h1>
                 
                 <div id="gestureSetupContainer">
-                    <video id="gesturePreview" style="display: none; width: 320px; height: 240px; margin: 0 auto;"></video>
+                    <!-- Video muss minimal sichtbar sein für MediaPipe Camera API -->
+                    <video id="gesturePreview" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></video>
                     <canvas id="gesturePreviewCanvas" style="width: 320px; height: 240px; border: 3px solid #00ff88; border-radius: 8px; margin: 0 auto; display: block;"></canvas>
                     
                     <div id="cameraStatus" style="margin: 20px 0; font-size: 18px;">
@@ -1731,46 +1732,78 @@
             const gestureTestHint = document.getElementById('gestureTestHint');
             const startBtn = document.getElementById('startWithGesturesBtn');
             
-            try {
-                cameraStatus.innerHTML = '🔄 Kamera-Zugriff anfordern...';
-                
-                // Initialize gesture controller for preview
-                if (!gestureController) {
-                    console.log('🎮 Initializing Gesture Controller for preview...');
-                    gestureController = new GestureController({
-                        videoElement: document.getElementById('gesturePreview'),
-                        canvasElement: document.getElementById('gesturePreviewCanvas'),
-                        onGestureDetected: (gesture) => {
-                            // Just show gesture during preview, don't affect game
-                            if (gesture !== 'NONE') {
-                                console.log('Preview gesture:', gesture);
-                            }
-                        },
-                        onStatsUpdate: updateGestureStats,
-                        onError: (error) => {
-                            console.error('Gesture preview error:', error);
-                            cameraStatus.innerHTML = '❌ Kamera-Fehler: ' + error.message;
-                        },
-                        debugMode: false,
-                        sensitivity: 1.0
-                    });
+            // Retry mechanism for camera initialization
+            let retryCount = 0;
+            const maxRetries = 2;
+            let initSuccess = false;
+            
+            while (retryCount < maxRetries && !initSuccess) {
+                try {
+                    if (retryCount > 0) {
+                        cameraStatus.innerHTML = '🔄 Zweiter Versuch... Kamera-Zugriff anfordern...';
+                        console.log(`Retry ${retryCount}/${maxRetries} for camera initialization`);
+                    } else {
+                        cameraStatus.innerHTML = '🔄 Kamera-Zugriff anfordern...';
+                    }
+                    
+                    // Use singleton pattern for gesture controller
+                    if (!window.globalGestureController) {
+                        console.log('🎮 Creating new Global Gesture Controller...');
+                        window.globalGestureController = new GestureController({
+                            videoElement: document.getElementById('gesturePreview'),
+                            canvasElement: document.getElementById('gesturePreviewCanvas'),
+                            onGestureDetected: (gesture) => {
+                                // Just show gesture during preview, don't affect game
+                                if (gesture !== 'NONE' && !PRODUCTION_MODE) {
+                                    console.log('Preview gesture:', gesture);
+                                }
+                            },
+                            onStatsUpdate: updateGestureStats,
+                            onError: (error) => {
+                                console.error('Gesture preview error:', error);
+                                // Don't show error immediately during retries
+                                if (retryCount >= maxRetries - 1) {
+                                    cameraStatus.innerHTML = '❌ Kamera-Fehler: ' + error.message;
+                                }
+                            },
+                            debugMode: false,
+                            sensitivity: 1.0
+                        });
+                    }
+                    
+                    gestureController = window.globalGestureController;
+                    
+                    // Add small delay before starting to ensure DOM is ready
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Start gesture detection for preview
+                    await gestureController.start();
+                    window.gesturePreviewActive = true;
+                    gestureEnabled = true;
+                    initSuccess = true;
+                    
+                    // Update UI on success
+                    cameraStatus.innerHTML = '✅ Kamera bereit!';
+                    gestureTestHint.style.display = 'block';
+                    startBtn.style.display = 'block';
+                    
+                    console.log('✅ Gesture preview initialized successfully');
+                    
+                } catch (error) {
+                    console.error(`Camera initialization attempt ${retryCount + 1} failed:`, error);
+                    retryCount++;
+                    
+                    if (retryCount >= maxRetries) {
+                        console.error('Failed to initialize gesture preview after retries:', error);
+                        cameraStatus.innerHTML = '❌ Kamera konnte nicht aktiviert werden. Bitte Seite neu laden (F5) und erneut versuchen.';
+                        
+                        // Show button to try again
+                        cameraStatus.innerHTML += '<br><button onclick="initializeGesturePreview()" style="margin-top: 10px; padding: 5px 10px;">🔄 Erneut versuchen</button>';
+                    } else {
+                        // Wait before retry
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
                 }
-                
-                // Start gesture detection for preview
-                await gestureController.start();
-                window.gesturePreviewActive = true;
-                gestureEnabled = true;
-                
-                // Update UI
-                cameraStatus.innerHTML = '✅ Kamera bereit!';
-                gestureTestHint.style.display = 'block';
-                startBtn.style.display = 'block';
-                
-                console.log('✅ Gesture preview initialized successfully');
-                
-            } catch (error) {
-                console.error('Failed to initialize gesture preview:', error);
-                cameraStatus.innerHTML = '❌ Kamera konnte nicht aktiviert werden. Bitte Berechtigungen prüfen.';
             }
         };
         
