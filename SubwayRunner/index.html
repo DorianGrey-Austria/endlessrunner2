@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.21-THREE-FIX</title>
+    <title>Subway Runner 3D - V5.3.22-THREE-FIX</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -731,7 +731,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.21-DEPLOYED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.22-DEPLOYED</div>
         </div>
         
         <!-- Round Transition Overlay -->
@@ -768,7 +768,7 @@
             </div>
         </div>
         
-        <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
+        <video id="gestureVideo" style="display: none; transform: scaleX(-1);" autoplay playsinline></video>
         <canvas id="gestureCanvas"></canvas>
         
         <div id="gestureDebugPanel">
@@ -853,6 +853,11 @@
     </div>
 
     <script>
+        // ============================================
+        // Production Mode Configuration
+        // ============================================
+        const PRODUCTION_MODE = true; // 🔧 Set to true to disable debug alerts & reduce logging
+        
         // ============================================
         // Gesture Controller with MediaPipe FaceMesh
         // ============================================
@@ -1093,8 +1098,8 @@
                 // 🎯 PERFEKTE BOUNDARIES FÜR INTUITIVE STEUERUNG
                 const LEFT_BOUNDARY = 0.45;   // 45% - gut erreichbar
                 const RIGHT_BOUNDARY = 0.55;  // 55% - gut erreichbar  
-                const UP_BOUNDARY = 0.35;     // 35% - natürliche Kopfbewegung nach oben
-                const DOWN_BOUNDARY = 0.65;   // 65% - natürliche Kopfbewegung nach unten
+                const UP_BOUNDARY = 0.3;      // 30% - ERWEITERT für besseres Jump (war 35%)
+                const DOWN_BOUNDARY = 0.7;    // 70% - ERWEITERT für besseres Duck (war 65%)
                 
                 let gesture = 'NONE';
                 const avgEyeY = (leftEye.y + rightEye.y) / 2;
@@ -1149,11 +1154,11 @@
                     if (this.verticalGestureBuffer === rawGesture) {
                         this.verticalGestureCount++;
                         
-                        if (this.verticalGestureCount >= 2) {
-                            // 2 consecutive frames confirmed - send gesture!
+                        if (this.verticalGestureCount >= 1) {
+                            // 1 frame confirmed - send gesture! (reduced from 2 for better responsiveness)
                             this.verticalGestureBuffer = null;
                             this.verticalGestureCount = 0;
-                            console.log(`✅ ${rawGesture} CONFIRMED (2-frame smoothing)`);
+                            console.log(`✅ ${rawGesture} CONFIRMED (1-frame smoothing)`);
                             return rawGesture;
                         } else {
                             return 'NONE'; // Still buffering
@@ -1182,12 +1187,12 @@
                 this.lastGesture = gesture;
                 this.options.onGestureDetected(gesture);
                 
-                // Set cooldown based on gesture type
+                // Set cooldown based on gesture type  
                 const cooldowns = {
-                    'MOVE_LEFT': 300,
-                    'MOVE_RIGHT': 300,
-                    'JUMP': 500,
-                    'DUCK': 400
+                    'MOVE_LEFT': 100,    // 🔧 REDUCED: 300ms → 100ms für schnellere Spurwechsel
+                    'MOVE_RIGHT': 100,   // 🔧 REDUCED: 300ms → 100ms für schnellere Spurwechsel  
+                    'JUMP': 400,         // 🔧 REDUCED: 500ms → 400ms
+                    'DUCK': 300          // 🔧 REDUCED: 400ms → 300ms
                 };
                 
                 this.gestureCooldown = cooldowns[gesture] || 0;
@@ -8429,14 +8434,16 @@
                 };
                 document.body.style.background = colors[gesture] || 'white';
                 
-                // Kurzer Alert für Test-Beweis
-                setTimeout(() => {
-                    alert('🎯 GESTURE TEST: ' + gesture + '\n\n' +
-                          (gesture === 'MOVE_LEFT' ? 'Kopf RECHTS → Spieler LINKS (intuitiv!)' :
-                           gesture === 'MOVE_RIGHT' ? 'Kopf LINKS → Spieler RECHTS (intuitiv!)' :
-                           gesture === 'JUMP' ? 'Kopf HOCH → SPRUNG' :
-                           gesture === 'DUCK' ? 'Kopf RUNTER → DUCKEN' : gesture));
-                }, 100);
+                // Alert nur im Debug-Mode
+                if (!PRODUCTION_MODE) {
+                    setTimeout(() => {
+                        alert('🎯 GESTURE TEST: ' + gesture + '\n\n' +
+                              (gesture === 'MOVE_LEFT' ? 'Kopf RECHTS → Spieler LINKS (intuitiv!)' :
+                               gesture === 'MOVE_RIGHT' ? 'Kopf LINKS → Spieler RECHTS (intuitiv!)' :
+                               gesture === 'JUMP' ? 'Kopf HOCH → SPRUNG' :
+                               gesture === 'DUCK' ? 'Kopf RUNTER → DUCKEN' : gesture));
+                    }, 100);
+                }
                 
                 // Reset nach 2 Sekunden
                 setTimeout(() => {
@@ -8458,41 +8465,81 @@
             
             switch (gesture) {
                 case 'MOVE_LEFT':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🚗 SPURWECHSEL DEBUG - MOVE_LEFT:', {
+                            currentLane: gameState.playerLane,
+                            canMoveLeft: gameState.playerLane > 0,
+                            targetLane: gameState.playerLane - 1
+                        });
+                    }
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
                         updatePlayerPosition();
+                        if (!PRODUCTION_MODE) console.log('✅ MOVED LEFT to lane:', gameState.playerLane);
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    } else {
+                        if (!PRODUCTION_MODE) console.log('❌ CANNOT MOVE LEFT - already at leftmost lane');
                     }
                     break;
                     
                 case 'MOVE_RIGHT':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🚗 SPURWECHSEL DEBUG - MOVE_RIGHT:', {
+                            currentLane: gameState.playerLane,
+                            canMoveRight: gameState.playerLane < 2,
+                            targetLane: gameState.playerLane + 1
+                        });
+                    }
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
                         updatePlayerPosition();
+                        if (!PRODUCTION_MODE) console.log('✅ MOVED RIGHT to lane:', gameState.playerLane);
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    } else {
+                        if (!PRODUCTION_MODE) console.log('❌ CANNOT MOVE RIGHT - already at rightmost lane');
                     }
                     break;
                     
                 case 'JUMP':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🦘 JUMP DEBUG:', {
+                            isJumping: gameState.isJumping,
+                            jumpCount: gameState.jumpCount,
+                            canJump: !gameState.isJumping && gameState.jumpCount < 2
+                        });
+                    }
                     if (!gameState.isJumping && gameState.jumpCount < 2) {
                         gameState.isJumping = true;
                         gameState.jumpCount++;
                         gameState.jumpVelocity = config.jumpPower;
+                        if (!PRODUCTION_MODE) console.log('✅ JUMPING! velocity:', config.jumpPower);
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    } else {
+                        if (!PRODUCTION_MODE) console.log('❌ CANNOT JUMP - already jumping or max jumps reached');
                     }
                     break;
                     
                 case 'DUCK':
+                    if (!PRODUCTION_MODE) {
+                        console.log('🦆 DUCK DEBUG:', {
+                            isDucking: gameState.isDucking,
+                            isJumping: gameState.isJumping,
+                            canDuck: !gameState.isDucking && !gameState.isJumping
+                        });
+                    }
                     if (!gameState.isDucking && !gameState.isJumping) {
                         gameState.isDucking = true;
+                        if (!PRODUCTION_MODE) console.log('✅ DUCKING!');
                         const speedMultiplier = gameState.score / 5000;
                         // FIXED: Check if audioManager exists before using it
-                    if (typeof audioManager !== 'undefined' && audioManager) {
-                        audioManager.playSpeedDependentSound('duck', speedMultiplier);
-                    }
+                        if (typeof audioManager !== 'undefined' && audioManager) {
+                            audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                        }
+                    } else {
+                        if (!PRODUCTION_MODE) console.log('❌ CANNOT DUCK - already ducking or jumping');
                     }
                     break;
                     
