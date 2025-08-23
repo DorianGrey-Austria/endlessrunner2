@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V5.3.28-INTELLIGENT-GESTURE-SYSTEM</title>
+    <title>Subway Runner 3D - V5.3.30-SIMPLIFIED-VERTICAL-DEBUG</title>
     <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -1110,9 +1110,9 @@
                 const RIGHT_LANE_BOUNDARY = 0.65;   // 65% - 100% = RIGHT LANE
                                                      // 35% - 65% = MIDDLE LANE (30% breit!)
                 
-                // 🎯 VERTIKALE BOUNDARIES (ACCESSIBILITY OPTIMIZED!)
-                const UP_BOUNDARY = 0.35;      // 35% - zugänglicher für natürliche Kopfbewegung (JUMP)
-                const DOWN_BOUNDARY = 0.65;    // 65% - zugänglicher für natürliche Kopfbewegung (DUCK)
+                // 🎯 VERTIKALE BOUNDARIES (ULTRA-ACCESSIBLE!)
+                const UP_BOUNDARY = 0.40;      // 40% - sehr zugänglich für natürliche Kopfbewegung (JUMP)
+                const DOWN_BOUNDARY = 0.60;    // 60% - sehr zugänglich für natürliche Kopfbewegung (DUCK)
                 
                 // 🎯 TOLERANCE ZONES für smooth state transitions
                 const NEUTRAL_ZONE_MIN = 0.40;  // Neutral-Bereich beginnt bei 40%
@@ -1133,8 +1133,13 @@
                     targetLane = 2; // Kopf rechts → Lane 2 (RIGHT) → Spieler links!
                 }
                 
-                // 🚀 STEP 2: INTELLIGENTE VERTIKALE STATE MANAGEMENT 
-                let verticalAction = this.calculateVerticalAction(avgEyeY, UP_BOUNDARY, DOWN_BOUNDARY, NEUTRAL_ZONE_MIN, NEUTRAL_ZONE_MAX);
+                // 🚀 STEP 2: SIMPLE VERTIKALE DETECTION (BACK TO BASICS!)
+                let verticalAction = 'NONE';
+                if (avgEyeY < UP_BOUNDARY) {
+                    verticalAction = 'JUMP';
+                } else if (avgEyeY > DOWN_BOUNDARY) {
+                    verticalAction = 'DUCK';
+                }
                 
                 // 🚀 STEP 3: BESTIMME AKTUELLE SPIELER LANE
                 const currentLane = gameState ? gameState.playerLane : 1; // Default Middle
@@ -1142,20 +1147,37 @@
                 // 🚀 STEP 4: BERECHNE FINALE GESTURE
                 let finalGesture = this.calculateFinalGesture(targetLane, currentLane, verticalAction);
                 
-                // 🔍 ULTRA-VERBOSE DEBUG LOGGING
-                console.log('🎯 GESTURE ANALYSIS:', {
-                    avgEyeX: avgEyeX.toFixed(3),
-                    mirroredEyeX: mirroredEyeX.toFixed(3),
-                    avgEyeY: avgEyeY.toFixed(3),
-                    targetLane: targetLane,
-                    currentLane: currentLane,
-                    verticalAction: verticalAction,
-                    finalGesture: finalGesture,
-                    boundaries: {
-                        leftLane: mirroredEyeX < LEFT_LANE_BOUNDARY,
-                        rightLane: mirroredEyeX > RIGHT_LANE_BOUNDARY,
-                        jump: avgEyeY < UP_BOUNDARY,
-                        duck: avgEyeY > DOWN_BOUNDARY
+                // 👁️ ULTRA-VERBOSE Y-COORDINATE DEBUG
+                if (verticalAction !== 'NONE') {
+                    console.log('🎯 VERTICAL MOVEMENT DETECTED:', {
+                        rawEyeY: avgEyeY.toFixed(4),
+                        upBoundary: UP_BOUNDARY,
+                        downBoundary: DOWN_BOUNDARY,
+                        isAboveUpBoundary: avgEyeY < UP_BOUNDARY,
+                        isBelowDownBoundary: avgEyeY > DOWN_BOUNDARY,
+                        detectedAction: verticalAction,
+                        distanceFromUp: (avgEyeY - UP_BOUNDARY).toFixed(4),
+                        distanceFromDown: (DOWN_BOUNDARY - avgEyeY).toFixed(4)
+                    });
+                }
+                
+                // 🔍 COMPREHENSIVE GESTURE ANALYSIS
+                console.log('🎯 COMPLETE ANALYSIS:', {
+                    horizontal: {
+                        avgEyeX: avgEyeX.toFixed(3),
+                        mirroredEyeX: mirroredEyeX.toFixed(3),
+                        targetLane: targetLane,
+                        currentLane: currentLane
+                    },
+                    vertical: {
+                        avgEyeY: avgEyeY.toFixed(4),
+                        action: verticalAction,
+                        upBoundaryHit: avgEyeY < UP_BOUNDARY,
+                        downBoundaryHit: avgEyeY > DOWN_BOUNDARY,
+                        inNeutralZone: (avgEyeY >= UP_BOUNDARY && avgEyeY <= DOWN_BOUNDARY)
+                    },
+                    result: {
+                        finalGesture: finalGesture
                     }
                 });
                 
@@ -1233,11 +1255,9 @@
             }
             
             calculateFinalGesture(targetLane, currentLane, verticalAction) {
-                // 🎯 PRIORITÄTS-SYSTEM: Vertikale Aktionen haben Vorrang!
-                if (verticalAction === 'JUMP' || verticalAction === 'DUCK' || 
-                    verticalAction === 'SUPER_JUMP' || verticalAction === 'LAND' || 
-                    verticalAction === 'STAND_UP') {
-                    return verticalAction; // Alle vertikalen Aktionen sofort ausführen!
+                // 🎯 PRIORITÄTS-SYSTEM: Vertikale Aktionen haben Vorrang (SIMPLIFIED!)
+                if (verticalAction === 'JUMP' || verticalAction === 'DUCK') {
+                    return verticalAction; // Basic Jump/Duck sofort ausführen!
                 }
                 
                 // 🎯 HORIZONTALE BEWEGUNG: Nur wenn unterschiedliche Lane
@@ -8662,51 +8682,15 @@
                     }
                     break;
                     
+                /* TEMPORARILY DISABLED - COMPLEX ACTIONS FOR BASIC TESTING
                 case 'SUPER_JUMP':
-                    if (!PRODUCTION_MODE) {
-                        console.log('🚀 SUPER JUMP DEBUG:', {
-                            isJumping: gameState.isJumping,
-                            jumpCount: gameState.jumpCount,
-                            superJumpHeight: config.jumpPower * 1.5
-                        });
-                    }
-                    
-                    // SUPER JUMP: Höherer Sprung bei wiederholten Bewegungen
-                    if (!gameState.isJumping) {
-                        gameState.isJumping = true;
-                        gameState.jumpCount = Math.min(gameState.jumpCount + 1, 2);
-                        gameState.jumpVelocity = config.jumpPower * 1.5; // 50% höher!
-                        if (!PRODUCTION_MODE) console.log('✅ SUPER JUMPING! velocity:', config.jumpPower * 1.5);
-                        
-                        // Visual feedback für Super Jump (Golden background)
-                        document.body.style.background = 'linear-gradient(to bottom, #FFD700 0%, #87CEEB 50%, #98FB98 100%)';
-                        setTimeout(() => {
-                            document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
-                        }, 200);
-                        
-                        const speedMultiplier = gameState.score / 5000;
-                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                    }
-                    break;
-                    
-                case 'LAND':
-                    if (!PRODUCTION_MODE) {
-                        console.log('🛬 LANDING DEBUG - Spieler kehrt zu normaler Haltung zurück');
-                    }
-                    // Landing wird automatisch im Game Loop gehandhabt - hier nur Debug
-                    break;
-                    
+                case 'LAND':  
                 case 'STAND_UP':
                     if (!PRODUCTION_MODE) {
-                        console.log('🧍 STAND UP DEBUG - Spieler steht von Duck-Position auf');
-                    }
-                    
-                    // Sofortiges Aufstehen aus Duck-Position
-                    if (gameState.isDucking) {
-                        gameState.isDucking = false;
-                        if (!PRODUCTION_MODE) console.log('✅ STANDING UP from duck position');
+                        console.log('⚠️ COMPLEX ACTION TEMPORARILY DISABLED:', gesture);
                     }
                     break;
+                */
                     
                 case 'DUCK':
                     if (!PRODUCTION_MODE) {
