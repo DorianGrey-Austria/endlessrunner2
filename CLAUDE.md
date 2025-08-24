@@ -19,12 +19,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. **Format**: MAJOR.MINOR.PATCH-DESCRIPTION
 6. **IMMER erhöhen**: Niemals alte Versionsnummern behalten!
 7. **CHECK COMMAND**: `grep -n "V5\.3\.\d+" SubwayRunner/index.html` vor Deployment
+8. **CURRENT VERSION CHECK**: `grep -n "V5\.3\.5[0-9]" SubwayRunner/index.html` (V5.3.50+)
+9. **VERSION VALIDATION**: Ensure all version references are consistent across title, UI, and comments
 
 ## Repository Overview
 
 Endless runner game collection with **SubwayRunner** as primary production project (vanilla JS + Three.js).
 
 **Live URL**: 🌐 https://ki-revolution.at/ (auto-deployed via GitHub Actions)
+
+### Project Structure
+- **SubwayRunner/**: Main production game (vanilla JS + Three.js)
+- **GestureRunnerPro/**: Advanced Godot-based runner with professional features
+- **EndlessRunner-MVP/**: React/TypeScript version with Vite build system
+- **Endless3D/**: Legacy 3D runner implementation
+- **godot-mcp/**: MCP (Model Context Protocol) integration for Godot development
 
 ## Common Development Commands
 
@@ -36,7 +45,9 @@ npm run serve               # Alternative: live-server with auto-reload
 
 # Testing (run from SubwayRunner directory)
 npm run test                 # Run test-runner.js (syntax, structure, performance, logic)
-npx playwright test         # Run browser automation tests
+npm run test:watch           # Watch mode for continuous testing
+npm run test:browser         # Live browser gameplay testing
+npm run test:playwright      # Browser automation tests with Playwright
 node test-live-game.js      # Test live browser gameplay
 node quick-critical-test.js # Fast critical function validation
 
@@ -45,21 +56,45 @@ npm run lint                # ESLint checks (TypeScript/React components)
 
 # Pre-deployment Validation
 npm run predeploy           # Combines all tests before deployment
+npm run pretest             # Pre-test setup and validation
 
 # Deployment (automatic via GitHub Actions)
 git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
+
+# React/TypeScript Development (EndlessRunner-MVP)
+cd EndlessRunner-MVP/SubwayRunner
+npm run dev                  # Vite dev server at localhost:5173
+npm run build               # Build for production
+npm run lint                # TypeScript/React linting
+
+# Godot Development (GestureRunnerPro)
+# Use Godot Editor 4.x - project files are in GestureRunnerPro/
+# MCP integration available via godot-mcp/ directory
+
+# MCP Integration (godot-mcp)
+cd godot-mcp
+npm install              # Install MCP server dependencies
+npm run build           # Build TypeScript to JavaScript
+npm run watch           # Watch mode for development
+npm run inspector       # Run MCP inspector tool
+
+# BMAD Method Integration (if available)
+npx bmad-method install  # Install BMAD Method framework
+npx bmad-method status   # Check installation status
+npx bmad-method list:expansions  # List available expansion packs
 ```
 
 ## Current Version & Features
 
-### V5.3.47 (Latest)
+### V5.3.50 (Current - ROLLBACK-TO-WORKING)
 - **Three.js v0.158.0**: Locked CDN version - DO NOT CHANGE
-- **MediaPipe Gesture Control**: 3-Lane horizontal detection works perfectly
-- **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) ❌ needs Y-axis fix
+- **MediaPipe Gesture Control**: Restored working state after V5.3.49 rollback
+- **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) ❌ needs Y-axis fix  
 - **Performance**: 60 FPS with PRODUCTION_MODE = true
 - **Power-ups**: Shield (3s immunity), Magnet (collectible attraction)
 - **10 Unique Levels**: Progressive difficulty with themed environments
 - **5 Characters**: Each with unique abilities and visuals
+- **Stability**: Rolled back from V5.3.49 to restore reliable gesture control
 
 ### CRITICAL: Performance & Gesture Control
 
