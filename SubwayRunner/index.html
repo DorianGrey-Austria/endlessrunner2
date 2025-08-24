@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.60-GESTURE-CONTROL-FIX</title>
+    <title>Subway Runner 3D - V5.3.62-GESTURE-WORKS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -497,7 +497,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.60-GESTURE-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.62-GESTURE-WORKS</div>
         </div>
         
         <div id="instructions">
@@ -2841,6 +2841,21 @@
                 ambientStarted = true;
             }
             
+            // V5.3.62 FIX: Ensure gesture control is active if in gesture mode
+            if (menuState.controlMode === 'gesture') {
+                gestureEnabled = true;
+                // Make gesture canvas visible
+                const gestureCanvas = document.getElementById('gestureCanvas');
+                if (gestureCanvas) {
+                    gestureCanvas.classList.add('active');
+                }
+                const gestureStatus = document.getElementById('gestureStatus');
+                if (gestureStatus) {
+                    gestureStatus.classList.add('active');
+                }
+                console.log('🎮 Gesture control activated from menu mode');
+            }
+            
             gameState.isPlaying = true;
             gameState.isGameOver = false;
             gameState.isVictory = false;
@@ -4405,8 +4420,14 @@
         // Initialize gesture control button
         if (gestureBtn) {
             console.log('🎮 Gesture Control Button found!');
-            gestureBtn.style.display = 'block'; // Force visibility
-            gestureBtn.style.visibility = 'visible';
+            // V5.3.62 FIX: Hide button if already in gesture mode from setup
+            if (menuState.controlMode === 'gesture') {
+                gestureBtn.style.display = 'none'; // Hide if already using gestures
+                console.log('🎮 Hiding gesture button - already in gesture mode from setup');
+            } else {
+                gestureBtn.style.display = 'block'; // Show for classic mode
+                gestureBtn.style.visibility = 'visible';
+            }
             gestureBtn.addEventListener('click', async () => {
                 if (!gestureEnabled) {
                     try {
@@ -4484,7 +4505,8 @@
                 case 'MOVE_LEFT':
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
-                        updatePlayerPosition();
+                        // V5.3.62 FIX: Removed updatePlayerPosition() - doesn't exist!
+                        // animate() loop at line 4131-4132 handles position update automatically
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
@@ -4493,7 +4515,8 @@
                 case 'MOVE_RIGHT':
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
-                        updatePlayerPosition();
+                        // V5.3.62 FIX: Removed updatePlayerPosition() - doesn't exist!
+                        // animate() loop at line 4131-4132 handles position update automatically
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
