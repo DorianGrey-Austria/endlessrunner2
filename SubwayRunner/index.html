@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.44-GESTURE-FIX</title>
+    <title>Subway Runner 3D - V5.3.46-GESTURE-COMPLETE</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -3851,8 +3851,13 @@
                     yawRight: 0.6,
                     pitchUp: -0.6,
                     pitchDown: 0.6,
+                    ultraJumpPitch: -0.8, // Ultra-Jump requires more extreme head movement
                     deadZone: 0.2
                 };
+                
+                // Ultra-Jump detection variables
+                this.ultraJumpCooldown = 0;
+                this.lastUltraJumpTime = 0;
             }
             
             async start() {
@@ -3950,13 +3955,29 @@
                 const adjustedPitch = this.calibrationData.isCalibrated ? 
                     pitch - this.calibrationData.neutralPitch : pitch;
                 
+                // Update Ultra-Jump cooldown
+                const currentTime = performance.now();
+                if (this.ultraJumpCooldown > 0) {
+                    this.ultraJumpCooldown = Math.max(0, this.ultraJumpCooldown - (currentTime - (this.lastFrameTime || currentTime)));
+                }
+                this.lastFrameTime = currentTime;
+                
+                // Ultra-Jump detection (extreme upward head movement)
+                if (adjustedPitch < this.thresholds.ultraJumpPitch && this.ultraJumpCooldown <= 0) {
+                    this.ultraJumpCooldown = 2000; // 2 second cooldown
+                    this.lastUltraJumpTime = currentTime;
+                    return 'ULTRA_JUMP';
+                }
+                
                 // Determine gesture based on thresholds
                 if (Math.abs(adjustedYaw) > Math.abs(adjustedPitch)) {
-                    if (adjustedYaw < this.thresholds.yawLeft) return 'LEFT';
-                    if (adjustedYaw > this.thresholds.yawRight) return 'RIGHT';
+                    // Horizontal movement (left/right) takes priority
+                    if (adjustedYaw < this.thresholds.yawLeft) return 'MOVE_LEFT';
+                    if (adjustedYaw > this.thresholds.yawRight) return 'MOVE_RIGHT';
                 } else {
-                    if (adjustedPitch < this.thresholds.pitchUp) return 'UP';
-                    if (adjustedPitch > this.thresholds.pitchDown) return 'DOWN';
+                    // Vertical movement (up/down)
+                    if (adjustedPitch < this.thresholds.pitchUp) return 'JUMP';
+                    if (adjustedPitch > this.thresholds.pitchDown) return 'DUCK';
                 }
                 
                 return 'NONE';
@@ -4074,7 +4095,7 @@
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
                         updatePlayerPosition();
-                        const speedMultiplier = gameState.score / 5000;
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
                     break;
@@ -4083,32 +4104,85 @@
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
                         updatePlayerPosition();
-                        const speedMultiplier = gameState.score / 5000;
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
                     break;
                     
                 case 'JUMP':
-                    if (!gameState.isJumping && gameState.jumpCount < 2) {
-                        gameState.isJumping = true;
-                        gameState.jumpCount++;
-                        gameState.jumpVelocity = config.jumpPower;
-                        const speedMultiplier = gameState.score / 5000;
+                    if (gameState.playerAction === 'running') {
+                        // First jump
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = performance.now();
+                        gameState.jumpCount = 1;
+                        
+                        // Audio & Visual Feedback
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        
+                        // Jump particle effect
+                        createParticleEffect(
+                            { x: gameState.playerLane * 2 - 2, y: 0.1, z: 0 },
+                            0x00ff88,
+                            'jump'
+                        );
+                    } else if (gameState.playerAction === 'jumping' && 
+                               gameState.jumpCount < gameState.maxJumps && 
+                               gameState.playerY > 0.5) {
+                        // Multi-jump system - up to 4 jumps
+                        gameState.jumpCount++;
+                        
+                        // Stronger jump velocity for multi-jumps
+                        gameState.jumpVelocity = 12 - (gameState.jumpCount * 0.5);
+                        
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        
+                        // Multi-jump particle effect
+                        createParticleEffect(
+                            { x: gameState.playerLane * 2 - 2, y: gameState.playerY + 0.5, z: 0 },
+                            0xffff00,
+                            'multijump'
+                        );
+                    }
+                    break;
+                    
+                case 'ULTRA_JUMP':
+                    if (gameState.playerAction === 'running') {
+                        // Ultra-Jump: Higher and longer jump
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 16; // Much stronger than regular jump (10)
+                        gameState.jumpStartTime = performance.now();
+                        gameState.jumpCount = 1;
+                        
+                        // Special Ultra-Jump audio & visual
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
+                        audioManager.playSpeedDependentSound('powerup', speedMultiplier); // Different sound
+                        
+                        // Ultra-Jump particle effect (blue/purple)
+                        createParticleEffect(
+                            { x: gameState.playerLane * 2 - 2, y: 0.1, z: 0 },
+                            0x8800ff,
+                            'ultrajump'
+                        );
+                        
+                        console.log('🚀 ULTRA-JUMP activated! Velocity:', gameState.jumpVelocity);
                     }
                     break;
                     
                 case 'DUCK':
-                    if (!gameState.isDucking && !gameState.isJumping) {
-                        gameState.isDucking = true;
-                        const speedMultiplier = gameState.score / 5000;
+                    if (gameState.playerAction === 'running') {
+                        gameState.playerAction = 'ducking';
+                        const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('duck', speedMultiplier);
                     }
                     break;
                     
                 case 'NONE':
-                    if (gameState.isDucking) {
-                        gameState.isDucking = false;
+                    // Return to running state when no gesture detected
+                    if (gameState.playerAction === 'ducking') {
+                        gameState.playerAction = 'running';
                     }
                     break;
             }

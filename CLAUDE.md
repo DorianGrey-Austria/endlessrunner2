@@ -52,8 +52,8 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.3.35 (Latest)
-- **Three.js v0.150.0**: Stable version - DO NOT CHANGE
+### V5.3.44 (Latest)
+- **Three.js v0.158.0**: Locked CDN version - DO NOT CHANGE
 - **MediaPipe Gesture Control**: 3-Lane horizontal detection works perfectly
 - **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) ❌ needs Y-axis fix
 - **Performance**: 60 FPS with PRODUCTION_MODE = true
@@ -79,11 +79,13 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ### Core Structure
 - **Monolithic Design**: Single `SubwayRunner/index.html` (~5000+ lines embedded JS)
-- **Three.js Integration**: v0.150.0 from unpkg CDN - DO NOT CHANGE VERSION
+- **Three.js Integration**: v0.158.0 from unpkg CDN - DO NOT CHANGE VERSION
 - **Game Loop**: `animate()` with requestAnimationFrame at 60 FPS
 - **Collision System**: 3D bounding box with 0.2-0.3 unit tolerance
 - **Performance**: Object pooling, frustum culling, lazy loading
 - **Gesture Control**: MediaPipe FaceMesh for head tracking (optional)
+- **Testing**: Node.js test runner with Playwright browser automation
+- **Deployment**: GitHub Actions → Hostinger FTP auto-deployment
 
 ### Key Game Constants (DO NOT MODIFY)
 ```javascript
@@ -144,8 +146,11 @@ git add . && git commit -m "🚨 ROLLBACK to stable" && git push
 
 ### Test Commands (from SubwayRunner/)
 ```bash
-npm run test          # Complete test suite
-npm run predeploy    # Pre-deployment validation
+npm run test               # Complete test suite (test-runner.js)
+npm run test:playwright    # Browser automation tests
+npm run test:browser       # Live gameplay testing
+npm run predeploy         # Pre-deployment validation
+node quick-critical-test.js # Fast critical function validation
 ```
 
 ## Deployment
@@ -193,6 +198,8 @@ npm run predeploy    # Pre-deployment validation
 ### NEVER Do This
 - ❌ Deploy without testing
 - ❌ Use Safari (breaks MediaPipe)
-- ❌ Change Three.js from v0.150.0
+- ❌ Change Three.js from v0.158.0
 - ❌ Log every frame (performance killer)
 - ❌ Skip version increments
+- ❌ Modify BASE_SPEED (performance-tuned)
+- ❌ Change LANE_POSITIONS (collision system dependent)
