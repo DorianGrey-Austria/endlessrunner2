@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.58-EYE-TRACKING-FIX</title>
+    <title>Subway Runner 3D - V5.3.60-GESTURE-CONTROL-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -497,7 +497,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.0-MULTI-JUMP</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.60-GESTURE-FIX</div>
         </div>
         
         <div id="instructions">
@@ -1060,6 +1060,10 @@
         };
         
         // ======== MENU STATE MANAGEMENT ========
+        // V5.3.60-GESTURE-CONTROL-FIX: Global gesture controller shared between setup and game
+        let globalGestureController = null;
+        let gestureEnabled = false;
+        
         const menuState = {
             currentScreen: 'main', // 'main' | 'gestureSetup' | 'game'
             gestureConfigured: false,
@@ -1148,9 +1152,27 @@
         
         // Start Game with Configured Gestures
         window.startGameWithConfiguredGestures = function() {
-            if (!menuState.gestureConfigured) {
+            if (!menuState.gestureConfigured || !globalGestureController) {
                 alert('Bitte warte bis die Kamera bereit ist!');
                 return;
+            }
+            
+            // V5.3.60 FIX: Update gesture controller to use game input handler and elements
+            console.log('🎮 Switching gesture controller to game mode...');
+            
+            // Update callback to game input handler
+            globalGestureController.options.onGestureDetected = handleGestureInput;
+            
+            // Switch video elements from setup to game
+            const gameVideo = document.getElementById('gestureVideo');
+            const gameCanvas = document.getElementById('gestureCanvas');
+            const setupVideo = document.getElementById('setupVideo');
+            
+            // Transfer video stream to game video element
+            if (setupVideo.srcObject && gameVideo) {
+                gameVideo.srcObject = setupVideo.srcObject;
+                globalGestureController.options.videoElement = gameVideo;
+                globalGestureController.options.canvasElement = gameCanvas;
             }
             
             menuState.controlMode = 'gesture';
@@ -1188,9 +1210,9 @@
                     await loadGestureModule();
                 }
                 
-                // Initialize gesture controller for preview
-                if (!gestureController && window.GestureControllerProjector) {
-                    gestureController = new window.GestureControllerProjector({
+                // V5.3.60 FIX: Initialize global gesture controller for preview
+                if (!globalGestureController && window.GestureControllerProjector) {
+                    globalGestureController = new window.GestureControllerProjector({
                         videoElement: document.getElementById('setupVideo'),
                         canvasElement: document.getElementById('setupCanvas'),
                         onGestureDetected: handleSetupGesture,
@@ -1206,7 +1228,7 @@
                         ipadOptimized: true // Enable iPad optimizations
                     });
                     
-                    await gestureController.start();
+                    await globalGestureController.start();
                 }
                 
                 cameraStatus.textContent = '✅ Bereit! Bewege deinen Kopf zum Testen.';
@@ -4341,8 +4363,7 @@
         document.addEventListener('keyup', handleKeyUp);
         
         // Gesture Control Integration with Dynamic Loading
-        let gestureController = null;
-        let gestureEnabled = false;
+        // V5.3.60 FIX: Using global gestureController from line 1064
         let gestureModuleLoaded = false;
         
         const gestureBtn = document.getElementById('gestureControlBtn');
@@ -4396,10 +4417,10 @@
                             return;
                         }
                         
-                        // Initialize gesture controller
-                        if (!gestureController && window.GestureControllerProjector) {
-                            console.log('🎮 Initializing Gesture Controller...');
-                            gestureController = new window.GestureControllerProjector({
+                        // V5.3.60 FIX: Initialize or reuse gesture controller
+                        if (!globalGestureController && window.GestureControllerProjector) {
+                            console.log('🎮 Initializing new Gesture Controller...');
+                            globalGestureController = new window.GestureControllerProjector({
                                 videoElement: document.getElementById('gestureVideo'),
                                 canvasElement: gestureCanvas,
                                 onGestureDetected: handleGestureInput,
@@ -4412,9 +4433,15 @@
                                 debugMode: false,
                                 projectorMode: true
                             });
+                            await globalGestureController.start();
+                        } else if (globalGestureController) {
+                            console.log('🎮 Reusing existing Gesture Controller from setup...');
+                            // Update elements and callback for game mode
+                            globalGestureController.options.videoElement = document.getElementById('gestureVideo');
+                            globalGestureController.options.canvasElement = gestureCanvas;
+                            globalGestureController.options.onGestureDetected = handleGestureInput;
+                            // Controller is already running, no need to start again
                         }
-                        
-                        await gestureController.start();
                         gestureEnabled = true;
                         gestureBtn.textContent = '🛑 Gestensteuerung stoppen';
                         gestureBtn.classList.add('active');
@@ -4429,8 +4456,8 @@
                     }
                 } else {
                     // Stop gesture control
-                    if (gestureController) {
-                        gestureController.stop();
+                    if (globalGestureController) {
+                        globalGestureController.stop();
                     }
                     gestureEnabled = false;
                     gestureBtn.textContent = '🎮 Gestensteuerung aktivieren';
@@ -4447,8 +4474,9 @@
             console.log('Module loaded:', window.GestureControllerProjector);
         }
         
-        function handleGestureInput(gesture) {
-            if (!gameState.isPlaying) return;
+        window.handleGestureInput = function(gesture) {
+            // V5.3.60 FIX: Allow gesture input when gesture mode is enabled
+            if (!gameState.isPlaying || !gestureEnabled) return;
             
             gestureCurrentText.textContent = gesture;
             
@@ -4522,7 +4550,7 @@
             console.log('Video Element:', document.getElementById('gestureVideo'));
             console.log('Status Element:', document.getElementById('gestureStatus'));
             console.log('Module Loaded:', !!window.GestureControllerProjector);
-            console.log('Controller Instance:', gestureController);
+            console.log('Controller Instance:', globalGestureController);
             console.log('Gesture Enabled:', gestureEnabled);
             
             // Check visibility

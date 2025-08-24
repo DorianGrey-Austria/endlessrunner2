@@ -86,15 +86,15 @@ npx bmad-method list:expansions  # List available expansion packs
 
 ## Current Version & Features
 
-### V5.3.50 (Current - ROLLBACK-TO-WORKING)
+### V5.3.58 (Current - EYE-TRACKING-FIX)
 - **Three.js v0.158.0**: Locked CDN version - DO NOT CHANGE
-- **MediaPipe Gesture Control**: Restored working state after V5.3.49 rollback
-- **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) ❌ needs Y-axis fix  
+- **MediaPipe Gesture Control**: Eye-tracking implementation for vertical gestures
+- **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) being fixed with eye-tracking  
 - **Performance**: 60 FPS with PRODUCTION_MODE = true
 - **Power-ups**: Shield (3s immunity), Magnet (collectible attraction)
 - **10 Unique Levels**: Progressive difficulty with themed environments
 - **5 Characters**: Each with unique abilities and visuals
-- **Stability**: Rolled back from V5.3.49 to restore reliable gesture control
+- **Stability**: Production-ready with active gesture control improvements
 
 ### CRITICAL: Performance & Gesture Control
 
@@ -113,7 +113,7 @@ npx bmad-method list:expansions  # List available expansion packs
 ## Architecture
 
 ### Core Structure
-- **Monolithic Design**: Single `SubwayRunner/index.html` (~5000+ lines embedded JS)
+- **Monolithic Design**: Single `SubwayRunner/index.html` (~4700+ lines embedded JS)
 - **Three.js Integration**: v0.158.0 from unpkg CDN - DO NOT CHANGE VERSION
 - **Game Loop**: `animate()` with requestAnimationFrame at 60 FPS
 - **Collision System**: 3D bounding box with 0.2-0.3 unit tolerance
@@ -121,6 +121,16 @@ npx bmad-method list:expansions  # List available expansion packs
 - **Gesture Control**: MediaPipe FaceMesh for head tracking (optional)
 - **Testing**: Node.js test runner with Playwright browser automation
 - **Deployment**: GitHub Actions → Hostinger FTP auto-deployment
+
+### Modular JavaScript Components (SubwayRunner/js/)
+- **GameCore.js**: Central module registration and dependency injection
+- **GestureControllerProjector.js**: MediaPipe-based gesture detection with eye tracking
+- **MainMenuManager.js**: Menu UI and state management
+- **CharacterManager.js**: Character selection and abilities
+- **LevelManager.js**: Progressive level system with themes
+- **PowerUpManager.js**: Shield and magnet power-up logic
+- **ObstacleManager.js**: Obstacle spawning and pooling
+- **ScoreManager.js**: Score tracking and persistence
 
 ### Key Game Constants (DO NOT MODIFY)
 ```javascript
@@ -153,17 +163,33 @@ DOWN_BOUNDARY: 0.65   // Duck zone
 
 ## Development Tasks
 
+### Working with Modular Components
+The game uses a modular architecture with components in `SubwayRunner/js/`:
+1. **GameCore.js** registers all modules - check dependencies here first
+2. **Module pattern**: Each file exports to `window.GameModules`
+3. **Access modules**: `window.GameModules.ModuleName`
+4. **Add new module**: Register in GameCore.js, follow existing patterns
+
 ### Adding New Obstacles
-1. Edit obstacle spawning in `SubwayRunner/index.html:1500-2000`
-2. Create Three.js geometry/material
-3. Add collision detection case
-4. Test spawn patterns locally
+1. Edit `SubwayRunner/js/ObstacleManager.js` for spawn logic
+2. Or edit main file `SubwayRunner/index.html:1500-2000` for inline changes
+3. Create Three.js geometry/material
+4. Add collision detection case
+5. Test spawn patterns locally with `npm run test:browser`
+
+### Adding New Features
+1. Check if feature belongs in existing module (`js/*.js`)
+2. For new systems, create module in `js/` directory
+3. Register in `GameCore.js`
+4. Follow existing module patterns for consistency
+5. Test with `npm run test` before deployment
 
 ### Version Update Process  
-1. Search current version in `SubwayRunner/index.html`
-2. Update HTML title tag
-3. Test changes locally
+1. Search current version: `grep -n "V5\.3\.\d+" SubwayRunner/index.html`
+2. Update ALL occurrences (title, UI, comments)
+3. Test changes: `npm run predeploy`
 4. Commit: `🎮 Version X.Y.Z: [feature]`
+5. Push to deploy automatically
 
 ### Emergency Rollback
 ```bash
@@ -174,18 +200,29 @@ git add . && git commit -m "🚨 ROLLBACK to stable" && git push
 ## Testing
 
 ### Test Files
-- `test-runner.js`: Main test suite
-- `tests/game.test.js`: Playwright tests
+- `test-runner.js`: Main test suite (syntax, structure, performance)
+- `tests/game.test.js`: Playwright browser automation tests
 - `test-live-game.js`: Live gameplay testing
-- `quick-critical-test.js`: Fast validation
+- `quick-critical-test.js`: Fast critical function validation
 
 ### Test Commands (from SubwayRunner/)
 ```bash
-npm run test               # Complete test suite (test-runner.js)
-npm run test:playwright    # Browser automation tests
-npm run test:browser       # Live gameplay testing
-npm run predeploy         # Pre-deployment validation
-node quick-critical-test.js # Fast critical function validation
+# Run complete test suite
+npm run test               # All tests via test-runner.js
+npm run predeploy         # Pre-deployment validation (all tests)
+
+# Run specific test types
+npm run test:playwright    # Browser automation tests only
+npm run test:browser       # Live browser gameplay testing
+npm run test:watch         # Watch mode for continuous testing
+
+# Run single test file
+node test-runner.js        # Main test suite directly
+node quick-critical-test.js # Fast validation of critical functions
+node test-live-game.js     # Live browser gameplay test
+
+# Debug specific test
+npm run test -- --verbose  # Verbose output for debugging
 ```
 
 ## Deployment
@@ -214,14 +251,24 @@ node quick-critical-test.js # Fast critical function validation
 
 ## Key Files
 
-### Production
-- `SubwayRunner/index.html`: Main game (~5000 lines)
+### Production (SubwayRunner)
+- `SubwayRunner/index.html`: Main game (~4700 lines)
 - `SubwayRunner/index.html.BASISVERSION5.backup`: Stable fallback
+- `SubwayRunner/js/*.js`: Modular JavaScript components
 - `.github/workflows/hostinger-deploy.yml`: Auto-deployment
+- `.github/workflows/test-before-deploy.yml`: Test-then-deploy pipeline
 
-### Testing
+### Testing Infrastructure
 - `SubwayRunner/test-runner.js`: Main test suite
-- `SubwayRunner/package.json`: NPM scripts
+- `SubwayRunner/tests/game.test.js`: Playwright browser tests
+- `SubwayRunner/test-live-game.js`: Live gameplay testing
+- `SubwayRunner/quick-critical-test.js`: Fast validation
+- `SubwayRunner/package.json`: NPM scripts and dependencies
+
+### Alternative Implementations
+- `EndlessRunner-MVP/`: React 18 + TypeScript + Three.js implementation
+- `GestureRunnerPro/`: Godot 4.3 game engine version
+- `godot-mcp/`: MCP server for AI-assisted Godot development
 
 ## Workflow
 
