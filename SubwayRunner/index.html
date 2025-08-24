@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <!-- Cache-Busting für V5.3.49 -->
+    <!-- Cache-Busting für V5.3.50 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Subway Runner 3D - V5.3.49-EYE-TRACKING-RESTORED</title>
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js?v=5.3.48"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2?v=5.3.48"></script>
+    <title>Subway Runner 3D - V5.3.50-ROLLBACK-TO-WORKING</title>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js?v=5.3.49"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2?v=5.3.49"></script>
     
     <!-- MediaPipe Face Mesh for gesture control -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0?v=5.3.48"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0?v=5.3.49"></script>
     <!-- Gesture control will be loaded inline after DOM is ready -->
     <style>
         * {
@@ -273,7 +273,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.49-EYE-TRACKING-RESTORED</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.50-EYE-TRACKING-RESTORED</div>
         </div>
         
         <div id="instructions">
@@ -757,7 +757,7 @@
             // JUMP TIMEOUT SYSTEM
             jumpStartTime: 0,
             maxJumpDuration: 1000, // 1 second max jump time
-            // MULTI-LEVEL JUMP SYSTEM (V5.3.49)
+            // MULTI-LEVEL JUMP SYSTEM (V5.3.50)
             jumpCount: 0,
             maxJumps: 4,
             currentHeightLevel: 1,
@@ -790,7 +790,7 @@
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
         };
 
-        // ==================== LEVEL SYSTEM V5.3.49 ====================
+        // ==================== LEVEL SYSTEM V5.3.50 ====================
         let currentLevel = 1;
         const LEVEL_PROGRESSION_THRESHOLD = 1000; // Points needed per level
         let nextLevelScore = LEVEL_PROGRESSION_THRESHOLD;
@@ -1101,7 +1101,7 @@
         LevelManager.registerLevel(1, Level1);
         LevelManager.registerLevel(2, Level2);
         
-        // HEIGHT LEVEL SYSTEM (V5.3.49)
+        // HEIGHT LEVEL SYSTEM (V5.3.50)
         const HEIGHT_LEVELS = {
             GROUND: 0,
             DUCKING: 0.5,
@@ -2805,7 +2805,7 @@
                 // Check for actual collision using 3D bounding box intersection
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
-                // ENHANCED DUCK COLLISION DETECTION - V5.3.49 WITH SUPER JUMP
+                // ENHANCED DUCK COLLISION DETECTION - V5.3.50 WITH SUPER JUMP
                 if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier' || obstacle.type === 'wallgap') {
                     const playerX = LANE_POSITIONS[gameState.playerLane];
                     const obstacleX = obstacle.mesh.position.x;
@@ -2821,7 +2821,7 @@
                         const playerHeight = gameState.playerY;
                         const safeJumpHeight = 3.0; // Can jump over duck obstacles at this height
                         
-                        // V5.3.49: Check if player is high enough to jump over
+                        // V5.3.50: Check if player is high enough to jump over
                         if (playerHeight >= safeJumpHeight) {
                             // SUPER JUMP SUCCESS! No collision when jumping high
                             console.log(`🚀 SUPER JUMP! Cleared duck obstacle at height ${playerHeight.toFixed(1)}`);
@@ -3852,7 +3852,14 @@
                     isCalibrated: false
                 };
                 
-                // Ultra-sensitive boundaries now hardcoded in analyzeHeadPose for performance
+                this.thresholds = {
+                    yawLeft: -0.6,
+                    yawRight: 0.6,
+                    pitchUp: -0.6,
+                    pitchDown: 0.6,
+                    ultraJumpPitch: -0.8, // Ultra-Jump requires more extreme head movement
+                    deadZone: 0.2
+                };
                 
                 // Ultra-Jump detection variables
                 this.ultraJumpCooldown = 0;
@@ -3919,9 +3926,6 @@
                         const landmarks = results.faceLandmarks[0];
                         const gesture = this.analyzeHeadPose(landmarks);
                         
-                        // Draw canvas visualization with eye positions
-                        this.drawCanvas(video, landmarks, gesture);
-                        
                         if (gesture !== this.lastGesture) {
                             this.lastGesture = gesture;
                             this.options.onGestureDetected(gesture);
@@ -3932,115 +3936,27 @@
                 requestAnimationFrame(() => this.detectLoop());
             }
             
-            drawCanvas(video, landmarks, currentGesture) {
-                // CANVAS VISUALIZATION FOR EYE POSITION TRACKING
-                if (!this.options.canvasElement) return;
-                
-                const canvas = this.options.canvasElement;
-                const ctx = canvas.getContext('2d');
-                
-                // Set canvas size to match video aspect ratio
-                canvas.width = 180;
-                canvas.height = 135;
-                
-                // Clear canvas
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw video feed (mirrored)
-                ctx.save();
-                ctx.scale(-1, 1);
-                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-                ctx.restore();
-                
-                if (this.lastEyePosition) {
-                    const eyePos = this.lastEyePosition;
-                    
-                    // Draw zone boundaries (ultra-sensitive)
-                    ctx.strokeStyle = '#555555';
-                    ctx.lineWidth = 1;
-                    ctx.setLineDash([2, 2]);
-                    
-                    // Vertical lines (horizontal boundaries)
-                    const leftBoundary = canvas.width * 0.35;
-                    const rightBoundary = canvas.width * 0.65;
-                    ctx.beginPath();
-                    ctx.moveTo(leftBoundary, 0);
-                    ctx.lineTo(leftBoundary, canvas.height);
-                    ctx.moveTo(rightBoundary, 0);
-                    ctx.lineTo(rightBoundary, canvas.height);
-                    ctx.stroke();
-                    
-                    // Horizontal lines (vertical boundaries)
-                    const upBoundary = canvas.height * 0.48;
-                    const downBoundary = canvas.height * 0.52;
-                    ctx.beginPath();
-                    ctx.moveTo(0, upBoundary);
-                    ctx.lineTo(canvas.width, upBoundary);
-                    ctx.moveTo(0, downBoundary);
-                    ctx.lineTo(canvas.width, downBoundary);
-                    ctx.stroke();
-                    
-                    // Draw eye position (mirrored X for display)
-                    const displayX = eyePos.mirroredX * canvas.width;
-                    const displayY = eyePos.y * canvas.height;
-                    
-                    // Eye position dot
-                    ctx.fillStyle = '#00ff88';
-                    ctx.beginPath();
-                    ctx.arc(displayX, displayY, 8, 0, 2 * Math.PI);
-                    ctx.fill();
-                    
-                    // Zone indicator
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = '12px Arial';
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`X: ${eyePos.x.toFixed(2)}`, 5, 15);
-                    ctx.fillText(`Y: ${eyePos.y.toFixed(2)}`, 5, 30);
-                    ctx.fillText(`Zone: ${currentGesture}`, 5, 45);
-                    
-                    // Zone background highlights
-                    ctx.globalAlpha = 0.3;
-                    switch (currentGesture) {
-                        case 'MOVE_LEFT':
-                            ctx.fillStyle = '#ff0000';
-                            ctx.fillRect(0, 0, leftBoundary, canvas.height);
-                            break;
-                        case 'MOVE_RIGHT':
-                            ctx.fillStyle = '#ff0000';
-                            ctx.fillRect(rightBoundary, 0, canvas.width - rightBoundary, canvas.height);
-                            break;
-                        case 'JUMP':
-                            ctx.fillStyle = '#0000ff';
-                            ctx.fillRect(0, 0, canvas.width, upBoundary);
-                            break;
-                        case 'DUCK':
-                            ctx.fillStyle = '#ffff00';
-                            ctx.fillRect(0, downBoundary, canvas.width, canvas.height - downBoundary);
-                            break;
-                        case 'ULTRA_JUMP':
-                            ctx.fillStyle = '#ff00ff';
-                            ctx.fillRect(0, 0, canvas.width, upBoundary * 0.875); // 0.42 zone
-                            break;
-                    }
-                    ctx.globalAlpha = 1.0;
-                }
-            }
-            
             analyzeHeadPose(landmarks) {
-                // DIRECT EYE POSITION TRACKING (WORKING VERSION RESTORED)
-                const leftEye = landmarks[33];   // Left eye outer corner
-                const rightEye = landmarks[263]; // Right eye outer corner
+                // ROLLBACK TO V5.3.45 WORKING VERSION - Yaw/Pitch calculation
+                const nose = landmarks[1];
+                const leftEye = landmarks[33];
+                const rightEye = landmarks[263];
+                const mouth = landmarks[13];
                 
-                // Calculate average eye positions (0.0 to 1.0 coordinates)
-                const avgEyeX = (leftEye.x + rightEye.x) / 2;
-                const avgEyeY = (leftEye.y + rightEye.y) / 2;
+                // Calculate relative positions
+                const eyeCenter = {
+                    x: (leftEye.x + rightEye.x) / 2,
+                    y: (leftEye.y + rightEye.y) / 2
+                };
                 
-                // Mirror correction for intuitive horizontal control
-                const mirroredX = 1.0 - avgEyeX;
+                // Yaw calculation (left/right movement)
+                const yaw = (eyeCenter.x - 0.5) * 2; // Normalize to -1 to 1
                 
-                // Store for canvas visualization
-                this.lastEyePosition = { x: avgEyeX, y: avgEyeY, mirroredX: mirroredX };
+                // Pitch calculation (up/down movement)  
+                const pitch = (eyeCenter.y - 0.5) * 2; // Normalize to -1 to 1
+                
+                // Mirror correction for intuitive control
+                const mirroredYaw = -yaw;
                 
                 // Update Ultra-Jump cooldown
                 const currentTime = performance.now();
@@ -4049,28 +3965,28 @@
                 }
                 this.lastFrameTime = currentTime;
                 
-                // ULTRA-SENSITIVE BOUNDARIES (48%/52% - only 4% neutral zone!)
+                // Apply calibration if available
+                const adjustedYaw = this.calibrationData.isCalibrated ? 
+                    mirroredYaw - this.calibrationData.neutralYaw : mirroredYaw;
+                const adjustedPitch = this.calibrationData.isCalibrated ? 
+                    pitch - this.calibrationData.neutralPitch : pitch;
                 
-                // Ultra-Jump detection (extreme upward eye movement)
-                if (avgEyeY < 0.42 && this.ultraJumpCooldown <= 0) {
+                // Ultra-Jump detection (extreme upward head movement)
+                if (adjustedPitch < this.thresholds.ultraJumpPitch && this.ultraJumpCooldown <= 0) {
                     this.ultraJumpCooldown = 2000; // 2 second cooldown
+                    this.lastUltraJumpTime = currentTime;
                     return 'ULTRA_JUMP';
                 }
                 
-                // Vertical movement (Jump/Duck) - Y-axis
-                if (avgEyeY < 0.48) {
-                    return 'JUMP';
-                }
-                if (avgEyeY > 0.52) {
-                    return 'DUCK';
-                }
-                
-                // Horizontal movement (Left/Right) - X-axis with mirror correction
-                if (mirroredX < 0.35) {
-                    return 'MOVE_LEFT';
-                }
-                if (mirroredX > 0.65) {
-                    return 'MOVE_RIGHT';
+                // Determine gesture based on thresholds
+                if (Math.abs(adjustedYaw) > Math.abs(adjustedPitch)) {
+                    // Horizontal movement (left/right) takes priority
+                    if (adjustedYaw < this.thresholds.yawLeft) return 'MOVE_LEFT';
+                    if (adjustedYaw > this.thresholds.yawRight) return 'MOVE_RIGHT';
+                } else {
+                    // Vertical movement (up/down)
+                    if (adjustedPitch < this.thresholds.pitchUp) return 'JUMP';
+                    if (adjustedPitch > this.thresholds.pitchDown) return 'DUCK';
                 }
                 
                 return 'NONE';
@@ -4323,7 +4239,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V5.3.49-EYE-TRACKING-RESTORED loaded');
+            console.log('🎮 SubwayRunner V5.3.50-EYE-TRACKING-RESTORED loaded');
             window.debugGesture();
         }, 2000);
 
