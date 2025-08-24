@@ -2,13 +2,19 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.46-GESTURE-COMPLETE</title>
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <!-- Cache-Busting für V5.3.47 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Subway Runner 3D - V5.3.47-GESTURE-COMPLETE</title>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js?v=5.3.46"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2?v=5.3.46"></script>
     
     <!-- MediaPipe Face Mesh for gesture control -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0?v=5.3.46"></script>
     <!-- Gesture control will be loaded inline after DOM is ready -->
     <style>
         * {
@@ -267,7 +273,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.0-MULTI-JUMP</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.47-GESTURE-COMPLETE</div>
         </div>
         
         <div id="instructions">
@@ -751,7 +757,7 @@
             // JUMP TIMEOUT SYSTEM
             jumpStartTime: 0,
             maxJumpDuration: 1000, // 1 second max jump time
-            // MULTI-LEVEL JUMP SYSTEM (V4.0)
+            // MULTI-LEVEL JUMP SYSTEM (V5.3.47)
             jumpCount: 0,
             maxJumps: 4,
             currentHeightLevel: 1,
@@ -784,7 +790,7 @@
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
         };
 
-        // ==================== LEVEL SYSTEM V3.3 ====================
+        // ==================== LEVEL SYSTEM V5.3.47 ====================
         let currentLevel = 1;
         const LEVEL_PROGRESSION_THRESHOLD = 1000; // Points needed per level
         let nextLevelScore = LEVEL_PROGRESSION_THRESHOLD;
@@ -1095,7 +1101,7 @@
         LevelManager.registerLevel(1, Level1);
         LevelManager.registerLevel(2, Level2);
         
-        // HEIGHT LEVEL SYSTEM (V4.0)
+        // HEIGHT LEVEL SYSTEM (V5.3.47)
         const HEIGHT_LEVELS = {
             GROUND: 0,
             DUCKING: 0.5,
@@ -2799,7 +2805,7 @@
                 // Check for actual collision using 3D bounding box intersection
                 const isColliding = boundingBoxIntersection(playerBBox, obstacleBBox);
                 
-                // ENHANCED DUCK COLLISION DETECTION - V4.0 WITH SUPER JUMP
+                // ENHANCED DUCK COLLISION DETECTION - V5.3.47 WITH SUPER JUMP
                 if (obstacle.type === 'duckbeam' || obstacle.type === 'highbarrier' || obstacle.type === 'wallgap') {
                     const playerX = LANE_POSITIONS[gameState.playerLane];
                     const obstacleX = obstacle.mesh.position.x;
@@ -2815,7 +2821,7 @@
                         const playerHeight = gameState.playerY;
                         const safeJumpHeight = 3.0; // Can jump over duck obstacles at this height
                         
-                        // V4.0: Check if player is high enough to jump over
+                        // V5.3.47: Check if player is high enough to jump over
                         if (playerHeight >= safeJumpHeight) {
                             // SUPER JUMP SUCCESS! No collision when jumping high
                             console.log(`🚀 SUPER JUMP! Cleared duck obstacle at height ${playerHeight.toFixed(1)}`);
@@ -4230,7 +4236,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V3.4-GESTURE-DEBUG loaded');
+            console.log('🎮 SubwayRunner V5.3.47-GESTURE-COMPLETE loaded');
             window.debugGesture();
         }, 2000);
 
