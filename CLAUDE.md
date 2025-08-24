@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. **Cache-Busting**: URLs mit ?v=X.Y.Z Parameter
 5. **Format**: MAJOR.MINOR.PATCH-DESCRIPTION
 6. **IMMER erhöhen**: Niemals alte Versionsnummern behalten!
-7. **CHECK COMMAND**: `grep -n "V5\.3\.[0-9]" SubwayRunner/index.html` vor Deployment
+7. **CHECK COMMAND**: `grep -n "V5\.3\.\d+" SubwayRunner/index.html` vor Deployment
 
 ## Repository Overview
 
@@ -32,6 +32,7 @@ Endless runner game collection with **SubwayRunner** as primary production proje
 # Local Development
 cd SubwayRunner
 python -m http.server 8001  # Serve locally at localhost:8001
+npm run serve               # Alternative: live-server with auto-reload
 
 # Testing (run from SubwayRunner directory)
 npm run test                 # Run test-runner.js (syntax, structure, performance, logic)
@@ -40,8 +41,7 @@ node test-live-game.js      # Test live browser gameplay
 node quick-critical-test.js # Fast critical function validation
 
 # Linting & Type Checking
-npm run lint                # ESLint checks
-npm run typecheck           # TypeScript type checking (for React components)
+npm run lint                # ESLint checks (TypeScript/React components)
 
 # Pre-deployment Validation
 npm run predeploy           # Combines all tests before deployment
@@ -52,7 +52,7 @@ git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 
 ## Current Version & Features
 
-### V5.3.44 (Latest)
+### V5.3.47 (Latest)
 - **Three.js v0.158.0**: Locked CDN version - DO NOT CHANGE
 - **MediaPipe Gesture Control**: 3-Lane horizontal detection works perfectly
 - **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) ❌ needs Y-axis fix
