@@ -241,32 +241,29 @@ export class GestureControllerProjector {
         const landmarks = results.faceLandmarks[0];
         const blendshapes = results.faceBlendshapes ? results.faceBlendshapes[0] : null;
         
-        const nose = landmarks[1];
-        const forehead = landmarks[9];
-        const chin = landmarks[152];
-        const leftEar = landmarks[234];
-        const rightEar = landmarks[454];
+        // KEY LANDMARKS - SIMPLE EYE TRACKING APPROACH (PROVEN TO WORK!)
         const leftEye = landmarks[33];
         const rightEye = landmarks[263];
+        const nose = landmarks[1];
         
-        const earDistance = Math.abs(rightEar.x - leftEar.x);
-        const faceCenterX = (leftEar.x + rightEar.x) / 2;
-        const eyeCenterX = (leftEye.x + rightEye.x) / 2;
+        // AVERAGE EYE POSITION (SIMPLE & RELIABLE)
+        const avgEyeX = (leftEye.x + rightEye.x) / 2;
+        const avgEyeY = (leftEye.y + rightEye.y) / 2;
         
-        let yaw = ((eyeCenterX - faceCenterX) / earDistance) * 3;
+        // MIRROR CORRECTION FOR X (more intuitive)
+        let yaw = 1.0 - avgEyeX;  // Mirror for natural control
+        let pitch = avgEyeY;       // Direct Y position
         
-        const faceHeight = Math.abs(chin.y - forehead.y);
-        const noseCenterY = (forehead.y + chin.y) / 2;
-        const noseOffsetY = nose.y - noseCenterY;
-        let pitch = (noseOffsetY / faceHeight) * 2.5;
-        
-        if (this.options.projectorMode && this.options.mirrorHorizontal) {
-            yaw = -yaw;
+        // DEBUG OUTPUT (temporarily)
+        if (Math.random() < 0.02) { // 2% of frames
+            console.log(`👁️ Eye Tracking: X=${yaw.toFixed(3)}, Y=${pitch.toFixed(3)}`);
         }
         
-        const perspectiveCorrection = 1.0 + (0.2 * Math.abs(pitch));
-        yaw *= perspectiveCorrection;
+        // Convert to centered coordinates (-1 to 1)
+        yaw = (yaw - 0.5) * 2;     // -1 (left) to 1 (right)
+        pitch = (pitch - 0.5) * 2;  // -1 (up) to 1 (down)
         
+        // Apply smoothing filters
         yaw = this.kalmanFilters.yaw.filter(yaw);
         pitch = this.kalmanFilters.pitch.filter(pitch);
         
@@ -293,30 +290,36 @@ export class GestureControllerProjector {
     }
     
     detectProjectorGesture(yaw, pitch) {
-        const inDeadZone = Math.abs(yaw) < this.thresholds.deadZone && 
-                          Math.abs(pitch) < this.thresholds.deadZone;
+        // Convert back to 0-1 range for simpler thresholds
+        const eyeX = (yaw / 2) + 0.5;   // Back to 0-1 range
+        const eyeY = (pitch / 2) + 0.5; // Back to 0-1 range
         
-        if (Math.abs(pitch) > Math.abs(yaw) * 1.5) {
-            if (pitch > this.thresholds.pitchDown) {
-                return 'DUCK';
-            } else if (pitch < this.thresholds.pitchUp) {
-                return 'JUMP';
-            }
+        // SIMPLE EYE-TRACKING THRESHOLDS (PROVEN TO WORK!)
+        const UP_THRESHOLD = 0.45;    // Eye looking up = Jump
+        const DOWN_THRESHOLD = 0.55;  // Eye looking down = Duck
+        const LEFT_THRESHOLD = 0.35;  // Eye looking left
+        const RIGHT_THRESHOLD = 0.65; // Eye looking right
+        
+        // Debug output for setup screen (only when needed)
+        if (this.options.debugMode && Math.random() < 0.05) {
+            console.log(`🎯 Eye Position: X=${eyeX.toFixed(2)}, Y=${eyeY.toFixed(2)}`);
         }
         
-        if (Math.abs(yaw) > this.thresholds.deadZone) {
-            if (yaw < this.thresholds.yawLeft) {
-                return 'MOVE_LEFT';
-            } else if (yaw > this.thresholds.yawRight) {
-                return 'MOVE_RIGHT';
-            }
+        // Vertical gestures have priority (user specifically wants these to work)
+        if (eyeY < UP_THRESHOLD) {
+            return 'JUMP';
+        } else if (eyeY > DOWN_THRESHOLD) {
+            return 'DUCK';
         }
         
-        if (inDeadZone || this.lastGesture === 'DUCK') {
-            return 'NONE';
+        // Horizontal gestures (already working according to user)
+        if (eyeX < LEFT_THRESHOLD) {
+            return 'MOVE_LEFT';
+        } else if (eyeX > RIGHT_THRESHOLD) {
+            return 'MOVE_RIGHT';
         }
         
-        return this.lastGesture;
+        return 'NONE';
     }
     
     updateGestureWithCooldown(gesture) {

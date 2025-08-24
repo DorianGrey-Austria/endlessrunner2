@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.56-GESTURE-CONFIG</title>
+    <title>Subway Runner 3D - V5.3.58-EYE-TRACKING-FIX</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -1048,11 +1048,9 @@
         window.startGameClassic = function() {
             console.log('Starting game in Classic mode');
             gestureEnabled = false;
-            try {
-                startGameInternal();
-            } catch (error) {
-                console.error('Error starting classic game:', error);
-            }
+            menuState.controlMode = 'classic';
+            // Properly navigate to game screen
+            navigateToScreen('game');
         };
         
         // Gesture mode - Navigate to Setup Screen
@@ -1196,6 +1194,14 @@
                         videoElement: document.getElementById('setupVideo'),
                         canvasElement: document.getElementById('setupCanvas'),
                         onGestureDetected: handleSetupGesture,
+                        onStatsUpdate: (stats) => {
+                            // Debug output for Y values in camera status
+                            if (stats.faceDetected && stats.pitch !== undefined) {
+                                const eyeY = ((stats.pitch / 45) / 2) + 0.5; // Convert back to 0-1 range
+                                cameraStatus.textContent = `✅ Eye Y: ${eyeY.toFixed(2)} | Jump < 0.45 | Duck > 0.55`;
+                                cameraStatus.style.color = eyeY < 0.45 ? '#00ffff' : eyeY > 0.55 ? '#ff8800' : '#00ff88';
+                            }
+                        },
                         debugMode: true,
                         ipadOptimized: true // Enable iPad optimizations
                     });
