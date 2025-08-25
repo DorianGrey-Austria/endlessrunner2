@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.65-FIVE-WORLDS</title>
+    <title>Subway Runner 3D - V5.3.66-FIVE-WORLDS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -497,7 +497,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.65-FIVE-WORLDS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.66-FIVE-WORLDS</div>
         </div>
         
         <div id="instructions">
@@ -1378,7 +1378,7 @@
                     await loadGestureModule();
                 }
                 
-                // V5.3.65 ADAPTIVE: Initialize with advanced features
+                // V5.3.66 ADAPTIVE: Initialize with advanced features
                 if (!globalGestureController && window.GestureControllerProjector) {
                     globalGestureController = new window.GestureControllerProjector({
                         videoElement: document.getElementById('setupVideo'),
@@ -1482,8 +1482,8 @@
             isVictory: false,
             score: 0,
             speed: 0.08, // Langsamerer Start
-            baseSpeed: 0.08,
-            maxSpeed: 0.45, // Sehr schnell am Ende!
+            baseSpeed: 0.05, // Viel langsamer Start für Level 1
+            maxSpeed: 0.40, // Reduziert von 0.45
             lives: 3,
             gameTime: 60, // 60 Sekunden
             timeRemaining: 60,
@@ -1517,7 +1517,13 @@
             activeCollectibles: [],
             maxActiveCollectibles: 10, // Increased from 8
             collectedApples: 0,
-            collectedBroccolis: 0
+            collectedBroccolis: 0,
+            // Beginner helpers for Level 1
+            beginnerMode: false,
+            ghostCollisions: 0, // First 3 collisions are warnings only
+            comboCount: 0,
+            perfectRunBonus: 1.0,
+            warningSignsActive: false
         };
         
         // STABILITY LIMITS
@@ -1628,6 +1634,16 @@
                     currentLevel++; // INCREMENT BEFORE LOADING!
                     this.loadLevel(currentLevel);
                     nextLevelScore = currentLevel * 1000;
+                    
+                    // Update beginner mode based on level
+                    gameState.beginnerMode = (currentLevel === 1);
+                    gameState.warningSignsActive = (currentLevel === 1 || currentLevel === 2);
+                    
+                    // Give bonus life when reaching Level 3 (Rainbow World)
+                    if (currentLevel === 3) {
+                        gameState.lives = Math.min(gameState.lives + 1, 5);
+                        console.log('🌈 Bonus life for reaching Rainbow World!');
+                    }
                 }
             },
             
@@ -2985,10 +3001,21 @@
                 if (oldest && oldest.mesh) {
                     scene.remove(oldest.mesh);
                 }
+                if (oldest && oldest.warningSign) {
+                    scene.remove(oldest.warningSign);
+                }
             }
             
             const obstacleGroup = new THREE.Group();
             obstacleGroup.position.set(LANE_POSITIONS[lane], 0, z);
+            
+            // Create warning sign for beginner levels
+            let warningSign = null;
+            if (gameState.warningSignsActive && (currentLevel === 1 || currentLevel === 2)) {
+                warningSign = createWarningSign(type);
+                warningSign.position.set(LANE_POSITIONS[lane], 2.5, z + 15); // 15 units ahead
+                scene.add(warningSign);
+            }
             
             let obstacleGeometry, obstacleMaterial, height;
             
@@ -3377,7 +3404,8 @@
                 swingSpeed: 0,
                 movementRange: 0,
                 movementSpeed: 0,
-                initialX: LANE_POSITIONS[lane]
+                initialX: LANE_POSITIONS[lane],
+                warningSign: warningSign // Add warning sign reference
             };
             
             // Set animation properties for moving obstacles
@@ -3404,6 +3432,92 @@
             }
             
             obstacles.push(obstacleData);
+        }
+        
+        // Create warning sign for obstacles
+        function createWarningSign(obstacleType) {
+            const signGroup = new THREE.Group();
+            
+            // Sign background (yellow warning)
+            const signGeometry = new THREE.PlaneGeometry(1.5, 1.5);
+            const signMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFFFF00,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.9
+            });
+            const sign = new THREE.Mesh(signGeometry, signMaterial);
+            signGroup.add(sign);
+            
+            // Warning triangle
+            const triangleShape = new THREE.Shape();
+            triangleShape.moveTo(0, 0.6);
+            triangleShape.lineTo(-0.5, -0.4);
+            triangleShape.lineTo(0.5, -0.4);
+            triangleShape.closePath();
+            
+            const triangleGeometry = new THREE.ShapeGeometry(triangleShape);
+            const triangleMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFF0000,
+                side: THREE.DoubleSide
+            });
+            const triangle = new THREE.Mesh(triangleGeometry, triangleMaterial);
+            triangle.position.z = 0.01;
+            signGroup.add(triangle);
+            
+            // Add action hint text/icon
+            const hintGeometry = new THREE.PlaneGeometry(0.4, 0.2);
+            let hintColor = 0x000000;
+            
+            // Determine action needed
+            if (obstacleType === 'lowbarrier' || obstacleType === 'jumpblock' || obstacleType === 'hurdleset') {
+                hintColor = 0x0000FF; // Blue = Jump
+                // Add up arrow
+                const arrowShape = new THREE.Shape();
+                arrowShape.moveTo(0, -0.1);
+                arrowShape.lineTo(0.1, 0);
+                arrowShape.lineTo(0.05, 0);
+                arrowShape.lineTo(0.05, 0.1);
+                arrowShape.lineTo(-0.05, 0.1);
+                arrowShape.lineTo(-0.05, 0);
+                arrowShape.lineTo(-0.1, 0);
+                arrowShape.closePath();
+                
+                const arrowGeometry = new THREE.ShapeGeometry(arrowShape);
+                const arrowMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x0000FF,
+                    side: THREE.DoubleSide
+                });
+                const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+                arrow.position.z = 0.02;
+                arrow.scale.set(2, 2, 1);
+                signGroup.add(arrow);
+                
+            } else if (obstacleType === 'highbarrier' || obstacleType === 'duckbeam' || obstacleType === 'wallgap') {
+                hintColor = 0xFF00FF; // Magenta = Duck
+                // Add down arrow
+                const arrowShape = new THREE.Shape();
+                arrowShape.moveTo(0, 0.1);
+                arrowShape.lineTo(0.1, 0);
+                arrowShape.lineTo(0.05, 0);
+                arrowShape.lineTo(0.05, -0.1);
+                arrowShape.lineTo(-0.05, -0.1);
+                arrowShape.lineTo(-0.05, 0);
+                arrowShape.lineTo(-0.1, 0);
+                arrowShape.closePath();
+                
+                const arrowGeometry = new THREE.ShapeGeometry(arrowShape);
+                const arrowMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xFF00FF,
+                    side: THREE.DoubleSide
+                });
+                const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+                arrow.position.z = 0.02;
+                arrow.scale.set(2, 2, 1);
+                signGroup.add(arrow);
+            }
+            
+            return signGroup;
         }
 
         // Create Apple collectible (red fruit) - DISTINCT from spikes!
@@ -3624,6 +3738,12 @@
             LevelManager.loadLevel(1);
             gameState.jumpVelocity = 0;
             gameState.jumpStartTime = 0; // Reset jump timer
+            
+            // Enable beginner mode for Level 1
+            gameState.beginnerMode = (currentLevel === 1);
+            gameState.ghostCollisions = 0;
+            gameState.comboCount = 0;
+            gameState.warningSignsActive = (currentLevel === 1);
             gameState.jumpCount = 0; // Reset jump counter
             gameState.aerialCombo = 0; // Reset aerial combo
             gameState.invulnerable = false;
@@ -4368,7 +4488,16 @@
                     // Collected!
                     if (collectible.type === 'apple') {
                         gameState.collectedApples++;
-                        addScore(50);
+                        
+                        // Apply combo bonus
+                        gameState.comboCount++;
+                        let scoreValue = 50;
+                        if (gameState.comboCount > 5) {
+                            scoreValue = Math.floor(scoreValue * (1 + gameState.comboCount * 0.1)); // 10% per combo
+                            gameState.perfectRunBonus = Math.min(gameState.perfectRunBonus * 1.02, 3.0);
+                        }
+                        
+                        addScore(scoreValue);
                         audioManager.play('collect');
                     } else if (collectible.type === 'broccoli') {
                         gameState.collectedBroccolis++;
@@ -4754,6 +4883,29 @@
         }
 
         function loseLife() {
+            // Handle ghost collisions for beginner mode
+            if (gameState.beginnerMode && gameState.ghostCollisions < 3) {
+                gameState.ghostCollisions++;
+                console.log(`⚠️ Ghost collision ${gameState.ghostCollisions}/3 - Warning only!`);
+                
+                // Visual warning flash
+                renderer.setClearColor(0xFF8800);
+                setTimeout(() => {
+                    const levelFogColor = LevelManager.levels[currentLevel] ? 
+                        LevelManager.levels[currentLevel].fogColor : 0x222222;
+                    renderer.setClearColor(levelFogColor);
+                }, 150);
+                
+                // Give brief invulnerability but don't lose life
+                gameState.invulnerable = true;
+                gameState.invulnerabilityTime = 1000;
+                return; // Don't actually lose life
+            }
+            
+            // Reset combo on actual life loss
+            gameState.comboCount = 0;
+            gameState.perfectRunBonus = 1.0;
+            
             gameState.lives--;
             
             // Make player invulnerable for 2 seconds
@@ -4995,8 +5147,21 @@
                     obstacle.mesh.position.z += visualSpeed;
                     obstacle.z = obstacle.mesh.position.z;
                     
+                    // Update warning sign position if it exists
+                    if (obstacle.warningSign) {
+                        obstacle.warningSign.position.z += visualSpeed;
+                        // Remove warning sign when it gets close
+                        if (obstacle.warningSign.position.z > -5) {
+                            scene.remove(obstacle.warningSign);
+                            obstacle.warningSign = null;
+                        }
+                    }
+                    
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
+                        if (obstacle.warningSign) {
+                            scene.remove(obstacle.warningSign);
+                        }
                         obstacles.splice(index, 1);
                         // Only give score if obstacle was properly avoided (not hit)
                         if (!obstacle.hitPlayer) {
@@ -5023,9 +5188,18 @@
                 // Spawn collectibles with 4-second interval
                 spawnCollectible();
                 
-                // Spawn obstacles - REDUCED frequency for better balance
-                const baseSpawnRate = 0.008; // Reduced from 0.012 (33% less obstacles)
-                const spawnSpeedMultiplier = 1 + (gameState.speed / gameState.maxSpeed) * 1.0; // Reduced from 1.5
+                // Level-specific spawn rates for better difficulty curve
+                const levelSpawnRates = {
+                    1: 0.004, // 50% weniger für Level 1
+                    2: 0.006,
+                    3: 0.008,
+                    4: 0.010,
+                    5: 0.012
+                };
+                const baseSpawnRate = levelSpawnRates[currentLevel] || 0.008;
+                
+                // Less aggressive speed multiplier for spawning
+                const spawnSpeedMultiplier = 1 + (levelProgress * 0.3); // Max 1.3x within level
                 const spawnRate = baseSpawnRate * spawnSpeedMultiplier;
                 
                 if (Math.random() < spawnRate) {
@@ -5087,10 +5261,23 @@
                     return;
                 }
                 
-                // Progressive speed increase - exponential curve for dramatic effect
-                const timeProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 to 1
-                const speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
-                gameState.speed = gameState.baseSpeed * speedMultiplier;
+                // Level-based progressive speed with smooth curve
+                const levelSpeedSettings = {
+                    1: { base: 0.05, max: 0.08, spawnRate: 0.004 }, // Baby-leicht
+                    2: { base: 0.08, max: 0.12, spawnRate: 0.006 }, // Einsteiger
+                    3: { base: 0.12, max: 0.18, spawnRate: 0.008 }, // Mittel
+                    4: { base: 0.18, max: 0.28, spawnRate: 0.010 }, // Herausfordernd
+                    5: { base: 0.28, max: 0.40, spawnRate: 0.012 }  // Hardcore
+                };
+                
+                const levelSettings = levelSpeedSettings[currentLevel] || levelSpeedSettings[1];
+                const levelProgress = (gameState.score % 1000) / 1000; // Progress within current level
+                
+                // Use sine curve for smooth acceleration (starts slow, speeds up, then plateaus)
+                const smoothProgress = Math.sin(levelProgress * Math.PI / 2);
+                
+                // Calculate speed based on level and progress
+                gameState.speed = levelSettings.base + (levelSettings.max - levelSettings.base) * smoothProgress;
                 gameState.speed = Math.min(gameState.speed, gameState.maxSpeed);
                 
                 // Update environment movement with parallax
