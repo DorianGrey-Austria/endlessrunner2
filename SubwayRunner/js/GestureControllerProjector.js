@@ -15,6 +15,10 @@ import { FaceLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdel
 
 export class GestureControllerProjector {
     constructor(options = {}) {
+        // Detect device type
+        this.deviceType = this.detectDeviceType();
+        this.deviceProfile = this.getDeviceProfile();
+        
         this.options = {
             videoElement: options.videoElement || null,
             canvasElement: options.canvasElement || null,
@@ -22,14 +26,19 @@ export class GestureControllerProjector {
             onStatsUpdate: options.onStatsUpdate || (() => {}),
             onError: options.onError || (() => {}),
             onCalibrationComplete: options.onCalibrationComplete || (() => {}),
+            onCalibrationProgress: options.onCalibrationProgress || (() => {}),
             minDetectionConfidence: 0.7,
             minTrackingConfidence: 0.7,
             smoothingFrames: 3,
             sensitivity: 1.0,
+            sensitivityX: options.sensitivityX || 1.0,
+            sensitivityY: options.sensitivityY || 1.0,
             debugMode: false,
             projectorMode: true,
             mirrorHorizontal: true,
-            aspectRatio: 16/9
+            aspectRatio: 16/9,
+            useEdgeDetection: true,
+            calibrationMode: 'adaptive' // 'adaptive' | 'simple' | 'preset'
         };
         
         this.isRunning = false;
@@ -53,7 +62,19 @@ export class GestureControllerProjector {
             isCalibrated: false,
             playerHeight: 1.0,
             samples: [],
-            sampleCount: 30
+            sampleCount: 30,
+            // Adaptive calibration data
+            userRangeX: { min: 0, max: 1, range: 1 },
+            userRangeY: { min: 0, max: 1, range: 1 },
+            faceSize: 0,
+            estimatedDistance: 50, // cm
+            calibrationStep: 0, // 0: not started, 1: face detection, 2: movement range, 3: edge calibration
+            movements: {
+                left: [],
+                right: [],
+                up: [],
+                down: []
+            }
         };
         
         this.stats = {
@@ -75,13 +96,16 @@ export class GestureControllerProjector {
             confidence: new AdvancedKalmanFilter(0.01, 0.5)
         };
         
-        this.thresholds = {
-            yawLeft: -0.5,
-            yawRight: 0.5,
-            pitchUp: -0.45,
-            pitchDown: 0.55,
-            deadZone: 0.15,
-            confidenceMin: 0.6
+        // Adaptive thresholds based on device type
+        this.thresholds = this.calculateAdaptiveThresholds();
+        
+        // Edge detection thresholds (for when head partially leaves frame)
+        this.edgeThresholds = {
+            left: 0.15,    // Head 15% out of frame
+            right: 0.85,   
+            top: 0.10,
+            bottom: 0.90,
+            enabled: this.deviceType !== 'desktop' // More useful for mobile/tablet
         };
         
         this.fallbackSystem = {
@@ -115,6 +139,109 @@ export class GestureControllerProjector {
             falsePositives: 0,
             sessionStart: Date.now()
         };
+        
+        // Load saved calibration if exists
+        this.loadCalibrationProfile();
+    }
+    
+    detectDeviceType() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isMobile = /iphone|ipod|android|mobile/i.test(userAgent);
+        const isTablet = /ipad|tablet|android(?!.*mobile)/i.test(userAgent);
+        
+        if (isTablet) return 'tablet';
+        if (isMobile) return 'mobile';
+        return 'desktop';
+    }
+    
+    getDeviceProfile() {
+        const profiles = {
+            mobile: {
+                name: 'Mobile',
+                expectedDistance: 30, // cm
+                movementScale: 0.7,
+                defaultSensitivity: 1.2,
+                thresholdMultiplier: 0.8,
+                useEdgeDetection: true,
+                deadZone: 0.10
+            },
+            tablet: {
+                name: 'Tablet',
+                expectedDistance: 45, // cm
+                movementScale: 0.85,
+                defaultSensitivity: 1.0,
+                thresholdMultiplier: 0.9,
+                useEdgeDetection: true,
+                deadZone: 0.12
+            },
+            desktop: {
+                name: 'Desktop',
+                expectedDistance: 60, // cm
+                movementScale: 1.0,
+                defaultSensitivity: 0.9,
+                thresholdMultiplier: 1.0,
+                useEdgeDetection: false,
+                deadZone: 0.15
+            }
+        };
+        
+        return profiles[this.deviceType] || profiles.desktop;
+    }
+    
+    calculateAdaptiveThresholds() {
+        const profile = this.deviceProfile;
+        const baseThresholds = {
+            // These will be dynamically adjusted based on calibration
+            yawLeft: -0.5 * profile.thresholdMultiplier,
+            yawRight: 0.5 * profile.thresholdMultiplier,
+            pitchUp: -0.45 * profile.thresholdMultiplier,
+            pitchDown: 0.55 * profile.thresholdMultiplier,
+            deadZone: profile.deadZone,
+            confidenceMin: 0.6
+        };
+        
+        // If we have calibration data, use it to refine thresholds
+        if (this.calibrationData.isCalibrated && this.calibrationData.userRangeX.range > 0) {
+            const xRange = this.calibrationData.userRangeX;
+            const yRange = this.calibrationData.userRangeY;
+            
+            baseThresholds.yawLeft = this.calibrationData.neutralYaw - (xRange.range * 0.3);
+            baseThresholds.yawRight = this.calibrationData.neutralYaw + (xRange.range * 0.3);
+            baseThresholds.pitchUp = this.calibrationData.neutralPitch - (yRange.range * 0.25);
+            baseThresholds.pitchDown = this.calibrationData.neutralPitch + (yRange.range * 0.25);
+        }
+        
+        return baseThresholds;
+    }
+    
+    loadCalibrationProfile() {
+        try {
+            const savedProfile = localStorage.getItem('gestureCalibrationProfile');
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                if (profile.deviceType === this.deviceType) {
+                    Object.assign(this.calibrationData, profile.calibrationData);
+                    this.thresholds = this.calculateAdaptiveThresholds();
+                    console.log('📂 Loaded saved calibration profile');
+                }
+            }
+        } catch (error) {
+            console.warn('Could not load calibration profile:', error);
+        }
+    }
+    
+    saveCalibrationProfile() {
+        try {
+            const profile = {
+                deviceType: this.deviceType,
+                calibrationData: this.calibrationData,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('gestureCalibrationProfile', JSON.stringify(profile));
+            console.log('💾 Saved calibration profile');
+        } catch (error) {
+            console.warn('Could not save calibration profile:', error);
+        }
     }
     
     async start() {
@@ -245,6 +372,15 @@ export class GestureControllerProjector {
         const leftEye = landmarks[33];
         const rightEye = landmarks[263];
         const nose = landmarks[1];
+        const chin = landmarks[152]; // Chin for better vertical tracking
+        
+        // Calculate face center for edge detection
+        const faceX = nose.x;
+        const faceY = (nose.y + chin.y) / 2; // Average of nose and chin
+        
+        // Store face size for distance estimation
+        const faceBounds = this.calculateFaceBounds(landmarks);
+        this.calibrationData.faceSize = faceBounds.width * faceBounds.height;
         
         // AVERAGE EYE POSITION (SIMPLE & RELIABLE)
         const avgEyeX = (leftEye.x + rightEye.x) / 2;
@@ -254,9 +390,17 @@ export class GestureControllerProjector {
         let yaw = 1.0 - avgEyeX;  // Mirror for natural control
         let pitch = avgEyeY;       // Direct Y position
         
+        // Track movement ranges during calibration
+        if (this.calibrationData.calibrationStep === 2) {
+            this.updateMovementRanges(yaw, pitch);
+        }
+        
         // DEBUG OUTPUT (temporarily)
         if (Math.random() < 0.02) { // 2% of frames
             console.log(`👁️ Eye Tracking: X=${yaw.toFixed(3)}, Y=${pitch.toFixed(3)}`);
+            if (this.edgeThresholds.enabled) {
+                console.log(`📍 Face Position: X=${faceX.toFixed(2)}, Y=${faceY.toFixed(2)}`);
+            }
         }
         
         // Convert to centered coordinates (-1 to 1)
@@ -273,50 +417,129 @@ export class GestureControllerProjector {
         this.stats.yaw = yaw * 45;
         this.stats.pitch = pitch * 45;
         
+        // Apply sensitivity adjustments per axis
+        const sensitivityX = this.options.sensitivityX * this.deviceProfile.movementScale;
+        const sensitivityY = this.options.sensitivityY * this.deviceProfile.movementScale;
+        
         if (this.calibrationData.isCalibrated) {
             yaw -= this.calibrationData.neutralYaw;
             pitch -= this.calibrationData.neutralPitch;
             
-            yaw *= (this.options.sensitivity * 1.5);
-            pitch *= (this.options.sensitivity * 1.5);
+            yaw *= sensitivityX;
+            pitch *= sensitivityY;
         } else if (this.calibrationData.samples.length < this.calibrationData.sampleCount) {
             this.calibrationData.samples.push({ yaw, pitch });
         }
         
         if (this.stats.confidence >= this.thresholds.confidenceMin) {
-            const gesture = this.detectProjectorGesture(yaw, pitch);
+            // Pass face position for edge detection
+            const gesture = this.detectProjectorGesture(yaw, pitch, faceX, faceY);
             this.updateGestureWithCooldown(gesture);
         }
     }
     
-    detectProjectorGesture(yaw, pitch) {
+    calculateFaceBounds(landmarks) {
+        let minX = 1, maxX = 0, minY = 1, maxY = 0;
+        
+        // Use key face landmarks for bounds
+        const keyPoints = [
+            landmarks[10], landmarks[152], landmarks[234], landmarks[454],  // Face outline
+            landmarks[33], landmarks[263], landmarks[1]  // Eyes and nose
+        ];
+        
+        keyPoints.forEach(point => {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+        });
+        
+        return {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY,
+            centerX: (minX + maxX) / 2,
+            centerY: (minY + maxY) / 2
+        };
+    }
+    
+    updateMovementRanges(x, y) {
+        // Update min/max ranges during calibration
+        if (!this.calibrationData.userRangeX.min || x < this.calibrationData.userRangeX.min) {
+            this.calibrationData.userRangeX.min = x;
+        }
+        if (!this.calibrationData.userRangeX.max || x > this.calibrationData.userRangeX.max) {
+            this.calibrationData.userRangeX.max = x;
+        }
+        if (!this.calibrationData.userRangeY.min || y < this.calibrationData.userRangeY.min) {
+            this.calibrationData.userRangeY.min = y;
+        }
+        if (!this.calibrationData.userRangeY.max || y > this.calibrationData.userRangeY.max) {
+            this.calibrationData.userRangeY.max = y;
+        }
+        
+        // Calculate ranges
+        this.calibrationData.userRangeX.range = this.calibrationData.userRangeX.max - this.calibrationData.userRangeX.min;
+        this.calibrationData.userRangeY.range = this.calibrationData.userRangeY.max - this.calibrationData.userRangeY.min;
+    }
+    
+    detectProjectorGesture(yaw, pitch, faceX = null, faceY = null) {
         // Convert back to 0-1 range for simpler thresholds
         const eyeX = (yaw / 2) + 0.5;   // Back to 0-1 range
         const eyeY = (pitch / 2) + 0.5; // Back to 0-1 range
         
-        // SIMPLE EYE-TRACKING THRESHOLDS (PROVEN TO WORK!)
-        const UP_THRESHOLD = 0.45;    // Eye looking up = Jump
-        const DOWN_THRESHOLD = 0.55;  // Eye looking down = Duck
-        const LEFT_THRESHOLD = 0.35;  // Eye looking left
-        const RIGHT_THRESHOLD = 0.65; // Eye looking right
+        // Check for edge detection first (if enabled and we have face position)
+        if (this.edgeThresholds.enabled && faceX !== null && faceY !== null) {
+            // Edge detection - when head partially leaves the frame
+            if (faceX < this.edgeThresholds.left) {
+                if (this.options.debugMode) console.log('🔴 Edge Detection: LEFT');
+                return 'MOVE_LEFT';
+            } else if (faceX > this.edgeThresholds.right) {
+                if (this.options.debugMode) console.log('🔴 Edge Detection: RIGHT');
+                return 'MOVE_RIGHT';
+            } else if (faceY < this.edgeThresholds.top) {
+                if (this.options.debugMode) console.log('🔴 Edge Detection: JUMP');
+                return 'JUMP';
+            } else if (faceY > this.edgeThresholds.bottom) {
+                if (this.options.debugMode) console.log('🔴 Edge Detection: DUCK');
+                return 'DUCK';
+            }
+        }
+        
+        // Use adaptive thresholds based on calibration
+        const UP_THRESHOLD = 0.5 + (this.thresholds.pitchUp * 0.5);
+        const DOWN_THRESHOLD = 0.5 + (this.thresholds.pitchDown * 0.5);
+        const LEFT_THRESHOLD = 0.5 + (this.thresholds.yawLeft * 0.5);
+        const RIGHT_THRESHOLD = 0.5 + (this.thresholds.yawRight * 0.5);
         
         // Debug output for setup screen (only when needed)
         if (this.options.debugMode && Math.random() < 0.05) {
             console.log(`🎯 Eye Position: X=${eyeX.toFixed(2)}, Y=${eyeY.toFixed(2)}`);
+            console.log(`📏 Thresholds - L:${LEFT_THRESHOLD.toFixed(2)} R:${RIGHT_THRESHOLD.toFixed(2)} U:${UP_THRESHOLD.toFixed(2)} D:${DOWN_THRESHOLD.toFixed(2)}`);
         }
         
+        // Apply dead zone
+        const deadZone = this.thresholds.deadZone;
+        const isInDeadZoneX = Math.abs(eyeX - 0.5) < deadZone;
+        const isInDeadZoneY = Math.abs(eyeY - 0.5) < deadZone;
+        
         // Vertical gestures have priority (user specifically wants these to work)
-        if (eyeY < UP_THRESHOLD) {
-            return 'JUMP';
-        } else if (eyeY > DOWN_THRESHOLD) {
-            return 'DUCK';
+        if (!isInDeadZoneY) {
+            if (eyeY < UP_THRESHOLD) {
+                return 'JUMP';
+            } else if (eyeY > DOWN_THRESHOLD) {
+                return 'DUCK';
+            }
         }
         
         // Horizontal gestures (already working according to user)
-        if (eyeX < LEFT_THRESHOLD) {
-            return 'MOVE_LEFT';
-        } else if (eyeX > RIGHT_THRESHOLD) {
-            return 'MOVE_RIGHT';
+        if (!isInDeadZoneX) {
+            if (eyeX < LEFT_THRESHOLD) {
+                return 'MOVE_LEFT';
+            } else if (eyeX > RIGHT_THRESHOLD) {
+                return 'MOVE_RIGHT';
+            }
         }
         
         return 'NONE';
@@ -400,6 +623,177 @@ export class GestureControllerProjector {
         } else {
             console.warn('⚠️ Calibration failed - no samples collected');
             setTimeout(() => this.startCalibration(), 2000);
+        }
+    }
+    
+    // Advanced 3-Step Calibration System
+    startAdvancedCalibration() {
+        console.log('🎯 Starting Advanced 3-Step Calibration...');
+        this.calibrationData.calibrationStep = 1;
+        this.calibrationData.samples = [];
+        this.calibrationData.isCalibrated = false;
+        this.calibrationData.movements = {
+            left: [],
+            right: [],
+            up: [],
+            down: []
+        };
+        
+        // Start with face detection and distance measurement
+        this.startStep1FaceDetection();
+    }
+    
+    startStep1FaceDetection() {
+        console.log('📸 Step 1: Face Detection & Distance Measurement');
+        this.calibrationData.calibrationStep = 1;
+        
+        // Notify UI
+        this.options.onCalibrationProgress({
+            step: 1,
+            message: 'Positioniere dein Gesicht in der Mitte',
+            progress: 0
+        });
+        
+        // Collect face size samples for 2 seconds
+        setTimeout(() => {
+            this.calculateDistanceFromFaceSize();
+            this.startStep2MovementRange();
+        }, 2000);
+    }
+    
+    calculateDistanceFromFaceSize() {
+        // Estimate distance based on face size
+        const avgFaceSize = this.calibrationData.faceSize;
+        const referenceFaceSize = 0.05; // Average face size at 50cm
+        
+        // Rough estimation: inverse relationship between size and distance
+        this.calibrationData.estimatedDistance = (referenceFaceSize / avgFaceSize) * 50;
+        
+        console.log(`📏 Estimated distance: ${this.calibrationData.estimatedDistance.toFixed(0)}cm`);
+        
+        // Adjust thresholds based on distance
+        const distanceMultiplier = this.calibrationData.estimatedDistance / this.deviceProfile.expectedDistance;
+        this.thresholds.deadZone *= distanceMultiplier;
+    }
+    
+    startStep2MovementRange() {
+        console.log('🎮 Step 2: Movement Range Calibration');
+        this.calibrationData.calibrationStep = 2;
+        
+        // Reset movement ranges
+        this.calibrationData.userRangeX = { min: 1, max: 0, range: 0 };
+        this.calibrationData.userRangeY = { min: 1, max: 0, range: 0 };
+        
+        // Notify UI
+        this.options.onCalibrationProgress({
+            step: 2,
+            message: 'Bewege deinen Kopf langsam: Links, Rechts, Oben, Unten',
+            progress: 33
+        });
+        
+        // Collect movement data for 4 seconds
+        setTimeout(() => {
+            this.analyzeMovementRange();
+            this.startStep3EdgeCalibration();
+        }, 4000);
+    }
+    
+    analyzeMovementRange() {
+        const xRange = this.calibrationData.userRangeX;
+        const yRange = this.calibrationData.userRangeY;
+        
+        console.log(`📊 Movement Range - X: ${xRange.range.toFixed(2)}, Y: ${yRange.range.toFixed(2)}`);
+        
+        // Update thresholds based on actual movement range
+        this.thresholds = this.calculateAdaptiveThresholds();
+        
+        // Mark center position
+        this.calibrationData.neutralYaw = (xRange.min + xRange.max) / 2;
+        this.calibrationData.neutralPitch = (yRange.min + yRange.max) / 2;
+    }
+    
+    startStep3EdgeCalibration() {
+        console.log('🔴 Step 3: Edge Detection Calibration');
+        this.calibrationData.calibrationStep = 3;
+        
+        // Notify UI
+        this.options.onCalibrationProgress({
+            step: 3,
+            message: 'Bewege den Kopf zu den Rändern (teilweise aus dem Bild)',
+            progress: 66
+        });
+        
+        // Test edge detection for 3 seconds
+        setTimeout(() => {
+            this.completeAdvancedCalibration();
+        }, 3000);
+    }
+    
+    completeAdvancedCalibration() {
+        this.calibrationData.calibrationStep = 0;
+        this.calibrationData.isCalibrated = true;
+        
+        // Save calibration profile
+        this.saveCalibrationProfile();
+        
+        console.log(`✅ Advanced Calibration Complete!`);
+        console.log(`📱 Device: ${this.deviceType}`);
+        console.log(`📏 Distance: ${this.calibrationData.estimatedDistance.toFixed(0)}cm`);
+        console.log(`🎯 Thresholds updated for optimal performance`);
+        
+        this.options.onCalibrationComplete({
+            deviceType: this.deviceType,
+            distance: this.calibrationData.estimatedDistance,
+            thresholds: this.thresholds,
+            edgeDetection: this.edgeThresholds.enabled
+        });
+        
+        // Notify UI
+        this.options.onCalibrationProgress({
+            step: 3,
+            message: 'Kalibrierung abgeschlossen!',
+            progress: 100
+        });
+        
+        if (this.ctx) {
+            this.showCalibrationSuccess();
+        }
+    }
+    
+    // Quick calibration presets
+    applyPreset(presetName) {
+        const presets = {
+            sensitive: {
+                deadZone: 0.08,
+                sensitivityX: 1.3,
+                sensitivityY: 1.3,
+                smoothingFrames: 2
+            },
+            normal: {
+                deadZone: 0.12,
+                sensitivityX: 1.0,
+                sensitivityY: 1.0,
+                smoothingFrames: 3
+            },
+            robust: {
+                deadZone: 0.18,
+                sensitivityX: 0.8,
+                sensitivityY: 0.8,
+                smoothingFrames: 4
+            },
+            gaming: {
+                deadZone: 0.10,
+                sensitivityX: 1.1,
+                sensitivityY: 1.1,
+                smoothingFrames: 1
+            }
+        };
+        
+        const preset = presets[presetName];
+        if (preset) {
+            Object.assign(this.options, preset);
+            this.thresholds.deadZone = preset.deadZone;
+            console.log(`🎮 Applied preset: ${presetName}`);
         }
     }
     

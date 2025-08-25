@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.62-GESTURE-WORKS</title>
+    <title>Subway Runner 3D - V5.3.64-ADAPTIVE-CALIBRATION</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -497,7 +497,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.62-GESTURE-WORKS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.64-ADAPTIVE-CALIBRATION</div>
         </div>
         
         <div id="instructions">
@@ -559,9 +559,24 @@
         <!-- Gesture Setup Screen (Step 2) -->
         <div id="gestureSetupScreen" style="display: none;">
             <h1>📹 Gestensteuerung einrichten</h1>
+            
+            <!-- Device Detection Display -->
+            <div id="deviceInfo" style="margin: 15px 0; padding: 10px; background: rgba(0,255,136,0.1); border-radius: 5px; display: none;">
+                <span id="deviceType" style="font-weight: bold;">📱 Gerät erkannt: </span>
+                <span id="deviceDistance" style="margin-left: 20px;">📏 Abstand: </span>
+            </div>
+            
+            <!-- Calibration Progress Bar -->
+            <div id="calibrationProgress" style="margin: 20px 0; display: none;">
+                <div style="background: rgba(255,255,255,0.1); height: 30px; border-radius: 15px; overflow: hidden;">
+                    <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00ff88, #00ccff); transition: width 0.5s;"></div>
+                </div>
+                <p id="calibrationMessage" style="text-align: center; margin-top: 10px; color: #00ff88;"></p>
+            </div>
+            
             <div style="margin: 20px 0; color: #666;">
-                <p>Positioniere dein Gesicht in der Mitte des Bildschirms</p>
-                <p>Bewege deinen Kopf zum Steuern: Links/Rechts/Oben/Unten</p>
+                <p id="setupInstructions">Positioniere dein Gesicht in der Mitte des Bildschirms</p>
+                <p id="setupDetails">Bewege deinen Kopf zum Steuern: Links/Rechts/Oben/Unten</p>
             </div>
             
             <!-- Live Camera Preview -->
@@ -580,23 +595,75 @@
             
             <!-- Configuration Controls -->
             <div class="config-controls" style="margin: 30px auto; max-width: 600px;">
-                <!-- Sensitivity Slider -->
-                <div class="sensitivity-control" style="margin: 20px 0;">
-                    <label style="display: block; margin-bottom: 10px;">
-                        Empfindlichkeit: <span id="sensitivityValue">50%</span>
-                    </label>
-                    <input type="range" id="sensitivitySlider" min="20" max="80" value="50" 
-                           style="width: 100%; height: 40px; cursor: pointer;"
-                           oninput="updateSensitivity(this.value)">
+                
+                <!-- Preset Buttons -->
+                <div id="presetButtons" style="margin: 20px 0; display: flex; justify-content: space-around; flex-wrap: wrap;">
+                    <button onclick="applyGesturePreset('sensitive')" class="preset-btn" 
+                            style="padding: 10px 15px; margin: 5px; background: rgba(255,255,255,0.1); 
+                                   border: 1px solid #00ff88; border-radius: 5px; cursor: pointer; color: white;">
+                        🎯 Empfindlich
+                    </button>
+                    <button onclick="applyGesturePreset('normal')" class="preset-btn" 
+                            style="padding: 10px 15px; margin: 5px; background: rgba(255,255,255,0.1); 
+                                   border: 1px solid #00ff88; border-radius: 5px; cursor: pointer; color: white;">
+                        ⚖️ Normal
+                    </button>
+                    <button onclick="applyGesturePreset('robust')" class="preset-btn" 
+                            style="padding: 10px 15px; margin: 5px; background: rgba(255,255,255,0.1); 
+                                   border: 1px solid #00ff88; border-radius: 5px; cursor: pointer; color: white;">
+                        🛡️ Robust
+                    </button>
+                    <button onclick="applyGesturePreset('gaming')" class="preset-btn" 
+                            style="padding: 10px 15px; margin: 5px; background: rgba(255,255,255,0.1); 
+                                   border: 1px solid #00ff88; border-radius: 5px; cursor: pointer; color: white;">
+                        🎮 Gaming
+                    </button>
                 </div>
                 
-                <!-- Calibration Button -->
-                <button onclick="calibrateNeutral()" 
-                        style="display: block; margin: 20px auto; padding: 15px 30px; 
-                               background: #00ff88; color: black; border: none; 
-                               border-radius: 8px; font-size: 18px; cursor: pointer;">
-                    🎯 Neutral-Position setzen
-                </button>
+                <!-- Sensitivity Sliders (X and Y separate) -->
+                <div class="sensitivity-control" style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">
+                        Horizontal-Empfindlichkeit: <span id="sensitivityXValue">50%</span>
+                    </label>
+                    <input type="range" id="sensitivityXSlider" min="20" max="80" value="50" 
+                           style="width: 100%; height: 40px; cursor: pointer;"
+                           oninput="updateSensitivityX(this.value)">
+                </div>
+                
+                <div class="sensitivity-control" style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">
+                        Vertikal-Empfindlichkeit: <span id="sensitivityYValue">50%</span>
+                    </label>
+                    <input type="range" id="sensitivityYSlider" min="20" max="80" value="50" 
+                           style="width: 100%; height: 40px; cursor: pointer;"
+                           oninput="updateSensitivityY(this.value)">
+                </div>
+                
+                <!-- Calibration Buttons -->
+                <div style="display: flex; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
+                    <button onclick="startSimpleCalibration()" 
+                            style="margin: 10px; padding: 15px 30px; 
+                                   background: #00ff88; color: black; border: none; 
+                                   border-radius: 8px; font-size: 18px; cursor: pointer;">
+                        🎯 Schnell-Kalibrierung
+                    </button>
+                    <button onclick="startAdvancedCalibration()" 
+                            style="margin: 10px; padding: 15px 30px; 
+                                   background: linear-gradient(135deg, #00ff88, #00ccff); color: black; border: none; 
+                                   border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold;">
+                        🔬 Erweiterte Kalibrierung
+                    </button>
+                </div>
+                
+                <!-- Edge Detection Toggle -->
+                <div style="margin: 20px 0; text-align: center;">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="edgeDetectionToggle" checked 
+                               onchange="toggleEdgeDetection(this.checked)" 
+                               style="margin-right: 10px; transform: scale(1.5);">
+                        <span style="font-size: 16px;">🔴 Edge-Detection aktivieren (Kopf aus Bild = Steuerung)</span>
+                    </label>
+                </div>
                 
                 <!-- Test Indicators -->
                 <div class="gesture-test-indicators" style="display: flex; justify-content: space-around; margin: 30px 0; flex-wrap: wrap;">
@@ -1134,12 +1201,12 @@
             }
         };
         
-        // Calibrate Neutral Position
-        window.calibrateNeutral = function() {
-            if (gestureController) {
-                gestureController.calibrate();
-                document.getElementById('cameraStatus').textContent = '✅ Kalibriert!';
-                document.getElementById('cameraStatus').style.color = '#00ff88';
+        // Simple Calibration (legacy)
+        window.startSimpleCalibration = function() {
+            if (globalGestureController) {
+                globalGestureController.startCalibration();
+                document.getElementById('cameraStatus').textContent = '🎯 Kalibriere...';
+                document.getElementById('cameraStatus').style.color = '#ffcc00';
                 
                 // Flash calibration overlay
                 const overlay = document.querySelector('.calibration-overlay');
@@ -1149,6 +1216,107 @@
                 }, 300);
             }
         };
+        
+        // Advanced 3-Step Calibration
+        window.startAdvancedCalibration = function() {
+            if (globalGestureController) {
+                // Show progress bar
+                document.getElementById('calibrationProgress').style.display = 'block';
+                document.getElementById('deviceInfo').style.display = 'block';
+                
+                // Update device info
+                const deviceType = globalGestureController.deviceType;
+                const deviceName = deviceType.charAt(0).toUpperCase() + deviceType.slice(1);
+                document.getElementById('deviceType').textContent = `📱 Gerät: ${deviceName}`;
+                
+                // Start calibration with progress callback
+                globalGestureController.options.onCalibrationProgress = updateCalibrationProgress;
+                globalGestureController.startAdvancedCalibration();
+            }
+        };
+        
+        // Update calibration progress UI
+        window.updateCalibrationProgress = function(data) {
+            const progressBar = document.getElementById('progressBar');
+            const message = document.getElementById('calibrationMessage');
+            const instructions = document.getElementById('setupInstructions');
+            const details = document.getElementById('setupDetails');
+            
+            progressBar.style.width = data.progress + '%';
+            message.textContent = data.message;
+            
+            // Update instructions based on step
+            switch(data.step) {
+                case 1:
+                    instructions.textContent = 'Schritt 1: Gesichtserkennung';
+                    details.textContent = 'Halte dein Gesicht ruhig in der Mitte';
+                    break;
+                case 2:
+                    instructions.textContent = 'Schritt 2: Bewegungsbereich';
+                    details.textContent = 'Bewege deinen Kopf langsam in alle Richtungen';
+                    break;
+                case 3:
+                    instructions.textContent = 'Schritt 3: Edge-Detection';
+                    details.textContent = 'Bewege deinen Kopf bis zum Rand des Bildes';
+                    break;
+            }
+            
+            // Update camera status
+            if (data.progress === 100) {
+                document.getElementById('cameraStatus').textContent = '✅ Kalibrierung abgeschlossen!';
+                document.getElementById('cameraStatus').style.color = '#00ff88';
+                
+                // Update distance info
+                if (globalGestureController.calibrationData.estimatedDistance) {
+                    const distance = globalGestureController.calibrationData.estimatedDistance;
+                    document.getElementById('deviceDistance').textContent = `📏 Abstand: ~${distance.toFixed(0)}cm`;
+                }
+            }
+        };
+        
+        // Apply gesture preset
+        window.applyGesturePreset = function(presetName) {
+            if (globalGestureController) {
+                globalGestureController.applyPreset(presetName);
+                
+                // Visual feedback
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.style.background = 'rgba(255,255,255,0.1)';
+                });
+                event.target.style.background = 'rgba(0,255,136,0.3)';
+                
+                // Update status
+                document.getElementById('cameraStatus').textContent = `🎮 Preset: ${presetName}`;
+            }
+        };
+        
+        // Update sensitivity sliders
+        window.updateSensitivityX = function(value) {
+            const percent = value;
+            document.getElementById('sensitivityXValue').textContent = percent + '%';
+            if (globalGestureController) {
+                globalGestureController.options.sensitivityX = value / 50; // 0.4 to 1.6
+            }
+        };
+        
+        window.updateSensitivityY = function(value) {
+            const percent = value;
+            document.getElementById('sensitivityYValue').textContent = percent + '%';
+            if (globalGestureController) {
+                globalGestureController.options.sensitivityY = value / 50; // 0.4 to 1.6
+            }
+        };
+        
+        // Toggle edge detection
+        window.toggleEdgeDetection = function(enabled) {
+            if (globalGestureController) {
+                globalGestureController.edgeThresholds.enabled = enabled;
+                console.log(`🔴 Edge Detection: ${enabled ? 'Enabled' : 'Disabled'}`);
+            }
+        };
+        
+        // Legacy calibrateNeutral for compatibility
+        window.calibrateNeutral = window.startSimpleCalibration;
         
         // Start Game with Configured Gestures
         window.startGameWithConfiguredGestures = function() {
@@ -1210,7 +1378,7 @@
                     await loadGestureModule();
                 }
                 
-                // V5.3.60 FIX: Initialize global gesture controller for preview
+                // V5.3.64 ADAPTIVE: Initialize with advanced features
                 if (!globalGestureController && window.GestureControllerProjector) {
                     globalGestureController = new window.GestureControllerProjector({
                         videoElement: document.getElementById('setupVideo'),
@@ -1220,15 +1388,36 @@
                             // Debug output for Y values in camera status
                             if (stats.faceDetected && stats.pitch !== undefined) {
                                 const eyeY = ((stats.pitch / 45) / 2) + 0.5; // Convert back to 0-1 range
-                                cameraStatus.textContent = `✅ Eye Y: ${eyeY.toFixed(2)} | Jump < 0.45 | Duck > 0.55`;
+                                const statusText = `✅ Eye Y: ${eyeY.toFixed(2)} | Device: ${globalGestureController.deviceType}`;
+                                cameraStatus.textContent = statusText;
                                 cameraStatus.style.color = eyeY < 0.45 ? '#00ffff' : eyeY > 0.55 ? '#ff8800' : '#00ff88';
                             }
                         },
+                        onCalibrationComplete: (data) => {
+                            console.log('✅ Calibration complete:', data);
+                            // Show device-specific info
+                            document.getElementById('deviceInfo').style.display = 'block';
+                            document.getElementById('deviceType').textContent = `📱 Gerät: ${data.deviceType || 'Unknown'}`;
+                            if (data.distance) {
+                                document.getElementById('deviceDistance').textContent = `📏 Abstand: ~${data.distance.toFixed(0)}cm`;
+                            }
+                        },
+                        onCalibrationProgress: updateCalibrationProgress,
                         debugMode: true,
-                        ipadOptimized: true // Enable iPad optimizations
+                        ipadOptimized: true, // Enable iPad optimizations
+                        calibrationMode: 'adaptive' // Use new adaptive calibration
                     });
                     
                     await globalGestureController.start();
+                    
+                    // Show device info immediately
+                    const deviceType = globalGestureController.deviceType;
+                    const deviceName = deviceType.charAt(0).toUpperCase() + deviceType.slice(1);
+                    document.getElementById('deviceInfo').style.display = 'block';
+                    document.getElementById('deviceType').textContent = `📱 Gerät: ${deviceName}`;
+                    
+                    // Set default edge detection based on device
+                    document.getElementById('edgeDetectionToggle').checked = deviceType !== 'desktop';
                 }
                 
                 cameraStatus.textContent = '✅ Bereit! Bewege deinen Kopf zum Testen.';

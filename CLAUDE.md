@@ -86,7 +86,7 @@ npx bmad-method list:expansions  # List available expansion packs
 
 ## Current Version & Features
 
-### V5.3.58 (Current - EYE-TRACKING-FIX)
+### V5.3.62 (Current - GESTURE-WORKS)
 - **Three.js v0.158.0**: Locked CDN version - DO NOT CHANGE
 - **MediaPipe Gesture Control**: Eye-tracking implementation for vertical gestures
 - **Current Status**: Horizontal gestures ✅ | Vertical (Jump/Duck) being fixed with eye-tracking  
