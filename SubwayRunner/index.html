@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3.64-ADAPTIVE-CALIBRATION</title>
+    <title>Subway Runner 3D - V5.3.65-FIVE-WORLDS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -497,7 +497,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.64-ADAPTIVE-CALIBRATION</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.3.65-FIVE-WORLDS</div>
         </div>
         
         <div id="instructions">
@@ -1378,7 +1378,7 @@
                     await loadGestureModule();
                 }
                 
-                // V5.3.64 ADAPTIVE: Initialize with advanced features
+                // V5.3.65 ADAPTIVE: Initialize with advanced features
                 if (!globalGestureController && window.GestureControllerProjector) {
                     globalGestureController = new window.GestureControllerProjector({
                         videoElement: document.getElementById('setupVideo'),
@@ -1623,7 +1623,7 @@
                 
                 nextLevelScore = currentLevel * 1000; // Update for test compatibility
                 const nextLevelThreshold = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
-                if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
+                if (gameState.score >= nextLevelThreshold && currentLevel < 5 && this.levels[currentLevel + 1]) {
                     this.lastLevelChange = now;
                     currentLevel++; // INCREMENT BEFORE LOADING!
                     this.loadLevel(currentLevel);
@@ -1835,9 +1835,571 @@
             }
         };
 
-        // Register levels
+        // Level 3: Rainbow Sky World
+        const Level3 = {
+            id: 3,
+            name: "Rainbow Sky World",
+            description: "Magical sky realm with rainbow bridge",
+            fogColor: 0x87CEEB,
+            fogDensity: 0.008,
+            objects: {
+                rainbow: null,
+                clouds: [],
+                floatingIslands: [],
+                sunRays: []
+            },
+            
+            load: function(scene, renderer) {
+                console.log('🌈 Loading Level 3: Rainbow Sky World');
+                
+                // Sky blue fog and background
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(0x87CEEB);
+                
+                // Create rainbow
+                this.createRainbow(scene);
+                
+                // Create clouds
+                this.createClouds(scene);
+                
+                // Create floating islands
+                this.createFloatingIslands(scene);
+                
+                // Add sun rays
+                this.createSunRays(scene);
+            },
+            
+            createRainbow: function(scene) {
+                const colors = [0xFF0000, 0xFFA500, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
+                const rainbowGroup = new THREE.Group();
+                
+                for (let i = 0; i < colors.length; i++) {
+                    const arcGeom = new THREE.TorusGeometry(30 + i * 2, 1.5, 4, 32, Math.PI);
+                    const arcMat = new THREE.MeshBasicMaterial({
+                        color: colors[i],
+                        transparent: true,
+                        opacity: 0.7,
+                        side: THREE.DoubleSide
+                    });
+                    const arc = new THREE.Mesh(arcGeom, arcMat);
+                    arc.position.set(0, 20, -80);
+                    arc.rotation.x = Math.PI;
+                    rainbowGroup.add(arc);
+                }
+                
+                this.objects.rainbow = rainbowGroup;
+                scene.add(rainbowGroup);
+                LevelManager.addLevelObject(rainbowGroup);
+            },
+            
+            createClouds: function(scene) {
+                for (let i = 0; i < 20; i++) {
+                    const cloudGroup = new THREE.Group();
+                    
+                    // Create fluffy cloud from multiple spheres
+                    for (let j = 0; j < 5; j++) {
+                        const cloudGeom = new THREE.SphereGeometry(
+                            2 + Math.random() * 2,
+                            8,
+                            6
+                        );
+                        const cloudMat = new THREE.MeshLambertMaterial({
+                            color: 0xFFFFFF,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const cloudPart = new THREE.Mesh(cloudGeom, cloudMat);
+                        cloudPart.position.set(
+                            (Math.random() - 0.5) * 3,
+                            (Math.random() - 0.5) * 1,
+                            (Math.random() - 0.5) * 2
+                        );
+                        cloudGroup.add(cloudPart);
+                    }
+                    
+                    cloudGroup.position.set(
+                        (Math.random() - 0.5) * 80,
+                        10 + Math.random() * 15,
+                        -20 - Math.random() * 60
+                    );
+                    
+                    cloudGroup.userData = {
+                        floatSpeed: 0.5 + Math.random() * 0.5,
+                        baseY: cloudGroup.position.y
+                    };
+                    
+                    this.objects.clouds.push(cloudGroup);
+                    scene.add(cloudGroup);
+                    LevelManager.addLevelObject(cloudGroup);
+                }
+            },
+            
+            createFloatingIslands: function(scene) {
+                for (let i = 0; i < 8; i++) {
+                    const islandGroup = new THREE.Group();
+                    
+                    // Island base
+                    const islandGeom = new THREE.ConeGeometry(3, 2, 8);
+                    const islandMat = new THREE.MeshLambertMaterial({
+                        color: 0x228B22
+                    });
+                    const island = new THREE.Mesh(islandGeom, islandMat);
+                    island.rotation.x = Math.PI;
+                    islandGroup.add(island);
+                    
+                    // Trees on island
+                    for (let j = 0; j < 3; j++) {
+                        const treeGeom = new THREE.ConeGeometry(0.5, 2, 6);
+                        const treeMat = new THREE.MeshLambertMaterial({
+                            color: 0x00FF00
+                        });
+                        const tree = new THREE.Mesh(treeGeom, treeMat);
+                        tree.position.set(
+                            (Math.random() - 0.5) * 2,
+                            1,
+                            (Math.random() - 0.5) * 2
+                        );
+                        islandGroup.add(tree);
+                    }
+                    
+                    islandGroup.position.set(
+                        -25 + Math.random() * 50,
+                        15 + Math.random() * 10,
+                        -30 - Math.random() * 60
+                    );
+                    
+                    this.objects.floatingIslands.push(islandGroup);
+                    scene.add(islandGroup);
+                    LevelManager.addLevelObject(islandGroup);
+                }
+            },
+            
+            createSunRays: function(scene) {
+                const sunLight = new THREE.DirectionalLight(0xFFFFAA, 1.5);
+                sunLight.position.set(20, 30, -50);
+                scene.add(sunLight);
+                LevelManager.addLevelObject(sunLight);
+                
+                // Volumetric light rays (simplified)
+                for (let i = 0; i < 5; i++) {
+                    const rayGeom = new THREE.CylinderGeometry(0.1, 5, 50, 4);
+                    const rayMat = new THREE.MeshBasicMaterial({
+                        color: 0xFFFF88,
+                        transparent: true,
+                        opacity: 0.1
+                    });
+                    const ray = new THREE.Mesh(rayGeom, rayMat);
+                    ray.position.set(
+                        20 + (Math.random() - 0.5) * 10,
+                        30,
+                        -50 + (Math.random() - 0.5) * 10
+                    );
+                    ray.rotation.z = (Math.random() - 0.5) * 0.5;
+                    this.objects.sunRays.push(ray);
+                    scene.add(ray);
+                    LevelManager.addLevelObject(ray);
+                }
+            },
+            
+            update: function(deltaTime) {
+                // Animate rainbow
+                if (this.objects.rainbow) {
+                    this.objects.rainbow.rotation.z = Math.sin(Date.now() * 0.0001) * 0.02;
+                }
+                
+                // Float clouds
+                this.objects.clouds.forEach(cloud => {
+                    cloud.position.y = cloud.userData.baseY + Math.sin(Date.now() * 0.001 * cloud.userData.floatSpeed) * 2;
+                    cloud.position.x += cloud.userData.floatSpeed * 0.01;
+                    if (cloud.position.x > 50) cloud.position.x = -50;
+                });
+                
+                // Rotate floating islands slowly
+                this.objects.floatingIslands.forEach(island => {
+                    island.rotation.y += 0.001;
+                });
+            },
+            
+            cleanup: function() {
+                console.log('Cleaning up Rainbow Sky World');
+                this.objects.rainbow = null;
+                this.objects.clouds = [];
+                this.objects.floatingIslands = [];
+                this.objects.sunRays = [];
+            }
+        };
+
+        // Level 4: Volcanic Inferno
+        const Level4 = {
+            id: 4,
+            name: "Volcanic Inferno",
+            description: "Dangerous lava caves with erupting volcanoes",
+            fogColor: 0x330000,
+            fogDensity: 0.02,
+            objects: {
+                lavaFlows: [],
+                volcanicRocks: [],
+                fireParticles: [],
+                smokeEffects: []
+            },
+            
+            load: function(scene, renderer) {
+                console.log('🌋 Loading Level 4: Volcanic Inferno');
+                
+                // Dark red fog
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(0x220000);
+                
+                // Create lava flows
+                this.createLavaFlows(scene);
+                
+                // Create volcanic rocks
+                this.createVolcanicRocks(scene);
+                
+                // Add fire effects
+                this.createFireEffects(scene);
+                
+                // Add ambient red lighting
+                const ambientLight = new THREE.AmbientLight(0xFF4400, 0.3);
+                scene.add(ambientLight);
+                LevelManager.addLevelObject(ambientLight);
+            },
+            
+            createLavaFlows: function(scene) {
+                for (let i = 0; i < 10; i++) {
+                    const lavaGeom = new THREE.PlaneGeometry(3, 20);
+                    const lavaMat = new THREE.MeshLambertMaterial({
+                        color: 0xFF4500,
+                        emissive: 0xFF0000,
+                        emissiveIntensity: 0.8
+                    });
+                    const lava = new THREE.Mesh(lavaGeom, lavaMat);
+                    lava.rotation.x = -Math.PI / 2;
+                    lava.position.set(
+                        (Math.random() - 0.5) * 20,
+                        -0.9,
+                        -10 - i * 15
+                    );
+                    
+                    lava.userData = {
+                        flowSpeed: 0.5 + Math.random() * 0.5
+                    };
+                    
+                    this.objects.lavaFlows.push(lava);
+                    scene.add(lava);
+                    LevelManager.addLevelObject(lava);
+                }
+            },
+            
+            createVolcanicRocks: function(scene) {
+                for (let i = 0; i < 30; i++) {
+                    const rockGeom = new THREE.DodecahedronGeometry(
+                        0.5 + Math.random() * 2,
+                        0
+                    );
+                    const rockMat = new THREE.MeshLambertMaterial({
+                        color: 0x2F1F1F,
+                        emissive: 0x880000,
+                        emissiveIntensity: Math.random() * 0.3
+                    });
+                    const rock = new THREE.Mesh(rockGeom, rockMat);
+                    rock.position.set(
+                        (Math.random() - 0.5) * 40,
+                        -0.5 + Math.random() * 2,
+                        -10 - Math.random() * 80
+                    );
+                    rock.rotation.set(
+                        Math.random() * Math.PI,
+                        Math.random() * Math.PI,
+                        Math.random() * Math.PI
+                    );
+                    
+                    this.objects.volcanicRocks.push(rock);
+                    scene.add(rock);
+                    LevelManager.addLevelObject(rock);
+                }
+            },
+            
+            createFireEffects: function(scene) {
+                // Fire particle systems
+                for (let i = 0; i < 15; i++) {
+                    const fireGroup = new THREE.Group();
+                    
+                    for (let j = 0; j < 10; j++) {
+                        const particleGeom = new THREE.SphereGeometry(0.1 + Math.random() * 0.2);
+                        const particleMat = new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0xFF4500 : 0xFFFF00,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        const particle = new THREE.Mesh(particleGeom, particleMat);
+                        particle.userData = {
+                            velocity: new THREE.Vector3(
+                                (Math.random() - 0.5) * 0.1,
+                                Math.random() * 0.2,
+                                (Math.random() - 0.5) * 0.1
+                            ),
+                            life: 1.0
+                        };
+                        fireGroup.add(particle);
+                    }
+                    
+                    fireGroup.position.set(
+                        (Math.random() - 0.5) * 30,
+                        0,
+                        -10 - Math.random() * 60
+                    );
+                    
+                    this.objects.fireParticles.push(fireGroup);
+                    scene.add(fireGroup);
+                    LevelManager.addLevelObject(fireGroup);
+                }
+            },
+            
+            update: function(deltaTime) {
+                // Animate lava flows
+                this.objects.lavaFlows.forEach(lava => {
+                    lava.material.emissiveIntensity = 0.6 + Math.sin(Date.now() * 0.001 * lava.userData.flowSpeed) * 0.4;
+                });
+                
+                // Animate fire particles
+                this.objects.fireParticles.forEach(fireGroup => {
+                    fireGroup.children.forEach(particle => {
+                        particle.position.add(particle.userData.velocity);
+                        particle.userData.life -= 0.01;
+                        particle.material.opacity = particle.userData.life;
+                        
+                        if (particle.userData.life <= 0) {
+                            particle.position.set(0, 0, 0);
+                            particle.userData.life = 1.0;
+                        }
+                    });
+                });
+                
+                // Rotate volcanic rocks slowly
+                this.objects.volcanicRocks.forEach(rock => {
+                    rock.rotation.y += 0.002;
+                });
+            },
+            
+            cleanup: function() {
+                console.log('Cleaning up Volcanic Inferno');
+                this.objects.lavaFlows = [];
+                this.objects.volcanicRocks = [];
+                this.objects.fireParticles = [];
+                this.objects.smokeEffects = [];
+            }
+        };
+
+        // Level 5: Crystal Ice Cave
+        const Level5 = {
+            id: 5,
+            name: "Crystal Ice Cave",
+            description: "Frozen crystal caverns with aurora lights",
+            fogColor: 0xCCEEFF,
+            fogDensity: 0.012,
+            objects: {
+                crystals: [],
+                icicles: [],
+                snowParticles: [],
+                aurora: null
+            },
+            
+            load: function(scene, renderer) {
+                console.log('❄️ Loading Level 5: Crystal Ice Cave');
+                
+                // Ice blue fog
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(0x99CCFF);
+                
+                // Create ice crystals
+                this.createCrystals(scene);
+                
+                // Create icicles
+                this.createIcicles(scene);
+                
+                // Create snow particles
+                this.createSnowfall(scene);
+                
+                // Create aurora borealis effect
+                this.createAurora(scene);
+                
+                // Blue ambient lighting
+                const ambientLight = new THREE.AmbientLight(0x88CCFF, 0.4);
+                scene.add(ambientLight);
+                LevelManager.addLevelObject(ambientLight);
+            },
+            
+            createCrystals: function(scene) {
+                for (let i = 0; i < 25; i++) {
+                    const crystalGroup = new THREE.Group();
+                    
+                    // Main crystal
+                    const crystalGeom = new THREE.OctahedronGeometry(1 + Math.random());
+                    const crystalMat = new THREE.MeshPhongMaterial({
+                        color: 0x88DDFF,
+                        transparent: true,
+                        opacity: 0.7,
+                        shininess: 100,
+                        emissive: 0x0088FF,
+                        emissiveIntensity: 0.2
+                    });
+                    const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+                    crystal.scale.y = 2;
+                    crystalGroup.add(crystal);
+                    
+                    // Crystal glow
+                    const glowGeom = new THREE.SphereGeometry(1.5);
+                    const glowMat = new THREE.MeshBasicMaterial({
+                        color: 0x00AAFF,
+                        transparent: true,
+                        opacity: 0.2
+                    });
+                    const glow = new THREE.Mesh(glowGeom, glowMat);
+                    crystalGroup.add(glow);
+                    
+                    crystalGroup.position.set(
+                        (Math.random() - 0.5) * 40,
+                        Math.random() * 3,
+                        -10 - Math.random() * 70
+                    );
+                    
+                    crystalGroup.userData = {
+                        rotationSpeed: 0.001 + Math.random() * 0.002,
+                        pulseSpeed: 0.5 + Math.random() * 0.5
+                    };
+                    
+                    this.objects.crystals.push(crystalGroup);
+                    scene.add(crystalGroup);
+                    LevelManager.addLevelObject(crystalGroup);
+                }
+            },
+            
+            createIcicles: function(scene) {
+                for (let i = 0; i < 40; i++) {
+                    const icicleGeom = new THREE.ConeGeometry(0.2, 2 + Math.random() * 2, 6);
+                    const icicleMat = new THREE.MeshPhongMaterial({
+                        color: 0xCCFFFF,
+                        transparent: true,
+                        opacity: 0.8,
+                        shininess: 50
+                    });
+                    const icicle = new THREE.Mesh(icicleGeom, icicleMat);
+                    
+                    icicle.position.set(
+                        (Math.random() - 0.5) * 50,
+                        8 + Math.random() * 5,
+                        -10 - Math.random() * 80
+                    );
+                    
+                    this.objects.icicles.push(icicle);
+                    scene.add(icicle);
+                    LevelManager.addLevelObject(icicle);
+                }
+            },
+            
+            createSnowfall: function(scene) {
+                const snowGeometry = new THREE.BufferGeometry();
+                const snowCount = 1000;
+                const positions = new Float32Array(snowCount * 3);
+                
+                for (let i = 0; i < snowCount * 3; i += 3) {
+                    positions[i] = (Math.random() - 0.5) * 100;
+                    positions[i + 1] = Math.random() * 30;
+                    positions[i + 2] = -Math.random() * 100;
+                }
+                
+                snowGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const snowMaterial = new THREE.PointsMaterial({
+                    color: 0xFFFFFF,
+                    size: 0.2,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const snow = new THREE.Points(snowGeometry, snowMaterial);
+                snow.userData = { isSnow: true };
+                
+                this.objects.snowParticles.push(snow);
+                scene.add(snow);
+                LevelManager.addLevelObject(snow);
+            },
+            
+            createAurora: function(scene) {
+                const auroraGroup = new THREE.Group();
+                
+                // Create wavy aurora bands
+                for (let i = 0; i < 3; i++) {
+                    const curve = new THREE.CatmullRomCurve3([
+                        new THREE.Vector3(-40, 20, -60),
+                        new THREE.Vector3(-20, 22 + i * 2, -65),
+                        new THREE.Vector3(0, 25 + i * 2, -70),
+                        new THREE.Vector3(20, 22 + i * 2, -65),
+                        new THREE.Vector3(40, 20, -60)
+                    ]);
+                    
+                    const tubeGeom = new THREE.TubeGeometry(curve, 50, 2, 8, false);
+                    const tubeMat = new THREE.MeshBasicMaterial({
+                        color: i === 0 ? 0x00FF88 : i === 1 ? 0x00FFFF : 0xFF00FF,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.DoubleSide
+                    });
+                    const aurora = new THREE.Mesh(tubeGeom, tubeMat);
+                    auroraGroup.add(aurora);
+                }
+                
+                this.objects.aurora = auroraGroup;
+                scene.add(auroraGroup);
+                LevelManager.addLevelObject(auroraGroup);
+            },
+            
+            update: function(deltaTime) {
+                // Rotate and pulse crystals
+                this.objects.crystals.forEach(crystalGroup => {
+                    crystalGroup.rotation.y += crystalGroup.userData.rotationSpeed;
+                    const glow = crystalGroup.children[1];
+                    if (glow) {
+                        glow.material.opacity = 0.1 + Math.sin(Date.now() * 0.001 * crystalGroup.userData.pulseSpeed) * 0.1;
+                    }
+                });
+                
+                // Animate snowfall
+                this.objects.snowParticles.forEach(snow => {
+                    const positions = snow.geometry.attributes.position.array;
+                    for (let i = 1; i < positions.length; i += 3) {
+                        positions[i] -= 0.05;
+                        if (positions[i] < -1) {
+                            positions[i] = 30;
+                        }
+                    }
+                    snow.geometry.attributes.position.needsUpdate = true;
+                });
+                
+                // Wave aurora
+                if (this.objects.aurora) {
+                    this.objects.aurora.children.forEach((band, index) => {
+                        band.material.opacity = 0.2 + Math.sin(Date.now() * 0.001 + index) * 0.1;
+                    });
+                }
+            },
+            
+            cleanup: function() {
+                console.log('Cleaning up Crystal Ice Cave');
+                this.objects.crystals = [];
+                this.objects.icicles = [];
+                this.objects.snowParticles = [];
+                this.objects.aurora = null;
+            }
+        };
+
+        // Register all levels
         LevelManager.registerLevel(1, Level1);
         LevelManager.registerLevel(2, Level2);
+        LevelManager.registerLevel(3, Level3);
+        LevelManager.registerLevel(4, Level4);
+        LevelManager.registerLevel(5, Level5);
         
         // HEIGHT LEVEL SYSTEM (V4.0)
         const HEIGHT_LEVELS = {
