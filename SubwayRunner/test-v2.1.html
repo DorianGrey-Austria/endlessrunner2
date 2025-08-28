@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test V2.1 Game</title>
+</head>
+<body>
+    <h1>Testing V2.1 - Basic Working Version</h1>
+    <iframe src="http://localhost:8001/index.html" width="800" height="600" frameborder="1"></iframe>
+    
+    <div>
+        <h2>Test Results:</h2>
+        <div id="results">Loading...</div>
+    </div>
+    
+    <script>
+        setTimeout(() => {
+            const iframe = document.querySelector('iframe');
+            const results = document.getElementById('results');
+            
+            iframe.onload = () => {
+                results.innerHTML = '✅ Game loaded successfully<br>';
+                
+                // Test if Three.js is working
+                setTimeout(() => {
+                    try {
+                        const iframeWindow = iframe.contentWindow;
+                        if (iframeWindow.THREE) {
+                            results.innerHTML += '✅ Three.js loaded<br>';
+                        } else {
+                            results.innerHTML += '❌ Three.js not found<br>';
+                        }
+                        
+                        // Check for start button
+                        const startBtn = iframeWindow.document.querySelector('button');
+                        if (startBtn) {
+                            results.innerHTML += '✅ Start button found<br>';
+                            results.innerHTML += `Button text: "${startBtn.textContent}"<br>`;
+                        } else {
+                            results.innerHTML += '❌ Start button not found<br>';
+                        }
+                    } catch (e) {
+                        results.innerHTML += '❌ Error accessing iframe: ' + e.message + '<br>';
+                    }
+                }, 1000);
+            };
+            
+            iframe.onerror = () => {
+                results.innerHTML = '❌ Failed to load game';
+            };
+        }, 100);
+    </script>
+</body>
+</html>
