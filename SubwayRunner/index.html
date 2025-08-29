@@ -2,13 +2,29 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V4.2-HIGHSCORE-RESTORED</title>
-    <script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Runner 3D - V4.2-SYNTAX-FIXED</title>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
+    <script type="module">
+        // Pre-load Gesture Control Module
+        import('./js/GestureControllerProjector.js')
+            .then(module => {
+                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
+                console.log('✅ Gesture Module pre-loaded successfully');
+            })
+            .catch(error => {
+                console.error('❌ Gesture Module pre-load failed:', error);
+                // Fallback: Try alternative loading method
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.innerHTML = `
+                    import { GestureControllerProjector } from './js/GestureControllerProjector.js';
+                    window.GestureControllerProjector = GestureControllerProjector;
+                `;
+                document.head.appendChild(script);
+            });
+    </script>
     <style>
         * {
             margin: 0;
@@ -71,7 +87,7 @@
             padding: 40px;
             border-radius: 16px;
             text-align: center;
-            z-index: 1000;
+            z-index: 200;
             min-width: 300px;
         }
         
@@ -176,36 +192,6 @@
             font-weight: bold;
         }
         
-        /* Audio Control Button */
-        #audioToggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #00ff88;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.3s;
-            user-select: none;
-        }
-        
-        #audioToggle:hover {
-            background: rgba(0, 255, 136, 0.2);
-            transform: scale(1.1);
-        }
-        
-        #audioToggle.muted {
-            border-color: #ff4444;
-            opacity: 0.7;
-        }
-        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
@@ -272,18 +258,6 @@
             z-index: 100;
             min-width: 200px;
             font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-        }
-        
-        .highscore-panel.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .highscore-panel.fading {
-            opacity: 0;
         }
         
         .highscore-entry {
@@ -295,352 +269,27 @@
             color: #4CAF50;
             font-weight: bold;
         }
-        
-        /* Head Tracking Preview Window - ENHANCED */
-        #headTrackPreview {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 400px;
-            height: 300px;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 0, 40, 0.9));
-            border: 2px solid #00ff88;
-            border-radius: 12px;
-            z-index: 500;
-            display: none;
-            overflow: hidden;
-            box-shadow: 
-                0 0 30px rgba(0, 255, 136, 0.5),
-                inset 0 0 20px rgba(0, 255, 136, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        #headTrackPreview.active {
-            display: block;
-        }
-        
-        #headTrackVideo {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-        }
-        
-        #headTrackCanvas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            transform: scaleX(-1);
-            z-index: 2;
-        }
-        
-        #headTrackStatus {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: #00ff88;
-            font-size: 12px;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 5px rgba(0, 255, 136, 0.8);
-            z-index: 10;
-        }
-        
-        /* Visual Feedback Metrics Panel */
-        #headTrackMetrics {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            color: #00ffff;
-            font-size: 11px;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 3px rgba(0, 255, 255, 0.8);
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            border-radius: 5px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 2px 0;
-        }
-        
-        .metric-label {
-            color: #888;
-        }
-        
-        .metric-value {
-            color: #0ff;
-            font-weight: bold;
-        }
-        
-        .metric-value.warning {
-            color: #ff0;
-        }
-        
-        .metric-value.danger {
-            color: #f00;
-        }
-        
-        .metric-value.success {
-            color: #0f0;
-        }
-        
-        #headTrackToggle {
-            position: fixed;
-            top: 20px;
-            right: 230px;
-            padding: 10px 15px;
-            background: #00ff88;
-            color: #000;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            z-index: 501;
-            transition: all 0.3s;
-        }
-        
-        #headTrackToggle:hover {
-            background: #00cc70;
-            transform: scale(1.05);
-        }
-        
-        #headTrackToggle.active {
-            background: #ff6b6b;
-        }
-        
-        /* Mobile UI Optimization */
-        #mobileScoreBar {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 0 10px;
-            z-index: 1000;
-            align-items: center;
-            justify-content: space-around;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        #mobileInfoBar {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 30px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 0 10px;
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        
-        .mobile-score-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        /* Media Queries for Mobile */
-        @media (max-width: 768px) or (pointer: coarse) {
-            /* Hide desktop UI elements */
-            #ui {
-                display: none !important;
-            }
-            
-            #instructions {
-                display: none !important;
-            }
-            
-            #gestureControl {
-                display: none !important;
-            }
-            
-            #headTrackToggle {
-                display: none !important;
-            }
-            
-            #headTrackPreview {
-                display: none !important;
-            }
-            
-            /* Show mobile UI */
-            #mobileScoreBar {
-                display: flex !important;
-            }
-            
-            #mobileInfoBar {
-                display: flex !important;
-            }
-            
-            /* Adjust game container for mobile bars */
-            #gameCanvas {
-                position: fixed;
-                top: 40px;
-                bottom: 30px;
-                left: 0;
-                right: 0;
-                width: 100% !important;
-                height: calc(100vh - 70px) !important;
-                max-width: none !important;
-                max-height: none !important;
-                border: none !important;
-                border-radius: 0 !important;
-            }
-            
-            /* Mobile menu adjustments */
-            #menu {
-                width: 90%;
-                padding: 20px;
-                font-size: 14px;
-            }
-            
-            #menu h1 {
-                font-size: 24px;
-            }
-            
-            #menu p {
-                font-size: 12px;
-                margin: 5px 0;
-            }
-            
-            #menu button {
-                font-size: 16px;
-                padding: 10px 20px;
-            }
-            
-            /* Show mobile instructions in menu only */
-            #menu .mobile-instructions {
-                display: block;
-                background: rgba(255, 255, 255, 0.1);
-                padding: 10px;
-                border-radius: 8px;
-                margin: 10px 0;
-            }
-        }
-        
-        /* Desktop-only styles */
-        @media (min-width: 769px) and (pointer: fine) {
-            #mobileScoreBar, #mobileInfoBar {
-                display: none !important;
-            }
-            
-            #menu .mobile-instructions {
-                display: none;
-            }
-        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
-        <!-- Jeeliz Face Tracking Canvas (behind game) -->
-        <canvas id="faceCanvas" style="position: absolute; width: 100%; height: 100%; z-index: 1; display: none;"></canvas>
-        <!-- Game Canvas (on top) -->
-        <canvas id="gameCanvas" style="position: relative; z-index: 2;"></canvas>
-        
-        <!-- Audio Toggle Button -->
-        <button id="audioToggle" class="muted" title="Toggle Sound">🔇</button>
-        
-        <!-- Mobile Score Bar (Top) -->
-        <div id="mobileScoreBar">
-            <div class="mobile-score-item">
-                <span>Score:</span>
-                <span id="mobileScore">0</span>
-            </div>
-            <div class="mobile-score-item">
-                <span>🍎</span>
-                <span id="mobileApples">0</span>
-            </div>
-            <div class="mobile-score-item">
-                <span>🥦</span>
-                <span id="mobileBroccolis">0</span>
-            </div>
-            <div class="mobile-score-item">
-                <span>❤️</span>
-                <span id="mobileLives">3</span>
-            </div>
-        </div>
-        
-        <!-- Mobile Info Bar (Bottom) -->
-        <div id="mobileInfoBar">
-            <span>Speed: <span id="mobileSpeed">100</span></span>
-            <span> | </span>
-            <span>Time: <span id="mobileTime">60</span>s</span>
-        </div>
-        
-        <!-- Head Tracking Preview Window -->
-        <button id="headTrackToggle">📹 Head Tracking</button>
-        <div id="headTrackPreview">
-            <video id="headTrackVideo" autoplay playsinline></video>
-            <canvas id="headTrackCanvas" width="400" height="300"></canvas>
-            <div id="headTrackMetrics">
-                <div class="metric-row">
-                    <span class="metric-label">POSITION:</span>
-                    <span class="metric-value" id="metricPosition">0.0cm</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">VELOCITY:</span>
-                    <span class="metric-value" id="metricVelocity">0.0cm/s</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">CONFIDENCE:</span>
-                    <span class="metric-value" id="metricConfidence">0%</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">STATE:</span>
-                    <span class="metric-value" id="metricState">IDLE</span>
-                </div>
-            </div>
-            <div id="headTrackStatus">Inactive</div>
-        </div>
+        <canvas id="gameCanvas"></canvas>
         
         <div id="ui">
-            <div id="roundIndicator" style="font-size: 28px; color: #FFD700; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); margin-bottom: 10px;">
-                🎮 DURCHGANG <span id="currentRound">1</span>/3
-            </div>
             <div>Score: <span id="score">0</span></div>
-            <div id="speedIndicator">Speed: <span id="speed">100</span></div>
+            <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.2-HIGHSCORE-FIXED</div>
-        </div>
-        
-        <!-- Round Transition Overlay -->
-        <div id="roundTransitionOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; justify-content: center; align-items: center; flex-direction: column;">
-            <div id="transitionTitle" style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.8); margin-bottom: 20px;"></div>
-            <div id="transitionSubtitle" style="font-size: 24px; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.8);"></div>
-            <div id="transitionCountdown" style="font-size: 72px; color: white; margin-top: 30px; text-shadow: 0 0 30px rgba(255,255,255,1);"></div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.0-MULTI-JUMP</div>
         </div>
         
         <div id="instructions">
             <div><strong>🎮 Steuerung:</strong></div>
-            <div class="desktop-controls">
-                <div>A/D: Spurwechsel</div>
-                <div>Leertaste/W: Springen 🦘</div>
-                <div>S: Ducken 🦆</div>
-            </div>
-            <div class="mobile-controls" style="display: none;">
-                <div>◀️ Wisch Links/Rechts ▶️</div>
-                <div>⬆️ Wisch Hoch: Springen</div>
-                <div>⬇️ Wisch Runter: Ducken</div>
-                <div>👆 Doppeltipp: Multi-Jump</div>
-            </div>
+            <div>A/D: Spurwechsel</div>
+            <div>Leertaste/W: Springen 🦘</div>
+            <div>S: Ducken 🦆</div>
             <div><strong>💡 Tipps:</strong></div>
             <div>🟠 Orange/Braun: Überspringen!</div>
             <div>🔵 Blau/Grau oben: Ducken!</div>
@@ -664,21 +313,8 @@
             <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
             <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
             <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            
-            <!-- Desktop Instructions -->
-            <div class="desktop-instructions">
-                <p><strong>🎮 Steuerung:</strong></p>
-                <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
-            </div>
-            
-            <!-- Mobile Instructions -->
-            <div class="mobile-instructions">
-                <p><strong>📱 Touch-Steuerung:</strong></p>
-                <p>◀️ Wisch Links/Rechts ▶️ Lane wechseln</p>
-                <p>⬆️ Wisch Hoch: Springen (mehrfach für Multi-Jump)</p>
-                <p>⬇️ Wisch Runter: Ducken (Wisch hoch zum Aufstehen)</p>
-            </div>
-            
+            <p><strong>🎮 Steuerung:</strong></p>
+            <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
             <button onclick="startGame()">🎮 Challenge starten!</button>
         </div>
         
@@ -687,2084 +323,36 @@
             <div id="highscoreList">Lade Bestenliste...</div>
         </div>
         
-        <div id="nameInputDialog" class="name-input-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-             background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,140,0,0.95)); 
-             padding: 30px; border-radius: 20px; text-align: center; z-index: 3000;
-             box-shadow: 0 0 50px rgba(255,215,0,0.8); min-width: 300px;">
-            <h2 style="color: white; text-shadow: 0 0 10px rgba(255,255,255,0.8); margin-bottom: 15px;">🎉 Neuer Highscore! 🎉</h2>
-            <p style="font-size: 24px; color: white; font-weight: bold; margin-bottom: 10px;">Score: <span id="highscoreValue" style="color: #FFD700;"></span></p>
-            <p style="color: white; margin-bottom: 15px;">Gib deinen Namen ein:</p>
-            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="20" 
-                   style="padding: 10px; font-size: 16px; border-radius: 5px; border: none; width: 80%; margin-bottom: 20px;">
+        <div id="nameInputDialog" class="name-input-dialog" style="display: none;">
+            <h2>🎉 Neuer Highscore!</h2>
+            <p>Gib deinen Namen ein:</p>
+            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="20">
             <br>
-            <button onclick="submitHighscore()" style="padding: 10px 20px; font-size: 16px; margin: 5px; 
-                    background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">💾 Speichern</button>
-            <button onclick="skipHighscore()" style="padding: 10px 20px; font-size: 16px; margin: 5px;
-                    background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">⏭️ Überspringen</button>
+            <button onclick="submitHighscore()">💾 Speichern</button>
+            <button onclick="skipHighscore()">⏭️ Überspringen</button>
         </div>
     </div>
 
     <script>
-        // ============================================
-        // ONE-EURO FILTER - Smoothing ohne Lag
-        // Based on: https://gery.casiez.net/1euro/
-        // ============================================
-        class OneEuroFilter {
-            constructor(freq = 60, minCutoff = 1.0, beta = 0.02, dCutoff = 1.0) {
-                this.freq = freq;
-                this.minCutoff = minCutoff;
-                this.beta = beta;
-                this.dCutoff = dCutoff;
-                this.xPrev = null;
-                this.dxPrev = null;
-                this.tPrev = null;
-            }
-            
-            alpha(cutoff) {
-                const tau = 1.0 / (2 * Math.PI * cutoff);
-                const te = 1.0 / this.freq;
-                return 1.0 / (1.0 + tau / te);
-            }
-            
-            filter(t, x) {
-                if (this.tPrev === null) {
-                    this.tPrev = t;
-                    this.xPrev = x;
-                    this.dxPrev = 0;
-                    return x;
-                }
-                
-                this.freq = 1.0 / Math.max(1e-6, t - this.tPrev);
-                const dx = (x - this.xPrev) * this.freq;
-                const aDx = this.alpha(this.dCutoff);
-                const dxHat = aDx * dx + (1 - aDx) * this.dxPrev;
-                
-                const cutoff = this.minCutoff + this.beta * Math.abs(dxHat);
-                const a = this.alpha(cutoff);
-                const xHat = a * x + (1 - a) * this.xPrev;
-                
-                this.xPrev = xHat;
-                this.dxPrev = dxHat;
-                this.tPrev = t;
-                
-                return xHat;
-            }
-            
-            reset() {
-                this.xPrev = null;
-                this.dxPrev = null;
-                this.tPrev = null;
-            }
-        }
-        
-        // ============================================
-        // HYSTERESIS CONTROLLER - Stabile Schwellwerte
-        // ============================================
-        class HysteresisController {
-            constructor(enterThreshold, exitThreshold) {
-                this.enterThreshold = enterThreshold;
-                this.exitThreshold = exitThreshold;
-                this.isActive = false;
-            }
-            
-            update(value) {
-                if (!this.isActive && Math.abs(value) >= Math.abs(this.enterThreshold)) {
-                    this.isActive = true;
-                    return true; // Rising edge
-                } else if (this.isActive && Math.abs(value) < Math.abs(this.exitThreshold)) {
-                    this.isActive = false;
-                }
-                return false;
-            }
-            
-            reset() {
-                this.isActive = false;
-            }
-        }
-        
-        // ============================================
-        // ADVANCED VISUAL FEEDBACK SYSTEM
-        // ============================================
-        class AdvancedVisualFeedback {
-            constructor(canvas) {
-                this.canvas = canvas;
-                this.ctx = canvas.getContext('2d');
-                this.width = canvas.width;
-                this.height = canvas.height;
-                
-                // Metrics tracking
-                this.position = 0;
-                this.velocity = 0;
-                this.lastPosition = 0;
-                this.lastUpdateTime = Date.now();
-                this.confidence = 0;
-                this.state = 'IDLE';
-                
-                // Movement history (circular buffer)
-                this.historySize = 60; // 1 second at 60fps
-                this.positionHistory = new Array(this.historySize).fill(0);
-                this.historyIndex = 0;
-                
-                // Visual settings
-                this.zones = {
-                    triggerLeft: -5,    // cm
-                    warningLeft: -3,    // cm
-                    deadZone: 3,        // cm (±3)
-                    warningRight: 3,    // cm
-                    triggerRight: 5     // cm
-                };
-                
-                // Animation states
-                this.triggerFlashAlpha = 0;
-                this.cooldownProgress = 0;
-                this.particleEffects = [];
-                
-                // Debug mode
-                this.debugMode = 1; // 0=off, 1=basic, 2=advanced, 3=developer
-            }
-            
-            update(positionCm, confidence, state, cooldownActive, cooldownTime) {
-                const now = Date.now();
-                const deltaTime = (now - this.lastUpdateTime) / 1000; // seconds
-                
-                // Calculate velocity
-                if (deltaTime > 0) {
-                    this.velocity = (positionCm - this.lastPosition) / deltaTime;
-                }
-                
-                this.position = positionCm;
-                this.confidence = confidence;
-                this.state = state;
-                this.lastPosition = positionCm;
-                this.lastUpdateTime = now;
-                
-                // Update history
-                this.positionHistory[this.historyIndex] = positionCm;
-                this.historyIndex = (this.historyIndex + 1) % this.historySize;
-                
-                // Update cooldown progress
-                if (cooldownActive && cooldownTime > 0) {
-                    this.cooldownProgress = 1 - (cooldownTime / 300); // 300ms total cooldown
-                } else {
-                    this.cooldownProgress = 0;
-                }
-                
-                // Update metrics display
-                this.updateMetricsDisplay();
-            }
-            
-            updateMetricsDisplay() {
-                // Update HTML metrics
-                const posEl = document.getElementById('metricPosition');
-                const velEl = document.getElementById('metricVelocity');
-                const confEl = document.getElementById('metricConfidence');
-                const stateEl = document.getElementById('metricState');
-                
-                if (posEl) {
-                    posEl.textContent = `${this.position.toFixed(1)}cm`;
-                    posEl.className = 'metric-value';
-                    
-                    if (Math.abs(this.position) > this.zones.triggerRight) {
-                        posEl.className += ' danger';
-                    } else if (Math.abs(this.position) > this.zones.warningRight) {
-                        posEl.className += ' warning';
-                    } else {
-                        posEl.className += ' success';
-                    }
-                }
-                
-                if (velEl) {
-                    velEl.textContent = `${this.velocity.toFixed(1)}cm/s`;
-                    const absVel = Math.abs(this.velocity);
-                    velEl.className = 'metric-value';
-                    if (absVel > 10) velEl.className += ' danger';
-                    else if (absVel > 5) velEl.className += ' warning';
-                }
-                
-                if (confEl) {
-                    const confPercent = Math.round(this.confidence * 100);
-                    confEl.textContent = `${confPercent}%`;
-                    confEl.className = 'metric-value';
-                    if (confPercent < 50) confEl.className += ' danger';
-                    else if (confPercent < 70) confEl.className += ' warning';
-                    else confEl.className += ' success';
-                }
-                
-                if (stateEl) {
-                    stateEl.textContent = this.state;
-                    stateEl.className = 'metric-value';
-                    if (this.state === 'TRACKING') stateEl.className += ' success';
-                    else if (this.state === 'COOLDOWN') stateEl.className += ' warning';
-                }
-            }
-            
-            render() {
-                // Clear canvas
-                this.ctx.clearRect(0, 0, this.width, this.height);
-                
-                // Draw components based on debug mode
-                if (this.debugMode >= 1) {
-                    this.drawMovementBar();
-                    this.drawCooldownIndicator();
-                }
-                
-                if (this.debugMode >= 2) {
-                    this.drawHistoryGraph();
-                    this.drawVelocityVector();
-                }
-                
-                if (this.debugMode >= 3) {
-                    this.drawRawData();
-                }
-                
-                // Always draw trigger effects
-                this.drawTriggerEffects();
-                this.updateParticles();
-            }
-            
-            drawMovementBar() {
-                const barY = this.height - 60;
-                const barHeight = 30;
-                const barWidth = this.width - 40;
-                const barX = 20;
-                const scale = barWidth / (this.zones.triggerRight * 2); // Scale to fit -5 to +5 cm
-                
-                // Draw background
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                this.ctx.fillRect(barX, barY, barWidth, barHeight);
-                
-                // Draw zones
-                const centerX = barX + barWidth / 2;
-                
-                // Dead zone (green)
-                const deadZoneWidth = this.zones.deadZone * scale;
-                this.ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
-                this.ctx.fillRect(centerX - deadZoneWidth, barY, deadZoneWidth * 2, barHeight);
-                
-                // Warning zones (yellow)
-                this.ctx.fillStyle = 'rgba(255, 255, 0, 0.2)';
-                // Left warning
-                const leftWarningX = centerX + (this.zones.warningLeft * scale);
-                const leftTriggerX = centerX + (this.zones.triggerLeft * scale);
-                this.ctx.fillRect(leftTriggerX, barY, leftWarningX - leftTriggerX, barHeight);
-                // Right warning
-                const rightWarningX = centerX + (this.zones.warningRight * scale);
-                const rightTriggerX = centerX + (this.zones.triggerRight * scale);
-                this.ctx.fillRect(rightWarningX, barY, rightTriggerX - rightWarningX, barHeight);
-                
-                // Trigger zones (red)
-                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-                // Left trigger
-                this.ctx.fillRect(barX, barY, leftTriggerX - barX, barHeight);
-                // Right trigger
-                this.ctx.fillRect(rightTriggerX, barY, barX + barWidth - rightTriggerX, barHeight);
-                
-                // Draw threshold lines
-                this.ctx.strokeStyle = '#444';
-                this.ctx.lineWidth = 1;
-                
-                // Center line
-                this.ctx.strokeStyle = '#0ff';
-                this.ctx.lineWidth = 2;
-                this.ctx.beginPath();
-                this.ctx.moveTo(centerX, barY);
-                this.ctx.lineTo(centerX, barY + barHeight);
-                this.ctx.stroke();
-                
-                // Current position indicator
-                const currentX = centerX + (this.position * scale);
-                
-                // Draw position marker
-                this.ctx.fillStyle = this.getPositionColor();
-                this.ctx.beginPath();
-                this.ctx.arc(currentX, barY + barHeight/2, 8, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Draw position line
-                this.ctx.strokeStyle = this.getPositionColor();
-                this.ctx.lineWidth = 3;
-                this.ctx.beginPath();
-                this.ctx.moveTo(currentX, barY - 5);
-                this.ctx.lineTo(currentX, barY + barHeight + 5);
-                this.ctx.stroke();
-                
-                // Draw zone labels
-                this.ctx.fillStyle = '#888';
-                this.ctx.font = '10px monospace';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText('-5cm', leftTriggerX, barY - 5);
-                this.ctx.fillText('-3cm', leftWarningX, barY - 5);
-                this.ctx.fillText('0', centerX, barY - 5);
-                this.ctx.fillText('3cm', rightWarningX, barY - 5);
-                this.ctx.fillText('5cm', rightTriggerX, barY - 5);
-            }
-            
-            drawHistoryGraph() {
-                const graphY = 100;
-                const graphHeight = 80;
-                const graphWidth = this.width - 40;
-                const graphX = 20;
-                
-                // Background
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                this.ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
-                
-                // Draw grid
-                this.ctx.strokeStyle = '#333';
-                this.ctx.lineWidth = 0.5;
-                
-                // Horizontal lines
-                for (let i = 0; i <= 4; i++) {
-                    const y = graphY + (graphHeight / 4) * i;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(graphX, y);
-                    this.ctx.lineTo(graphX + graphWidth, y);
-                    this.ctx.stroke();
-                }
-                
-                // Draw history line
-                this.ctx.strokeStyle = '#0ff';
-                this.ctx.lineWidth = 2;
-                this.ctx.beginPath();
-                
-                const stepX = graphWidth / this.historySize;
-                const centerY = graphY + graphHeight / 2;
-                const scale = graphHeight / 20; // Scale to fit -10 to +10 cm
-                
-                for (let i = 0; i < this.historySize; i++) {
-                    const index = (this.historyIndex + i) % this.historySize;
-                    const value = this.positionHistory[index];
-                    const x = graphX + i * stepX;
-                    const y = centerY - (value * scale);
-                    
-                    if (i === 0) {
-                        this.ctx.moveTo(x, y);
-                    } else {
-                        this.ctx.lineTo(x, y);
-                    }
-                }
-                this.ctx.stroke();
-                
-                // Draw threshold lines
-                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-                this.ctx.lineWidth = 1;
-                this.ctx.setLineDash([5, 5]);
-                
-                // Upper threshold
-                const upperY = centerY - (this.zones.triggerRight * scale);
-                this.ctx.beginPath();
-                this.ctx.moveTo(graphX, upperY);
-                this.ctx.lineTo(graphX + graphWidth, upperY);
-                this.ctx.stroke();
-                
-                // Lower threshold
-                const lowerY = centerY - (this.zones.triggerLeft * scale);
-                this.ctx.beginPath();
-                this.ctx.moveTo(graphX, lowerY);
-                this.ctx.lineTo(graphX + graphWidth, lowerY);
-                this.ctx.stroke();
-                
-                this.ctx.setLineDash([]);
-            }
-            
-            drawVelocityVector() {
-                const centerX = this.width / 2;
-                const centerY = 50;
-                const maxLength = 40;
-                
-                // Background circle
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, maxLength + 10, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Velocity vector
-                const velocityLength = Math.min(Math.abs(this.velocity) * 2, maxLength);
-                const velocityAngle = this.velocity > 0 ? 0 : Math.PI;
-                
-                const endX = centerX + Math.cos(velocityAngle) * velocityLength;
-                const endY = centerY;
-                
-                // Draw arrow
-                this.ctx.strokeStyle = this.velocity > 0 ? '#f00' : '#0f0';
-                this.ctx.lineWidth = 3;
-                this.ctx.beginPath();
-                this.ctx.moveTo(centerX, centerY);
-                this.ctx.lineTo(endX, endY);
-                this.ctx.stroke();
-                
-                // Arrow head
-                if (velocityLength > 5) {
-                    this.ctx.beginPath();
-                    const arrowSize = 8;
-                    const angle1 = velocityAngle + 2.5;
-                    const angle2 = velocityAngle - 2.5;
-                    this.ctx.moveTo(endX, endY);
-                    this.ctx.lineTo(endX - Math.cos(angle1) * arrowSize, endY - Math.sin(angle1) * arrowSize);
-                    this.ctx.moveTo(endX, endY);
-                    this.ctx.lineTo(endX - Math.cos(angle2) * arrowSize, endY - Math.sin(angle2) * arrowSize);
-                    this.ctx.stroke();
-                }
-                
-                // Velocity text
-                this.ctx.fillStyle = '#fff';
-                this.ctx.font = '12px monospace';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(`${this.velocity.toFixed(1)} cm/s`, centerX, centerY + maxLength + 25);
-            }
-            
-            drawCooldownIndicator() {
-                if (this.cooldownProgress > 0) {
-                    const centerX = this.width - 40;
-                    const centerY = 40;
-                    const radius = 25;
-                    
-                    // Background circle
-                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    // Progress arc
-                    this.ctx.strokeStyle = '#ff0';
-                    this.ctx.lineWidth = 4;
-                    this.ctx.beginPath();
-                    this.ctx.arc(centerX, centerY, radius - 2, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * this.cooldownProgress));
-                    this.ctx.stroke();
-                    
-                    // Text
-                    this.ctx.fillStyle = '#ff0';
-                    this.ctx.font = '10px monospace';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText('COOLDOWN', centerX, centerY + radius + 15);
-                }
-            }
-            
-            drawTriggerEffects() {
-                // Flash effect when triggering
-                if (this.triggerFlashAlpha > 0) {
-                    const color = this.position < 0 ? '0, 255, 0' : '255, 0, 0';
-                    this.ctx.fillStyle = `rgba(${color}, ${this.triggerFlashAlpha})`;
-                    this.ctx.fillRect(0, 0, this.width, this.height);
-                    this.triggerFlashAlpha -= 0.05;
-                }
-            }
-            
-            updateParticles() {
-                // Update and draw particle effects
-                this.particleEffects = this.particleEffects.filter(particle => {
-                    particle.y -= particle.velocity;
-                    particle.alpha -= 0.02;
-                    particle.size *= 0.98;
-                    
-                    if (particle.alpha > 0) {
-                        this.ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
-                        this.ctx.beginPath();
-                        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                        this.ctx.fill();
-                        return true;
-                    }
-                    return false;
-                });
-            }
-            
-            triggerLaneChange(direction) {
-                // Visual feedback for lane change
-                this.triggerFlashAlpha = 0.3;
-                
-                // Create particles
-                const centerX = this.width / 2;
-                const centerY = this.height - 60;
-                
-                for (let i = 0; i < 10; i++) {
-                    this.particleEffects.push({
-                        x: centerX + (Math.random() - 0.5) * 100,
-                        y: centerY,
-                        velocity: Math.random() * 2 + 1,
-                        size: Math.random() * 5 + 2,
-                        color: direction === 'left' ? '0, 255, 0' : '255, 0, 0',
-                        alpha: 1
-                    });
-                }
-            }
-            
-            drawRawData() {
-                // Developer mode - show raw data
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                this.ctx.fillRect(10, 10, 150, 80);
-                
-                this.ctx.fillStyle = '#0f0';
-                this.ctx.font = '10px monospace';
-                this.ctx.textAlign = 'left';
-                
-                const lines = [
-                    `Pos: ${this.position.toFixed(3)}cm`,
-                    `Vel: ${this.velocity.toFixed(3)}cm/s`,
-                    `Conf: ${(this.confidence * 100).toFixed(1)}%`,
-                    `State: ${this.state}`,
-                    `History: ${this.historyIndex}/${this.historySize}`,
-                    `FPS: ${(1000 / (Date.now() - this.lastUpdateTime)).toFixed(0)}`
-                ];
-                
-                lines.forEach((line, i) => {
-                    this.ctx.fillText(line, 15, 25 + i * 12);
-                });
-            }
-            
-            getPositionColor() {
-                const absPos = Math.abs(this.position);
-                if (absPos > this.zones.triggerRight) {
-                    return '#f00'; // Red - trigger zone
-                } else if (absPos > this.zones.warningRight) {
-                    return '#ff0'; // Yellow - warning zone
-                } else {
-                    return '#0f0'; // Green - safe zone
-                }
-            }
-            
-            toggleDebugMode() {
-                this.debugMode = (this.debugMode + 1) % 4;
-                console.log(`Debug mode: ${this.debugMode}`);
-            }
-        }
-        
-        // ============================================
-        // LOW-LIGHT HEAD TRACKER - Enhanced for poor lighting
-        // ============================================
-        class LowLightHeadTracker {
-            constructor() {
-                // Core tracking modes
-                this.TRACKING_MODES = {
-                    FACE: 'face',           // Headtrackr face detection
-                    OPTICAL_FLOW: 'flow',   // Motion tracking
-                    SHOULDER: 'shoulder',   // Upper body silhouette
-                    GESTURE: 'gesture'      // Big gesture mode
-                };
-                
-                // Current state
-                this.currentMode = this.TRACKING_MODES.FACE;
-                this.confidence = 0;
-                this.lightLevel = 1.0; // 0=dark, 1=bright
-                this.isCalibrating = true;
-                this.calibrationFrames = 0;
-                
-                // Image preprocessing
-                this.preprocessCanvas = null;
-                this.preprocessCtx = null;
-                this.enhancementLevel = 0; // 0=none, 1=mild, 2=moderate, 3=aggressive
-                
-                // Adaptive thresholds
-                this.baseThreshold = 5; // cm
-                this.currentThreshold = 5;
-                this.thresholdMultiplier = 1.0;
-                
-                // Optical flow tracking
-                this.opticalFlowData = {
-                    prevFrame: null,
-                    currentFrame: null,
-                    flowVectors: [],
-                    avgMotionX: 0,
-                    avgMotionY: 0
-                };
-                
-                // Shoulder tracking
-                this.shoulderData = {
-                    leftEdge: 0,
-                    rightEdge: 0,
-                    centerX: 0,
-                    detected: false
-                };
-                
-                // Big gesture mode
-                this.gestureMode = {
-                    active: false,
-                    requiredMovement: 15, // cm
-                    lastGestureTime: 0
-                };
-                
-                // Fallback to SimpleHeadTracker
-                this.simpleTracker = null;
-                
-                this.init();
-            }
-            
-            init() {
-                // Create preprocessing canvas
-                this.preprocessCanvas = document.createElement('canvas');
-                this.preprocessCanvas.width = 320;
-                this.preprocessCanvas.height = 240;
-                this.preprocessCtx = this.preprocessCanvas.getContext('2d');
-                
-                // Initialize simple tracker as base
-                this.simpleTracker = new SimpleHeadTracker();
-                
-                // Override the simple tracker's onHeadMove
-                const originalOnHeadMove = this.simpleTracker.onHeadMove.bind(this.simpleTracker);
-                this.simpleTracker.onHeadMove = (event) => {
-                    this.enhancedHeadMove(event, originalOnHeadMove);
-                };
-                
-                // Start calibration
-                this.startCalibration();
-                
-                console.log('🌙 Low-Light Head Tracker initialized');
-            }
-            
-            startCalibration() {
-                this.isCalibrating = true;
-                this.calibrationFrames = 0;
-                const calibrationData = {
-                    brightness: [],
-                    contrast: [],
-                    noise: []
-                };
-                
-                const calibrationInterval = setInterval(() => {
-                    if (!this.simpleTracker.video || !this.simpleTracker.isActive) {
-                        return;
-                    }
-                    
-                    // Analyze frame
-                    const metrics = this.analyzeFrame();
-                    calibrationData.brightness.push(metrics.brightness);
-                    calibrationData.contrast.push(metrics.contrast);
-                    calibrationData.noise.push(metrics.noise);
-                    
-                    this.calibrationFrames++;
-                    
-                    // After 60 frames (1 second), determine lighting conditions
-                    if (this.calibrationFrames >= 60) {
-                        clearInterval(calibrationInterval);
-                        this.completeCalibration(calibrationData);
-                    }
-                }, 16); // 60fps
-            }
-            
-            analyzeFrame() {
-                if (!this.simpleTracker.video) {
-                    return { brightness: 0.5, contrast: 0.5, noise: 0 };
-                }
-                
-                // Draw video frame to preprocessing canvas
-                this.preprocessCtx.drawImage(
-                    this.simpleTracker.video,
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                // Get image data
-                const imageData = this.preprocessCtx.getImageData(
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                const pixels = imageData.data;
-                
-                // Calculate brightness (average luminance)
-                let totalBrightness = 0;
-                let minBrightness = 255;
-                let maxBrightness = 0;
-                
-                for (let i = 0; i < pixels.length; i += 4) {
-                    const luminance = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
-                    totalBrightness += luminance;
-                    minBrightness = Math.min(minBrightness, luminance);
-                    maxBrightness = Math.max(maxBrightness, luminance);
-                }
-                
-                const avgBrightness = totalBrightness / (pixels.length / 4) / 255;
-                const contrast = (maxBrightness - minBrightness) / 255;
-                
-                // Estimate noise (simplified)
-                let noise = 0;
-                for (let i = 4; i < pixels.length - 4; i += 4) {
-                    const diff = Math.abs(pixels[i] - pixels[i-4]);
-                    noise += diff;
-                }
-                noise = noise / (pixels.length / 4) / 255;
-                
-                return {
-                    brightness: avgBrightness,
-                    contrast: contrast,
-                    noise: noise
-                };
-            }
-            
-            completeCalibration(data) {
-                // Calculate averages
-                const avgBrightness = data.brightness.reduce((a, b) => a + b, 0) / data.brightness.length;
-                const avgContrast = data.contrast.reduce((a, b) => a + b, 0) / data.contrast.length;
-                const avgNoise = data.noise.reduce((a, b) => a + b, 0) / data.noise.length;
-                
-                // Determine light level and enhancement needs
-                this.lightLevel = avgBrightness;
-                
-                if (avgBrightness < 0.2) {
-                    // Very dark
-                    this.enhancementLevel = 3;
-                    this.thresholdMultiplier = 3.0;
-                    this.currentMode = this.TRACKING_MODES.GESTURE;
-                    console.log('🌑 Very dark environment detected - Big Gesture Mode');
-                } else if (avgBrightness < 0.35) {
-                    // Dark
-                    this.enhancementLevel = 2;
-                    this.thresholdMultiplier = 2.0;
-                    this.currentMode = this.TRACKING_MODES.SHOULDER;
-                    console.log('🌘 Dark environment - Shoulder Tracking Mode');
-                } else if (avgBrightness < 0.5) {
-                    // Dim
-                    this.enhancementLevel = 1;
-                    this.thresholdMultiplier = 1.5;
-                    this.currentMode = this.TRACKING_MODES.OPTICAL_FLOW;
-                    console.log('🌗 Dim lighting - Optical Flow Mode');
-                } else {
-                    // Good lighting
-                    this.enhancementLevel = 0;
-                    this.thresholdMultiplier = 1.0;
-                    this.currentMode = this.TRACKING_MODES.FACE;
-                    console.log('🌕 Good lighting - Face Tracking Mode');
-                }
-                
-                // Update thresholds
-                this.currentThreshold = this.baseThreshold * this.thresholdMultiplier;
-                
-                // Update visual feedback
-                if (this.simpleTracker.visualFeedback) {
-                    this.simpleTracker.visualFeedback.zones.triggerLeft = -this.currentThreshold;
-                    this.simpleTracker.visualFeedback.zones.triggerRight = this.currentThreshold;
-                }
-                
-                this.isCalibrating = false;
-                
-                // Show calibration results to user
-                this.showCalibrationResults();
-                
-                // Re-calibrate every 30 seconds
-                setTimeout(() => this.startCalibration(), 30000);
-            }
-            
-            showCalibrationResults() {
-                const status = document.getElementById('headTrackStatus');
-                if (status) {
-                    const modeText = {
-                        [this.TRACKING_MODES.FACE]: '😊 Face Tracking',
-                        [this.TRACKING_MODES.OPTICAL_FLOW]: '〰️ Motion Tracking',
-                        [this.TRACKING_MODES.SHOULDER]: '👤 Shoulder Tracking',
-                        [this.TRACKING_MODES.GESTURE]: '🙌 Big Gesture Mode'
-                    };
-                    
-                    status.innerHTML = `
-                        <span style="color: ${this.lightLevel < 0.35 ? '#ff9900' : '#00ff00'}">
-                            Light: ${Math.round(this.lightLevel * 100)}% | 
-                            Mode: ${modeText[this.currentMode]} |
-                            Sensitivity: ${this.currentThreshold.toFixed(1)}cm
-                        </span>
-                    `;
-                }
-            }
-            
-            enhancedHeadMove(event, originalCallback) {
-                // Apply preprocessing if needed
-                if (this.enhancementLevel > 0) {
-                    this.preprocessFrame();
-                }
-                
-                // Route to appropriate tracking mode
-                switch (this.currentMode) {
-                    case this.TRACKING_MODES.FACE:
-                        // Use original headtrackr with enhanced confidence check
-                        if (event.confidence > 0.4) {
-                            this.confidence = event.confidence;
-                            originalCallback(event);
-                        } else {
-                            // Fallback to optical flow
-                            this.trackOpticalFlow();
-                        }
-                        break;
-                        
-                    case this.TRACKING_MODES.OPTICAL_FLOW:
-                        this.trackOpticalFlow();
-                        break;
-                        
-                    case this.TRACKING_MODES.SHOULDER:
-                        this.trackShoulders();
-                        break;
-                        
-                    case this.TRACKING_MODES.GESTURE:
-                        this.trackBigGestures();
-                        break;
-                }
-                
-                // Update visual feedback with current mode
-                this.updateModeFeedback();
-            }
-            
-            preprocessFrame() {
-                if (!this.simpleTracker.video) return;
-                
-                // Draw original frame
-                this.preprocessCtx.drawImage(
-                    this.simpleTracker.video,
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                // Get image data
-                const imageData = this.preprocessCtx.getImageData(
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                // Apply enhancements based on level
-                if (this.enhancementLevel >= 1) {
-                    this.applyGammaCorrection(imageData, 1.5);
-                }
-                
-                if (this.enhancementLevel >= 2) {
-                    this.applyCLAHE(imageData);
-                }
-                
-                if (this.enhancementLevel >= 3) {
-                    this.applyBilateralFilter(imageData);
-                }
-                
-                // Put enhanced image back
-                this.preprocessCtx.putImageData(imageData, 0, 0);
-            }
-            
-            applyGammaCorrection(imageData, gamma) {
-                const data = imageData.data;
-                const invGamma = 1 / gamma;
-                
-                for (let i = 0; i < data.length; i += 4) {
-                    data[i] = 255 * Math.pow(data[i] / 255, invGamma);
-                    data[i + 1] = 255 * Math.pow(data[i + 1] / 255, invGamma);
-                    data[i + 2] = 255 * Math.pow(data[i + 2] / 255, invGamma);
-                }
-            }
-            
-            applyCLAHE(imageData) {
-                // Simplified CLAHE (Contrast Limited Adaptive Histogram Equalization)
-                const data = imageData.data;
-                const width = imageData.width;
-                const height = imageData.height;
-                const tileSize = 8;
-                const clipLimit = 2.0;
-                
-                // Convert to grayscale and apply local histogram equalization
-                for (let ty = 0; ty < height; ty += tileSize) {
-                    for (let tx = 0; tx < width; tx += tileSize) {
-                        this.equalizeHistogramTile(data, width, height, tx, ty, tileSize, clipLimit);
-                    }
-                }
-            }
-            
-            equalizeHistogramTile(data, width, height, tx, ty, tileSize, clipLimit) {
-                // Simplified tile-based histogram equalization
-                const histogram = new Array(256).fill(0);
-                let pixelCount = 0;
-                
-                // Build histogram for tile
-                for (let y = ty; y < Math.min(ty + tileSize, height); y++) {
-                    for (let x = tx; x < Math.min(tx + tileSize, width); x++) {
-                        const idx = (y * width + x) * 4;
-                        const gray = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
-                        histogram[gray]++;
-                        pixelCount++;
-                    }
-                }
-                
-                // Apply clipping
-                const avgBinSize = pixelCount / 256;
-                const limit = avgBinSize * clipLimit;
-                let excess = 0;
-                
-                for (let i = 0; i < 256; i++) {
-                    if (histogram[i] > limit) {
-                        excess += histogram[i] - limit;
-                        histogram[i] = limit;
-                    }
-                }
-                
-                // Redistribute excess
-                const avgExcess = excess / 256;
-                for (let i = 0; i < 256; i++) {
-                    histogram[i] += avgExcess;
-                }
-                
-                // Build cumulative distribution
-                const cdf = new Array(256);
-                cdf[0] = histogram[0];
-                for (let i = 1; i < 256; i++) {
-                    cdf[i] = cdf[i - 1] + histogram[i];
-                }
-                
-                // Apply equalization to tile
-                for (let y = ty; y < Math.min(ty + tileSize, height); y++) {
-                    for (let x = tx; x < Math.min(tx + tileSize, width); x++) {
-                        const idx = (y * width + x) * 4;
-                        const gray = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
-                        const newGray = Math.round((cdf[gray] / pixelCount) * 255);
-                        
-                        // Apply to all channels
-                        const ratio = newGray / (gray || 1);
-                        data[idx] = Math.min(255, data[idx] * ratio);
-                        data[idx + 1] = Math.min(255, data[idx + 1] * ratio);
-                        data[idx + 2] = Math.min(255, data[idx + 2] * ratio);
-                    }
-                }
-            }
-            
-            applyBilateralFilter(imageData) {
-                // Simplified bilateral filter for noise reduction
-                const data = imageData.data;
-                const width = imageData.width;
-                const height = imageData.height;
-                const output = new Uint8ClampedArray(data);
-                const kernelSize = 3;
-                const spatialSigma = 2;
-                const intensitySigma = 30;
-                
-                for (let y = kernelSize; y < height - kernelSize; y++) {
-                    for (let x = kernelSize; x < width - kernelSize; x++) {
-                        const centerIdx = (y * width + x) * 4;
-                        let sumR = 0, sumG = 0, sumB = 0, sumW = 0;
-                        
-                        for (let ky = -kernelSize; ky <= kernelSize; ky++) {
-                            for (let kx = -kernelSize; kx <= kernelSize; kx++) {
-                                const idx = ((y + ky) * width + (x + kx)) * 4;
-                                
-                                // Spatial weight
-                                const spatialDist = Math.sqrt(kx * kx + ky * ky);
-                                const spatialWeight = Math.exp(-(spatialDist * spatialDist) / (2 * spatialSigma * spatialSigma));
-                                
-                                // Intensity weight
-                                const intensityDiff = Math.sqrt(
-                                    Math.pow(data[centerIdx] - data[idx], 2) +
-                                    Math.pow(data[centerIdx + 1] - data[idx + 1], 2) +
-                                    Math.pow(data[centerIdx + 2] - data[idx + 2], 2)
-                                );
-                                const intensityWeight = Math.exp(-(intensityDiff * intensityDiff) / (2 * intensitySigma * intensitySigma));
-                                
-                                const weight = spatialWeight * intensityWeight;
-                                
-                                sumR += data[idx] * weight;
-                                sumG += data[idx + 1] * weight;
-                                sumB += data[idx + 2] * weight;
-                                sumW += weight;
-                            }
-                        }
-                        
-                        output[centerIdx] = sumR / sumW;
-                        output[centerIdx + 1] = sumG / sumW;
-                        output[centerIdx + 2] = sumB / sumW;
-                    }
-                }
-                
-                // Copy back
-                for (let i = 0; i < data.length; i++) {
-                    data[i] = output[i];
-                }
-            }
-            
-            trackOpticalFlow() {
-                if (!this.simpleTracker.video) return;
-                
-                // Get current frame
-                this.preprocessCtx.drawImage(
-                    this.simpleTracker.video,
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                const currentFrame = this.preprocessCtx.getImageData(
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                if (this.opticalFlowData.prevFrame) {
-                    // Calculate optical flow using Lucas-Kanade method (simplified)
-                    const flow = this.calculateOpticalFlow(
-                        this.opticalFlowData.prevFrame,
-                        currentFrame
-                    );
-                    
-                    // Average horizontal motion
-                    const avgMotionX = flow.reduce((sum, v) => sum + v.x, 0) / flow.length;
-                    
-                    // Convert to cm (rough estimation)
-                    const motionCm = avgMotionX * 50; // Scale factor
-                    
-                    // Trigger lane change if motion exceeds threshold
-                    if (Math.abs(motionCm) > this.currentThreshold) {
-                        this.triggerLaneChange(motionCm > 0 ? 'right' : 'left');
-                    }
-                    
-                    this.confidence = Math.min(0.6, Math.abs(avgMotionX) * 10);
-                }
-                
-                this.opticalFlowData.prevFrame = currentFrame;
-            }
-            
-            calculateOpticalFlow(prevFrame, currentFrame) {
-                // Simplified Lucas-Kanade optical flow
-                const flow = [];
-                const blockSize = 16;
-                const width = prevFrame.width;
-                const height = prevFrame.height;
-                
-                for (let y = blockSize; y < height - blockSize; y += blockSize) {
-                    for (let x = blockSize; x < width - blockSize; x += blockSize) {
-                        // Calculate gradients
-                        let Ix = 0, Iy = 0, It = 0;
-                        let sumIx2 = 0, sumIy2 = 0, sumIxIy = 0;
-                        let sumIxIt = 0, sumIyIt = 0;
-                        
-                        for (let by = -blockSize/2; by < blockSize/2; by++) {
-                            for (let bx = -blockSize/2; bx < blockSize/2; bx++) {
-                                const idx = ((y + by) * width + (x + bx)) * 4;
-                                const idxLeft = ((y + by) * width + (x + bx - 1)) * 4;
-                                const idxRight = ((y + by) * width + (x + bx + 1)) * 4;
-                                const idxUp = ((y + by - 1) * width + (x + bx)) * 4;
-                                const idxDown = ((y + by + 1) * width + (x + bx)) * 4;
-                                
-                                // Spatial gradients
-                                Ix = (currentFrame.data[idxRight] - currentFrame.data[idxLeft]) / 2;
-                                Iy = (currentFrame.data[idxDown] - currentFrame.data[idxUp]) / 2;
-                                
-                                // Temporal gradient
-                                It = currentFrame.data[idx] - prevFrame.data[idx];
-                                
-                                sumIx2 += Ix * Ix;
-                                sumIy2 += Iy * Iy;
-                                sumIxIy += Ix * Iy;
-                                sumIxIt += Ix * It;
-                                sumIyIt += Iy * It;
-                            }
-                        }
-                        
-                        // Solve for flow vector
-                        const det = sumIx2 * sumIy2 - sumIxIy * sumIxIy;
-                        if (Math.abs(det) > 0.001) {
-                            const vx = (sumIy2 * (-sumIxIt) - sumIxIy * (-sumIyIt)) / det;
-                            const vy = (sumIx2 * (-sumIyIt) - sumIxIy * (-sumIxIt)) / det;
-                            
-                            flow.push({ x: vx, y: vy });
-                        }
-                    }
-                }
-                
-                return flow;
-            }
-            
-            trackShoulders() {
-                if (!this.simpleTracker.video) return;
-                
-                // Get frame
-                this.preprocessCtx.drawImage(
-                    this.simpleTracker.video,
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                const imageData = this.preprocessCtx.getImageData(
-                    0, 0,
-                    this.preprocessCanvas.width,
-                    this.preprocessCanvas.height
-                );
-                
-                // Find upper body silhouette (simplified edge detection)
-                const edges = this.detectEdges(imageData);
-                
-                // Find shoulder positions
-                const shoulderY = Math.floor(imageData.height * 0.3); // Upper third of image
-                let leftMost = imageData.width;
-                let rightMost = 0;
-                
-                for (let x = 0; x < imageData.width; x++) {
-                    const idx = (shoulderY * imageData.width + x) * 4;
-                    if (edges.data[idx] > 128) {
-                        leftMost = Math.min(leftMost, x);
-                        rightMost = Math.max(rightMost, x);
-                    }
-                }
-                
-                if (rightMost > leftMost) {
-                    const centerX = (leftMost + rightMost) / 2;
-                    const normalizedX = (centerX / imageData.width - 0.5) * 2; // -1 to 1
-                    
-                    // Convert to cm
-                    const positionCm = normalizedX * 30; // Scale factor
-                    
-                    if (Math.abs(positionCm) > this.currentThreshold) {
-                        this.triggerLaneChange(positionCm > 0 ? 'right' : 'left');
-                    }
-                    
-                    this.shoulderData = {
-                        leftEdge: leftMost,
-                        rightEdge: rightMost,
-                        centerX: centerX,
-                        detected: true
-                    };
-                    
-                    this.confidence = 0.4;
-                }
-            }
-            
-            detectEdges(imageData) {
-                // Simplified Sobel edge detection
-                const data = imageData.data;
-                const width = imageData.width;
-                const height = imageData.height;
-                const output = new ImageData(width, height);
-                
-                const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
-                const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
-                
-                for (let y = 1; y < height - 1; y++) {
-                    for (let x = 1; x < width - 1; x++) {
-                        let pixelX = 0;
-                        let pixelY = 0;
-                        
-                        for (let ky = -1; ky <= 1; ky++) {
-                            for (let kx = -1; kx <= 1; kx++) {
-                                const idx = ((y + ky) * width + (x + kx)) * 4;
-                                const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-                                const kernelIdx = (ky + 1) * 3 + (kx + 1);
-                                
-                                pixelX += gray * sobelX[kernelIdx];
-                                pixelY += gray * sobelY[kernelIdx];
-                            }
-                        }
-                        
-                        const magnitude = Math.sqrt(pixelX * pixelX + pixelY * pixelY);
-                        const idx = (y * width + x) * 4;
-                        
-                        output.data[idx] = magnitude;
-                        output.data[idx + 1] = magnitude;
-                        output.data[idx + 2] = magnitude;
-                        output.data[idx + 3] = 255;
-                    }
-                }
-                
-                return output;
-            }
-            
-            trackBigGestures() {
-                // In very low light, require big movements
-                if (!this.simpleTracker.video) return;
-                
-                // Get frame center brightness
-                const metrics = this.analyzeFrame();
-                
-                // Show instruction to user
-                const status = document.getElementById('headTrackStatus');
-                if (status) {
-                    status.innerHTML = `
-                        <span style="color: #ff9900; font-size: 18px;">
-                            🙌 BIG GESTURE MODE - Move head LEFT or RIGHT strongly!
-                        </span>
-                    `;
-                }
-                
-                // Use optical flow but with much higher threshold
-                const prevThreshold = this.currentThreshold;
-                this.currentThreshold = this.gestureMode.requiredMovement;
-                
-                this.trackOpticalFlow();
-                
-                this.currentThreshold = prevThreshold;
-                
-                this.confidence = 0.2;
-            }
-            
-            triggerLaneChange(direction) {
-                const now = Date.now();
-                
-                // Check cooldown
-                if (this.simpleTracker.cooldownActive && 
-                    (now - this.simpleTracker.lastMoveTime) < this.simpleTracker.cooldownMs) {
-                    return;
-                }
-                
-                // Change lane
-                if (direction === 'left' && gameState.playerLane > 0) {
-                    gameState.playerLane--;
-                    console.log(`⬅ ${this.currentMode.toUpperCase()}: Move left to lane ${gameState.playerLane}`);
-                } else if (direction === 'right' && gameState.playerLane < 2) {
-                    gameState.playerLane++;
-                    console.log(`➡ ${this.currentMode.toUpperCase()}: Move right to lane ${gameState.playerLane}`);
-                }
-                
-                this.simpleTracker.cooldownActive = true;
-                this.simpleTracker.lastMoveTime = now;
-                
-                // Visual feedback
-                if (this.simpleTracker.visualFeedback) {
-                    this.simpleTracker.visualFeedback.triggerLaneChange(direction);
-                }
-                
-                this.simpleTracker.showMoveFeedback(direction.toUpperCase());
-            }
-            
-            updateModeFeedback() {
-                // Update visual feedback to show current tracking mode
-                if (this.simpleTracker.visualFeedback) {
-                    const ctx = this.simpleTracker.canvas.getContext('2d');
-                    
-                    // Mode indicator
-                    ctx.fillStyle = this.getModeColor();
-                    ctx.fillRect(0, 0, 100, 20);
-                    
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = '12px monospace';
-                    ctx.fillText(this.currentMode.toUpperCase(), 5, 15);
-                    
-                    // Confidence bar
-                    const confWidth = this.confidence * 100;
-                    ctx.fillStyle = this.confidence > 0.5 ? '#00ff00' : '#ff9900';
-                    ctx.fillRect(0, 20, confWidth, 5);
-                    
-                    // Show shoulder detection if active
-                    if (this.currentMode === this.TRACKING_MODES.SHOULDER && this.shoulderData.detected) {
-                        ctx.strokeStyle = '#00ffff';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.moveTo(this.shoulderData.leftEdge, 50);
-                        ctx.lineTo(this.shoulderData.rightEdge, 50);
-                        ctx.stroke();
-                    }
-                }
-            }
-            
-            getModeColor() {
-                switch (this.currentMode) {
-                    case this.TRACKING_MODES.FACE:
-                        return '#00ff00';
-                    case this.TRACKING_MODES.OPTICAL_FLOW:
-                        return '#00ccff';
-                    case this.TRACKING_MODES.SHOULDER:
-                        return '#ffcc00';
-                    case this.TRACKING_MODES.GESTURE:
-                        return '#ff6600';
-                    default:
-                        return '#ffffff';
-                }
-            }
-        }
-        
-        // ============================================
-        // SIMPLE HEAD TRACKER - Using Headtrackr.js
-        // ============================================
-        class SimpleHeadTracker {
-            constructor() {
-                // Core components
-                this.htracker = null;
-                this.video = null;
-                this.canvas = null;
-                this.isActive = false;
-                
-                // Tracking values
-                this.lastX = 0;
-                this.centerX = 0;
-                this.cooldownActive = false;
-                this.lastMoveTime = 0;
-                this.confidence = 0;
-                
-                // Simple thresholds
-                this.moveThreshold = 5; // cm of movement to trigger lane change
-                this.cooldownMs = 300; // ms between moves
-                
-                // Debug
-                this.debugMode = true;
-                
-                // Visual feedback system
-                this.visualFeedback = null;
-                this.renderLoop = null;
-                
-                this.init();
-            }
-            
-            init() {
-                // Get DOM elements
-                this.video = document.getElementById('headTrackVideo');
-                this.canvas = document.getElementById('headTrackCanvas');
-                
-                // Initialize visual feedback system
-                if (this.canvas) {
-                    this.visualFeedback = new AdvancedVisualFeedback(this.canvas);
-                }
-                
-                // Create input canvas for headtrackr (hidden)
-                const inputCanvas = document.createElement('canvas');
-                inputCanvas.id = 'headtrackrInput';
-                inputCanvas.width = 320;
-                inputCanvas.height = 240;
-                inputCanvas.style.display = 'none';
-                document.body.appendChild(inputCanvas);
-                
-                // Setup button
-                const toggleBtn = document.getElementById('headTrackToggle');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', () => this.toggle());
-                }
-                
-                // Setup TAB key for debug mode toggle
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Tab' && this.visualFeedback) {
-                        e.preventDefault();
-                        this.visualFeedback.toggleDebugMode();
-                    }
-                });
-                
-                console.log('✅ Headtrackr.js with Advanced Visual Feedback initialized');
-                console.log('💡 Press TAB to toggle debug modes (1=basic, 2=advanced, 3=developer)');
-            }
-            
-            initializeHeadtrackr() {
-                if (typeof headtrackr === 'undefined') {
-                    console.error('❌ Headtrackr.js not loaded!');
-                    return false;
-                }
-                
-                try {
-                    // Create headtrackr instance
-                    this.htracker = new headtrackr.Tracker({
-                        ui: false,
-                        calcAngles: false,
-                        headPosition: true
-                    });
-                    
-                    // Initialize with video and canvas
-                    const inputCanvas = document.getElementById('headtrackrInput');
-                    this.htracker.init(this.video, inputCanvas);
-                    
-                    // Setup event listener for head tracking
-                    document.addEventListener('headtrackingEvent', (event) => {
-                        this.onHeadMove(event);
-                    });
-                    
-                    console.log('✅ Headtrackr initialized');
-                    return true;
-                } catch (error) {
-                    console.error('❌ Failed to initialize headtrackr:', error);
-                    return false;
-                }
-            }
-            
-            toggle() {
-                if (this.isActive) {
-                    this.stop();
-                } else {
-                    this.start();
-                }
-            }
-            
-            async start() {
-                try {
-                    // Request webcam access
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { 
-                            width: 640, 
-                            height: 480,
-                            facingMode: 'user'
-                        }
-                    });
-                    
-                    this.video.srcObject = stream;
-                    await this.video.play();
-                    
-                    // Initialize headtrackr after video is ready
-                    if (!this.htracker) {
-                        if (!this.initializeHeadtrackr()) {
-                            alert('Headtrackr konnte nicht initialisiert werden.');
-                            return;
-                        }
-                    }
-                    
-                    // Start tracking
-                    this.htracker.start();
-                    this.isActive = true;
-                    
-                    // Start render loop for visual feedback
-                    this.startRenderLoop();
-                    
-                    // Update UI
-                    document.getElementById('headTrackPreview').classList.add('active');
-                    document.getElementById('headTrackToggle').classList.add('active');
-                    document.getElementById('headTrackToggle').textContent = '🛑 Stop Tracking';
-                    
-                    // Calibrate center position after 1 second
-                    setTimeout(() => {
-                        this.centerX = this.lastX;
-                        console.log('🎯 Calibrated center position:', this.centerX);
-                        document.getElementById('headTrackStatus').textContent = 'Calibrating...';
-                        
-                        // After calibration, set to active
-                        setTimeout(() => {
-                            document.getElementById('headTrackStatus').textContent = 'TRACKING';
-                            this.confidence = 1.0;
-                        }, 500);
-                    }, 1000);
-                    
-                    console.log('✅ Head tracking started with Headtrackr');
-                } catch (error) {
-                    console.error('❌ Failed to start head tracking:', error);
-                    alert('Fehler beim Starten der Kopfsteuerung. Bitte Kamera-Zugriff erlauben.');
-                }
-            }
-            
-            startRenderLoop() {
-                const render = () => {
-                    if (this.isActive && this.visualFeedback) {
-                        this.visualFeedback.render();
-                        this.renderLoop = requestAnimationFrame(render);
-                    }
-                };
-                render();
-            }
-            
-            stop() {
-                this.isActive = false;
-                
-                // Stop render loop
-                if (this.renderLoop) {
-                    cancelAnimationFrame(this.renderLoop);
-                    this.renderLoop = null;
-                }
-                
-                // Stop headtrackr
-                if (this.htracker) {
-                    this.htracker.stop();
-                }
-                
-                // Stop video stream
-                if (this.video && this.video.srcObject) {
-                    const tracks = this.video.srcObject.getTracks();
-                    tracks.forEach(track => track.stop());
-                    this.video.srcObject = null;
-                }
-                
-                // Clear canvas
-                if (this.canvas) {
-                    const ctx = this.canvas.getContext('2d');
-                    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-                
-                // Update UI
-                document.getElementById('headTrackPreview').classList.remove('active');
-                document.getElementById('headTrackToggle').classList.remove('active');
-                document.getElementById('headTrackToggle').textContent = '📹 Head Tracking';
-                document.getElementById('headTrackStatus').textContent = 'Inactive';
-                
-                console.log('✅ Head tracking stopped');
-            }
-            
-            onHeadMove(event) {
-                if (!this.isActive) return;
-                
-                // event.x is horizontal position in cm relative to screen
-                const currentX = event.x;
-                this.lastX = currentX;
-                
-                // Update confidence based on event (headtrackr provides this)
-                this.confidence = event.confidence || 0.8;
-                
-                // Calculate relative movement from center
-                const relativeX = currentX - this.centerX;
-                
-                // Update visual feedback system
-                if (this.visualFeedback) {
-                    const now = Date.now();
-                    const cooldownTime = this.cooldownActive ? 
-                        this.cooldownMs - (now - this.lastMoveTime) : 0;
-                    const state = this.cooldownActive ? 'COOLDOWN' : 'TRACKING';
-                    
-                    this.visualFeedback.update(
-                        relativeX,
-                        this.confidence,
-                        state,
-                        this.cooldownActive,
-                        cooldownTime
-                    );
-                }
-                
-                // Only process game moves if game is playing
-                if (!gameState.isPlaying) return;
-                
-                // Check cooldown
-                const now = Date.now();
-                if (this.cooldownActive) {
-                    if ((now - this.lastMoveTime) >= this.cooldownMs) {
-                        this.cooldownActive = false;
-                    } else {
-                        return; // Still in cooldown
-                    }
-                }
-                
-                // Simple threshold-based lane change
-                if (relativeX < -this.moveThreshold) {
-                    // Move left
-                    if (gameState.playerLane > 0) {
-                        gameState.playerLane--;
-                        this.cooldownActive = true;
-                        this.lastMoveTime = now;
-                        console.log('⬅ HEAD: Move left to lane', gameState.playerLane);
-                        
-                        // Trigger visual effects
-                        if (this.visualFeedback) {
-                            this.visualFeedback.triggerLaneChange('left');
-                        }
-                        this.showMoveFeedback('LEFT');
-                    }
-                } else if (relativeX > this.moveThreshold) {
-                    // Move right
-                    if (gameState.playerLane < 2) {
-                        gameState.playerLane++;
-                        this.cooldownActive = true;
-                        this.lastMoveTime = now;
-                        console.log('➡ HEAD: Move right to lane', gameState.playerLane);
-                        
-                        // Trigger visual effects
-                        if (this.visualFeedback) {
-                            this.visualFeedback.triggerLaneChange('right');
-                        }
-                        this.showMoveFeedback('RIGHT');
-                    }
-                }
-                
-                // Update status display
-                document.getElementById('headTrackStatus').textContent = 
-                    `${relativeX >= 0 ? '+' : ''}${relativeX.toFixed(1)}cm | Lane ${gameState.playerLane}`;
-            }
-            
-            showMoveFeedback(direction) {
-                // Quick visual feedback for successful move
-                const canvas = this.canvas;
-                const ctx = canvas.getContext('2d');
-                
-                ctx.fillStyle = direction === 'LEFT' ? '#00ff00' : '#00ffff';
-                ctx.fillRect(0, 0, canvas.width, 10);
-                
-                setTimeout(() => {
-                    ctx.clearRect(0, 0, canvas.width, 10);
-                }, 100);
-            }
-        }
-        
-        // Initialize head tracking when page loads
-        let headTracker = null;
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize Low-Light Head Tracker after page load
-            setTimeout(() => {
-                headTracker = new LowLightHeadTracker();
-                console.log('🌙 Low-Light Head Tracking System ready');
-                console.log('💡 System will auto-calibrate for your lighting conditions');
-                console.log('🎮 Use Q/E keys as fallback controls');
-            }, 1000);
-        });
-        
-        // ============================================
-        // MOBILE TOUCH CONTROLLER
-        // ============================================
-        class TouchController {
-            constructor() {
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.touchStartTime = 0;
-                this.touchEndX = 0;
-                this.touchEndY = 0;
-                
-                // Double/Triple tap detection
-                this.lastTapTime = 0;
-                this.tapCount = 0;
-                this.tapTimeout = null;
-                
-                // Swipe detection thresholds
-                this.minSwipeDistance = 30; // Minimum distance for swipe
-                this.maxSwipeTime = 300; // Maximum time for swipe (ms)
-                this.doubleTapDelay = 300; // Max time between taps
-                
-                // Duck state tracking
-                this.duckTimeout = null;
-                this.isDucking = false;
-                
-                this.init();
-            }
-            
-            init() {
-                // Get canvas element
-                const canvas = document.getElementById('gameCanvas');
-                if (!canvas) return;
-                
-                // Add touch event listeners with passive: false for better control
-                canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
-                canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-                canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
-                
-                // Prevent default touch behaviors
-                canvas.addEventListener('gesturestart', (e) => e.preventDefault());
-                document.body.addEventListener('touchmove', (e) => {
-                    if (e.target === canvas) e.preventDefault();
-                }, { passive: false });
-                
-                console.log('📱 Touch Controller initialized');
-            }
-            
-            handleTouchStart(e) {
-                e.preventDefault();
-                
-                if (!gameState.isPlaying) return;
-                
-                const touch = e.touches[0];
-                this.touchStartX = touch.clientX;
-                this.touchStartY = touch.clientY;
-                this.touchStartTime = Date.now();
-                
-                // Double/Triple tap detection
-                const currentTime = Date.now();
-                const timeSinceLastTap = currentTime - this.lastTapTime;
-                
-                if (timeSinceLastTap < this.doubleTapDelay) {
-                    this.tapCount++;
-                } else {
-                    this.tapCount = 1;
-                }
-                
-                this.lastTapTime = currentTime;
-                
-                // Clear previous tap timeout
-                if (this.tapTimeout) {
-                    clearTimeout(this.tapTimeout);
-                }
-                
-                // Set timeout to process taps
-                this.tapTimeout = setTimeout(() => {
-                    this.processTaps();
-                }, this.doubleTapDelay);
-            }
-            
-            handleTouchMove(e) {
-                e.preventDefault();
-                
-                if (!gameState.isPlaying) return;
-                
-                const touch = e.touches[0];
-                this.touchEndX = touch.clientX;
-                this.touchEndY = touch.clientY;
-            }
-            
-            handleTouchEnd(e) {
-                e.preventDefault();
-                
-                if (!gameState.isPlaying) return;
-                
-                const touch = e.changedTouches[0];
-                this.touchEndX = touch.clientX;
-                this.touchEndY = touch.clientY;
-                
-                // Calculate swipe
-                const deltaX = this.touchEndX - this.touchStartX;
-                const deltaY = this.touchEndY - this.touchStartY;
-                const deltaTime = Date.now() - this.touchStartTime;
-                
-                // Check if it's a swipe (not a tap)
-                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                
-                if (distance > this.minSwipeDistance && deltaTime < this.maxSwipeTime) {
-                    // It's a swipe, cancel tap processing
-                    if (this.tapTimeout) {
-                        clearTimeout(this.tapTimeout);
-                        this.tapTimeout = null;
-                    }
-                    this.tapCount = 0;
-                    
-                    // Determine swipe direction
-                    this.processSwipe(deltaX, deltaY);
-                }
-            }
-            
-            processSwipe(deltaX, deltaY) {
-                const absX = Math.abs(deltaX);
-                const absY = Math.abs(deltaY);
-                
-                // Determine primary direction
-                if (absX > absY) {
-                    // Horizontal swipe
-                    if (deltaX > 0) {
-                        this.swipeRight();
-                    } else {
-                        this.swipeLeft();
-                    }
-                } else {
-                    // Vertical swipe
-                    if (deltaY > 0) {
-                        this.swipeDown();
-                    } else {
-                        this.swipeUp();
-                    }
-                }
-            }
-            
-            swipeLeft() {
-                // Move lane left
-                if (gameState.playerLane > 0) {
-                    gameState.playerLane--;
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
-                    console.log('📱 Swipe Left - Lane:', gameState.playerLane);
-                }
-            }
-            
-            swipeRight() {
-                // Move lane right
-                if (gameState.playerLane < 2) {
-                    gameState.playerLane++;
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
-                    console.log('📱 Swipe Right - Lane:', gameState.playerLane);
-                }
-            }
-            
-            swipeUp() {
-                // If ducking, stand up
-                if (gameState.playerAction === 'ducking') {
-                    this.standUp();
-                } 
-                // If running, first jump
-                else if (gameState.playerAction === 'running') {
-                    this.jump();
-                }
-                // If already jumping, perform multi-jump
-                else if (gameState.playerAction === 'jumping') {
-                    this.performMultiJump();
-                }
-            }
-            
-            performMultiJump() {
-                // Check current jump count and perform next jump level
-                if (gameState.jumpCount === 1 && gameState.jumpCount < 3) {
-                    // Second jump (Double Jump)
-                    gameState.jumpVelocity = 12;
-                    gameState.jumpCount = 2;
-                    gameState.jumpStartTime = performance.now();
-                    
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                    
-                    // Double jump particles
-                    createParticleEffect(
-                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
-                        0xFF8800,
-                        'jump'
-                    );
-                    
-                    console.log('📱 Swipe Up - Double Jump!');
-                } 
-                else if (gameState.jumpCount === 2 && gameState.jumpCount < 3) {
-                    // Third jump (Triple Jump)
-                    gameState.jumpVelocity = 14;
-                    gameState.jumpCount = 3;
-                    gameState.jumpStartTime = performance.now();
-                    
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                    
-                    // Triple jump particles
-                    createParticleEffect(
-                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
-                        0xFF0088,
-                        'jump'
-                    );
-                    
-                    console.log('📱 Swipe Up - Triple Jump!');
-                }
-            }
-            
-            swipeDown() {
-                // Duck
-                if (gameState.playerAction === 'running') {
-                    this.duck();
-                }
-                // If jumping, fast fall (slam down)
-                else if (gameState.playerAction === 'jumping') {
-                    gameState.jumpVelocity = -15; // Fast fall
-                    console.log('📱 Swipe Down - Fast Fall');
-                }
-            }
-            
-            processTaps() {
-                if (!gameState.isPlaying) return;
-                
-                console.log('📱 Taps detected:', this.tapCount);
-                
-                if (this.tapCount === 1) {
-                    // Single tap - Jump
-                    this.jump();
-                } else if (this.tapCount === 2) {
-                    // Double tap - Double Jump
-                    this.doubleJump();
-                } else if (this.tapCount >= 3) {
-                    // Triple tap - Multi Jump
-                    this.multiJump();
-                }
-                
-                // Reset tap count
-                this.tapCount = 0;
-                this.tapTimeout = null;
-            }
-            
-            jump() {
-                if (gameState.playerAction === 'running') {
-                    gameState.playerAction = 'jumping';
-                    gameState.jumpVelocity = 10;
-                    gameState.jumpStartTime = performance.now();
-                    gameState.jumpCount = 1;
-                    
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                    
-                    // Jump particles
-                    createParticleEffect(
-                        new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                        0xFFFF00,
-                        'jump'
-                    );
-                    
-                    console.log('📱 Jump!');
-                }
-            }
-            
-            doubleJump() {
-                if (gameState.playerAction === 'jumping' && gameState.jumpCount < 2) {
-                    gameState.jumpVelocity = 12;
-                    gameState.jumpCount = 2;
-                    gameState.jumpStartTime = performance.now();
-                    
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                    
-                    // Double jump particles
-                    createParticleEffect(
-                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
-                        0xFF8800,
-                        'jump'
-                    );
-                    
-                    console.log('📱 Double Jump!');
-                }
-            }
-            
-            multiJump() {
-                if (gameState.jumpCount < 3) {
-                    gameState.playerAction = 'jumping';
-                    gameState.jumpVelocity = 14;
-                    gameState.jumpCount = 3;
-                    gameState.jumpStartTime = performance.now();
-                    
-                    const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                    audioManager.playSpeedDependentSound('jump', speedMultiplier);
-                    
-                    // Multi jump particles
-                    createParticleEffect(
-                        new THREE.Vector3(player.position.x, player.position.y, player.position.z),
-                        0xFF0088,
-                        'jump'
-                    );
-                    
-                    console.log('📱 Multi Jump!');
-                }
-            }
-            
-            duck() {
-                gameState.playerAction = 'ducking';
-                this.isDucking = true;
-                
-                const speedMultiplier = gameState.speed / gameState.maxSpeed;
-                audioManager.playSpeedDependentSound('duck', speedMultiplier);
-                
-                // NO auto stand up - only manual with swipe up
-                console.log('📱 Duck! (Swipe up to stand)');
-            }
-            
-            standUp() {
-                if (gameState.playerAction === 'ducking') {
-                    gameState.playerAction = 'running';
-                    this.isDucking = false;
-                    
-                    if (this.duckTimeout) {
-                        clearTimeout(this.duckTimeout);
-                        this.duckTimeout = null;
-                    }
-                    
-                    console.log('📱 Stand Up!');
-                }
-            }
-        }
-        
-        // Initialize touch controller
-        let touchController = null;
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if mobile device
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (isMobile || 'ontouchstart' in window) {
-                touchController = new TouchController();
-                console.log('📱 Mobile device detected - Touch controls enabled');
-                
-                // Show mobile controls instructions
-                const desktopControls = document.querySelector('.desktop-controls');
-                const mobileControls = document.querySelector('.mobile-controls');
-                if (desktopControls) desktopControls.style.display = 'none';
-                if (mobileControls) mobileControls.style.display = 'block';
-            }
-            
-            // Setup audio toggle button
-            const audioToggle = document.getElementById('audioToggle');
-            if (audioToggle) {
-                // Set initial state based on AudioManager
-                updateAudioButtonState();
-                
-                audioToggle.addEventListener('click', () => {
-                    const isMuted = audioManager.toggleMute();
-                    updateAudioButtonState();
-                    
-                    // Resume audio context if needed
-                    if (!isMuted) {
-                        audioManager.resume();
-                    }
-                });
-            }
-        });
-        
-        // Helper function to update audio button appearance
-        function updateAudioButtonState() {
-            const audioToggle = document.getElementById('audioToggle');
-            if (audioToggle && audioManager) {
-                if (audioManager.isMuted) {
-                    audioToggle.textContent = '🔇';
-                    audioToggle.classList.add('muted');
-                    audioToggle.title = 'Enable Sound';
-                } else {
-                    audioToggle.textContent = '🔊';
-                    audioToggle.classList.remove('muted');
-                    audioToggle.title = 'Disable Sound';
-                }
-            }
-        }
-        
-        // Modern Audio System with Real Sounds
+        // Audio System
         class AudioManager {
             constructor() {
                 this.audioContext = null;
                 this.sounds = {};
                 this.masterVolume = 0.3;
-                this.isMuted = true; // Start muted by default!
-                this.audioBuffers = {}; // Cache for loaded sounds
-                this.soundUrls = {
-                    // Using free sound effects (these are example URLs - replace with actual working ones)
-                    jump: 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=', // Placeholder
-                    coin: 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=', // Placeholder
-                    crash: null, // Will use synthesizer
-                    whoosh: null, // Will use synthesizer
-                    land: null, // Will use synthesizer
-                    powerup: null, // Will use synthesizer
-                };
-                // DON'T initialize audio here - wait for user interaction!
-                this.audioInitialized = false;
-                this.loadMutePreference();
+                this.initAudio();
             }
 
             async initAudio() {
-                if (this.audioInitialized) return; // Already initialized
-                
                 try {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.masterGain = this.audioContext.createGain();
-                    this.masterGain.gain.value = this.isMuted ? 0 : this.masterVolume;
+                    this.masterGain.gain.value = this.masterVolume;
                     this.masterGain.connect(this.audioContext.destination);
                     this.createAdvancedSounds();
-                    this.audioInitialized = true;
-                    this.preloadSounds(); // Now load sounds after context is created
-                    console.log('✅ Audio system initialized on user interaction');
                 } catch (error) {
                     console.log('Audio not supported');
                 }
-            }
-            
-            loadMutePreference() {
-                const saved = localStorage.getItem('audioMuted');
-                if (saved !== null) {
-                    this.isMuted = saved === 'true';
-                    if (this.masterGain) {
-                        this.masterGain.gain.value = this.isMuted ? 0 : this.masterVolume;
-                    }
-                }
-            }
-            
-            toggleMute() {
-                this.isMuted = !this.isMuted;
-                if (this.masterGain) {
-                    this.masterGain.gain.value = this.isMuted ? 0 : this.masterVolume;
-                }
-                localStorage.setItem('audioMuted', this.isMuted);
-                return this.isMuted;
-            }
-            
-            mute() {
-                this.isMuted = true;
-                if (this.masterGain) {
-                    this.masterGain.gain.value = 0;
-                }
-                localStorage.setItem('audioMuted', 'true');
-            }
-            
-            unmute() {
-                this.isMuted = false;
-                if (this.masterGain) {
-                    this.masterGain.gain.value = this.masterVolume;
-                }
-                localStorage.setItem('audioMuted', 'false');
-            }
-            
-            async preloadSounds() {
-                // Preload any external sounds or base64 sounds
-                for (const [name, url] of Object.entries(this.soundUrls)) {
-                    if (url) {
-                        try {
-                            if (url.startsWith('data:')) {
-                                // Base64 encoded sound
-                                const response = await fetch(url);
-                                const arrayBuffer = await response.arrayBuffer();
-                                this.audioBuffers[name] = await this.audioContext.decodeAudioData(arrayBuffer);
-                            } else if (url.startsWith('http')) {
-                                // External URL
-                                const response = await fetch(url, { mode: 'cors' });
-                                const arrayBuffer = await response.arrayBuffer();
-                                this.audioBuffers[name] = await this.audioContext.decodeAudioData(arrayBuffer);
-                            }
-                        } catch (error) {
-                            console.log(`Could not load sound ${name}, will use synthesizer fallback`);
-                        }
-                    }
-                }
-            }
-            
-            playBuffer(name) {
-                if (this.audioBuffers[name] && this.audioContext) {
-                    const source = this.audioContext.createBufferSource();
-                    source.buffer = this.audioBuffers[name];
-                    source.connect(this.masterGain);
-                    source.start();
-                    return true;
-                }
-                return false;
             }
 
             createTone(frequency, duration, type = 'sine', fadeOut = true) {
@@ -2791,7 +379,7 @@
             }
 
             createNoise(duration, filterFreq = 1000) {
-                if (!this.audioContext || this.isMuted) return; // Check muted!
+                if (!this.audioContext) return;
                 
                 const bufferSize = this.audioContext.sampleRate * duration;
                 const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
@@ -2823,23 +411,26 @@
                 // Enhanced realistic sounds using multiple layers
                 this.sounds = {
                     jump: () => {
-                        // Softer, more natural jump sound
-                        this.createTone(100, 0.05, 'sine'); // Soft thud
-                        setTimeout(() => this.createNoise(0.04, 1500), 20); // Light whoosh
-                        // Removed reverb for cleaner sound
+                        // Multi-layered jump sound: impact + whoosh + landing prep
+                        this.createTone(180, 0.08, 'sine'); // Base thump
+                        setTimeout(() => this.createTone(320, 0.12, 'triangle'), 20); // Whoosh up
+                        setTimeout(() => this.createNoise(0.06, 4000), 40); // Air resistance
+                        this.createReverbEffect(240, 0.15, 0.3); // Echo for depth
                     },
                     
                     land: () => {
-                        // Subtle landing sound
-                        this.createTone(60, 0.08, 'sine'); // Soft thud
-                        this.createNoise(0.05, 600); // Light impact
-                        // No reverb for cleaner sound
+                        // Heavy landing with ground impact and dust
+                        this.createTone(80, 0.15, 'square'); // Deep thud
+                        this.createNoise(0.12, 800); // Ground crunch
+                        setTimeout(() => this.createNoise(0.08, 1500), 50); // Dust settle
+                        this.createReverbEffect(120, 0.2, 0.4); // Ground echo
                     },
                     
                     duck: () => {
-                        // Minimal duck sound
-                        this.createNoise(0.06, 2000); // Soft swoosh
-                        this.createTone(90, 0.06, 'sine'); // Light movement
+                        // Quick duck sound with fabric/wind
+                        this.createTone(140, 0.15, 'sawtooth');
+                        this.createNoise(0.1, 3500); // Wind resistance
+                        setTimeout(() => this.createTone(110, 0.1, 'sine'), 80); // Body movement
                     },
                     
                     success: () => {
@@ -2860,27 +451,39 @@
                     },
                     
                     collision: () => {
-                        // Softer collision sound
-                        this.createNoise(0.15, 800); // Muffled impact
-                        this.createTone(40, 0.2, 'sine', false); // Low bump
+                        // Dramatic collision with multiple impact layers
+                        this.createNoise(0.4, 1200); // Main crash
+                        this.createTone(60, 0.6, 'sawtooth', false); // Low rumble
+                        setTimeout(() => this.createNoise(0.25, 2500), 100); // Glass/debris
+                        setTimeout(() => this.createTone(200, 0.3, 'square'), 150); // Metal impact
+                        this.createReverbEffect(150, 0.8, 0.7); // Long echo
                         
+                        // Add screen shake intensity based on collision
                         if (window.gameState) {
-                            gameState.cameraShakeIntensity = Math.max(gameState.cameraShakeIntensity, 0.15);
+                            gameState.cameraShakeIntensity = Math.max(gameState.cameraShakeIntensity, 0.3);
                         }
                     },
                     
                     coin: () => {
-                        // Pleasant two-tone chime
-                        this.createTone(800, 0.08, 'sine'); // First note
-                        setTimeout(() => this.createTone(1200, 0.06, 'sine'), 40); // Second note
-                        // Removed excessive shimmer effects
+                        // Magical coin collection with sparkle
+                        this.createTone(800, 0.12, 'sine');
+                        setTimeout(() => this.createTone(1200, 0.1, 'sine'), 40);
+                        setTimeout(() => this.createTone(1600, 0.08, 'triangle'), 80);
+                        this.createReverbEffect(1000, 0.2, 0.5); // Magical echo
+                        // Add subtle high-frequency shimmer
+                        setTimeout(() => {
+                            for (let k = 0; k < 4; k++) {
+                                setTimeout(() => this.createTone(2000 + k * 200, 0.03, 'sine'), k * 15);
+                            }
+                        }, 120);
                     },
                     
                     whoosh: () => {
-                        // Subtle lane change sound
+                        // Enhanced lane change with speed-dependent pitch
                         const speedMultiplier = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.5;
-                        this.createNoise(0.08, 1500 + speedMultiplier * 500); // Light swoosh
-                        // Removed tone for cleaner effect
+                        const baseFreq = 2000 + speedMultiplier * 2000;
+                        this.createNoise(0.15 + speedMultiplier * 0.1, baseFreq);
+                        this.createTone(250 + speedMultiplier * 100, 0.1, 'triangle');
                     },
                     
                     powerup: () => {
@@ -2929,7 +532,7 @@
 
             // Enhanced reverb effect for depth
             createReverbEffect(frequency, duration, intensity) {
-                if (!this.audioContext || this.isMuted) return; // Check muted!
+                if (!this.audioContext) return;
                 
                 const delay = this.audioContext.createDelay(0.3);
                 const feedback = this.audioContext.createGain();
@@ -2996,14 +599,6 @@
             }
             
             play(soundName) {
-                if (this.isMuted) return; // Don't play if muted
-                
-                // First try to play buffered/real sound
-                if (this.playBuffer(soundName)) {
-                    return; // Successfully played real sound
-                }
-                
-                // Fall back to synthesizer sounds
                 if (this.sounds[soundName]) {
                     try {
                         this.sounds[soundName]();
@@ -3013,14 +608,9 @@
                 }
             }
 
-            async resume() {
-                // First ensure audio is initialized
-                if (!this.audioInitialized) {
-                    await this.initAudio();
-                }
-                
+            resume() {
                 if (this.audioContext && this.audioContext.state === 'suspended') {
-                    await this.audioContext.resume();
+                    this.audioContext.resume();
                 }
             }
         }
@@ -3032,8 +622,8 @@
         let ambientStarted = false;
 
         // Supabase Configuration - Disabled for now to fix startup issue
-        const SUPABASE_URL = 'https://cquahsbgcycdmslcmmdz.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdWFoc2JnY3ljZG1zbGNtbWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1MzU2NDUsImV4cCI6MjA1MjExMTY0NX0.7icZ7GGer0DAM2gxHpeXCOS6K-xLziVX9w0nwPmA0_k';
+        const SUPABASE_URL = 'https://xyzcompany.supabase.co' // Replace with your URL
+        const SUPABASE_ANON_KEY = 'your-anon-key-here' // Replace with your anon key
         
         // Initialize Supabase client
         let supabase = null;
@@ -3041,13 +631,8 @@
         let currentScore = 0;
         let currentSurvivalTime = 0;
 
-        // TEMPORARILY DISABLED - Using localStorage only for now
-        // The Supabase database needs the correct table (subway_runner_scores) to be created
-        console.log('📴 Supabase temporarily disabled - using localStorage for highscores');
-        supabase = null; // Explicitly set to null to use localStorage fallback
-        
-        // TODO: Create subway_runner_scores table in Supabase database
-        // SQL is available in SUPABASE_SETUP.md
+        // Disable Supabase for now to fix the startup issue
+        console.log('Supabase disabled for debugging - running in offline mode only');
 
         // Highscore Management System
         class HighscoreManager {
@@ -3140,51 +725,12 @@
         }
 
         const highscoreManager = new HighscoreManager();
-        
-        // Highscore Panel Visibility Control
-        let highscorePanelTimeout = null;
-        
-        function showHighscorePanelTemporarily() {
-            const panel = document.getElementById('highscorePanel');
-            if (!panel) return;
-            
-            // Show panel
-            panel.classList.add('visible');
-            panel.classList.remove('fading');
-            
-            // Hide after 5 seconds
-            if (highscorePanelTimeout) {
-                clearTimeout(highscorePanelTimeout);
-            }
-            
-            highscorePanelTimeout = setTimeout(() => {
-                hideHighscorePanel();
-            }, 5000);
-        }
-        
-        function showHighscorePanel() {
-            const panel = document.getElementById('highscorePanel');
-            if (!panel) return;
-            panel.classList.add('visible');
-            panel.classList.remove('fading');
-        }
-        
-        function hideHighscorePanel() {
-            const panel = document.getElementById('highscorePanel');
-            if (!panel) return;
-            
-            panel.classList.add('fading');
-            setTimeout(() => {
-                panel.classList.remove('visible');
-                panel.classList.remove('fading');
-            }, 500);
-        }
 
         // Make functions globally available for onclick handlers
-        window.startGame = async function() {
+        window.startGame = function() {
             console.log('startGame called');
             try {
-                await startGameInternal();
+                startGameInternal();
             } catch (error) {
                 console.error('Error in startGame:', error);
             }
@@ -3210,16 +756,9 @@
             baseSpeed: 0.08,
             maxSpeed: 0.45, // Sehr schnell am Ende!
             lives: 3,
-            gameTime: 60, // 60 Sekunden pro Durchgang
+            gameTime: 60, // 60 Sekunden
             timeRemaining: 60,
             gameStartTime: 0,
-            // 3-DURCHGANG-SYSTEM
-            currentRound: 1, // 1-3
-            roundStartTime: 0,
-            totalGameTime: 180, // 3x60 Sekunden
-            roundTransition: false,
-            roundTransitionStartTime: 0,
-            roundTransitionDuration: 3000, // 3 Sekunden Übergang
             playerLane: 1, // 0=left, 1=center, 2=right
             playerAction: 'running', // running, jumping, ducking
             playerY: 0,
@@ -3843,8 +1382,8 @@
             // Shoe stripes (simple glow effect)
             const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
             const stripeMaterial = new THREE.MeshBasicMaterial({
-                color: 0x00FF00
-                // emissive not supported in MeshBasicMaterial
+                color: 0x00FF00,
+                emissive: 0x00FF00
             });
             
             const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
@@ -4752,9 +2291,9 @@
             }
         }
 
-        async function startGameInternal() {
-            // Resume audio context (will initialize on first call)
-            await audioManager.resume();
+        function startGameInternal() {
+            // Resume audio context
+            audioManager.resume();
             
             // Start ambient city sounds
             if (!ambientStarted) {
@@ -4766,26 +2305,13 @@
             gameState.isGameOver = false;
             gameState.isVictory = false;
             gameState.score = 0;
+            gameState.speed = gameState.baseSpeed;
             gameState.lives = 3;
             gameState.timeRemaining = gameState.gameTime;
             gameState.gameStartTime = Date.now();
             gameState.playerLane = 1;
             gameState.playerAction = 'running';
             gameState.playerY = 0;
-            
-            // Reset round system
-            gameState.currentRound = 1;
-            gameState.roundStartTime = Date.now();
-            gameState.roundTransition = false;
-            
-            // Set Round 1 speed parameters
-            setRoundSpeedParameters(1);
-            
-            // Apply Round 1 visual effects
-            applyRoundVisualEffects(1);
-            
-            // Show highscore panel for first 5 seconds
-            showHighscorePanelTemporarily();
             
             // Load Level 1
             currentLevel = 1;
@@ -4825,15 +2351,6 @@
                 return;
             }
             
-            // Hide highscore panel when game ends
-            hideHighscorePanel();
-            
-            // Clear any pending timeout
-            if (highscorePanelTimeout) {
-                clearTimeout(highscorePanelTimeout);
-                highscorePanelTimeout = null;
-            }
-            
             gameState.isPlaying = false;
             gameState.isGameOver = true;
             
@@ -4854,286 +2371,45 @@
 
         function victoryGame() {
             // Prevent multiple victory calls
-            if (gameState.roundTransition) {
-                console.log('Round transition already in progress');
+            if (gameState.isVictory) {
+                console.log('Victory already triggered, skipping');
                 return;
             }
             
-            // Check if this was the final round
-            if (gameState.currentRound >= 3) {
-                // FINAL VICTORY - All 3 rounds completed!
-                gameState.isPlaying = false;
-                gameState.isVictory = true;
-                
-                // Stop ambient sounds
-                audioManager.stopAmbient();
-                ambientStarted = false;
-                
-                currentScore = gameState.score;
-                currentSurvivalTime = 180; // Full 180 seconds survived!
-                
-                // Epic victory celebration!
-                audioManager.play('powerup');
-                
-                // Massive fireworks effect
-                for (let i = 0; i < 10; i++) {
-                    setTimeout(() => {
-                        createParticleEffect(
-                            new THREE.Vector3((Math.random() - 0.5) * 15, 5 + Math.random() * 5, -5),
-                            [0xFF6B35, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFEDE57, 0xFF1493, 0x00FF00][i % 7],
-                            'success'
-                        );
-                    }, i * 200);
-                }
-                
-                // Show epic victory screen
-                showFinalVictoryDialog();
-            } else {
-                // Round completed - transition to next round
-                startRoundTransition();
-            }
-        }
-        
-        // New round transition function
-        function startRoundTransition() {
-            console.log(`🎯 Round ${gameState.currentRound} completed, transitioning to Round ${gameState.currentRound + 1}`);
-            
-            gameState.roundTransition = true;
-            gameState.roundTransitionStartTime = Date.now(); // FIX: Consistent time API
             gameState.isPlaying = false;
+            gameState.isVictory = true;
             
-            // Pause all game elements
-            obstacles.forEach(o => o.paused = true);
-            gameState.activeCollectibles.forEach(c => c.paused = true);
+            // Stop ambient sounds
+            audioManager.stopAmbient();
+            ambientStarted = false;
             
-            const overlay = document.getElementById('roundTransitionOverlay');
-            const title = document.getElementById('transitionTitle');
-            const subtitle = document.getElementById('transitionSubtitle');
-            const countdown = document.getElementById('transitionCountdown');
+            currentScore = gameState.score;
+            currentSurvivalTime = 60; // Full 60 seconds survived!
             
-            // Show round completed message
-            title.textContent = `DURCHGANG ${gameState.currentRound} GESCHAFFT! 🎉`;
-            subtitle.textContent = `Bereite dich auf DURCHGANG ${gameState.currentRound + 1} vor...`;
-            
-            // Apply round-specific colors
-            if (gameState.currentRound === 1) {
-                // Transition to Round 2 - Orange theme
-                title.style.color = '#FFA500';
-                subtitle.style.color = '#FF8C00';
-                overlay.style.background = 'linear-gradient(135deg, rgba(255,140,0,0.9), rgba(255,69,0,0.9))';
-            } else if (gameState.currentRound === 2) {
-                // Transition to Round 3 - Purple/Pink theme
-                title.style.color = '#FF1493';
-                subtitle.style.color = '#FF00FF';
-                overlay.style.background = 'linear-gradient(135deg, rgba(138,43,226,0.9), rgba(255,20,147,0.9))';
-            }
-            
-            // Properly show the overlay
-            overlay.style.display = 'flex';
-            console.log('✅ Round transition overlay shown');
-            
-            // Countdown animation
-            let count = 3;
-            countdown.textContent = count;
-            
-            const countdownInterval = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    countdown.textContent = count;
-                } else {
-                    clearInterval(countdownInterval);
-                    overlay.style.display = 'none';
-                    console.log('✅ Round transition overlay hidden');
-                    startNextRound();
-                }
-            }, 1000);
-        }
-        
-        function startNextRound() {
-            console.log(`🚀 Starting Round ${gameState.currentRound + 1}`);
-            
-            // Increment round
-            gameState.currentRound++;
-            gameState.roundStartTime = Date.now(); // FIX: Use Date.now() consistently!
-            
-            console.log(`✅ Now in Round ${gameState.currentRound}`);
-            
-            // Reset timer for new round
-            gameState.timeRemaining = 60;
-            gameState.gameStartTime = Date.now(); // FIX: Use Date.now() not performance.now()!
-            
-            // Update UI
-            document.getElementById('currentRound').textContent = gameState.currentRound;
-            
-            // Apply round-specific visual effects
-            applyRoundVisualEffects(gameState.currentRound);
-            
-            // Set round-specific speed parameters
-            setRoundSpeedParameters(gameState.currentRound);
-            
-            // Resume game
-            gameState.roundTransition = false;
-            gameState.isPlaying = true;
-            
-            // Unpause game elements
-            obstacles.forEach(o => o.paused = false);
-            gameState.activeCollectibles.forEach(c => c.paused = false);
-            
-            // Play round start sound
+            // Victory celebration!
             audioManager.play('powerup');
-        }
-        
-        function setRoundSpeedParameters(round) {
-            switch(round) {
-                case 1:
-                    // Round 1: Normal progression (0.08 → 0.35)
-                    gameState.baseSpeed = 0.08;
-                    gameState.maxSpeed = 0.35;
-                    break;
-                case 2:
-                    // Round 2: Faster start, higher max (0.28 → 0.525)
-                    gameState.baseSpeed = 0.28;
-                    gameState.maxSpeed = 0.525;
-                    break;
-                case 3:
-                    // Round 3: INSANE mode (0.42 → 0.75)
-                    gameState.baseSpeed = 0.42;
-                    gameState.maxSpeed = 0.75;
-                    break;
+            
+            // Fireworks effect
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createParticleEffect(
+                        new THREE.Vector3((Math.random() - 0.5) * 10, 5, -5),
+                        [0xFF6B35, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFEDE57][i],
+                        'success'
+                    );
+                }, i * 300);
             }
             
-            // Set current speed to base speed
-            gameState.speed = gameState.baseSpeed;
-        }
-        
-        function applyRoundVisualEffects(round) {
-            const speedIndicator = document.getElementById('speedIndicator');
-            const roundIndicator = document.getElementById('roundIndicator');
-            
-            switch(round) {
-                case 1:
-                    // Normal theme
-                    speedIndicator.style.color = 'white';
-                    roundIndicator.style.color = '#FFD700';
-                    document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%)';
-                    break;
-                case 2:
-                    // Heat theme - Orange/Red
-                    speedIndicator.style.color = '#FFA500';
-                    speedIndicator.style.textShadow = '0 0 10px rgba(255,165,0,0.8)';
-                    roundIndicator.style.color = '#FF4500';
-                    roundIndicator.innerHTML = '🔥 DURCHGANG <span id="currentRound">2</span>/3 - HEAT MODE';
-                    document.body.style.background = 'linear-gradient(to bottom, #FF8C00 0%, #FF4500 100%)';
-                    
-                    // Add motion blur effect
-                    renderer.domElement.style.filter = 'blur(0.5px)';
-                    setTimeout(() => {
-                        renderer.domElement.style.filter = 'none';
-                    }, 1000);
-                    break;
-                case 3:
-                    // Insane theme - Purple/Pink Neon
-                    speedIndicator.style.color = '#FF1493';
-                    speedIndicator.style.textShadow = '0 0 20px rgba(255,20,147,1)';
-                    speedIndicator.style.animation = 'pulse 0.5s infinite';
-                    roundIndicator.style.color = '#FF00FF';
-                    roundIndicator.innerHTML = '⚡ DURCHGANG <span id="currentRound">3</span>/3 - INSANE MODE!!!';
-                    document.body.style.background = 'linear-gradient(to bottom, #8A2BE2 0%, #FF1493 100%)';
-                    
-                    // Add chromatic aberration effect
-                    renderer.domElement.style.filter = 'contrast(1.1) saturate(1.3)';
-                    
-                    // Add CSS animation for pulsing
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        @keyframes pulse {
-                            0% { transform: scale(1); }
-                            50% { transform: scale(1.05); }
-                            100% { transform: scale(1); }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    break;
-            }
-        }
-        
-        function showFinalVictoryDialog() {
-            // Create epic victory screen
-            const victoryHTML = `
-                <div id="finalVictoryDialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                     background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,20,147,0.95)); 
-                     padding: 40px; border-radius: 20px; text-align: center; z-index: 2000;
-                     box-shadow: 0 0 50px rgba(255,215,0,0.8);">
-                    <h1 style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,1); margin-bottom: 20px;">
-                        🏆 LEGENDARY RUNNER! 🏆
-                    </h1>
-                    <div style="font-size: 24px; color: white; margin-bottom: 30px;">
-                        Du hast alle 3 Durchgänge gemeistert!
-                    </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <div style="color: #FFD700; font-size: 20px; margin-bottom: 10px;">📊 STATISTIK</div>
-                        <div style="color: white; font-size: 18px;">
-                            <div>✅ Durchgang 1: 60s</div>
-                            <div>✅ Durchgang 2: 60s</div>
-                            <div>✅ Durchgang 3: 60s</div>
-                            <div style="margin-top: 10px; font-size: 24px; color: #FFD700;">
-                                🎯 Total: 180 Sekunden überlebt!
-                            </div>
-                            <div style="margin-top: 5px;">Max Speed: ${Math.floor(gameState.maxSpeed * 1000)}</div>
-                            <div>Score: ${gameState.score}</div>
-                        </div>
-                    </div>
-                    <button onclick="window.proceedToHighscore()" style="padding: 15px 30px; font-size: 20px; 
-                            background: linear-gradient(135deg, #FFD700, #FFA500); border: none; 
-                            border-radius: 10px; color: white; cursor: pointer; font-weight: bold;
-                            box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-                        🎮 WEITER ZU HIGHSCORE
-                    </button>
-                </div>
-            `;
-            
-            const victoryDiv = document.createElement('div');
-            victoryDiv.innerHTML = victoryHTML;
-            document.body.appendChild(victoryDiv);
-            
-            // Add function to proceed to highscore
-            window.proceedToHighscore = function() {
-                // Remove victory dialog
-                const dialog = document.getElementById('finalVictoryDialog');
-                if (dialog) dialog.remove();
-                
-                // Show highscore input
-                if (highscoreManager.isHighscore(gameState.score)) {
-                    showNameInputDialog(true); // true = victory
-                } else {
-                    showGameOverMenu(true); // true = victory
-                }
-            };
+            // Always show name input for victory (it's always a highscore achievement!)
+            showNameInputDialog(true);
         }
 
         function updateUI() {
-            // Update desktop UI
             document.getElementById('score').textContent = gameState.score;
             document.getElementById('speed').textContent = Math.floor(gameState.speed * 1000);
             document.getElementById('lives').textContent = gameState.lives;
-            document.getElementById('currentRound').textContent = gameState.currentRound;
             document.getElementById('apples').textContent = gameState.collectedApples;
             document.getElementById('broccolis').textContent = gameState.collectedBroccolis;
-            
-            // Update mobile UI
-            const mobileScore = document.getElementById('mobileScore');
-            const mobileSpeed = document.getElementById('mobileSpeed');
-            const mobileLives = document.getElementById('mobileLives');
-            const mobileApples = document.getElementById('mobileApples');
-            const mobileBroccolis = document.getElementById('mobileBroccolis');
-            const mobileTime = document.getElementById('mobileTime');
-            
-            if (mobileScore) mobileScore.textContent = gameState.score;
-            if (mobileSpeed) mobileSpeed.textContent = Math.floor(gameState.speed * 1000);
-            if (mobileLives) mobileLives.textContent = gameState.lives;
-            if (mobileApples) mobileApples.textContent = gameState.collectedApples;
-            if (mobileBroccolis) mobileBroccolis.textContent = gameState.collectedBroccolis;
-            if (mobileTime) mobileTime.textContent = Math.max(0, Math.ceil(gameState.timeRemaining));
             
             // Update timer with visual warnings
             const timeElement = document.getElementById('timeRemaining');
@@ -5142,12 +2418,6 @@
             
             // Timer visual states with audio warnings
             const timeLeft = Math.ceil(gameState.timeRemaining);
-            
-            // Show highscore panel in last 5 seconds
-            if (timeLeft <= 5 && timeLeft > 0) {
-                showHighscorePanel();
-            }
-            
             if (timeLeft <= 10) {
                 timerElement.className = 'timer-critical';
                 // Final countdown beeps
@@ -5168,17 +2438,11 @@
         function showNameInputDialog(isVictory) {
             const dialog = document.getElementById('nameInputDialog');
             const title = dialog.querySelector('h2');
-            const scoreValue = document.getElementById('highscoreValue');
             
             if (isVictory) {
                 title.innerHTML = '🎉 VICTORY + HIGHSCORE! 🎉';
             } else {
                 title.innerHTML = '🎉 Neuer Highscore! 🎉';
-            }
-            
-            // Display the achieved score
-            if (scoreValue) {
-                scoreValue.textContent = currentScore;
             }
             
             dialog.style.display = 'block';
@@ -5188,49 +2452,20 @@
         function showGameOverMenu(isVictory) {
             const menu = document.getElementById('menu');
             
-            // Get highscores for display
-            const highscores = highscoreManager.getHighscores();
-            let highscoreHTML = '';
-            
-            if (highscores && highscores.length > 0) {
-                highscoreHTML = `
-                    <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
-                        <h3>🏆 HIGHSCORES 🏆</h3>
-                        <table style="width: 100%; margin-top: 10px;">
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
-                                <th style="text-align: left; padding: 5px;">Rank</th>
-                                <th style="text-align: left; padding: 5px;">Name</th>
-                                <th style="text-align: right; padding: 5px;">Score</th>
-                            </tr>
-                            ${highscores.slice(0, 5).map((entry, index) => `
-                                <tr style="${entry.score === currentScore ? 'background: rgba(255,215,0,0.2); font-weight: bold;' : ''}">
-                                    <td style="padding: 5px;">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}</td>
-                                    <td style="padding: 5px;">${entry.name}</td>
-                                    <td style="text-align: right; padding: 5px;">${entry.score}</td>
-                                </tr>
-                            `).join('')}
-                        </table>
-                    </div>
-                `;
-            }
-            
             if (isVictory) {
                 menu.innerHTML = `
                     <h1>🎉 VICTORY! 🎉</h1>
-                    <h2>Du hast ${gameState.currentRound > 1 ? `${gameState.currentRound} Durchgänge` : '60 Sekunden'} überlebt!</h2>
-                    <p style="font-size: 24px; color: #FFD700;">Final Score: ${currentScore}</p>
+                    <h2>Du hast 60 Sekunden überlebt!</h2>
+                    <p>Final Score: ${currentScore}</p>
                     <p>Du bist ein Subway Runner Champion! 🏆</p>
-                    ${highscoreHTML}
-                    <button onclick="startGame()" style="padding: 10px 20px; font-size: 18px;">🎮 Nochmal versuchen</button>
+                    <button onclick="startGame()">🎮 Nochmal versuchen</button>
                 `;
             } else {
                 menu.innerHTML = `
                     <h1>Game Over!</h1>
-                    <p style="font-size: 20px;">Final Score: <span style="color: #FFD700; font-weight: bold;">${currentScore}</span></p>
+                    <p>Final Score: ${currentScore}</p>
                     <p>Zeit überlebt: ${currentSurvivalTime}s</p>
-                    <p>Durchgang: ${gameState.currentRound}/3</p>
-                    ${highscoreHTML}
-                    <button onclick="startGame()" style="padding: 10px 20px; font-size: 18px;">🎮 Nochmal spielen</button>
+                    <button onclick="startGame()">🎮 Nochmal spielen</button>
                 `;
             }
             
@@ -5292,10 +2527,6 @@
                 }
             });
         });
-        
-        // Expose functions to window for HTML buttons
-        window.submitHighscore = submitHighscoreInternal;
-        window.skipHighscore = skipHighscoreInternal;
 
         function handleKeyDown(event) {
             if (!gameState.isPlaying) return;
@@ -5303,24 +2534,20 @@
             switch (event.code) {
                 case 'ArrowLeft':
                 case 'KeyA':
-                case 'KeyQ':  // HEAD TRACKING FALLBACK
                     event.preventDefault();
                     if (gameState.playerLane > 0) {
                         gameState.playerLane--;
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
-                        console.log('⌨️ Q/A/← Lane left:', gameState.playerLane);
                     }
                     break;
                 case 'ArrowRight':
                 case 'KeyD':
-                case 'KeyE':  // HEAD TRACKING FALLBACK
                     event.preventDefault();
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
-                        console.log('⌨️ E/D/→ Lane right:', gameState.playerLane);
                     }
                     break;
                 case 'ArrowUp':
@@ -5628,27 +2855,8 @@
                             // No collision - continue to next obstacle
                             return;
                         } else if (gameState.playerAction === 'ducking') {
-                            // Normal ducking success - FAIR POINTS FOR DUCK!
+                            // Normal ducking success
                             console.log(`✅ DUCK SUCCESS! Player ducked properly.`);
-                            
-                            // Give fair points for successful duck
-                            addScore(150); // Base duck points
-                            showScorePopup(150, obstacle.mesh.position, 'DUCK SUCCESS!');
-                            
-                            // Success particle effect
-                            createParticleEffect(
-                                obstacle.mesh.position.clone().add(new THREE.Vector3(0, 0.5, 0)),
-                                0x00FF00,
-                                'success'
-                            );
-                            
-                            // Play success sound
-                            audioManager.play('success');
-                            
-                            // Remove obstacle since it was successfully avoided
-                            scene.remove(obstacle.mesh);
-                            obstacles.splice(index, 1);
-                            return; // Important: Skip to next obstacle
                         } else {
                             // Collision - not ducking and not high enough
                             console.log(`💥 DUCK COLLISION! Height: ${playerHeight.toFixed(1)}, needed: ${safeJumpHeight}`);
@@ -6379,89 +3587,44 @@
             }
             
             if (gameState.isPlaying) {
-                // DIRECT player position update - NO INTERPOLATION!
+                // Update player position
                 const targetX = LANE_POSITIONS[gameState.playerLane];
-                player.position.x = targetX; // INSTANT LANE CHANGE!
+                player.position.x += (targetX - player.position.x) * 0.1;
                 
-                // Handle jumping - TRULY SMOOTH LANDING with parabolic descent
+                // Handle jumping - ROBUST mit absolutem Timeout
                 if (gameState.playerAction === 'jumping') {
-                    const deltaTime = 0.016;
+                    // Physics update
+                    gameState.playerY += gameState.jumpVelocity * 0.016;
+                    gameState.jumpVelocity -= 30 * 0.016; // Stärkere Gravitation
                     
-                    // Update vertical position
-                    gameState.playerY += gameState.jumpVelocity * deltaTime;
-                    
-                    // Dynamic gravity based on height and velocity
-                    let gravityStrength = 30; // Base gravity
-                    
-                    // Increase gravity when falling (negative velocity)
-                    if (gameState.jumpVelocity < 0) {
-                        // Apply air resistance for more realistic fall
-                        const fallMultiplier = 1.3; // Makes falling slightly faster than rising
-                        gravityStrength *= fallMultiplier;
-                        
-                        // Near ground - apply landing smoothing
-                        if (gameState.playerY < 2.0) {
-                            // Gradual gravity reduction near ground for soft landing
-                            const landingFactor = gameState.playerY / 2.0; // 0 to 1 as we approach ground
-                            gravityStrength *= (0.5 + landingFactor * 0.5); // Reduce gravity by up to 50%
-                            
-                            // Also apply velocity damping for extra smoothness
-                            if (gameState.playerY < 1.0) {
-                                gameState.jumpVelocity *= 0.95; // Slow down fall near ground
-                            }
-                        }
-                    }
-                    
-                    // Apply gravity
-                    gameState.jumpVelocity -= gravityStrength * deltaTime;
-                    
-                    // Terminal velocity cap (prevents too fast falling)
-                    if (gameState.jumpVelocity < -25) {
-                        gameState.jumpVelocity = -25;
-                    }
-                    
-                    // ABSOLUTE TIMEOUT CHECK
+                    // ABSOLUTE TIMEOUT CHECK - Senior Developer Approach
                     const jumpDuration = performance.now() - gameState.jumpStartTime;
                     const shouldForceLand = jumpDuration > gameState.maxJumpDuration;
                     
-                    // Check for landing
-                    if (gameState.playerY <= 0) {
-                        // Smooth final touchdown
+                    // Landing conditions: physics OR timeout
+                    if (gameState.playerY <= 0 || shouldForceLand) {
+                        // FORCE landing - absolute condition!
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
-                        gameState.jumpStartTime = 0;
-                        gameState.jumpCount = 0;
-                        gameState.aerialCombo = 0;
-                    } else if (shouldForceLand) {
-                        // Forced landing - accelerate descent smoothly
-                        if (gameState.playerY > 0.5) {
-                            // Still high - increase downward velocity gradually
-                            gameState.jumpVelocity = Math.min(gameState.jumpVelocity - 2, -15);
-                        } else {
-                            // Close to ground - land immediately
-                            gameState.playerY = 0;
-                            gameState.jumpVelocity = 0;
-                            gameState.playerAction = 'running';
-                            gameState.jumpStartTime = 0;
-                            gameState.jumpCount = 0;
-                            gameState.aerialCombo = 0;
-                            
-                            // Landing Audio & Visual - only when actually landing
-                            audioManager.play('land');
+                        gameState.jumpStartTime = 0; // Reset timer
+                        gameState.jumpCount = 0; // Reset jump counter
+                        gameState.aerialCombo = 0; // Reset aerial combo
                         
-                            // Debug log if forced landing
-                            if (shouldForceLand && gameState.playerY > 0) {
-                                console.warn('⚠️ Jump timeout triggered - forced landing!');
-                            }
-                            
-                            // Landing-Partikel
-                            createParticleEffect(
-                                new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                                0xAAAAAA,
-                                'landing'
-                            );
+                        // Landing Audio & Visual
+                        audioManager.play('land');
+                        
+                        // Debug log if forced landing
+                        if (shouldForceLand && gameState.playerY > 0) {
+                            console.warn('⚠️ Jump timeout triggered - forced landing!');
                         }
+                        
+                        // Landing-Partikel
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                            0xAAAAAA,
+                            'landing'
+                        );
                         
                         // Mini screen shake for landing
                         screenShake(0.05, 100);
@@ -6521,12 +3684,10 @@
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
-                // Move obstacles with smooth speed (unless in round transition)
+                // Move obstacles with smooth speed
                 obstacles.forEach((obstacle, index) => {
-                    if (!gameState.roundTransition) {
-                        obstacle.mesh.position.z += visualSpeed;
-                        obstacle.z = obstacle.mesh.position.z;
-                    }
+                    obstacle.mesh.position.z += visualSpeed;
+                    obstacle.z = obstacle.mesh.position.z;
                     
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
@@ -6538,15 +3699,13 @@
                     }
                 });
                 
-                // Move and cleanup collectibles (unless in round transition)
+                // Move and cleanup collectibles
                 gameState.activeCollectibles = gameState.activeCollectibles.filter(collectible => {
-                    if (!gameState.roundTransition) {
-                        collectible.mesh.position.z += visualSpeed;
-                        
-                        // Gentle floating animation
-                        collectible.mesh.position.y += Math.sin(Date.now() * 0.003 + collectible.mesh.position.x) * 0.01;
-                        collectible.mesh.rotation.y += 0.02; // Slow rotation
-                    }
+                    collectible.mesh.position.z += visualSpeed;
+                    
+                    // Gentle floating animation
+                    collectible.mesh.position.y += Math.sin(Date.now() * 0.003 + collectible.mesh.position.x) * 0.01;
+                    collectible.mesh.rotation.y += 0.02; // Slow rotation
                     
                     if (collectible.mesh.position.z > 10) {
                         scene.remove(collectible.mesh);
@@ -6622,27 +3781,9 @@
                     return;
                 }
                 
-                // Progressive speed increase based on current round
+                // Progressive speed increase - exponential curve for dramatic effect
                 const timeProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 to 1
-                
-                let speedMultiplier;
-                switch(gameState.currentRound) {
-                    case 1:
-                        // Round 1: Gradual increase (0.08 → 0.35)
-                        speedMultiplier = 1 + timeProgress * 3.375; // Results in 0.08 * 4.375 = 0.35
-                        break;
-                    case 2:
-                        // Round 2: Moderate increase (0.28 → 0.525)
-                        speedMultiplier = 1 + timeProgress * 0.875; // Results in 0.28 * 1.875 = 0.525
-                        break;
-                    case 3:
-                        // Round 3: Slight increase but very fast (0.42 → 0.75)
-                        speedMultiplier = 1 + timeProgress * 0.786; // Results in 0.42 * 1.786 = 0.75
-                        break;
-                    default:
-                        speedMultiplier = 1 + timeProgress * 3.375;
-                }
-                
+                const speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
                 gameState.speed = gameState.baseSpeed * speedMultiplier;
                 gameState.speed = Math.min(gameState.speed, gameState.maxSpeed);
                 
@@ -6681,20 +3822,6 @@
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
         
-        // Debug mode toggle for head tracking
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'h' || e.key === 'H') {
-                if (headTracker) {
-                    headTracker.debugMode = !headTracker.debugMode;
-                    console.log(`🐛 Head Tracking Debug: ${headTracker.debugMode ? 'ON' : 'OFF'}`);
-                    if (!headTracker.debugMode && headTracker.debugHUD) {
-                        headTracker.debugHUD.remove();
-                        headTracker.debugHUD = null;
-                    }
-                }
-            }
-        });
-        
         // Gesture Control Integration with Dynamic Loading
         let gestureController = null;
         let gestureEnabled = false;
@@ -6708,7 +3835,7 @@
         
         // Check if gesture module is already loaded
         async function loadGestureModule() {
-            // Gesture control removed for stability
+            if (gestureModuleLoaded || window.GestureControllerProjector) {
                 gestureModuleLoaded = true;
                 return true;
             }
