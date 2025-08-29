@@ -5,32 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V4.1-3ROUNDS-FIXED</title>
+    <title>Subway Runner 3D - V4.2-HIGHSCORE-RESTORED</title>
     <script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
-    <!-- Headtrackr.js for stable head tracking -->
-    <script src="https://cdn.jsdelivr.net/gh/auduno/headtrackr/headtrackr.min.js"></script>
-    
-    <script type="module">
-        // Pre-load Gesture Control Module
-        import('./js/GestureControllerProjector.js')
-            .then(module => {
-                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
-                console.log('✅ Gesture Module pre-loaded successfully');
-            })
-            .catch(error => {
-                console.error('❌ Gesture Module pre-load failed:', error);
-                // Fallback: Try alternative loading method
-                const script = document.createElement('script');
-                script.type = 'module';
-                script.innerHTML = `
-                    import { GestureControllerProjector } from './js/GestureControllerProjector.js';
-                    window.GestureControllerProjector = GestureControllerProjector;
-                `;
-                document.head.appendChild(script);
-            });
-    </script>
     <style>
         * {
             margin: 0;
@@ -93,7 +71,7 @@
             padding: 40px;
             border-radius: 16px;
             text-align: center;
-            z-index: 200;
+            z-index: 1000;
             min-width: 300px;
         }
         
@@ -640,11 +618,11 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.1-3ROUNDS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.2-HIGHSCORE-FIXED</div>
         </div>
         
         <!-- Round Transition Overlay -->
-        <div id="roundTransitionOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+        <div id="roundTransitionOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; justify-content: center; align-items: center; flex-direction: column;">
             <div id="transitionTitle" style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.8); margin-bottom: 20px;"></div>
             <div id="transitionSubtitle" style="font-size: 24px; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.8);"></div>
             <div id="transitionCountdown" style="font-size: 72px; color: white; margin-top: 30px; text-shadow: 0 0 30px rgba(255,255,255,1);"></div>
@@ -709,13 +687,20 @@
             <div id="highscoreList">Lade Bestenliste...</div>
         </div>
         
-        <div id="nameInputDialog" class="name-input-dialog" style="display: none;">
-            <h2>🎉 Neuer Highscore!</h2>
-            <p>Gib deinen Namen ein:</p>
-            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="20">
+        <div id="nameInputDialog" class="name-input-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+             background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,140,0,0.95)); 
+             padding: 30px; border-radius: 20px; text-align: center; z-index: 3000;
+             box-shadow: 0 0 50px rgba(255,215,0,0.8); min-width: 300px;">
+            <h2 style="color: white; text-shadow: 0 0 10px rgba(255,255,255,0.8); margin-bottom: 15px;">🎉 Neuer Highscore! 🎉</h2>
+            <p style="font-size: 24px; color: white; font-weight: bold; margin-bottom: 10px;">Score: <span id="highscoreValue" style="color: #FFD700;"></span></p>
+            <p style="color: white; margin-bottom: 15px;">Gib deinen Namen ein:</p>
+            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="20" 
+                   style="padding: 10px; font-size: 16px; border-radius: 5px; border: none; width: 80%; margin-bottom: 20px;">
             <br>
-            <button onclick="submitHighscore()">💾 Speichern</button>
-            <button onclick="skipHighscore()">⏭️ Überspringen</button>
+            <button onclick="submitHighscore()" style="padding: 10px 20px; font-size: 16px; margin: 5px; 
+                    background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">💾 Speichern</button>
+            <button onclick="skipHighscore()" style="padding: 10px 20px; font-size: 16px; margin: 5px;
+                    background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">⏭️ Überspringen</button>
         </div>
     </div>
 
@@ -3857,9 +3842,9 @@
             
             // Shoe stripes (simple glow effect)
             const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
-            const stripeMaterial = new THREE.MeshLambertMaterial({
-                color: 0x00FF00,
-                emissive: 0x004400
+            const stripeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00FF00
+                // emissive not supported in MeshBasicMaterial
             });
             
             const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
@@ -4911,8 +4896,10 @@
         
         // New round transition function
         function startRoundTransition() {
+            console.log(`🎯 Round ${gameState.currentRound} completed, transitioning to Round ${gameState.currentRound + 1}`);
+            
             gameState.roundTransition = true;
-            gameState.roundTransitionStartTime = performance.now();
+            gameState.roundTransitionStartTime = Date.now(); // FIX: Consistent time API
             gameState.isPlaying = false;
             
             // Pause all game elements
@@ -4941,7 +4928,9 @@
                 overlay.style.background = 'linear-gradient(135deg, rgba(138,43,226,0.9), rgba(255,20,147,0.9))';
             }
             
+            // Properly show the overlay
             overlay.style.display = 'flex';
+            console.log('✅ Round transition overlay shown');
             
             // Countdown animation
             let count = 3;
@@ -4954,19 +4943,24 @@
                 } else {
                     clearInterval(countdownInterval);
                     overlay.style.display = 'none';
+                    console.log('✅ Round transition overlay hidden');
                     startNextRound();
                 }
             }, 1000);
         }
         
         function startNextRound() {
+            console.log(`🚀 Starting Round ${gameState.currentRound + 1}`);
+            
             // Increment round
             gameState.currentRound++;
-            gameState.roundStartTime = performance.now();
+            gameState.roundStartTime = Date.now(); // FIX: Use Date.now() consistently!
+            
+            console.log(`✅ Now in Round ${gameState.currentRound}`);
             
             // Reset timer for new round
             gameState.timeRemaining = 60;
-            gameState.gameStartTime = performance.now();
+            gameState.gameStartTime = Date.now(); // FIX: Use Date.now() not performance.now()!
             
             // Update UI
             document.getElementById('currentRound').textContent = gameState.currentRound;
@@ -5066,9 +5060,9 @@
         function showFinalVictoryDialog() {
             // Create epic victory screen
             const victoryHTML = `
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                <div id="finalVictoryDialog" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
                      background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,20,147,0.95)); 
-                     padding: 40px; border-radius: 20px; text-align: center; z-index: 1000;
+                     padding: 40px; border-radius: 20px; text-align: center; z-index: 2000;
                      box-shadow: 0 0 50px rgba(255,215,0,0.8);">
                     <h1 style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,1); margin-bottom: 20px;">
                         🏆 LEGENDARY RUNNER! 🏆
@@ -5089,11 +5083,11 @@
                             <div>Score: ${gameState.score}</div>
                         </div>
                     </div>
-                    <button onclick="location.reload()" style="padding: 15px 30px; font-size: 20px; 
+                    <button onclick="window.proceedToHighscore()" style="padding: 15px 30px; font-size: 20px; 
                             background: linear-gradient(135deg, #FFD700, #FFA500); border: none; 
                             border-radius: 10px; color: white; cursor: pointer; font-weight: bold;
                             box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-                        🎮 NOCHMAL SPIELEN
+                        🎮 WEITER ZU HIGHSCORE
                     </button>
                 </div>
             `;
@@ -5101,6 +5095,20 @@
             const victoryDiv = document.createElement('div');
             victoryDiv.innerHTML = victoryHTML;
             document.body.appendChild(victoryDiv);
+            
+            // Add function to proceed to highscore
+            window.proceedToHighscore = function() {
+                // Remove victory dialog
+                const dialog = document.getElementById('finalVictoryDialog');
+                if (dialog) dialog.remove();
+                
+                // Show highscore input
+                if (highscoreManager.isHighscore(gameState.score)) {
+                    showNameInputDialog(true); // true = victory
+                } else {
+                    showGameOverMenu(true); // true = victory
+                }
+            };
         }
 
         function updateUI() {
@@ -5160,11 +5168,17 @@
         function showNameInputDialog(isVictory) {
             const dialog = document.getElementById('nameInputDialog');
             const title = dialog.querySelector('h2');
+            const scoreValue = document.getElementById('highscoreValue');
             
             if (isVictory) {
                 title.innerHTML = '🎉 VICTORY + HIGHSCORE! 🎉';
             } else {
                 title.innerHTML = '🎉 Neuer Highscore! 🎉';
+            }
+            
+            // Display the achieved score
+            if (scoreValue) {
+                scoreValue.textContent = currentScore;
             }
             
             dialog.style.display = 'block';
@@ -5174,20 +5188,49 @@
         function showGameOverMenu(isVictory) {
             const menu = document.getElementById('menu');
             
+            // Get highscores for display
+            const highscores = highscoreManager.getHighscores();
+            let highscoreHTML = '';
+            
+            if (highscores && highscores.length > 0) {
+                highscoreHTML = `
+                    <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                        <h3>🏆 HIGHSCORES 🏆</h3>
+                        <table style="width: 100%; margin-top: 10px;">
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                                <th style="text-align: left; padding: 5px;">Rank</th>
+                                <th style="text-align: left; padding: 5px;">Name</th>
+                                <th style="text-align: right; padding: 5px;">Score</th>
+                            </tr>
+                            ${highscores.slice(0, 5).map((entry, index) => `
+                                <tr style="${entry.score === currentScore ? 'background: rgba(255,215,0,0.2); font-weight: bold;' : ''}">
+                                    <td style="padding: 5px;">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}</td>
+                                    <td style="padding: 5px;">${entry.name}</td>
+                                    <td style="text-align: right; padding: 5px;">${entry.score}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    </div>
+                `;
+            }
+            
             if (isVictory) {
                 menu.innerHTML = `
                     <h1>🎉 VICTORY! 🎉</h1>
-                    <h2>Du hast 60 Sekunden überlebt!</h2>
-                    <p>Final Score: ${currentScore}</p>
+                    <h2>Du hast ${gameState.currentRound > 1 ? `${gameState.currentRound} Durchgänge` : '60 Sekunden'} überlebt!</h2>
+                    <p style="font-size: 24px; color: #FFD700;">Final Score: ${currentScore}</p>
                     <p>Du bist ein Subway Runner Champion! 🏆</p>
-                    <button onclick="startGame()">🎮 Nochmal versuchen</button>
+                    ${highscoreHTML}
+                    <button onclick="startGame()" style="padding: 10px 20px; font-size: 18px;">🎮 Nochmal versuchen</button>
                 `;
             } else {
                 menu.innerHTML = `
                     <h1>Game Over!</h1>
-                    <p>Final Score: ${currentScore}</p>
+                    <p style="font-size: 20px;">Final Score: <span style="color: #FFD700; font-weight: bold;">${currentScore}</span></p>
                     <p>Zeit überlebt: ${currentSurvivalTime}s</p>
-                    <button onclick="startGame()">🎮 Nochmal spielen</button>
+                    <p>Durchgang: ${gameState.currentRound}/3</p>
+                    ${highscoreHTML}
+                    <button onclick="startGame()" style="padding: 10px 20px; font-size: 18px;">🎮 Nochmal spielen</button>
                 `;
             }
             
@@ -5249,6 +5292,10 @@
                 }
             });
         });
+        
+        // Expose functions to window for HTML buttons
+        window.submitHighscore = submitHighscoreInternal;
+        window.skipHighscore = skipHighscoreInternal;
 
         function handleKeyDown(event) {
             if (!gameState.isPlaying) return;
@@ -5581,8 +5628,27 @@
                             // No collision - continue to next obstacle
                             return;
                         } else if (gameState.playerAction === 'ducking') {
-                            // Normal ducking success
+                            // Normal ducking success - FAIR POINTS FOR DUCK!
                             console.log(`✅ DUCK SUCCESS! Player ducked properly.`);
+                            
+                            // Give fair points for successful duck
+                            addScore(150); // Base duck points
+                            showScorePopup(150, obstacle.mesh.position, 'DUCK SUCCESS!');
+                            
+                            // Success particle effect
+                            createParticleEffect(
+                                obstacle.mesh.position.clone().add(new THREE.Vector3(0, 0.5, 0)),
+                                0x00FF00,
+                                'success'
+                            );
+                            
+                            // Play success sound
+                            audioManager.play('success');
+                            
+                            // Remove obstacle since it was successfully avoided
+                            scene.remove(obstacle.mesh);
+                            obstacles.splice(index, 1);
+                            return; // Important: Skip to next obstacle
                         } else {
                             // Collision - not ducking and not high enough
                             console.log(`💥 DUCK COLLISION! Height: ${playerHeight.toFixed(1)}, needed: ${safeJumpHeight}`);
@@ -6642,7 +6708,7 @@
         
         // Check if gesture module is already loaded
         async function loadGestureModule() {
-            if (gestureModuleLoaded || window.GestureControllerProjector) {
+            // Gesture control removed for stability
                 gestureModuleLoaded = true;
                 return true;
             }
