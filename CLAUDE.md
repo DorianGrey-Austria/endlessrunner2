@@ -4,817 +4,239 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚨 CRITICAL DEPLOYMENT & WORKFLOW RULES (TOP PRIORITY!)
 
-### 🔴 AUTO-DEPLOYMENT IST PFLICHT!
-- **NACH JEDER ÄNDERUNG**: `git add . && git commit -m "message" && git push`
-- **IMMER SOFORT ONLINE STELLEN**: Jede Code-Änderung muss deployed werden!
-- **URL FORMAT**: Immer als **🌐 https://ki-revolution.at/** (klickbar!)
-- **BROWSER**: Chrome verwenden (NIEMALS Safari)
-- **NACH DEPLOYMENT SAGEN**: "**🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/**"
-- **KEINE LOKALEN TESTS**: Direkt online testen auf https://ki-revolution.at/
+### 🔴 AUTO-DEPLOYMENT IS MANDATORY!
+- **AFTER EVERY CHANGE**: `git add . && git commit -m "message" && git push`
+- **ALWAYS GO LIVE IMMEDIATELY**: Every code change must be deployed!
+- **URL FORMAT**: Always as **🌐 https://ki-revolution.at/** (clickable!)
+- **BROWSER**: Use Chrome (NEVER Safari)
+- **AFTER DEPLOYMENT SAY**: "**🌐 Version X.Y.Z now live on https://ki-revolution.at/**"
+- **NO LOCAL TESTS**: Test directly online at https://ki-revolution.at/
 
 ### 📋 WORKFLOW STANDARDS
-1. **Versionierung**: IMMER updaten (MAJOR.MINOR.PATCH)
-2. **Dokumentation**: Änderungen sofort in .md Dateien
-3. **Testing**: "Teste in Chrome: **🌐 https://ki-revolution.at/**"
-4. **UI/UX First**: User Experience > Technische Eleganz
-5. **Kurze Antworten**: Präzise, action-orientiert mit ✅
+1. **Versioning**: ALWAYS update (MAJOR.MINOR.PATCH)
+2. **Documentation**: Changes immediately in .md files
+3. **Testing**: "Test in Chrome: **🌐 https://ki-revolution.at/**"
+4. **UI/UX First**: User Experience > Technical Elegance
+5. **Concise Answers**: Precise, action-oriented with ✅
 
-**SIEHE AUCH**: [CLAUDE_CODE_RULES.md](./CLAUDE_CODE_RULES.md) für vollständige Regeln!
+## Repository Architecture Overview
 
-## Quick Task Reference
+This is a collection of endless runner games built with different technologies, following a UI/UX-first philosophy. The project demonstrates modern web gaming capabilities across multiple platforms and technologies.
 
-### Adding a New Obstacle Type
-1. Add to obstacle spawning logic in `index.html` (~line 1500-2000)
-2. Create geometry and material with Three.js
-3. Add collision detection case
-4. Test spawn patterns and difficulty balance
+### Primary Projects:
+- **SubwayRunner**: Main production game (Vanilla JS + Three.js, deployed via GitHub Actions)
+- **Endless3D**: Perspective-based 3D runner with modular world system
+- **EndlessRunner-MVP**: Feature-rich browser runner (10,000+ lines) with enterprise-grade architecture
+- **GestureRunnerPro**: Godot 4.3 gesture-controlled runner with webcam integration
+- **godot-mcp**: MCP server for AI-driven Godot integration
 
-### Modifying Game Speed
-- Base speed: Search for `baseSpeed = 0.12` in index.html
-- Speed scaling: Look for `speedMultiplier` calculations
-- Max speed cap: Find `Math.min(baseSpeed * multiplier, 0.35)`
+**Primary Focus**: SubwayRunner is the main production game at https://ki-revolution.at/
 
-### Fixing Collision Issues
-1. Find `checkCollisions()` function
-2. Adjust `tolerance` values (0.2-0.3 typical)
-3. Debug with console.log bounding boxes
-4. Test with different obstacle types
+### Core Philosophy:
+- **UI/UX First**: User experience drives all technical decisions
+- **Performance Intelligence**: Adaptive rendering (60-120 FPS based on device)
+- **Universal Compatibility**: From IE11 to modern M1/M2 iPads
 
-### Updating Score Display
-- Score element: `document.getElementById('score')`
-- Update throttled to 10 FPS (performance optimization)
-- Score cap at 999,999 to prevent overflow
+## SubwayRunner - Core Architecture (Primary Project)
 
-### Emergency Rollback
-```bash
-# Find backup version
-ls SubwayRunner/*.backup
-# Restore specific version
-cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html
-# Deploy immediately
-git add . && git commit -m "🚨 ROLLBACK to V4.6.11" && git push
-```
+### Dual Architecture System:
+- **Production**: Single `index.html` file (~5000+ lines embedded JavaScript)
+- **Development**: React + TypeScript in `src/` folder (Vite, React Three Fiber)
 
-## 🔴 CRITICAL LESSONS LEARNED - 10 HOURS OF FAILURE (03.08.2025)
+### Key Technical Details:
+- **Three.js 0.158.0**: 3D graphics engine
+- **Game Loop**: 60 FPS requestAnimationFrame with modular update system
+- **Collision Detection**: 3D bounding box with configurable tolerance (0.2-0.3)
+- **Object Pooling**: Performance optimization for obstacles/collectibles
+- **Module System**: Dynamic ES6 module loading for gesture control
+- **Dependencies**: Supabase (backend), MediaPipe (gestures), Headtrackr.js (tracking)
 
-### **THE DISASTER: 12 Failed Attempts in 10 Hours**
-After 10+ hours trying to implement simple collectibles (Kiwis & Broccolis), we produced a WORSE version than we started with. This is a complete system failure that requires fundamental workflow changes.
+### Game Constants (NEVER CHANGE):
+- **Base Speed**: 0.12 (perfect balance tested extensively)
+- **Lane Positions**: [-2, 0, 2] (left, center, right)
+- **Jump Height**: 2.5 units, Duration ~600ms
+- **Score Cap**: 999,999 (prevents overflow bugs)
+- **Win Condition**: 30 kiwis collected
 
-### **ROOT CAUSES OF REPEATED FAILURE:**
-
-#### **1. RESEARCH FAILURE - REINVENTING INSTEAD OF REUSING**
-- **PROBLEM**: Ignored existing working implementations
-- **PATTERN**: User says "we had working version" → I create new from scratch
-- **SOLUTION**: ALWAYS search for existing code first:
-```bash
-# MANDATORY before any implementation:
-git log --oneline | grep -i "feature_name"
-grep -r "function_name" . --include="*.backup"
-```
-
-#### **2. MATHEMATICAL IGNORANCE**
-- **DISASTER**: Set 30% spawn rate = 18 collectibles/second at 60 FPS
-- **PATTERN**: Deploy without calculating: Rate × FPS × Time
-- **SOLUTION**: ALWAYS calculate before deploying:
+### Core Game Systems:
 ```javascript
-// MANDATORY calculation:
-const spawnsPerSecond = spawnRate * fps;
-const totalIn30Seconds = spawnsPerSecond * 30;
-console.log(`Will spawn ${totalIn30Seconds} items`);
+// Main game loop structure (embedded in index.html)
+function animate() {
+    requestAnimationFrame(animate);
+    if (gameState === 'playing') {
+        updatePlayer();      // Input, jumping, lane switching
+        updateObstacles();   // Move and spawn obstacles
+        updateCollectibles(); // Move and spawn collectibles
+        checkCollisions();   // 3D bounding box detection
+        updateScore();       // Direct updates (no queue system)
+        updateSpeed();       // Progressive difficulty
+    }
+    renderer.render(scene, camera);
+}
 ```
 
-#### **3. DEPLOYMENT WITHOUT TESTING**
-- **PATTERN**: Deploy → Fail → Emergency Fix → Worse → Rollback (12 times!)
-- **SOLUTION**: MANDATORY local testing checklist:
-  - [ ] Game starts successfully
-  - [ ] Feature works as expected
-  - [ ] Performance acceptable (60 FPS)
-  - [ ] No console errors
-  - [ ] Play for minimum 30 seconds
+## Essential Development Commands
 
-#### **4. OVER-ENGINEERING SIMPLE REQUESTS**
-- **USER WANTS**: Simple collectibles
-- **I DELIVER**: 80+ lines complex code with rings, seeds, glints
-- **RESULT**: Game doesn't start
-- **SOLUTION**: Maximum 20 lines for simple features
-
-#### **5. IGNORING USER FEEDBACK**
-- **USER**: "We're making it too complicated"
-- **ME**: Makes it MORE complicated
-- **SOLUTION**: User feedback is LAW - simplify immediately
-
-### **NEW MANDATORY WORKFLOW:**
-
-#### **PHASE 1: ARCHAEOLOGICAL RESEARCH** (ALWAYS FIRST!)
-```bash
-# Find ALL existing implementations:
-git log --oneline --grep="feature"
-grep -r "createFunction" . --include="*.html" --include="*.backup"
-# Extract working code, DON'T reinvent
-```
-
-#### **PHASE 2: MATHEMATICAL VALIDATION**
-```javascript
-// BEFORE any spawn rate change:
-const validation = {
-  spawnRate: 0.02,
-  fps: 60,
-  itemsPerSecond: 0.02 * 60, // 1.2
-  itemsIn30Sec: 1.2 * 30,     // 36
-  acceptable: 36 < 50         // true ✓
-};
-```
-
-#### **PHASE 3: LOCAL TESTING** (NO EXCEPTIONS!)
-1. Start local server: `python3 -m http.server 8001`
-2. Test in Chrome (NEVER Safari)
-3. Play minimum 30 seconds
-4. Verify all features work
-5. Check console for errors
-6. Monitor FPS (must stay >50)
-
-#### **PHASE 4: INCREMENTAL DEPLOYMENT**
-- ONE feature per deployment
-- Small changes only
-- Immediate user feedback
-- Rollback if ANY issues
-
-### **THE 5 COMMANDMENTS OF FUTURE DEVELOPMENT:**
-
-1. **THOU SHALT NOT REINVENT** - Always search existing code first
-2. **THOU SHALT CALCULATE** - Math check every spawn rate/performance change
-3. **THOU SHALT TEST LOCALLY** - No deployment without 30-second test
-4. **THOU SHALT KEEP IT SIMPLE** - <20 lines for simple features
-5. **THOU SHALT LISTEN TO USERS** - Their feedback is absolute law
-
-### **SUCCESS METRICS TO TRACK:**
-- **Deployment Success Rate**: Must be >80% (currently 0%)
-- **Time to Working Feature**: Must be <2 hours (currently 10+ hours)
-- **User Satisfaction**: "It works!" not "This can't be happening!"
-- **Code Reuse**: >50% existing, <50% new (currently 0% reuse)
-
-### **COMMITMENT:**
-Never again will we have 12 emergency rollbacks in 10 hours. The solution is NOT in complex new code, but in finding and combining existing working pieces. 
-
-**NEW MANTRA**: **RESEARCH → EXTRACT → COMBINE → TEST → DEPLOY**
-
-## Repository Overview
-
-This is a collection of endless runner game projects built with different technologies, following a UI/UX-first development philosophy where user experience drives all technical decisions.
-
-- **SubwayRunner**: Vanilla JavaScript + Three.js (main production game, deployed via GitHub Actions)
-  - Single HTML file with embedded JS modules (~5000 lines)
-  - React development version in src/ folder
-  - Gesture control with MediaPipe and Headtrackr.js
-  - Supabase integration for ghost racing features
-- **Endless3D**: Vanilla JavaScript + Three.js (perspective-based 3D runner with world system)
-- **EndlessRunner-MVP**: Pure JavaScript (feature-rich browser runner)
-- **GestureRunnerPro**: Godot 4.3 (gesture-controlled runner with MediaPipe WebCam integration)
-- **godot-mcp**: Godot MCP server for AI integration
-
-**Primary Project**: SubwayRunner is the main production game with automated deployment to Hostinger via GitHub Actions.
-
-## 🚨 VERSIONING RULES (NEVER DELETE!)
-
-### **CRITICAL: Version Management System**
-**RULE 1**: Every deployment MUST increment the sub-version number  
-**RULE 2**: Version format: MAJOR.MINOR.PATCH (e.g., 3.5.0)  
-**RULE 3**: Increment rules:
-- **PATCH** (+0.0.1): Bug fixes, small improvements, feature additions
-- **MINOR** (+0.1.0): Major features, significant UI changes, new systems  
-- **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
-
-### **CURRENT VERSION TRACKING**
-- **CURRENT**: V4.1-3ROUNDS-RESTORED (as per index.html title - active deployment)
-- **STABLE BASE**: V3.1-BALANCED (✅ ERFOLGREICH GETESTET - 60 Sekunden durchgespielt!)
-- **Previous**: V3.0-COLLECTIBLES (✅ Äpfel & Brokkoli funktionieren)
-- **Before**: V2.2-DUCK-FIX (✅ Duck collision detection restored)
-- **Before**: V2.1-STABILIZED (Basic version with stability features)
-- **Historic**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
-- **Historic**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
-- **Historic**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
-- **FAILED**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
-- **Historic**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
-- **Historic**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
-- **Historic**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
-- **Historic**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
-- **Historic**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
-
-### **BASISVERSION 3 FINAL - DEFINITION (05.08.2025 - FINALIZED)**
-**VERSION**: V3.1-BALANCED  
-**STATUS**: ✅ ERFOLGREICH GETESTET - 60 SEKUNDEN DURCHGESPIELT!
-**USER BESTÄTIGUNG**: "Das können wir als großen Erfolg abspeichern. Ich habe die 60 Sekunden durchgespielt. Ich habe 13 Äpfel und einige Brokkolis gesammelt, und das Spiel ist nicht abgestürzt."
-
-**FEATURES**:
-- ✅ Grundlegendes Endless Runner Gameplay
-- ✅ Duck Collision Detection (Spieler MUSS ducken bei highbarrier/duckbeam)
-- ✅ Stability Features (Score Limits, Object Limits, Memory Monitoring)
-- ✅ Verschiedene Hindernistypen (lowbarrier, highbarrier, spikes, etc.)
-- ✅ Lane-Switching System
-- ✅ Jump & Duck Mechanics
-- ✅ Äpfel & Brokkoli Collectibles (2.5-Sekunden Intervall)
-- ✅ Sichere Spawn-Limitierung (max 10 gleichzeitig)
-- ✅ Faire Collectible-Platzierung (50 units Abstand)
-- ✅ Ausbalancierte Spawn-Raten (weniger Obstacles, mehr Collectibles)
-- ❌ KEINE Level/Characters (zu komplex für Basis)
-
-**ERFOLGSMETRIKEN**:
-- 60 Sekunden durchgespielt ohne Absturz
-- 13 Äpfel gesammelt (realistischer Wert)
-- Mehrere Brokkolis gesammelt
-- Keine Performance-Probleme
-- Faires, spaßiges Gameplay
-
-### **KNOWN ISSUE TO FIX IN V3.2**:
-- ⚠️ Apfel sieht aus wie Spike-Hindernis (Kugel) - muss eindeutig unterscheidbar sein!
-
-### **CURRENT CODEBASE STATUS**
-The game is at version V3.1-BALANCED (FINALE BASISVERSION 3). Dies ist die endgültig getestete und vom User abgenommene Basis für alle weiteren Entwicklungen.
-
-### **V4.6.13 SCORE-FIX DETAILS**
-- **CRITICAL BUG FIXED**: Score explosion to 2+ billion points
-- **Root Cause**: Every obstacle leaving screen gave +10 "shield_collision" points
-- **Solution**: 
-  - Removed buggy addScore line
-  - Removed entire score queue system
-  - Direct score updates only
-  - UI update throttling (10 FPS)
-  - Score cap at 999,999
-- **NO new features added**
-
-### **V4.6.12 MINIMAL FIX DETAILS**
-- **Changes**: ONLY Y-position adjustments
-- **Broccoli**: Y=0.3 (confirmed working)
-- **Kiwi**: Y=0.3 (same height as broccoli)
-- **NO spawn algorithm changes**
-- **NO new features**
-- **NO performance "optimizations"**
-
-### **GAMEPLAY BALANCE PREFERENCES** (Stand: 27.07.2025)
-- **Geschwindigkeit**: PERFEKT! Aktuelle Geschwindigkeit beibehalten (baseSpeed: 0.12)
-- **Hindernisse**: Spawn-Raten sind gut balanciert (Start: 0.004, Ende: 0.035)
-- **Collectibles**: 10 Kiwis + 5 Broccolis - reduziert für besseres Gameplay
-- **Visuals**: Realistische braune Kiwis, bodennahe grüne Broccolis
-
-### **VERSION UPDATE PROCESS**
-1. **Find version location**: Search for `V4.6.13-SCORE-FIX` in `SubwayRunner/index.html`
-2. **Update version string**: Replace with new version (e.g., `V4.6.14-NEW-FEATURE`)
-3. **Update CLAUDE.md**: Add new version to "CURRENT VERSION TRACKING" section
-4. **Update commit message**: Use format `🎮 Version X.Y.Z: [feature description]`
-5. **User notification format**: "🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/"
-6. **Version locations to update**:
-   - `SubwayRunner/index.html`: Main version display
-   - `CLAUDE.md`: Version tracking section
-   - Git commit message: Version reference
-
-### **DEBUGGING & TROUBLESHOOTING**
-- **Test Files**:
-  - `SubwayRunner/test-runner.js`: Custom test suite (syntax, structure, performance, logic)
-  - `SubwayRunner/tests/game.test.js`: Playwright browser tests
-  - `SubwayRunner/test-gamestate.html`: Manual game state testing
-- **Debug Utilities**:
-  - `SubwayRunner/syntax_validator.html`: Check JavaScript syntax errors
-  - `SubwayRunner/find_syntax_error.js`: Locate syntax issues
-  - `SubwayRunner/function_test.html`, `quick_test.html`: Isolated function testing
-- **Troubleshooting Docs**:
-  - `SubwayRunner/DEBUG_GUIDE.md`: Common issues and solutions
-  - `SubwayRunner/TROUBLESHOOTING.md`: Performance and bug fixes
-  - `troubleshooting.md`: Repository-wide issues
-- **Version Rollback**: Multiple `.backup` files for emergency restoration
-
-### **KEY FEATURES IMPLEMENTED**
-- **10 Unique Levels**: Each with distinct themes, obstacles, and mechanics
-- **5 Playable Characters**: NEON-7 (Cyberpunk), Commander Void (Space), Lara Thornwood (Jungle), Bjorn Frostbeard (Ice), Seraphina Prism (Crystal)
-- **Level System**: Automatic progression every 1000 points
-- **Visual Effects**: Enhanced graphics with particles, shaders, and post-processing
-- **Gesture Control**: MediaPipe integration for head tracking
-- **Ghost Racing**: Daily challenges with Supabase integration
-- **Collectibles**: Kiwis, Broccolis, and Mystery Boxes (strict no-power-ups rule)
-- **Performance**: Object pooling, frustum culling, adaptive quality
-
-### **🚀 AUTO-DEPLOYMENT RULE (CRITICAL)**
-**WICHTIGE REGEL**: Nach jeder längeren Programmier-Session IMMER sofort online stellen!
-- Nach Implementierung von Features/Fixes: `git add . && git commit -m "message" && git push`
-- GitHub Actions deployed automatisch zu https://ki-revolution.at/
-- Nutzer sollen immer die neueste Version testen können
-- Online läuft derzeit nur eine Testversion - regelmäßige Updates sind essentiell
-
-## Common Development Commands
-
-### SubwayRunner (Vanilla JS/Three.js) - Primary Project
+### SubwayRunner (Primary Project)
 ```bash
 cd SubwayRunner
 
-# Local Development
-python -m http.server 8001      # Serve index.html locally
-npm run serve                   # Alternative: live-server with auto-reload
+# Development
+python -m http.server 8001      # Local development server
+npm run dev                     # React dev server (port 5173)
+npm run serve                   # Live-server with watch mode on port 8001
 
-# Testing Commands
-npm run test                    # Run custom test-runner.js (syntax, structure, performance, logic tests)
-npm run test:watch             # Run tests in watch mode with nodemon
-python -m http.server 8001 &   # Start server for Playwright tests
-npx playwright test            # Run Playwright browser tests
-npx playwright test --ui       # Run with interactive UI
-npx playwright test --debug    # Debug mode
+# Testing (MANDATORY BEFORE DEPLOY)
+npm run test                    # Custom test suite (syntax, performance, logic)
+npx playwright test            # Browser automation tests
+npm run test:watch             # Watch mode for development
+npm run pretest                # Pre-test check with echo output
+npm run predeploy              # Pre-deployment validation
 
-# React Development (src/ folder)
-npm install                     # Install dependencies
-npm run dev                     # Start Vite dev server (port 5173)
-npm run build                   # Build for production
-npm run lint                    # Run ESLint (max 0 warnings)
-npm run preview                 # Preview production build
+# Linting & Building
+npm run lint                   # ESLint for TypeScript/React
+npm run build                  # TypeScript + Vite build
+npm run preview                # Preview built application
 
 # Deployment
-npm run predeploy              # Pre-deployment validation (runs tests)
 git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 # Automatic deployment via GitHub Actions to https://ki-revolution.at/
 ```
 
-### Endless3D (Vanilla JS/Three.js)
+### Other Projects
 ```bash
-cd Endless3D
-# Serve locally - no build process needed
-python -m http.server 8000
-# Navigate to localhost:8000
+# Endless3D / EndlessRunner-MVP
+python -m http.server 8000     # Simple static serving
+
+# GestureRunnerPro (Godot 4.3+)
+godot --path GestureRunnerPro  # Open in Godot editor
+godot --path GestureRunnerPro --headless --export-release "HTML5" web_export/  # Export HTML5
+
+# godot-mcp (MCP Server)
+npm run build                  # Build TypeScript to JavaScript
+npm run inspector              # Launch MCP inspector tool
+npm run watch                  # Watch mode for development
 ```
 
-### EndlessRunner-MVP (Pure JavaScript)
+## Version Management System
+
+### Current Status:
+- **CURRENT**: V4.1-3ROUNDS-RESTORED (active deployment)
+- **STABLE BASE**: V3.1-BALANCED (tested stable reference)
+
+### Version Update Process:
+1. Find version in `SubwayRunner/index.html` title
+2. Update version string (e.g., `V4.6.14-NEW-FEATURE`)
+3. Update this CLAUDE.md file
+4. Use commit format: `🎮 Version X.Y.Z: [description]`
+
+### Backup System:
+- Multiple `.backup` files in SubwayRunner/ for emergency rollback
+- Use: `cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html`
+
+## Testing & Deployment
+
+### GitHub Actions CI/CD:
+- **Workflow**: `.github/workflows/hostinger-deploy.yml`
+- **Trigger**: Push to main branch
+- **Process**: Copies `SubwayRunner/index.html` → production deployment
+- **Target**: Hostinger FTP (https://ki-revolution.at/)
+- **Deployment Time**: ~2-3 minutes
+
+### Testing Stack:
+- **test-runner.js**: Syntax, structure, performance, logic validation
+- **Playwright**: Browser automation tests with screenshots
+- **Manual Testing**: ALWAYS test in Chrome after deployment
+
+### Pre-deployment Checklist:
 ```bash
-cd EndlessRunner-MVP
-# Serve locally - no build process needed
-python -m http.server 8000
-# Navigate to localhost:8000
-```
-
-### GestureRunnerPro (Godot)
-```bash
-# Open project in Godot 4.3+
-godot --path GestureRunnerPro
-
-# Export for web
-godot --export-release "Web" web_export/index.html
-
-# Serve web export
-cd GestureRunnerPro/web_export
-python -m http.server 8000
-```
-
-### godot-mcp (MCP Server)
-```bash
-cd godot-mcp
-npm install          # Install dependencies
-npm run build        # Build TypeScript to JavaScript
-npm run watch        # Watch mode for development
-npm run inspector    # Run MCP inspector
-```
-
-## Architecture Overview
-
-### SubwayRunner Architecture (Primary Project)
-- **Dual Architecture**: 
-  - **Production**: Single `index.html` file with embedded JavaScript modules (~5000+ lines)
-  - **Development**: React + TypeScript in `src/` folder (Vite, React Three Fiber)
-- **Core Game Systems** (embedded in index.html):
-  - **Game State**: Menu, Playing, GameOver, Win states
-  - **Scene Management**: Three.js scene, camera, lighting setup
-  - **Track System**: 3-lane track with dynamic segment spawning
-  - **Collision Detection**: 3D bounding box collision with tolerance settings
-  - **Spawn System**: Distance-based spawning with speed scaling
-  - **Score System**: Direct updates (queue system removed in v4.6.13)
-- **Obstacle Types**: Tunnels, barriers, spikes, walls, moving obstacles, trains
-- **Collectibles**: Kiwis (brown spheres), Broccolis (green), Mystery Boxes (golden fountains)
-- **Controls**: Keyboard (WASD/Arrows) and planned MediaPipe gesture support
-- **Performance**: Object pooling, frustum culling, 60 FPS target
-
-### Endless3D Architecture
-- **Modular World System**: JSON-configurable environments and themes
-- **Object Pooling**: Efficient obstacle and track segment reuse
-- **Adaptive Performance**: Quality scaling based on FPS detection
-- **Perspective Rendering**: Objects spawn in distance, move toward player
-- **Pattern-based Spawning**: Configurable obstacle patterns per world
-
-### EndlessRunner-MVP Architecture
-- **Event-driven**: Clean component communication via custom events
-- **Device-adaptive**: GPU tier detection with quality scaling
-- **Feature-rich**: Shop system, biomes, power-ups, achievements
-- **Analytics System**: Real-time player behavior tracking
-- **Cross-platform**: ES5 compatibility with modern progressive enhancement
-
-### GestureRunnerPro Architecture
-- **Godot Scene System**: Modular scenes for UI, gameplay, effects
-- **Autoloaded Singletons**: GameCore, AudioManager, SaveSystem, Analytics
-- **MediaPipe Integration**: Real-time gesture recognition via JavaScript bridge
-- **WebCam Support**: Browser webcam access with pose landmark detection
-- **Gesture System**: 6 supported gestures (move left/right, jump, duck, shield, magnet)
-- **Cross-Platform Bridge**: JavaScriptBridge for web export gesture communication
-- **State Machine**: Player states with gesture-driven transitions
-
-### godot-mcp Architecture
-- **MCP Protocol**: Model Context Protocol server for Godot integration
-- **WebSocket Communication**: Real-time communication with Godot editor
-- **Command System**: Modular command processors for different operations
-- **Resource Management**: Utilities for Godot scenes, scripts, and projects
-
-## Key Design Patterns
-
-### Performance Optimization
-- All projects use object pooling to minimize garbage collection
-- Adaptive quality systems adjust rendering based on device capabilities
-- Frame-based updates ensure consistent 60+ FPS gameplay
-
-### State Management
-- **React projects**: Zustand for minimal state management
-- **Vanilla JS**: Event-driven architecture with custom events
-- **Godot**: Singleton autoloads for global state, signals for communication
-
-### Collision Detection
-- **3D projects**: Bounding box collision with configurable tolerances
-- **2D Godot**: Physics body collision layers for precise detection
-- **Performance**: Spatial partitioning and early exit optimizations
-
-## Core Implementation Details
-
-### SubwayRunner Game Loop Structure
-```javascript
-// Main game loop pattern (in index.html)
-function animate() {
-    requestAnimationFrame(animate);
-    
-    // 1. Update game state
-    if (gameState === 'playing') {
-        updatePlayer();          // Handle input, jumping, lane switching
-        updateObstacles();       // Move and spawn obstacles
-        updateCollectibles();    // Move and spawn collectibles
-        checkCollisions();       // Bounding box collision detection
-        updateScore();          // Direct score updates (no queue)
-        updateSpeed();          // Progressive difficulty
-    }
-    
-    // 2. Render scene
-    renderer.render(scene, camera);
-}
-```
-
-### Key Game Constants & Configuration
-- **Base Speed**: 0.12 (perfect balance, don't change)
-- **Max Speed**: ~0.35 (after collecting many items)
-- **Lane Positions**: [-2, 0, 2] (left, center, right)
-- **Jump Height**: 2.5 units
-- **Jump Duration**: ~600ms
-- **Collision Tolerance**: 0.2-0.3 units
-- **Spawn Distance**: 30-50 units ahead
-- **Score Cap**: 999,999 (prevents overflow)
-- **Win Condition**: 30 kiwis collected
-
-### Critical Bug Fixes History
-- **V4.6.13**: Fixed 2 billion score bug (removed score queue system)
-- **V4.6.12**: Fixed collectible Y-positioning (Y=0.3 for ground items)
-- **V4.7.x**: FAILED - Aggressive spawning caused crashes (rolled back)
-
-## Architecture Overview
-
-### SubwayRunner Architecture (Primary Project)
-- **Dual Architecture**: 
-  - **Production**: Single `index.html` file with embedded JavaScript modules (~5000+ lines)
-  - **Development**: React + TypeScript in `src/` folder (Vite, React Three Fiber)
-- **Core Game Systems** (embedded in index.html):
-  - **Game State**: Menu, Playing, GameOver, Win states
-  - **Scene Management**: Three.js scene, camera, lighting setup
-  - **Track System**: 3-lane track with dynamic segment spawning
-  - **Collision Detection**: 3D bounding box collision with tolerance settings
-  - **Spawn System**: Distance-based spawning with speed scaling
-  - **Score System**: Direct updates (queue system removed in v4.6.13)
-- **Obstacle Types**: Tunnels, barriers, spikes, walls, moving obstacles, trains
-- **Collectibles**: Kiwis (brown spheres), Broccolis (green), Mystery Boxes (golden fountains)
-- **Controls**: Keyboard (WASD/Arrows) and planned MediaPipe gesture support
-- **Performance**: Object pooling, frustum culling, 60 FPS target
-
-### Endless3D Architecture
-- **Modular World System**: JSON-configurable environments and themes
-- **Object Pooling**: Efficient obstacle and track segment reuse
-- **Adaptive Performance**: Quality scaling based on FPS detection
-- **Perspective Rendering**: Objects spawn in distance, move toward player
-- **Pattern-based Spawning**: Configurable obstacle patterns per world
-
-### EndlessRunner-MVP Architecture
-- **Event-driven**: Clean component communication via custom events
-- **Device-adaptive**: GPU tier detection with quality scaling
-- **Feature-rich**: Shop system, biomes, power-ups, achievements
-- **Analytics System**: Real-time player behavior tracking
-- **Cross-platform**: ES5 compatibility with modern progressive enhancement
-
-### GestureRunnerPro Architecture
-- **Godot Scene System**: Modular scenes for UI, gameplay, effects
-- **Autoloaded Singletons**: GameCore, AudioManager, SaveSystem, Analytics
-- **MediaPipe Integration**: Real-time gesture recognition via JavaScript bridge
-- **WebCam Support**: Browser webcam access with pose landmark detection
-- **Gesture System**: 6 supported gestures (move left/right, jump, duck, shield, magnet)
-- **Cross-Platform Bridge**: JavaScriptBridge for web export gesture communication
-- **State Machine**: Player states with gesture-driven transitions
-
-### godot-mcp Architecture
-- **MCP Protocol**: Model Context Protocol server for Godot integration
-- **WebSocket Communication**: Real-time communication with Godot editor
-- **Command System**: Modular command processors for different operations
-- **Resource Management**: Utilities for Godot scenes, scripts, and projects
-
-## Key Design Patterns
-
-### Performance Optimization
-- All projects use object pooling to minimize garbage collection
-- Adaptive quality systems adjust rendering based on device capabilities
-- Frame-based updates ensure consistent 60+ FPS gameplay
-
-### State Management
-- **React projects**: Zustand for minimal state management
-- **Vanilla JS**: Event-driven architecture with custom events
-- **Godot**: Singleton autoloads for global state, signals for communication
-
-### Collision Detection
-- **3D projects**: Bounding box collision with configurable tolerances
-- **2D Godot**: Physics body collision layers for precise detection
-- **Performance**: Spatial partitioning and early exit optimizations
-
-## Core Implementation Details
-
-### SubwayRunner Game Loop Structure
-```javascript
-// Main game loop pattern (in index.html)
-function animate() {
-    requestAnimationFrame(animate);
-    
-    // 1. Update game state
-    if (gameState === 'playing') {
-        updatePlayer();          // Handle input, jumping, lane switching
-        updateObstacles();       // Move and spawn obstacles
-        updateCollectibles();    // Move and spawn collectibles
-        checkCollisions();       // Bounding box collision detection
-        updateScore();          // Direct score updates (no queue)
-        updateSpeed();          // Progressive difficulty
-    }
-    
-    // 2. Render scene
-    renderer.render(scene, camera);
-}
-```
-
-### Key Game Constants & Configuration
-- **Base Speed**: 0.12 (perfect balance, don't change)
-- **Max Speed**: ~0.35 (after collecting many items)
-- **Lane Positions**: [-2, 0, 2] (left, center, right)
-- **Jump Height**: 2.5 units
-- **Jump Duration**: ~600ms
-- **Collision Tolerance**: 0.2-0.3 units
-- **Spawn Distance**: 30-50 units ahead
-- **Score Cap**: 999,999 (prevents overflow)
-- **Win Condition**: 30 kiwis collected
-
-### Critical Bug Fixes History
-- **V4.6.13**: Fixed 2 billion score bug (removed score queue system)
-- **V4.6.12**: Fixed collectible Y-positioning (Y=0.3 for ground items)
-- **V4.7.x**: FAILED - Aggressive spawning caused crashes (rolled back)
-
-## 🎮 **BASISVERSION 3 - IMPLEMENTATION GUIDE**
-
-### **ADDING FEATURES TO BASISVERSION 3**
-When adding ANY new feature to BASISVERSION 3, follow this checklist:
-
-1. **RESEARCH FIRST**
-   ```bash
-   # Check if feature existed before
-   git log --oneline --grep="feature_name"
-   grep -r "createFeature" SubwayRunner/*.backup
-   ```
-
-2. **CALCULATE IMPACT**
-   ```javascript
-   // For any spawn rate feature:
-   const spawnRate = 0.02; // 2% chance
-   const fps = 60;
-   const itemsPerSecond = spawnRate * fps; // 1.2
-   const itemsPer30Seconds = itemsPerSecond * 30; // 36
-   console.log(`Will spawn ${itemsPer30Seconds} items in 30 seconds`);
-   ```
-
-3. **INCREMENTAL IMPLEMENTATION**
-   - Start with MINIMAL code (max 20 lines)
-   - Test locally for 30+ seconds
-   - Only add complexity if basic version works
-
-4. **VERSION INCREMENT**
-   - V2.2 → V2.3 for small features
-   - V2.2 → V3.0 for collectibles/major features
-
-## 🚨 **CRITICAL GAME DESIGN RULES** (Never delete!)
-
-### **Collectible System Rules**
-**RULE 1**: ONLY these collectibles allowed:
-- ✅ **Kiwis** (large, realistic brown fruit) 
-- ✅ **Broccolis** (green vegetables)
-- ✅ **Mystery Boxes** (max 2 per game) - golden sparkly fountains
-
-**RULE 2**: NO rectangular/box collectibles:
-- ❌ **NO** Power-ups (magnets, shields, speed boosts)  
-- ❌ **NO** Score tokens or coins
-- ❌ **NO** Geometric shapes as collectibles
-- ❌ **NO** Rectangle/cube collectibles
-
-**RULE 3**: Collectible spawning must be:
-- ✅ **30+ units behind obstacles** (never next to or inside obstacles)
-- ✅ **Speed-dependent spacing** that increases with game speed
-- ✅ **Sequential spawning** - collectibles come AFTER obstacles, never parallel
-- ✅ **Safe lane checking** with 25+ unit clearance
-
-### **Collectible Balance Rules**
-- **Target**: 30 Kiwis + 7 Broccolis (minimum 20 kiwis guaranteed)
-- **Total limit**: 40 collectibles max for good gameplay
-- **Bias**: 85% kiwi spawning, 15% broccoli spawning
-- **Pattern limits**: Max 2 collectibles per pattern (never all 3 lanes)
-
-## Development Guidelines
-
-### Code Style
-- Follow existing patterns in each project
-- NO COMMENTS in code unless explicitly requested
-- Maintain consistent naming conventions
-
-### Performance Priorities
-- Object pooling for all spawned objects (obstacles, collectibles)
-- 60 FPS target on all devices
-- Cleanup destroyed objects to prevent memory leaks
-
-### Testing Strategy
-- **SubwayRunner Testing Stack**:
-  - **test-runner.js**: Validates syntax, HTML structure, performance metrics, game logic
-  - **Playwright Tests**: Browser automation tests for gameplay, UI, collision detection
-  - **Test Reports**: HTML reports in `tests/playwright-report/`
-  - **Error Artifacts**: Screenshots and traces saved in `test-results/`
-- **Test Execution**:
-  ```bash
-  npm run test          # Run all tests (test-runner.js)
-  npx playwright test   # Run Playwright tests
-  npm run test:watch    # Watch mode for development
-  ```
-- **Pre-deployment**: `npm run predeploy` runs tests before allowing deployment
-- **Test Coverage**: Syntax validation, game initialization, collision detection, UI updates
-
-## Deployment & CI/CD
-
-### GitHub Actions Workflow
-- **Workflow File**: `.github/workflows/hostinger-deploy.yml`
-- **Trigger**: Push to main branch or manual workflow_dispatch
-- **Process**: 
-  1. Copies `SubwayRunner/index.html` to `deploy/index.html`
-  2. Creates production `.htaccess` with security headers, HTTPS redirect, compression
-  3. Deploys via FTP-Deploy-Action@v4.3.4
-- **Target**: Hostinger FTP root directory (server-dir: /)
-- **Secrets Required** (set in GitHub repo settings):
-  - `FTP_SERVER`: Hostinger server IP address (not domain)
-  - `FTP_USERNAME`: FTP username from Hostinger panel
-  - `FTP_PASSWORD`: FTP password
-- **Live URL**: https://ki-revolution.at/
-- **Deployment Time**: ~2-3 minutes after push
-- **Important**: GitHub Secrets are repository-specific - must be reconfigured when switching repos
-
-### Known Issues & Current Focus
-- **Next Phase**: Gesture control integration from GestureRunnerPro into SubwayRunner
-- **Planned**: Sound system overhaul with realistic audio samples
-- **Dual Architecture**: SubwayRunner exists as both vanilla JS (index.html) and React version (src/)
-
-## Project-Specific Notes
-
-### SubwayRunner (Primary Project)
-- **Development Port**: 8001 (python -m http.server)
-- **Production**: Single HTML file deployment (index.html with ~5000 lines embedded JS)
-- **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: V4.1-3ROUNDS-RESTORED (as seen in index.html title)
-- **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
-- **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
-- **Key Features**: 
-  - Gesture Control with MediaPipe integration
-  - Headtrackr.js for stable head tracking
-  - Supabase integration for ghost racing
-  - Module system with GestureControllerProjector
-  - Three.js 0.158.0 for 3D graphics
-- **Testing**: Playwright test suite (`npm run test`), custom test runner (`test-runner.js`)
-- **Pre-deployment**: `npm run predeploy` validates tests before deployment
-
-### Endless3D
-- Fully modular world system - add new worlds via JSON config
-- German documentation - maintain language consistency
-- Advanced shader effects and post-processing
-
-### EndlessRunner-MVP
-- Extensive feature set - over 10,000 lines of code
-- iPad M1/M2 optimization with 120 FPS support
-- UI/UX first development philosophy
-
-### GestureRunnerPro
-- **MediaPipe Version**: 0.10.0 from CDN for pose detection
-- **Gesture Recognition**: 240x180 video preview with real-time skeleton overlay
-- **Browser Requirements**: WebRTC (getUserMedia), WebGL, HTTPS for camera access
-- **Key Files**: systems/gesture/GestureInterface.gd, web_export/mediapipe/gesture_bridge.html
-- **Gesture Thresholds**: 15% torso height for lean, 30% above shoulders for jump
-
-### godot-mcp
-- Requires Godot editor to be running for full functionality
-- TypeScript source compiled to JavaScript for distribution
-- Provides tools for scene management, script editing, and project operations
-
-## Important Documentation Files
-
-- **CLAUDE_CODE_RULES.md**: Universal rules for all Claude Code projects (MUST READ)
-- **github.hostinger.connection.md**: Fix deployment issues with GitHub Actions
-- **SubwayRunner/DEBUG_GUIDE.md**: Common game bugs and solutions
-- **HEAD_TRACKING_README.md**: MediaPipe gesture control setup
-
-## File Structure
-- **SubwayRunner/index.html**: Main production game (5000+ lines, embedded JS)
-- **SubwayRunner/src/**: React development version (not deployed)
-- **SubwayRunner/js/**: JavaScript modules for gesture control
-  - `GestureControllerProjector.js`: Main gesture control module
-  - Other gesture/tracking modules
-- **SubwayRunner/*.backup**: Emergency rollback files  
-- **SubwayRunner/tests/**: Playwright tests and reports
-- **SubwayRunner/package.json**: NPM scripts and dependencies
-- **.github/workflows/**: GitHub Actions deployment scripts
-  - `hostinger-deploy.yml`: Main deployment workflow
-  - `test-before-deploy.yml`: Pre-deployment testing
-
-## JavaScript Module System
-- **Main Game**: Embedded in index.html with Three.js, Supabase
-- **Gesture Control**: ES6 modules loaded dynamically
-- **Pre-loading Strategy**: GestureControllerProjector module loaded on page init
-- **Fallback System**: Alternative loading method if primary fails
-- **External Dependencies**: 
-  - Three.js 0.158.0 from CDN
-  - Supabase JS SDK for backend
-  - Headtrackr.js for head tracking
-
-## 🚨 MANDATORY DEVELOPMENT WORKFLOW (NEVER SKIP!)
-
-### **TESTING → DEPLOYMENT → REPORT WORKFLOW**
-
-Für JEDE größere Änderung MUSS dieser Workflow befolgt werden:
-
-#### **SCHRITT 1: PLAYWRIGHT TESTING** 
-```bash
-# PFLICHT: Tests ausführen vor JEDEM Deployment
-npm run test
-```
-
-#### **SCHRITT 2: FEHLER BEHEBEN**
-- ❌ **BEI FEHLERN**: Sofort alle Errors beheben
-- ❌ **NIEMALS deployen** wenn Tests fehlschlagen
-- ✅ **ERST wenn alle Tests grün**: Weiter zu Schritt 3
-
-#### **SCHRITT 3: DEPLOYMENT (nur bei erfolgreichen Tests)**
-```bash
-# NUR wenn Tests erfolgreich:
+# MANDATORY workflow:
+npm run test          # All tests must pass
+# Only deploy if tests pass:
 git add . && git commit -m "message" && git push
 ```
 
-#### **SCHRITT 4: USER BENACHRICHTIGUNG**
+## Critical Game Design Rules
+
+### Collectible System:
+**ALLOWED**: Kiwis (brown), Broccolis (green), Mystery Boxes (golden)
+**FORBIDDEN**: Power-ups, geometric shapes, score tokens
+
+### Spawn Rules:
+- **Collectibles**: 30+ units behind obstacles, never parallel
+- **Speed-dependent spacing**: Increases with game speed
+- **Balance**: 85% kiwis, 15% broccoli spawning
+- **Limits**: Max 40 collectibles total, 10 simultaneous objects
+
+## Emergency Procedures
+
+### If Game Crashes:
+1. Check `SubwayRunner/tests/playwright-report/` for test results
+2. Look for backup versions: `ls SubwayRunner/*.backup`
+3. Restore last working version
+4. Deploy immediately
+
+### Performance Issues:
+- Monitor: Objects in scene should stay < 50
+- Check: FPS must stay > 50
+- Debug: Use browser DevTools Performance tab
+
+## Key Files Structure:
 ```
-✅ [Feature] erfolgreich implementiert und deployed!
-🧪 Alle Tests erfolgreich durchgelaufen
-🌐 Version X.Y.Z jetzt live auf https://ki-revolution.at/
+EndlessRunner/
+├── SubwayRunner/           # Main production project
+│   ├── index.html          # Production game (5000+ lines embedded JS)
+│   ├── src/                # React/TypeScript development version
+│   ├── js/                 # Gesture control modules (ES6 modules)
+│   ├── tests/              # Playwright tests with HTML reports
+│   ├── *.backup           # Emergency rollback versions
+│   ├── test-runner.js     # Custom validation suite
+│   └── playwright.config.js # Test configuration
+├── GestureRunnerPro/       # Godot 4.3 gesture-controlled runner
+│   ├── scenes/            # Game scenes (Main, Gameplay, UI)
+│   ├── systems/           # Modular game systems
+│   ├── autoload/          # Singleton managers
+│   └── project.godot      # Godot project configuration
+├── godot-mcp/             # MCP server for Godot integration
+│   ├── src/               # TypeScript source
+│   ├── build/             # Compiled JavaScript
+│   └── godot-mcp/         # Godot addon for MCP integration
+└── .github/workflows/     # CI/CD automation
+    └── hostinger-deploy.yml
 ```
 
-### **NIEMALS WIEDER:**
-- ❌ Deployment ohne Testing
-- ❌ Deployment mit bekannten Fehlern  
-- ❌ User Benachrichtigung ohne Verifikation
-- ❌ "Sollte funktionieren" Aussagen
+## Development Philosophy
 
-### **IMMER:**
-- ✅ Testing vor JEDEM Deployment
-- ✅ Error-free Status vor Online-Stellung
-- ✅ Verifikation vor User-Report
+1. **UI/UX First**: User experience drives all decisions
+2. **Performance Priority**: 60+ FPS is mandatory
+3. **Incremental Changes**: Small deployments, immediate testing
+4. **Research First**: Always check existing implementations before coding
+5. **Mathematical Validation**: Calculate impact before implementing spawn changes
 
-## Current Project Status
+## Cross-Project Development
 
-### V4.1-3ROUNDS-RESTORED - Active Production (29.08.2025)
-- **Version**: V4.1-3ROUNDS-RESTORED (as per current index.html)
-- **Branch**: main 
-- **Status**: ✅ DEPLOYED - Active on https://ki-revolution.at/
-- **Technology Stack**: 
-  - Three.js 0.158.0 for 3D graphics
-  - Supabase integration for backend features
-  - Headtrackr.js for head tracking stability
-  - MediaPipe gesture recognition
-  - JavaScript ES6 modules
-- **Features**: 
-  - Advanced gesture control system
-  - Ghost racing with Supabase backend
-  - Apple & Broccoli collectibles
-  - Jump/duck mechanics with particle effects
-  - Lane switching system
-  - Progressive difficulty scaling
-- **Performance**: 60 FPS stable, memory optimized with object pooling
-- **Architecture**: Modular JavaScript with embedded GameCore system
+### GestureRunnerPro (Godot 4.3+)
+- **Autoload System**: GameCore, AudioManager, SaveSystem, Analytics
+- **Scene Architecture**: Main → Gameplay → UI components
+- **Gesture Integration**: MediaPipe via JavaScript bridge in web export
+- **Performance**: State machine pattern with object pooling
 
-### Historic Stable Base
-- **BASISVERSION 3 FINAL**: V3.1-BALANCED (Previous tested stable release)
-- **Features**: Basic endless runner with collectibles
-- **Status**: ✅ Reference implementation for rollbacks
+### godot-mcp Integration
+- **Purpose**: AI-driven Godot development via MCP protocol
+- **Tools**: Scene manipulation, script generation, project management
+- **Usage**: `npm run inspector` for debugging MCP communication
+- **Godot Addon**: WebSocket server for bidirectional communication
+
+## MANDATORY Workflow for Every Session:
+
+1. **RESEARCH**: `git log --grep="feature"` and `grep -r "function" *.backup`
+2. **CALCULATE**: For spawn rates: `spawnRate * fps * timeSeconds`
+3. **TEST LOCALLY**: Run for 30+ seconds, check console
+4. **DEPLOY**: Only if tests pass
+5. **VERIFY**: User tests in Chrome at live URL
+
+**SUCCESS MANTRA**: RESEARCH → EXTRACT → COMBINE → TEST → DEPLOY
+
+---
+
+*Auto-deployment after every change is mandatory. Always provide live URL as **🌐 https://ki-revolution.at/***
