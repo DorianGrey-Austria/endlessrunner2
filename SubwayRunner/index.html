@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V4.1-3ROUNDS-RESTORED</title>
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <title>Subway Runner 3D - V4.1-3ROUNDS-FIXED</title>
+    <script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <!-- Headtrackr.js for stable head tracking -->
@@ -3857,9 +3857,9 @@
             
             // Shoe stripes (simple glow effect)
             const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
-            const stripeMaterial = new THREE.MeshBasicMaterial({
+            const stripeMaterial = new THREE.MeshLambertMaterial({
                 color: 0x00FF00,
-                emissive: 0x00FF00
+                emissive: 0x004400
             });
             
             const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);

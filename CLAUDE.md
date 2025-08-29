@@ -163,12 +163,16 @@ Never again will we have 12 emergency rollbacks in 10 hours. The solution is NOT
 This is a collection of endless runner game projects built with different technologies, following a UI/UX-first development philosophy where user experience drives all technical decisions.
 
 - **SubwayRunner**: Vanilla JavaScript + Three.js (main production game, deployed via GitHub Actions)
+  - Single HTML file with embedded JS modules (~5000 lines)
+  - React development version in src/ folder
+  - Gesture control with MediaPipe and Headtrackr.js
+  - Supabase integration for ghost racing features
 - **Endless3D**: Vanilla JavaScript + Three.js (perspective-based 3D runner with world system)
 - **EndlessRunner-MVP**: Pure JavaScript (feature-rich browser runner)
 - **GestureRunnerPro**: Godot 4.3 (gesture-controlled runner with MediaPipe WebCam integration)
 - **godot-mcp**: Godot MCP server for AI integration
 
-**Primary Project**: SubwayRunner is the main production game with automated deployment to Hostinger.
+**Primary Project**: SubwayRunner is the main production game with automated deployment to Hostinger via GitHub Actions.
 
 ## 🚨 VERSIONING RULES (NEVER DELETE!)
 
@@ -181,19 +185,20 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **BASISVERSION 3 FINAL**: V3.1-BALANCED (✅ ERFOLGREICH GETESTET - 60 Sekunden durchgespielt!)
+- **CURRENT**: V4.1-3ROUNDS-RESTORED (as per index.html title - active deployment)
+- **STABLE BASE**: V3.1-BALANCED (✅ ERFOLGREICH GETESTET - 60 Sekunden durchgespielt!)
 - **Previous**: V3.0-COLLECTIBLES (✅ Äpfel & Brokkoli funktionieren)
 - **Before**: V2.2-DUCK-FIX (✅ Duck collision detection restored)
 - **Before**: V2.1-STABILIZED (Basic version with stability features)
-- **Before**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
-- **Before**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
-- **Before**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
-- **Before**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
-- **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
-- **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
-- **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
-- **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
-- **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
+- **Historic**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
+- **Historic**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
+- **Historic**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
+- **FAILED**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
+- **Historic**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
+- **Historic**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
+- **Historic**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
+- **Historic**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
+- **Historic**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
 
 ### **BASISVERSION 3 FINAL - DEFINITION (05.08.2025 - FINALIZED)**
 **VERSION**: V3.1-BALANCED  
@@ -680,13 +685,19 @@ When adding ANY new feature to BASISVERSION 3, follow this checklist:
 
 ### SubwayRunner (Primary Project)
 - **Development Port**: 8001 (python -m http.server)
-- **Production**: Single HTML file deployment (index.html)
+- **Production**: Single HTML file deployment (index.html with ~5000 lines embedded JS)
 - **React Version**: Available for development (uses Vite, TypeScript, React Three Fiber)
-- **Current Version**: 4.6.13-SCORE-FIX
+- **Current Version**: V4.1-3ROUNDS-RESTORED (as seen in index.html title)
 - **Deployment**: Automatic via GitHub Actions to https://ki-revolution.at/
 - **Architecture**: Modular system with embedded GameCore, LevelManager, and Level modules
-- **Key Features**: 10 levels, 5 characters, gesture control, ghost racing, visual effects
+- **Key Features**: 
+  - Gesture Control with MediaPipe integration
+  - Headtrackr.js for stable head tracking
+  - Supabase integration for ghost racing
+  - Module system with GestureControllerProjector
+  - Three.js 0.158.0 for 3D graphics
 - **Testing**: Playwright test suite (`npm run test`), custom test runner (`test-runner.js`)
+- **Pre-deployment**: `npm run predeploy` validates tests before deployment
 
 ### Endless3D
 - Fully modular world system - add new worlds via JSON config
@@ -720,9 +731,25 @@ When adding ANY new feature to BASISVERSION 3, follow this checklist:
 ## File Structure
 - **SubwayRunner/index.html**: Main production game (5000+ lines, embedded JS)
 - **SubwayRunner/src/**: React development version (not deployed)
-- **SubwayRunner/*.backup**: Emergency rollback files
+- **SubwayRunner/js/**: JavaScript modules for gesture control
+  - `GestureControllerProjector.js`: Main gesture control module
+  - Other gesture/tracking modules
+- **SubwayRunner/*.backup**: Emergency rollback files  
 - **SubwayRunner/tests/**: Playwright tests and reports
+- **SubwayRunner/package.json**: NPM scripts and dependencies
 - **.github/workflows/**: GitHub Actions deployment scripts
+  - `hostinger-deploy.yml`: Main deployment workflow
+  - `test-before-deploy.yml`: Pre-deployment testing
+
+## JavaScript Module System
+- **Main Game**: Embedded in index.html with Three.js, Supabase
+- **Gesture Control**: ES6 modules loaded dynamically
+- **Pre-loading Strategy**: GestureControllerProjector module loaded on page init
+- **Fallback System**: Alternative loading method if primary fails
+- **External Dependencies**: 
+  - Three.js 0.158.0 from CDN
+  - Supabase JS SDK for backend
+  - Headtrackr.js for head tracking
 
 ## 🚨 MANDATORY DEVELOPMENT WORKFLOW (NEVER SKIP!)
 
@@ -767,10 +794,27 @@ git add . && git commit -m "message" && git push
 
 ## Current Project Status
 
-### BASISVERSION 5 FINAL - Stable Release (07.08.2025)
-- **Version**: BASISVERSION 5 FINAL
-- **Branch**: main (commit e448fa3)
-- **Status**: ✅ STABLE - No crashes, working collectibles, gesture control ready
-- **Features**: Apple & Broccoli collectibles, jump/duck mechanics, lane switching
-- **Performance**: 60 FPS stable, no memory leaks
-- **Known Issues**: None critical - ready for feature additions
+### V4.1-3ROUNDS-RESTORED - Active Production (29.08.2025)
+- **Version**: V4.1-3ROUNDS-RESTORED (as per current index.html)
+- **Branch**: main 
+- **Status**: ✅ DEPLOYED - Active on https://ki-revolution.at/
+- **Technology Stack**: 
+  - Three.js 0.158.0 for 3D graphics
+  - Supabase integration for backend features
+  - Headtrackr.js for head tracking stability
+  - MediaPipe gesture recognition
+  - JavaScript ES6 modules
+- **Features**: 
+  - Advanced gesture control system
+  - Ghost racing with Supabase backend
+  - Apple & Broccoli collectibles
+  - Jump/duck mechanics with particle effects
+  - Lane switching system
+  - Progressive difficulty scaling
+- **Performance**: 60 FPS stable, memory optimized with object pooling
+- **Architecture**: Modular JavaScript with embedded GameCore system
+
+### Historic Stable Base
+- **BASISVERSION 3 FINAL**: V3.1-BALANCED (Previous tested stable release)
+- **Features**: Basic endless runner with collectibles
+- **Status**: ✅ Reference implementation for rollbacks
