@@ -113,6 +113,7 @@ godot --path GestureRunnerPro  # Open in Godot editor
 godot --path GestureRunnerPro --headless --export-release "HTML5" web_export/  # Export HTML5
 
 # godot-mcp (MCP Server)
+cd godot-mcp
 npm run build                  # Build TypeScript to JavaScript
 npm run inspector              # Launch MCP inspector tool
 npm run watch                  # Watch mode for development
@@ -168,6 +169,12 @@ git add . && git commit -m "message" && git push
 - **Balance**: 85% kiwis, 15% broccoli spawning
 - **Limits**: Max 40 collectibles total, 10 simultaneous objects
 
+### Testing Requirements:
+- **MANDATORY**: Run `npm run test` before any deployment
+- **Playwright Tests**: Visual regression and functionality testing
+- **Performance**: Must maintain 60+ FPS on test devices
+- **Syntax Validation**: Automated JS/CSS syntax checking via test-runner.js
+
 ## Emergency Procedures
 
 ### If Game Crashes:
@@ -191,18 +198,21 @@ EndlessRunner/
 │   ├── tests/              # Playwright tests with HTML reports
 │   ├── *.backup           # Emergency rollback versions
 │   ├── test-runner.js     # Custom validation suite
-│   └── playwright.config.js # Test configuration
+│   ├── playwright.config.js # Test configuration
+│   └── package.json       # Dependencies and scripts
 ├── GestureRunnerPro/       # Godot 4.3 gesture-controlled runner
 │   ├── scenes/            # Game scenes (Main, Gameplay, UI)
 │   ├── systems/           # Modular game systems
-│   ├── autoload/          # Singleton managers
+│   ├── autoload/          # Singleton managers (GameCore, AudioManager, etc.)
+│   ├── content/           # Characters, obstacles, powerups
 │   └── project.godot      # Godot project configuration
 ├── godot-mcp/             # MCP server for Godot integration
 │   ├── src/               # TypeScript source
-│   ├── build/             # Compiled JavaScript
-│   └── godot-mcp/         # Godot addon for MCP integration
+│   ├── build/             # Compiled JavaScript  
+│   ├── godot-mcp/         # Godot addon for MCP integration
+│   └── package.json       # MCP server dependencies
 └── .github/workflows/     # CI/CD automation
-    └── hostinger-deploy.yml
+    └── hostinger-deploy.yml # Auto-deployment to ki-revolution.at
 ```
 
 ## Development Philosophy
@@ -231,11 +241,29 @@ EndlessRunner/
 
 1. **RESEARCH**: `git log --grep="feature"` and `grep -r "function" *.backup`
 2. **CALCULATE**: For spawn rates: `spawnRate * fps * timeSeconds`
-3. **TEST LOCALLY**: Run for 30+ seconds, check console
-4. **DEPLOY**: Only if tests pass
-5. **VERIFY**: User tests in Chrome at live URL
+3. **TEST LOCALLY**: Run `npm run test` and verify 30+ seconds gameplay
+4. **DEPLOY**: Only if all tests pass - `git add . && git commit && git push`
+5. **VERIFY**: Confirm deployment at **🌐 https://ki-revolution.at/**
 
-**SUCCESS MANTRA**: RESEARCH → EXTRACT → COMBINE → TEST → DEPLOY
+**SUCCESS MANTRA**: RESEARCH → EXTRACT → COMBINE → TEST → DEPLOY → VERIFY
+
+## Quick Reference Commands
+
+```bash
+# Most common development workflow
+cd SubwayRunner
+npm run test                    # Always run first
+python -m http.server 8001     # Local testing
+npx playwright test            # Browser testing
+git add . && git commit -m "🎮 Version X.Y.Z: description" && git push
+
+# MCP Development
+cd godot-mcp
+npm run build && npm run inspector
+
+# Emergency rollback
+cp SubwayRunner/index.html.backup-stable SubwayRunner/index.html
+```
 
 ---
 
