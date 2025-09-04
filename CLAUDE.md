@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **NO LOCAL TESTS**: Test directly online at https://ki-revolution.at/
 
 ### 📋 WORKFLOW STANDARDS
-1. **Versioning**: ALWAYS update (MAJOR.MINOR.PATCH)
+1. **Versioning**: ALWAYS increment version number in SubwayRunner/index.html title tag before every deployment (MAJOR.MINOR.PATCH)
 2. **Documentation**: Changes immediately in .md files
 3. **Testing**: "Test in Chrome: **🌐 https://ki-revolution.at/**"
 4. **UI/UX First**: User Experience > Technical Elegance
@@ -125,11 +125,11 @@ npm run watch                  # Watch mode for development
 - **CURRENT**: V4.1-3ROUNDS-RESTORED (active deployment)
 - **STABLE BASE**: V3.1-BALANCED (tested stable reference)
 
-### Version Update Process:
-1. Find version in `SubwayRunner/index.html` title
-2. Update version string (e.g., `V4.6.14-NEW-FEATURE`)
-3. Update this CLAUDE.md file
-4. Use commit format: `🎮 Version X.Y.Z: [description]`
+### Version Update Process (MANDATORY BEFORE EVERY DEPLOYMENT):
+1. **ALWAYS INCREMENT**: Find version in `SubwayRunner/index.html` title tag
+2. **UPDATE VERSION**: Increment version number (e.g., `V4.2` → `V4.3-STABLE`)
+3. **COMMIT FORMAT**: Use `🎮 Version X.Y.Z: [description]`
+4. **NEVER DEPLOY**: Same version number twice - always increment!
 
 ### Backup System:
 - Multiple `.backup` files in SubwayRunner/ for emergency rollback
@@ -241,11 +241,12 @@ EndlessRunner/
 
 1. **RESEARCH**: `git log --grep="feature"` and `grep -r "function" *.backup`
 2. **CALCULATE**: For spawn rates: `spawnRate * fps * timeSeconds`
-3. **TEST LOCALLY**: Run `npm run test` and verify 30+ seconds gameplay
-4. **DEPLOY**: Only if all tests pass - `git add . && git commit && git push`
-5. **VERIFY**: Confirm deployment at **🌐 https://ki-revolution.at/**
+3. **INCREMENT VERSION**: ALWAYS update version number in index.html title tag
+4. **TEST LOCALLY**: Run `npm run test` and verify 30+ seconds gameplay
+5. **DEPLOY**: Only if all tests pass - `git add . && git commit && git push`
+6. **VERIFY**: Confirm deployment at **🌐 https://ki-revolution.at/**
 
-**SUCCESS MANTRA**: RESEARCH → EXTRACT → COMBINE → TEST → DEPLOY → VERIFY
+**SUCCESS MANTRA**: RESEARCH → EXTRACT → COMBINE → VERSION++ → TEST → DEPLOY → VERIFY
 
 ## Quick Reference Commands
 
