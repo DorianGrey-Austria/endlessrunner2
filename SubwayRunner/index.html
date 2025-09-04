@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.3-STABLE</title>
+    <title>Subway Runner 3D - V5.0-FIVE-LEVELS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -278,6 +278,9 @@
         
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
+            <div id="levelIndicator" style="font-size: 20px; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                🎮 LEVEL <span id="currentLevel">1</span>/5
+            </div>
             <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
@@ -295,6 +298,13 @@
             <div>🟠 Orange/Braun: Überspringen!</div>
             <div>🔵 Blau/Grau oben: Ducken!</div>
             <div>🔴 Stacheln: Beides möglich!</div>
+        </div>
+        
+        <!-- Level Transition Overlay -->
+        <div id="levelTransitionOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; flex-direction: column; justify-content: center; align-items: center;">
+            <div id="transitionTitle" style="font-size: 48px; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.8); margin-bottom: 20px;"></div>
+            <div id="transitionSubtitle" style="font-size: 24px; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.8); text-align: center;"></div>
+            <div id="transitionCountdown" style="font-size: 72px; color: white; margin-top: 30px; text-shadow: 0 0 30px rgba(255,255,255,1);"></div>
         </div>
         
         <div id="gestureControl">
@@ -789,7 +799,21 @@
             activeCollectibles: [],
             maxActiveCollectibles: 10, // Increased from 8
             collectedApples: 0,
-            collectedBroccolis: 0
+            collectedBroccolis: 0,
+            // 5-LEVEL SYSTEM
+            currentLevel: 1,
+            levelStartTime: 0,
+            levelTransition: false,
+            levelTransitionStartTime: 0,
+            levelTransitionDuration: 3000, // 3 seconds
+            levelThresholds: [0, 500, 1000, 1500, 2000], // Points needed for each level
+            levelSpeeds: {
+                1: { min: 0.08, max: 0.15 },
+                2: { min: 0.15, max: 0.22 },
+                3: { min: 0.22, max: 0.30 },
+                4: { min: 0.30, max: 0.38 },
+                5: { min: 0.38, max: 0.45 }
+            }
         };
         
         // STABILITY LIMITS
@@ -1202,6 +1226,9 @@
                 // Enhanced Scene
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x101020, 0.025); // Better fog
+
+                // Initialize 5-Level System
+                initializeLevelSystem();
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -2314,9 +2341,14 @@
             gameState.playerAction = 'running';
             gameState.playerY = 0;
             
-            // Load Level 1
-            currentLevel = 1;
-            LevelManager.loadLevel(1);
+            // Initialize 5-Level System
+            gameState.currentLevel = 1;
+            gameState.levelStartTime = Date.now();
+            gameState.levelTransition = false;
+            updateLevelSpeed(1);
+            updateLevelVisuals(1);
+            updateLevelUI();
+            
             gameState.jumpVelocity = 0;
             gameState.jumpStartTime = 0; // Reset jump timer
             gameState.jumpCount = 0; // Reset jump counter
@@ -3565,6 +3597,97 @@
             }
         }
         
+        // 5-LEVEL SYSTEM IMPLEMENTATION
+        function initializeLevelSystem() {
+            console.log('🎮 Initializing 5-Level System...');
+            gameState.currentLevel = 1;
+            gameState.levelStartTime = Date.now();
+            updateLevelUI();
+        }
+
+        const LEVEL_THEMES = {
+            1: { name: "Classic Subway", color: 0x87CEEB },
+            2: { name: "Neon Night", color: 0x001133 },
+            3: { name: "Ancient Temple", color: 0x8B4513 },
+            4: { name: "Space Station", color: 0x000011 },
+            5: { name: "Underwater", color: 0x001122 }
+        };
+
+        function checkLevelProgression() {
+            if (gameState.levelTransition) return;
+            
+            const nextLevel = gameState.currentLevel + 1;
+            if (nextLevel > 5) return; // Max 5 levels
+            
+            const threshold = gameState.levelThresholds[nextLevel - 1];
+            if (gameState.score >= threshold) {
+                triggerLevelTransition(nextLevel);
+            }
+        }
+
+        function triggerLevelTransition(nextLevel) {
+            if (gameState.levelTransition) return;
+            
+            gameState.levelTransition = true;
+            gameState.levelTransitionStartTime = Date.now();
+            
+            const levelTheme = LEVEL_THEMES[nextLevel];
+            document.getElementById('transitionTitle').textContent = `LEVEL ${nextLevel}`;
+            document.getElementById('transitionSubtitle').textContent = levelTheme.name;
+            document.getElementById('levelTransitionOverlay').style.display = 'flex';
+            
+            console.log(`🌟 Transitioning to Level ${nextLevel}: ${levelTheme.name}`);
+            
+            // Countdown animation
+            let countdown = 3;
+            const countdownElement = document.getElementById('transitionCountdown');
+            countdownElement.textContent = countdown;
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                } else {
+                    countdownElement.textContent = 'GO!';
+                    setTimeout(() => {
+                        document.getElementById('levelTransitionOverlay').style.display = 'none';
+                        gameState.levelTransition = false;
+                        gameState.currentLevel = nextLevel;
+                        updateLevelVisuals(nextLevel);
+                        updateLevelSpeed(nextLevel);
+                        updateLevelUI();
+                    }, 500);
+                    clearInterval(countdownInterval);
+                }
+            }, 800);
+        }
+
+        function updateLevelVisuals(level) {
+            const theme = LEVEL_THEMES[level];
+            if (theme && scene.fog) {
+                scene.fog.color.setHex(theme.color);
+                renderer.setClearColor(theme.color);
+                console.log(`🎨 Updated visuals for Level ${level}: ${theme.name}`);
+            }
+        }
+
+        function updateLevelSpeed(level) {
+            const speeds = gameState.levelSpeeds[level];
+            if (speeds) {
+                gameState.baseSpeed = speeds.min;
+                gameState.maxSpeed = speeds.max;
+                gameState.speed = speeds.min;
+                console.log(`⚡ Updated speed for Level ${level}: ${speeds.min} - ${speeds.max}`);
+            }
+        }
+
+        function updateLevelUI() {
+            const currentLevelElement = document.getElementById('currentLevel');
+            if (currentLevelElement) {
+                currentLevelElement.textContent = gameState.currentLevel;
+            }
+        }
+
         // Alias for test compatibility
         const gameLoop = animate;
         const GameCore = { LevelManager };
@@ -3793,6 +3916,9 @@
                 
                 // Update current level
                 LevelManager.update(deltaTime);
+                
+                // Check level progression
+                checkLevelProgression();
                 
                 // Update visual effects based on speed
                 updateVisualEffects();
