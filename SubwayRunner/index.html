@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.2-SYNTAX-FIXED</title>
+    <title>Subway Runner 3D - V4.2-DEPLOYMENT-TEST</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -36,6 +36,22 @@
             background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
             font-family: Arial, sans-serif;
             overflow: hidden;
+        }
+
+        /* UNMISSABLE VERSION BANNER */
+        .version-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #00ff00;
+            color: black;
+            padding: 10px;
+            text-align: center;
+            z-index: 999999;
+            font-weight: bold;
+            font-size: 16px;
+            border-bottom: 3px solid #008000;
         }
         
         #gameContainer {
@@ -272,6 +288,11 @@
     </style>
 </head>
 <body>
+    <!-- UNMISSABLE VERSION BANNER -->
+    <div class="version-banner">
+        🎮 VERSION 4.2-DEPLOYMENT-TEST - Deployed: Sept 4, 2025 18:07 🎮
+    </div>
+    
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         
