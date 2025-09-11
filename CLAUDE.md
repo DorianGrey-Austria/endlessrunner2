@@ -81,26 +81,29 @@ function animate() {
 ```bash
 cd SubwayRunner
 
-# Development
-python -m http.server 8001      # Local development server
-npm run dev                     # React dev server (port 5173)
+# Development Servers
+python -m http.server 8001      # Local development server (production testing)
+python3 -m http.server 8001     # Alternative Python 3 command
+npm run dev                     # React dev server (Vite, port 5173)
 npm run serve                   # Live-server with watch mode on port 8001
 
 # Testing (MANDATORY BEFORE DEPLOY)
-npm run test                    # Custom test suite (syntax, performance, logic)
-npx playwright test            # Browser automation tests
-npm run test:watch             # Watch mode for development
-npm run pretest                # Pre-test check with echo output
-npm run predeploy              # Pre-deployment validation
+npm run test                    # Custom test-runner.js (4 test categories)
+npm run test:watch             # Watch mode with nodemon for development
+npx playwright test            # Browser automation tests (Chrome + mobile)
+npm run pretest                # Pre-test validation with status output
+npm run predeploy              # Combined test + deploy validation
 
-# Linting & Building
-npm run lint                   # ESLint for TypeScript/React
-npm run build                  # TypeScript + Vite build
-npm run preview                # Preview built application
+# Development & Building
+npm run lint                   # ESLint for TypeScript/React code
+npm run build                  # TypeScript + Vite production build
+npm run preview                # Preview Vite build (port 4173)
 
-# Deployment
+# Deployment (Automatic via GitHub Actions)
 git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
-# Automatic deployment via GitHub Actions to https://ki-revolution.at/
+# Triggers: .github/workflows/hostinger-deploy.yml
+# Deploys: SubwayRunner/index.html → https://ki-revolution.at/
+# Time: ~2-3 minutes for full deployment
 ```
 
 ### Other Projects
@@ -122,14 +125,15 @@ npm run watch                  # Watch mode for development
 ## Version Management System
 
 ### Current Status:
-- **CURRENT**: V4.1-3ROUNDS-RESTORED (active deployment)
-- **STABLE BASE**: V3.1-BALANCED (tested stable reference)
+- **CURRENT**: V5.0-FIVE-LEVELS (active deployment per git log)
+- **STABLE BASE**: V4.3-STABLE (tested stable reference)
+- **VERSION FILE**: Version is stored in SubwayRunner/package.json (currently v4.5.10)
 
 ### Version Update Process (MANDATORY BEFORE EVERY DEPLOYMENT):
-1. **ALWAYS INCREMENT**: Find version in `SubwayRunner/index.html` title tag
-2. **UPDATE VERSION**: Increment version number (e.g., `V4.2` → `V4.3-STABLE`)
-3. **COMMIT FORMAT**: Use `🎮 Version X.Y.Z: [description]`
-4. **NEVER DEPLOY**: Same version number twice - always increment!
+1. **DUAL VERSION UPDATE**: Update both `SubwayRunner/index.html` title tag AND `SubwayRunner/package.json`
+2. **VERSION INCREMENT**: Increment both versions (e.g., `V4.2` → `V4.3-STABLE` and `4.5.10` → `4.5.11`)
+3. **COMMIT FORMAT**: Use `🎮 Version X.Y.Z: [description]` (emoji mandatory for deployment tracking)
+4. **NEVER DEPLOY**: Same version number twice - always increment both files!
 
 ### Backup System:
 - Multiple `.backup` files in SubwayRunner/ for emergency rollback
@@ -145,8 +149,14 @@ npm run watch                  # Watch mode for development
 - **Deployment Time**: ~2-3 minutes
 
 ### Testing Stack:
-- **test-runner.js**: Syntax, structure, performance, logic validation
-- **Playwright**: Browser automation tests with screenshots
+- **test-runner.js**: Custom validation suite with 4 test categories:
+  - Syntax Test: Checks for unclosed tags, Three.js loading, GameCore initialization
+  - Structure Test: Validates level system, essential game functions
+  - Performance Test: File size analysis, line count monitoring
+  - Game Logic Test: Score system, level progression, collision detection
+- **Playwright**: Browser automation tests with HTML reports (tests/playwright-report/)
+  - Supports both desktop Chrome and mobile (iPhone 12) testing
+  - Configured for localhost:8001 with video/screenshot capture
 - **Manual Testing**: ALWAYS test in Chrome after deployment
 
 ### Pre-deployment Checklist:
@@ -241,29 +251,37 @@ EndlessRunner/
 
 1. **RESEARCH**: `git log --grep="feature"` and `grep -r "function" *.backup`
 2. **CALCULATE**: For spawn rates: `spawnRate * fps * timeSeconds`
-3. **INCREMENT VERSION**: ALWAYS update version number in index.html title tag
-4. **TEST LOCALLY**: Run `npm run test` and verify 30+ seconds gameplay
-5. **DEPLOY**: Only if all tests pass - `git add . && git commit && git push`
-6. **VERIFY**: Confirm deployment at **🌐 https://ki-revolution.at/**
+3. **INCREMENT VERSION**: ALWAYS update both SubwayRunner/index.html title tag AND package.json version
+4. **TEST LOCALLY**: Run `npm run test` and verify 30+ seconds gameplay  
+5. **DEPLOY**: Only if all tests pass - `git add . && git commit -m "🎮 Version X.Y.Z: description" && git push`
+6. **MONITOR**: GitHub Actions deployment at https://github.com/[user]/EndlessRunner/actions
+7. **VERIFY**: Confirm deployment at **🌐 https://ki-revolution.at/**
 
 **SUCCESS MANTRA**: RESEARCH → EXTRACT → COMBINE → VERSION++ → TEST → DEPLOY → VERIFY
 
 ## Quick Reference Commands
 
 ```bash
-# Most common development workflow
+# Standard Development Workflow (most common)
 cd SubwayRunner
-npm run test                    # Always run first
-python -m http.server 8001     # Local testing
-npx playwright test            # Browser testing
+npm run test                    # MANDATORY: Run all 4 test categories first
+python3 -m http.server 8001    # Local testing server
+npx playwright test            # Browser automation tests
 git add . && git commit -m "🎮 Version X.Y.Z: description" && git push
 
-# MCP Development
-cd godot-mcp
-npm run build && npm run inspector
+# Test Suite Details
+npm run test                    # Runs: Syntax → Structure → Performance → Logic
+npm run test:watch             # Development mode with file watching
+npm run predeploy              # Full validation before deployment
 
-# Emergency rollback
-cp SubwayRunner/index.html.backup-stable SubwayRunner/index.html
+# MCP Development (Godot Integration)
+cd godot-mcp
+npm run build && npm run inspector  # Build TypeScript + launch MCP inspector
+npm run watch                   # Development mode with auto-rebuild
+
+# Emergency Procedures
+ls SubwayRunner/*.backup        # List available backup versions
+cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html  # Restore specific backup
 ```
 
 ---
