@@ -384,7 +384,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.1-TOUCH-CONTROLS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.1.2-PLAYER-FIX</div>
         </div>
         
         <!-- Sound Toggle Button -->
@@ -2526,6 +2526,29 @@
             // Start sound
             audioManager.play('powerup');
             
+            // CRITICAL FIX: Reset player position and ensure visibility
+            if (player && scene.children.includes(player)) {
+                player.position.set(LANE_POSITIONS[gameState.playerLane], gameState.playerY, 0);
+                player.visible = true; // Ensure visibility
+                player.rotation.y = Math.PI; // Ensure correct rotation
+                console.log('✅ Player position reset:', player.position);
+            } else {
+                console.warn('⚠️ Player missing or not in scene! Re-creating...');
+                if (player && !scene.children.includes(player)) {
+                    // Player exists but not in scene - re-add
+                    scene.add(player);
+                    console.log('✅ Player re-added to scene');
+                } else {
+                    // Player completely missing - recreate
+                    createPlayer();
+                    console.log('✅ Player recreated');
+                }
+                // Set position after recreation/re-adding
+                player.position.set(LANE_POSITIONS[gameState.playerLane], gameState.playerY, 0);
+                player.visible = true;
+                player.rotation.y = Math.PI;
+            }
+            
             document.getElementById('menu').style.display = 'none';
             document.body.classList.add('game-playing'); // Hide instructions during gameplay
             updateUI();
@@ -3868,9 +3891,32 @@
             }
             
             if (gameState.isPlaying) {
-                // Update player position
+                // SAFETY: Validate player exists and has valid position
+                if (!player) {
+                    console.error('❌ CRITICAL: Player is null in game loop!');
+                    return;
+                }
+                
+                // Validate player position is not NaN or extreme values
+                if (isNaN(player.position.x) || isNaN(player.position.y) || isNaN(player.position.z)) {
+                    console.warn('⚠️ Player position is NaN! Resetting...');
+                    player.position.set(LANE_POSITIONS[gameState.playerLane], gameState.playerY, 0);
+                }
+                
+                // Validate lane bounds
+                if (gameState.playerLane < 0 || gameState.playerLane > 2) {
+                    console.warn('⚠️ Invalid player lane! Resetting to center...');
+                    gameState.playerLane = 1;
+                }
+                
+                // Update player position with bounds checking
                 const targetX = LANE_POSITIONS[gameState.playerLane];
-                player.position.x += (targetX - player.position.x) * 0.1;
+                if (!isNaN(targetX)) {
+                    player.position.x += (targetX - player.position.x) * 0.1;
+                } else {
+                    console.error('❌ Target position is NaN!');
+                    player.position.x = 0; // Reset to center
+                }
                 
                 // Handle jumping - ROBUST mit absolutem Timeout
                 if (gameState.playerAction === 'jumping') {
@@ -4138,6 +4184,15 @@
             const touchEndY = touch.clientY;
             const touchEndTime = Date.now();
             
+            // SAFETY: Validate touch coordinates
+            if (isNaN(touchEndX) || isNaN(touchEndY) || isNaN(touchStartX) || isNaN(touchStartY)) {
+                console.warn('⚠️ Invalid touch coordinates detected, ignoring touch');
+                touchStartX = null;
+                touchStartY = null;
+                touchStartTime = null;
+                return;
+            }
+            
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
             const deltaTime = touchEndTime - touchStartTime;
@@ -4150,13 +4205,21 @@
                 const speedMultiplier = gameState.speed / gameState.maxSpeed;
                 
                 if (deltaX > 0 && gameState.playerLane < 2) {
-                    // Swipe right
-                    gameState.playerLane++;
-                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    // Swipe right - with bounds check
+                    const newLane = gameState.playerLane + 1;
+                    if (newLane >= 0 && newLane <= 2) {
+                        gameState.playerLane = newLane;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        console.log('👉 Lane change right to:', gameState.playerLane);
+                    }
                 } else if (deltaX < 0 && gameState.playerLane > 0) {
-                    // Swipe left  
-                    gameState.playerLane--;
-                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    // Swipe left - with bounds check
+                    const newLane = gameState.playerLane - 1;
+                    if (newLane >= 0 && newLane <= 2) {
+                        gameState.playerLane = newLane;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                        console.log('👈 Lane change left to:', gameState.playerLane);
+                    }
                 }
             }
             // Swipe/Tap vertical (Springen/Ducken)
