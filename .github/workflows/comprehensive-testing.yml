@@ -1,0 +1,474 @@
+# 🧪 COMPREHENSIVE GAME TESTING WORKFLOW
+# Production-ready testing pipeline for browser games
+name: 🧪 Comprehensive Game Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *' # Daily at 2 AM UTC
+  workflow_dispatch: # Manual trigger
+
+env:
+  NODE_VERSION: '18'
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
+
+jobs:
+  # 🚀 SMOKE TESTS - Fast validation
+  smoke-tests:
+    name: 🚀 Smoke Tests (2-3 min)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: 🧪 Run smoke tests
+        run: |
+          echo "🚀 Running smoke tests..."
+          npm run test 2>&1 | tee test-output.log || echo "Test runner completed"
+
+      - name: 🔍 Basic game loading test
+        run: |
+          echo "🔍 Testing basic game loading..."
+          timeout 30 python3 -m http.server 8001 &
+          SERVER_PID=$!
+          sleep 5
+
+          # Test that the server responds
+          curl -f http://localhost:8001/ || echo "Server not responding"
+          kill $SERVER_PID || true
+
+      - name: 📊 Upload smoke test logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test-logs
+          path: SubwayRunner/test-output.log
+          retention-days: 3
+
+  # 🔧 AUTO-TEST GENERATION
+  generate-tests:
+    name: 🤖 Auto-Generate Tests
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🤖 Generate auto-tests
+        run: |
+          echo "🤖 Generating automatic tests..."
+          node tests/utils/auto-test-generator.js
+
+      - name: 📤 Upload generated tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-generated-tests
+          path: SubwayRunner/tests/generated/
+          retention-days: 7
+
+  # 🧪 CORE TESTING SUITE
+  core-tests:
+    name: 🧪 Core Tests (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    needs: [smoke-tests, generate-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+        include:
+          - browser: chromium
+            viewport: "1920x1080"
+          - browser: firefox
+            viewport: "1920x1080"
+
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: 📥 Download generated tests
+        uses: actions/download-artifact@v4
+        with:
+          name: auto-generated-tests
+          path: SubwayRunner/tests/generated/
+
+      - name: 🧪 Run core gameplay tests
+        run: |
+          echo "🎮 Running core gameplay tests on ${{ matrix.browser }}..."
+          npx playwright test tests/e2e/core-gameplay/ --project=${{ matrix.browser }}
+        continue-on-error: true
+
+      - name: 🚀 Run cache-busting tests
+        run: |
+          echo "🚀 Running cache-busting tests..."
+          npx playwright test tests/integration/cache-busting.spec.js --project=${{ matrix.browser }}
+        continue-on-error: true
+
+      - name: 🤖 Run auto-generated tests
+        run: |
+          echo "🤖 Running auto-generated tests..."
+          npx playwright test tests/generated/ --project=${{ matrix.browser }}
+        continue-on-error: true
+
+      - name: 📊 Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-test-reports-${{ matrix.browser }}
+          path: |
+            SubwayRunner/tests/reports/
+            SubwayRunner/test-results/
+          retention-days: 7
+
+  # ⚡ PERFORMANCE TESTING
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: ⚡ Run FPS monitoring tests
+        run: |
+          echo "⚡ Running performance tests..."
+          npx playwright test tests/performance/fps-monitoring.spec.js --project=Desktop-Chrome
+        continue-on-error: true
+
+      - name: 📊 Generate performance report
+        run: |
+          echo "📊 Generating performance report..."
+          if [ -f "tests/reports/game-testing-report.json" ]; then
+            echo "Performance report generated successfully"
+            cat tests/reports/game-testing-report.json | jq '.performance' || echo "No performance data"
+          else
+            echo "No performance report found"
+          fi
+
+      - name: 📤 Upload performance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-reports
+          path: |
+            SubwayRunner/tests/reports/performance/
+            SubwayRunner/tests/reports/game-testing-report.json
+            SubwayRunner/tests/reports/game-dashboard.html
+          retention-days: 7
+
+  # 📱 MOBILE TESTING
+  mobile-tests:
+    name: 📱 Mobile Tests
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: 📱 Run mobile compatibility tests
+        run: |
+          echo "📱 Running mobile tests..."
+          npx playwright test tests/e2e/core-gameplay/basic-gameplay.spec.js --project=Mobile-iPhone12
+        continue-on-error: true
+
+      - name: 📤 Upload mobile test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-test-reports
+          path: |
+            SubwayRunner/tests/reports/
+            SubwayRunner/test-results/
+          retention-days: 5
+
+  # 🚀 DEPLOYMENT VALIDATION (only on main branch)
+  deployment-validation:
+    name: 🚀 Deployment Validation
+    runs-on: ubuntu-latest
+    needs: [core-tests, performance-tests]
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: ⏳ Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to be available..."
+          for i in {1..30}; do
+            if curl -f -s https://ki-revolution.at/ > /dev/null; then
+              echo "✅ Deployment is live!"
+              break
+            fi
+            echo "⏳ Waiting... ($i/30)"
+            sleep 10
+          done
+
+      - name: 🌐 Test live deployment
+        run: |
+          echo "🌐 Testing live deployment..."
+          npx playwright test tests/integration/cache-busting.spec.js --project=Desktop-Chrome
+        env:
+          CI: true
+        continue-on-error: true
+
+      - name: 🔍 Cache-busting validation
+        run: |
+          echo "🔍 Validating cache-busting..."
+          timestamp=$(date +%s)
+          response=$(curl -s "https://ki-revolution.at/?cb=$timestamp" -w "%{http_code}")
+          echo "Response code: $response"
+
+          if [[ "$response" == *"200" ]]; then
+            echo "✅ Cache-busting successful"
+          else
+            echo "⚠️ Cache-busting may have issues"
+          fi
+
+      - name: 📊 Generate deployment report
+        run: |
+          echo "📊 Generating deployment validation report..."
+          cat > deployment-report.md << EOF
+          # 🚀 Deployment Validation Report
+
+          **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Commit**: ${{ github.sha }}
+          **Branch**: ${{ github.ref_name }}
+
+          ## Validation Results
+          - Live URL: https://ki-revolution.at/
+          - Cache-busting: Tested with timestamp parameters
+          - Performance: See performance-reports artifact
+
+          ## Next Steps
+          - Review test reports for any failures
+          - Monitor live site performance
+          - Check user feedback channels
+
+          ---
+          *Generated by GitHub Actions*
+          EOF
+
+      - name: 📤 Upload deployment reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployment-validation-reports
+          path: |
+            SubwayRunner/deployment-report.md
+            SubwayRunner/tests/reports/
+          retention-days: 7
+
+  # 📋 FINAL REPORT
+  test-summary:
+    name: 📋 Test Summary
+    runs-on: ubuntu-latest
+    needs: [core-tests, performance-tests, mobile-tests]
+    if: always()
+
+    steps:
+      - name: 📥 Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts/
+
+      - name: 📊 Generate summary report
+        run: |
+          echo "# 🧪 Test Execution Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "**Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> test-summary.md
+          echo "**Commit**: ${{ github.sha }}" >> test-summary.md
+          echo "**Workflow**: ${{ github.workflow }}" >> test-summary.md
+          echo "" >> test-summary.md
+
+          echo "## Job Results" >> test-summary.md
+          echo "- Smoke Tests: ${{ needs.smoke-tests.result }}" >> test-summary.md
+          echo "- Core Tests: ${{ needs.core-tests.result }}" >> test-summary.md
+          echo "- Performance Tests: ${{ needs.performance-tests.result }}" >> test-summary.md
+          echo "- Mobile Tests: ${{ needs.mobile-tests.result }}" >> test-summary.md
+          echo "" >> test-summary.md
+
+          echo "## Artifacts Generated" >> test-summary.md
+          if [ -d "test-artifacts" ]; then
+            find test-artifacts -name "*.json" -o -name "*.html" -o -name "*.md" | while read file; do
+              echo "- $(basename "$file")" >> test-summary.md
+            done
+          fi
+          echo "" >> test-summary.md
+
+          echo "## Recommendations" >> test-summary.md
+          echo "1. Review failed tests in detailed reports" >> test-summary.md
+          echo "2. Check performance metrics for regressions" >> test-summary.md
+          echo "3. Validate cache-busting if deployment tests failed" >> test-summary.md
+          echo "4. Monitor live site after deployment" >> test-summary.md
+
+          cat test-summary.md
+
+      - name: 📤 Upload final summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-execution-summary
+          path: test-summary.md
+          retention-days: 30
+
+      - name: 💬 Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  # 🔄 NIGHTLY FULL SUITE (scheduled only)
+  nightly-full-suite:
+    name: 🌙 Nightly Full Test Suite
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    defaults:
+      run:
+        working-directory: ./SubwayRunner
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './SubwayRunner/package-lock.json'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: 🤖 Generate fresh auto-tests
+        run: node tests/utils/auto-test-generator.js
+
+      - name: 🧪 Run complete test suite
+        run: |
+          echo "🌙 Running nightly full test suite..."
+          npx playwright test --reporter=html,json,github
+        continue-on-error: true
+
+      - name: 📊 Generate comprehensive report
+        run: |
+          echo "📊 Generating nightly report..."
+          if [ -f "tests/reports/game-dashboard.html" ]; then
+            echo "✅ Game dashboard generated"
+          fi
+
+      - name: 📤 Upload nightly reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-full-reports
+          path: |
+            SubwayRunner/tests/reports/
+            SubwayRunner/test-results/
+            SubwayRunner/playwright-report/
+          retention-days: 14

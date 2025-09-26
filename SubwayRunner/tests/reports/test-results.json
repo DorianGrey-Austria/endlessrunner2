@@ -1,0 +1,209 @@
+{
+  "config": {
+    "configFile": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/playwright.config.js",
+    "rootDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/global-setup.js",
+    "globalTeardown": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/global-teardown.js",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "tests/reports/html-report",
+          "open": "on-failure"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "tests/reports/junit.xml"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "tests/reports/test-results.json"
+        }
+      ],
+      [
+        "github",
+        null
+      ],
+      [
+        "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/custom-game-reporter.js",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Desktop-Chrome",
+        "name": "Desktop-Chrome",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Desktop-Firefox",
+        "name": "Desktop-Firefox",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Desktop-Safari",
+        "name": "Desktop-Safari",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Mobile-iPhone12",
+        "name": "Mobile-iPhone12",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Mobile-iPhone12ProMax",
+        "name": "Mobile-iPhone12ProMax",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Mobile-GalaxyS21",
+        "name": "Mobile-GalaxyS21",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Tablet-iPadPro",
+        "name": "Tablet-iPadPro",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "Tablet-iPadAir",
+        "name": "Tablet-iPadAir",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "LowEnd-Mobile",
+        "name": "LowEnd-Mobile",
+        "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "TypeError: Cannot read properties of undefined (reading 'baseURL')",
+      "stack": "TypeError: Cannot read properties of undefined (reading 'baseURL')\n    at globalSetup (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/global-setup.js:18:27)",
+      "location": {
+        "file": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/global-setup.js",
+        "column": 27,
+        "line": 18
+      },
+      "snippet": "\u001b[90m   at \u001b[39mutils/global-setup.js:18\n\n  16 |     startTime: new Date().toISOString(),\n  17 |     testConfig: {\n> 18 |       baseURL: config.use.baseURL,\n     |                           ^\n  19 |       browser: process.env.BROWSER || 'chromium',\n  20 |       workers: config.workers,\n  21 |       retries: config.retries"
+    }
+  ],
+  "stats": {
+    "startTime": "2025-09-26T15:12:06.019Z",
+    "duration": 39.70500000000004,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
