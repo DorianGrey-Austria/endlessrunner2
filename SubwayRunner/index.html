@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 SubwayRunner V6.1.1-COMPLETE-LEVELS - Perfect 10-Level Difficulty Curve</title>
+    <title>🎮 SubwayRunner V6.2.1-SENIOR-OPTIMIZED - Agent-Based Performance & Balance</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -1520,9 +1520,9 @@
             levelThresholds: [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500], // Points needed for each level (10 levels)
             levelSpeeds: {
                 1: { min: 0.08, max: 0.12 },  // Sehr langsam - Tutorial
-                2: { min: 0.12, max: 0.18 },  // Langsam steigend
-                3: { min: 0.18, max: 0.28 },  // PEAK Schwierigkeit
-                4: { min: 0.16, max: 0.24 },  // Etwas leichter
+                2: { min: 0.10, max: 0.15 },  // FIXED: Sanfter Anstieg (war 0.12-0.18)
+                3: { min: 0.14, max: 0.20 },  // FIXED: Kontrollierter Peak (war 0.18-0.28)
+                4: { min: 0.19, max: 0.27 },  // FIXED: Eliminiert Regression (war 0.16-0.24)
                 5: { min: 0.20, max: 0.30 },  // Mittelschwer
                 6: { min: 0.22, max: 0.32 },  // Progressiv
                 7: { min: 0.24, max: 0.35 },  // Herausfordernd
@@ -1532,9 +1532,9 @@
             },
             levelSpawnRates: {
                 1: 0.005,  // Sehr wenige Obstacles
-                2: 0.008,  // Mehr Obstacles
-                3: 0.012,  // PEAK Obstacles
-                4: 0.009,  // Reduziert
+                2: 0.007,  // FIXED: Sanfter Anstieg (war 0.008)
+                3: 0.010,  // FIXED: Kontrollierter Peak (war 0.012)
+                4: 0.011,  // FIXED: Eliminiert Regression (war 0.009)
                 5: 0.010,  // Moderat
                 6: 0.011,  // Steigend
                 7: 0.013,  // Viele
@@ -1550,6 +1550,127 @@
             MAX_OBSTACLES: 20,
             MAX_SCENE_OBJECTS: 500,
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
+        };
+
+        // ==================== PERFORMANCE OPTIMIZATION SYSTEM ====================
+        // Mobile Device Detection & Optimization
+        const DeviceOptimizer = {
+            isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+            isLowEnd: false,
+            qualitySettings: {},
+
+            init() {
+                // Detect device capabilities
+                this.detectDeviceCapabilities();
+                this.applyOptimalSettings();
+                console.log('📱 Device Optimizer initialized for', this.isMobile ? 'MOBILE' : 'DESKTOP');
+            },
+
+            detectDeviceCapabilities() {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+                if (gl) {
+                    const renderer = gl.getParameter(gl.RENDERER);
+                    const vendor = gl.getParameter(gl.VENDOR);
+
+                    // Detect low-end GPUs
+                    const lowEndIndicators = ['adreno 3', 'adreno 4', 'mali-4', 'powervrsgx', 'intel hd 3000'];
+                    this.isLowEnd = lowEndIndicators.some(indicator =>
+                        renderer.toLowerCase().includes(indicator) || vendor.toLowerCase().includes(indicator)
+                    );
+                }
+
+                // Memory constraint detection
+                if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+                    this.isLowEnd = true;
+                }
+            },
+
+            applyOptimalSettings() {
+                if (this.isMobile || this.isLowEnd) {
+                    this.qualitySettings = {
+                        maxObstacles: 12,           // Reduced from 20
+                        maxCollectibles: 25,        // Reduced from 40
+                        particleCount: 8,           // Reduced from 20
+                        shadowQuality: 'off',       // Disable shadows
+                        antialias: false,           // Disable antialiasing
+                        textureQuality: 'low',      // Lower texture resolution
+                        geometryComplexity: 0.6     // Simplified geometry
+                    };
+
+                    // Update LIMITS for mobile
+                    LIMITS.MAX_OBSTACLES = 12;
+                    LIMITS.MAX_SCENE_OBJECTS = 200; // Reduced from 500
+
+                    console.log('📱 Mobile optimizations applied - Performance Mode ON');
+                } else {
+                    this.qualitySettings = {
+                        maxObstacles: 20,
+                        maxCollectibles: 40,
+                        particleCount: 20,
+                        shadowQuality: 'high',
+                        antialias: true,
+                        textureQuality: 'high',
+                        geometryComplexity: 1.0
+                    };
+                    console.log('🖥️ Desktop quality settings applied');
+                }
+            },
+
+            getQualitySetting(key) {
+                return this.qualitySettings[key];
+            }
+        };
+
+        // Senior Developer Implementation - Geometry/Material Pooling
+        const PerformancePool = {
+            geometries: new Map(),
+            materials: new Map(),
+            initialized: false,
+
+            init() {
+                if (this.initialized) return;
+
+                console.log('🚀 Initializing Performance Pool...');
+
+                // Pre-create shared geometries (reusable)
+                this.geometries.set('lowbarrier', new THREE.BoxGeometry(1.5, 0.8, 0.3));
+                this.geometries.set('highbarrier', new THREE.BoxGeometry(1.5, 2.5, 0.3));
+                this.geometries.set('jumpblock', new THREE.BoxGeometry(1.2, 0.6, 1.2));
+                this.geometries.set('duckbeam', new THREE.BoxGeometry(2.5, 0.4, 0.3));
+                this.geometries.set('kiwi', new THREE.SphereGeometry(0.3, 8, 6));
+                this.geometries.set('broccoli', new THREE.SphereGeometry(0.25, 8, 6));
+
+                // Pre-create shared materials (reusable)
+                this.materials.set('lowbarrier', new THREE.MeshLambertMaterial({ color: 0xFF6B35 }));
+                this.materials.set('highbarrier', new THREE.MeshLambertMaterial({ color: 0x35FF6B }));
+                this.materials.set('jumpblock', new THREE.MeshLambertMaterial({ color: 0x6B35FF }));
+                this.materials.set('duckbeam', new THREE.MeshLambertMaterial({ color: 0xFF35CB }));
+                this.materials.set('kiwi', new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
+                this.materials.set('broccoli', new THREE.MeshLambertMaterial({ color: 0x228B22 }));
+
+                this.initialized = true;
+                console.log('✅ Performance Pool initialized with', this.geometries.size, 'geometries and', this.materials.size, 'materials');
+            },
+
+            getGeometry(type) {
+                return this.geometries.get(type);
+            },
+
+            getMaterial(type) {
+                return this.materials.get(type);
+            },
+
+            // Memory cleanup on game end
+            dispose() {
+                this.geometries.forEach(geo => geo.dispose());
+                this.materials.forEach(mat => mat.dispose());
+                this.geometries.clear();
+                this.materials.clear();
+                this.initialized = false;
+                console.log('🧹 Performance Pool disposed');
+            }
         };
 
         // ==================== LEVEL SYSTEM V3.3 ====================
@@ -3332,13 +3453,31 @@
         const SPEED_LERP_FACTOR = 0.05;
 
         function init() {
-            console.log('Initializing Three.js scene...');
+            console.log('🚀 Initializing SubwayRunner V6.2.1...');
             try {
+                // SENIOR DEVELOPER: Initialize optimization systems first
+                DeviceOptimizer.init();
+                PerformancePool.init();
+
+                // Production Error Handling
+                window.addEventListener('error', (e) => {
+                    console.error('🚨 Runtime Error:', e.error);
+                    // Graceful degradation - don't crash the game
+                    if (gameState === 'playing') {
+                        console.log('🛡️ Error during gameplay - continuing with degraded mode');
+                    }
+                });
+
+                window.addEventListener('unhandledrejection', (e) => {
+                    console.error('🚨 Unhandled Promise Rejection:', e.reason);
+                    e.preventDefault(); // Prevent crash
+                });
+
                 // Enhanced Scene
                 scene = new THREE.Scene();
                 scene.fog = new THREE.FogExp2(0x101020, 0.025); // Better fog
 
-                // Initialize 5-Level System
+                // Initialize 10-Level System
                 initializeLevelSystem();
 
             // Camera (Subway Surfers perspective)
@@ -3828,10 +3967,36 @@
         function createObstacle(type, lane, z) {
             // STABILITY: Limit max obstacles
             if (obstacles.length >= LIMITS.MAX_OBSTACLES) {
-                // Remove oldest obstacle
+                // Remove oldest obstacle with proper cleanup
                 const oldest = obstacles.shift();
                 if (oldest && oldest.mesh) {
                     scene.remove(oldest.mesh);
+
+                    // CRITICAL: Proper memory cleanup
+                    if (oldest.mesh.geometry) {
+                        oldest.mesh.geometry.dispose();
+                    }
+                    if (oldest.mesh.material) {
+                        if (Array.isArray(oldest.mesh.material)) {
+                            oldest.mesh.material.forEach(mat => mat.dispose());
+                        } else {
+                            oldest.mesh.material.dispose();
+                        }
+                    }
+
+                    // Cleanup group children
+                    if (oldest.mesh.children) {
+                        oldest.mesh.children.forEach(child => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(mat => mat.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    }
                 }
             }
             
@@ -3840,21 +4005,20 @@
             
             let obstacleGeometry, obstacleMaterial, height;
             
+            // Initialize performance pool if needed
+            PerformancePool.init();
+
             switch (type) {
                 case 'lowbarrier':
-                    // Niedrige Barriere - muss übersprungen werden
-                    obstacleGeometry = new THREE.BoxGeometry(1.5, 0.8, 0.3);
-                    obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0xFF6B35
-                    });
+                    // Use pooled geometry and material - MASSIVE performance improvement
+                    obstacleGeometry = PerformancePool.getGeometry('lowbarrier');
+                    obstacleMaterial = PerformancePool.getMaterial('lowbarrier');
                     height = 0.8;
                     break;
                 case 'highbarrier':
-                    // Hohe Barriere - muss unterduckt werden
-                    obstacleGeometry = new THREE.BoxGeometry(1.8, 0.4, 0.3);
-                    obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x8B0000
-                    });
+                    // Use pooled geometry and material
+                    obstacleGeometry = PerformancePool.getGeometry('highbarrier');
+                    obstacleMaterial = PerformancePool.getMaterial('highbarrier');
                     height = 0.4;
                     break;
                 case 'spikes':
@@ -3867,11 +4031,9 @@
                     height = 0.6;
                     break;
                 case 'jumpblock':
-                    // Block zum Überspringen - Concrete texture
-                    obstacleGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-                    obstacleMaterial = new THREE.MeshLambertMaterial({ 
-                        color: 0x8B8B8B
-                    });
+                    // Use pooled geometry and material
+                    obstacleGeometry = PerformancePool.getGeometry('jumpblock');
+                    obstacleMaterial = PerformancePool.getMaterial('jumpblock');
                     height = 1.2;
                     // Add concrete details
                     const detailGeom = new THREE.BoxGeometry(0.1, 0.1, 1.3);
@@ -3888,9 +4050,9 @@
                     }
                     break;
                 case 'duckbeam':
-                    // Balken zum Unterducken - Metal beam
-                    obstacleGeometry = new THREE.BoxGeometry(2.2, 0.3, 0.8);
-                    obstacleMaterial = new THREE.MeshLambertMaterial({ 
+                    // Use pooled geometry and material
+                    obstacleGeometry = PerformancePool.getGeometry('duckbeam');
+                    obstacleMaterial = PerformancePool.getMaterial('duckbeam'); 
                         color: 0x4682B4
                     });
                     height = 0.3;

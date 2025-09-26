@@ -1,7 +1,7 @@
 {
   "name": "subway-runner",
   "private": true,
-  "version": "6.1.0",
+  "version": "6.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,6 @@
     "serve": "live-server --port=8001 --watch=. --ignore=node_modules",
     "pretest": "echo '🧪 Running pre-deployment tests...'",
     "predeploy": "npm run test && echo '✅ Tests passed - ready for deployment'",
-
     "test:playwright": "npx playwright test",
     "test:smoke": "npx playwright test tests/e2e/core-gameplay/basic-gameplay.spec.js --project=Desktop-Chrome",
     "test:cache": "npx playwright test tests/integration/cache-busting.spec.js",
@@ -24,15 +23,14 @@
     "test:live": "npx playwright test --config=playwright.config.js",
     "test:debug": "npx playwright test --debug",
     "test:headed": "npx playwright test --headed",
-
     "report:open": "npx playwright show-report tests/reports/html-report",
     "report:dashboard": "open tests/reports/game-dashboard.html || xdg-open tests/reports/game-dashboard.html",
     "generate:tests": "node tests/utils/auto-test-generator.js",
-
     "self-test": "npx playwright test tests/e2e/simple-validation.spec.js --project=Desktop-Chrome --reporter=list && echo '✅ Self-test completed successfully'",
     "validate": "npm run generate:tests && npm run self-test"
   },
   "dependencies": {
+    "@inquirer/external-editor": "^1.0.2",
     "@react-three/drei": "^9.88.13",
     "@react-three/fiber": "^8.15.11",
     "@types/three": "^0.158.3",
@@ -42,6 +40,7 @@
     "zustand": "^4.4.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
@@ -50,10 +49,9 @@
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.0",
     "live-server": "^1.2.2",
     "nodemon": "^3.0.0",
-    "@playwright/test": "^1.40.0"
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
   }
 }
