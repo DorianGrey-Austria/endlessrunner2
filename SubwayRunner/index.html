@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 SubwayRunner V6.0-TEN-LEVELS - Complete 10-Level Adventure</title>
+    <title>🎮 SubwayRunner V6.0.2-LEVEL-FIX - 10-Level System Unlocked</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -5766,14 +5766,19 @@
             2: { name: "Neon Night", color: 0x001133 },
             3: { name: "Ancient Temple", color: 0x8B4513 },
             4: { name: "Space Station", color: 0x000011 },
-            5: { name: "Underwater", color: 0x001122 }
+            5: { name: "Jungle Temple", color: 0x228B22 },
+            6: { name: "Space Station", color: 0x0F0F23 },
+            7: { name: "Volcano Run", color: 0xFF4500 },
+            8: { name: "Underwater Tunnel", color: 0x006994 },
+            9: { name: "Crystal Caves", color: 0x9370DB },
+            10: { name: "Rainbow Road", color: 0xFF69B4 }
         };
 
         function checkLevelProgression() {
             if (gameState.levelTransition) return;
             
             const nextLevel = gameState.currentLevel + 1;
-            if (nextLevel > 5) return; // Max 5 levels
+            if (nextLevel > 10) return; // Max 10 levels
             
             const threshold = gameState.levelThresholds[nextLevel - 1];
             if (gameState.score >= threshold) {
