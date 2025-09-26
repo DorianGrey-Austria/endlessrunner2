@@ -34,10 +34,19 @@ jobs:
         # Copy JavaScript modules for gesture control
         echo "📁 Copying JavaScript modules..."
         cp -r SubwayRunner/js deploy/
-        
+
         # Copy CSS files if they exist
         if [ -d "SubwayRunner/css" ]; then
             cp -r SubwayRunner/css deploy/
+        fi
+
+        # Copy sounds directory for background music and SFX
+        echo "🎵 Copying audio assets..."
+        if [ -d "SubwayRunner/sounds" ]; then
+            cp -r SubwayRunner/sounds deploy/
+            echo "✅ Audio assets copied successfully"
+        else
+            echo "⚠️ Warning: sounds directory not found"
         fi
         
         # Create .htaccess for production security and performance
@@ -110,6 +119,12 @@ jobs:
         ls -la deploy/
         echo "📁 JavaScript modules:"
         ls -la deploy/js/ || echo "❌ JS modules not found"
+        echo "🎵 Audio assets:"
+        ls -la deploy/sounds/ || echo "❌ Audio assets not found"
+        if [ -d "deploy/sounds/background" ]; then
+            echo "🎶 Background music files:"
+            ls -la deploy/sounds/background/
+        fi
         
     - name: Validate Deployment Configuration
       run: |

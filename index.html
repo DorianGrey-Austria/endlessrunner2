@@ -191,29 +191,136 @@
             filter: blur(2px);
         }
         
+        /* REMOVED: Fixed instructions during gameplay - user wants minimal text only */
         #instructions {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: white;
-            font-size: 14px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            text-align: right;
-            z-index: 100;
+            display: none;
         }
         
-        #menu {
+        /* PROFESSIONAL MENU SYSTEM */
+        .menu-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            z-index: 1000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .menu-screen {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 40px;
-            border-radius: 16px;
             text-align: center;
-            z-index: 200;
-            min-width: 300px;
+            color: white;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-screen.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .menu-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+
+        .menu-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .control-option {
+            display: inline-block;
+            margin: 20px;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .control-option:hover, .control-option.selected {
+            background: rgba(255,255,255,0.2);
+            border-color: #4ecdc4;
+            transform: translateY(-5px);
+        }
+
+        .rules-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left;
+            background: rgba(0,0,0,0.3);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .rules-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rules-list li {
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .rules-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4ecdc4;
+            font-weight: bold;
         }
         
         #menu h1 {
@@ -478,7 +585,8 @@
         <div id="magnetVignette" class="magnet-vignette"></div>
         
         <!-- Gesture Control UI -->
-        <div id="gestureControls">
+        <!-- HIDDEN: Gesture controls now auto-enabled via menu selection -->
+        <div id="gestureControls" style="display: none;">
             <button id="gestureToggle" onclick="toggleGestureControl()">🎥 Gesten aktivieren</button>
             <button id="calibrateBtn" onclick="calibrateGestures()" disabled>🎯 Kalibrieren</button>
             <span id="gestureStatus">Gesten: Inaktiv</span>
@@ -554,34 +662,73 @@
             </div>
         </div>
         
-        <div id="instructions">
-            <div><strong>🎮 Steuerung:</strong></div>
-            <div>A/D: Spurwechsel</div>
-            <div>Leertaste/W: Springen 🦘</div>
-            <div>S: Ducken 🦆</div>
-            <div><strong>📱 Touch-Steuerung:</strong></div>
-            <div>← → Wischen: Spurwechsel</div>
-            <div>↑ Wischen: Springen</div>
-            <div>↓ Wischen: Ducken</div>
-            <div><strong>💡 Tipps:</strong></div>
-            <div>🟠 Orange/Braun: Überspringen!</div>
-            <div>🔵 Blau/Grau oben: Ducken!</div>
-            <div>🔴 Stacheln: Beides möglich!</div>
-            <div><strong>🎯 Neue Features:</strong></div>
-            <div>⚡ Near-Miss Bonus!</div>
-            <div>🏁 Meilenstein-Belohnungen!</div>
-            <div>🔥 Combo-Multiplikator!</div>
-        </div>
+        <!-- REMOVED: Instructions during gameplay - explained in menu rules instead -->
         
-        <div id="menu">
-            <h1>🚇 Subway Runner 3D</h1>
-            <h2>⏱️ 60-Sekunden Challenge!</h2>
-            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
-            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
-            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
-            <button onclick="startGame()">🎮 Challenge starten!</button>
+        <!-- PROFESSIONAL MENU SYSTEM -->
+        <div id="menu" class="menu-container">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="menu-screen active">
+                <h1>🏃 SUBWAY RUNNER 3D</h1>
+                <h2>⚡ 60 Second Challenge</h2>
+                <div class="game-rules">
+                    <p>⬅️➡️ Dodge obstacles</p>
+                    <p>⬆️ Jump over low objects</p>
+                    <p>⬇️ Duck under high ones</p>
+                    <p>⚡ Collect power-ups for boosts</p>
+                </div>
+                <button class="btn-primary" onclick="showControlSelection()">🎮 PLAY NOW</button>
+                <div class="menu-secondary">
+                    <button onclick="showLeaderboard()">🏆 Leaderboard</button>
+                    <button onclick="showSettings()">⚙️ Settings</button>
+                </div>
+            </div>
+
+            <!-- Control Selection -->
+            <div id="controlScreen" class="menu-screen">
+                <h2>Choose Your Control Style</h2>
+                <div class="control-options">
+                    <div class="control-option recommended" onclick="selectControl('classic')">
+                        <div class="control-icon">🎮</div>
+                        <h3>CLASSIC</h3>
+                        <p>Keyboard • Touch • Gamepad</p>
+                        <span class="badge">Recommended</span>
+                    </div>
+                    <div class="control-option" onclick="selectControl('gesture')">
+                        <div class="control-icon">👋</div>
+                        <h3>GESTURE</h3>
+                        <p>Camera Control • Hands-free</p>
+                        <span class="badge beta">Beta</span>
+                    </div>
+                </div>
+                <button class="btn-back" onclick="showWelcomeScreen()">← Back</button>
+            </div>
+
+            <!-- Countdown Screen -->
+            <div id="countdownScreen" class="menu-screen">
+                <div class="countdown-display">
+                    <div id="countdownNumber">3</div>
+                    <p>Get Ready!</p>
+                </div>
+                <button class="btn-skip" onclick="startGameImmediately()" style="display: none;">Skip</button>
+            </div>
+
+            <!-- Leaderboard Modal -->
+            <div id="leaderboardModal" class="menu-screen modal">
+                <h2>🏆 Leaderboards</h2>
+                <div class="league-tabs">
+                    <button class="tab-btn active" onclick="showLeague('classic')">🎮 CLASSIC LEAGUE</button>
+                    <button class="tab-btn" onclick="showLeague('gesture')">👋 GESTURE LEAGUE</button>
+                </div>
+                <div id="leaderboardContent">
+                    <div id="classicLeague" class="league-content active">
+                        <div id="classicScores">Loading...</div>
+                    </div>
+                    <div id="gestureLeague" class="league-content">
+                        <div id="gestureScores">Loading...</div>
+                    </div>
+                </div>
+                <button class="btn-back" onclick="showWelcomeScreen()">← Back</button>
+            </div>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -1147,11 +1294,15 @@
             }
 
             async submitScore(playerName, score, survivalTime, isVictory) {
+                // DUAL LEAGUE SYSTEM - Track control type
+                const controlType = window.selectedControlType || 'classic';
+
                 const scoreEntry = {
                     player_name: playerName,
                     score: score,
                     survival_time: survivalTime,
                     is_victory: isVictory,
+                    control_type: controlType, // NEW: Track control type for dual leagues
                     created_at: new Date().toISOString()
                 };
 
@@ -1193,24 +1344,41 @@
             }
 
             displayHighscores() {
-                const list = document.getElementById('highscoreList');
-                if (highscores.length === 0) {
-                    list.innerHTML = 'Keine Scores vorhanden';
+                // DUAL LEAGUE SYSTEM - Display both leagues
+                this.displayLeague('classic');
+                this.displayLeague('gesture');
+            }
+
+            displayLeague(leagueType) {
+                const containerId = leagueType === 'classic' ? 'classicScores' : 'gestureScores';
+                const container = document.getElementById(containerId);
+
+                if (!container) return;
+
+                // Filter scores by control type
+                const leagueScores = highscores
+                    .filter(score => (score.control_type || 'classic') === leagueType)
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 10);
+
+                if (leagueScores.length === 0) {
+                    container.innerHTML = `<div class="no-scores">No ${leagueType} scores yet</div>`;
                     return;
                 }
 
                 let html = '';
-                highscores.forEach((score, index) => {
+                leagueScores.forEach((score, index) => {
                     const rank = index + 1;
                     const victoryIcon = score.is_victory ? '🏆' : '';
                     const timeText = score.is_victory ? '60s' : `${score.survival_time}s`;
-                    
+                    const controlIcon = leagueType === 'classic' ? '🎮' : '👋';
+
                     html += `<div class="highscore-entry">
-                        ${rank}. ${score.player_name} ${victoryIcon}<br>
+                        ${rank}. ${score.player_name} ${controlIcon} ${victoryIcon}<br>
                         <small>${score.score} pts - ${timeText}</small>
                     </div>`;
                 });
-                list.innerHTML = html;
+                container.innerHTML = html;
             }
         }
 
@@ -2270,12 +2438,24 @@
         }
 
         function startGameInternal() {
+            // AUTO-ENABLE GESTURE CONTROL BASED ON MENU SELECTION
+            const controlType = window.selectedControlType || 'classic';
+
+            if (controlType === 'gesture' && !gestureEnabled) {
+                // Auto-enable gesture control when gesture mode selected
+                initGestureController();
+                toggleGestureControl();
+            } else if (controlType === 'classic' && gestureEnabled) {
+                // Disable gesture control for classic mode
+                toggleGestureControl();
+            }
+
             // Resume audio context
             audioManager.resume();
-            
+
             // Start background music
             audioManager.startBackgroundMusic();
-            
+
             // Start ambient city sounds
             if (!ambientStarted) {
                 audioManager.play('ambient');
@@ -2507,27 +2687,108 @@
             document.getElementById('playerNameInput').focus();
         }
 
+        // PROFESSIONAL MENU NAVIGATION SYSTEM
+        let selectedControlType = 'classic'; // Default selection
+
+        function showControlSelection() {
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('controlScreen').classList.add('active');
+        }
+
+        function selectControl(type) {
+            selectedControlType = type;
+            // Update visual selection
+            document.querySelectorAll('.control-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[onclick="selectControl('${type}')"]`).classList.add('selected');
+        }
+
+        function showRules() {
+            document.getElementById('controlScreen').classList.remove('active');
+            document.getElementById('rulesScreen').classList.add('active');
+        }
+
+        function startGameFromMenu() {
+            // Hide menu completely
+            document.getElementById('menu').style.display = 'none';
+
+            // Set control type for game
+            window.selectedControlType = selectedControlType;
+
+            // Start the actual game
+            startGameInternal();
+        }
+
         function showGameOverMenu(isVictory) {
             const menu = document.getElementById('menu');
-            
+
             if (isVictory) {
                 menu.innerHTML = `
-                    <h1>🎉 VICTORY! 🎉</h1>
-                    <h2>Du hast 60 Sekunden überlebt!</h2>
-                    <p>Final Score: ${currentScore}</p>
-                    <p>Du bist ein Subway Runner Champion! 🏆</p>
-                    <button onclick="startGame()">🎮 Nochmal versuchen</button>
+                    <div class="menu-screen active">
+                        <h1>🎉 VICTORY! 🎉</h1>
+                        <h2>Du hast 60 Sekunden überlebt!</h2>
+                        <p>Final Score: ${currentScore}</p>
+                        <p>Du bist ein Subway Runner Champion! 🏆</p>
+                        <button class="btn-primary" onclick="resetToWelcome()">🎮 Nochmal versuchen</button>
+                    </div>
                 `;
             } else {
                 menu.innerHTML = `
-                    <h1>Game Over!</h1>
-                    <p>Final Score: ${currentScore}</p>
-                    <p>Zeit überlebt: ${currentSurvivalTime}s</p>
-                    <button onclick="startGame()">🎮 Nochmal spielen</button>
+                    <div class="menu-screen active">
+                        <h1>Game Over!</h1>
+                        <p>Final Score: ${currentScore}</p>
+                        <p>Zeit überlebt: ${currentSurvivalTime}s</p>
+                        <button class="btn-primary" onclick="resetToWelcome()">🎮 Nochmal spielen</button>
+                    </div>
                 `;
             }
-            
+
             menu.style.display = 'block';
+        }
+
+        function resetToWelcome() {
+            // Restore original menu structure
+            const menu = document.getElementById('menu');
+            menu.innerHTML = `
+                <div id="welcomeScreen" class="menu-screen active">
+                    <h1>🏃 SUBWAY RUNNER 3D</h1>
+                    <p style="margin-bottom: 2rem; opacity: 0.8;">High-Performance Mobile Game with Perfect Difficulty Balance</p>
+                    <button class="btn-primary" onclick="showControlSelection()">🎮 PLAY NOW</button>
+                </div>
+
+                <div id="controlScreen" class="menu-screen">
+                    <h2>Choose Your Controls</h2>
+                    <div class="control-option selected" onclick="selectControl('classic')">
+                        <h3>🎮 Classic Controls</h3>
+                        <p>Simple tap controls</p>
+                        <p><strong>Recommended for beginners</strong></p>
+                    </div>
+                    <div class="control-option" onclick="selectControl('gesture')">
+                        <h3>👋 Gesture Controls</h3>
+                        <p>Use hand gestures via camera</p>
+                        <p><strong>Advanced players only</strong></p>
+                    </div>
+                    <button class="btn-primary" onclick="showRules()">Continue ➡️</button>
+                </div>
+
+                <div id="rulesScreen" class="menu-screen">
+                    <div class="rules-container">
+                        <h2>Quick Rules</h2>
+                        <ul class="rules-list">
+                            <li>Dodge obstacles by switching lanes</li>
+                            <li>Collect power-ups and fruits for points</li>
+                            <li>Survive 60 seconds to achieve victory</li>
+                            <li>Speed increases every 10 seconds</li>
+                        </ul>
+                    </div>
+                    <button class="btn-primary" onclick="startGameFromMenu()">🚀 START GAME</button>
+                    <button class="btn-secondary" onclick="showControlSelection()">⬅️ Back</button>
+                </div>
+            `;
+
+            // Reset selection
+            selectedControlType = 'classic';
         }
 
         async function submitHighscoreInternal() {

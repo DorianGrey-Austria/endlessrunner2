@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 SubwayRunner V5.2.2-PROFESSIONAL-AUDIO - Endless 3D Runner</title>
+    <title>🎵 SubwayRunner V5.3.1-COMPLETE-AUDIO-SYSTEM - Endless 3D Runner</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -521,8 +521,9 @@
                 // Background Music System
                 this.backgroundMusic = null;
                 this.backgroundMusicSource = null;
-                this.musicVolume = 0.12; // Optimized 12% for better balance
-                this.sfxVolume = 0.35; // Enhanced 35% for clear feedback
+                // Load volume settings from localStorage with fallbacks
+                this.musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.12; // Default 12%
+                this.sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.35; // Default 35%
                 this.musicGain = null;
                 this.sfxGain = null;
                 this.isMusicLoaded = false;
@@ -547,10 +548,13 @@
                 this.baseVolumeSFX = 0.35;
                 this.speedBoostMax = 0.25; // Max 25% volume boost at high speed
 
-                this.initAudio();
+                // Audio will be initialized on first user interaction
+                this.audioInitialized = false;
             }
 
             async initAudio() {
+                if (this.audioInitialized) return;
+
                 try {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -611,6 +615,8 @@
 
                     // Initialize A/B testing framework
                     this.initABTesting();
+
+                    this.audioInitialized = true;
 
                     // Preload background music after audio context is ready
                     this.preloadBackgroundMusic();
@@ -924,26 +930,30 @@
 
             // Background Music System Methods
             async preloadBackgroundMusic() {
-                const musicFiles = [
-                    'sounds/background/background.mp3',
-                    'sounds/background/game-music.mp3',
-                    'sounds/background/subway-theme.mp3'
+                // Multi-format support for better compatibility
+                const musicFormats = [
+                    { url: 'sounds/background/background.mp3', type: 'audio/mpeg' },
+                    { url: 'sounds/background/background.ogg', type: 'audio/ogg' },
+                    { url: 'sounds/background/game-music.mp3', type: 'audio/mpeg' },
+                    { url: 'sounds/background/subway-theme.mp3', type: 'audio/mpeg' }
                 ];
 
-                for (const file of musicFiles) {
+                for (const format of musicFormats) {
                     try {
-                        console.log(`🎵 Attempting to load: ${file}`);
-                        const response = await fetch(file);
+                        console.log(`🎵 Attempting to load: ${format.url} (${format.type})`);
+                        const response = await fetch(format.url);
 
                         if (response.ok) {
                             const arrayBuffer = await response.arrayBuffer();
                             this.backgroundMusic = await this.audioContext.decodeAudioData(arrayBuffer);
                             this.isMusicLoaded = true;
-                            console.log(`✅ Background music loaded: ${file}`);
+                            console.log(`✅ Background music loaded: ${format.url}`);
                             return; // Stop after first successful load
+                        } else {
+                            console.log(`❌ Failed to load ${format.url}: HTTP ${response.status}`);
                         }
                     } catch (error) {
-                        console.warn(`❌ Failed to load: ${file} - ${error.message}`);
+                        console.warn(`❌ Failed to load: ${format.url} - ${error.message}`);
                         continue;
                     }
                 }
@@ -961,6 +971,10 @@
                     this.backgroundMusicSource = this.audioContext.createBufferSource();
                     this.backgroundMusicSource.buffer = this.backgroundMusic;
                     this.backgroundMusicSource.loop = true;
+
+                    // Professional gapless looping - avoid click at loop boundary
+                    this.backgroundMusicSource.loopStart = 0;
+                    this.backgroundMusicSource.loopEnd = this.backgroundMusic.duration - 0.01; // Small gap prevention
 
                     // Connect to music gain node
                     this.backgroundMusicSource.connect(this.musicGain);
@@ -1010,6 +1024,10 @@
 
             setMusicVolume(volume) {
                 this.musicVolume = Math.max(0, Math.min(1, volume));
+
+                // Persist music volume setting
+                localStorage.setItem('musicVolume', this.musicVolume.toString());
+
                 if (this.musicGain) {
                     this.musicGain.gain.setValueAtTime(this.musicVolume, this.audioContext.currentTime);
                 }
@@ -1018,6 +1036,10 @@
 
             setSfxVolume(volume) {
                 this.sfxVolume = Math.max(0, Math.min(1, volume));
+
+                // Persist SFX volume setting
+                localStorage.setItem('sfxVolume', this.sfxVolume.toString());
+
                 if (this.sfxGain) {
                     this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.audioContext.currentTime);
                 }
@@ -2996,6 +3018,11 @@
         }
 
         function startGameInternal() {
+            // Initialize audio on first user interaction (fixes autoplay policy)
+            if (!audioManager.audioInitialized) {
+                audioManager.initAudio();
+            }
+
             // Resume audio context
             audioManager.resume();
 
@@ -5035,6 +5062,11 @@
             const musicVolumeSlider = document.getElementById('musicVolume');
             const musicVolumeLabel = document.getElementById('musicVolumeLabel');
             if (musicVolumeSlider && musicVolumeLabel) {
+                // Set initial values from saved settings
+                const initialMusicVolume = Math.round(audioManager.musicVolume * 100);
+                musicVolumeSlider.value = initialMusicVolume;
+                musicVolumeLabel.textContent = `${initialMusicVolume}%`;
+
                 musicVolumeSlider.addEventListener('input', (e) => {
                     const volume = e.target.value / 100;
                     audioManager.setMusicVolume(volume);
@@ -5046,6 +5078,11 @@
             const sfxVolumeSlider = document.getElementById('sfxVolume');
             const sfxVolumeLabel = document.getElementById('sfxVolumeLabel');
             if (sfxVolumeSlider && sfxVolumeLabel) {
+                // Set initial values from saved settings
+                const initialSfxVolume = Math.round(audioManager.sfxVolume * 100);
+                sfxVolumeSlider.value = initialSfxVolume;
+                sfxVolumeLabel.textContent = `${initialSfxVolume}%`;
+
                 sfxVolumeSlider.addEventListener('input', (e) => {
                     const volume = e.target.value / 100;
                     audioManager.setSfxVolume(volume);
