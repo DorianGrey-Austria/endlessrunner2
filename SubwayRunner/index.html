@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 SubwayRunner V5.3.3-COMPLETE-AUDIO-SYSTEM - Endless 3D Runner</title>
+    <title>🛠️ SubwayRunner V5.3.5-GAME-START-FIX - Endless 3D Runner</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -1437,11 +1437,24 @@
 
         // Make functions globally available for onclick handlers
         window.startGame = function() {
-            console.log('startGame called');
+            console.log('🎮 startGame called from button click');
             try {
+                // Hide menu first
+                const menu = document.getElementById('menu');
+                if (menu) {
+                    menu.style.display = 'none';
+                    console.log('✅ Menu hidden');
+                }
+
                 startGameInternal();
             } catch (error) {
-                console.error('Error in startGame:', error);
+                console.error('❌ Critical error in startGame:', error);
+                // Show menu again if there was an error
+                const menu = document.getElementById('menu');
+                if (menu) {
+                    menu.style.display = 'flex';
+                }
+                alert('Fehler beim Spielstart: ' + error.message);
             }
         };
 
@@ -3018,8 +3031,23 @@
         }
 
         function startGameInternal() {
+            console.log('🎮 startGameInternal called');
+
+            // CRITICAL FIX: Ensure Three.js is initialized before starting game
+            if (!scene || !camera || !renderer || !player) {
+                console.log('🚨 Three.js not initialized, calling init() first...');
+                try {
+                    init();
+                    console.log('✅ Three.js initialization complete');
+                } catch (error) {
+                    console.error('❌ Failed to initialize Three.js:', error);
+                    return;
+                }
+            }
+
             // Initialize audio on first user interaction (fixes autoplay policy)
             if (!audioManager.audioInitialized) {
+                console.log('🎵 Initializing audio system...');
                 audioManager.initAudio();
             }
 
