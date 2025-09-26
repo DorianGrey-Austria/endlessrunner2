@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.0-FIVE-LEVELS</title>
+    <title>Subway Runner 3D - V5.2-BACKGROUND-MUSIC</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -384,29 +384,75 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.1.2-PLAYER-FIX</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V5.2-BACKGROUND-MUSIC</div>
         </div>
         
-        <!-- Sound Toggle Button -->
-        <button id="soundToggle" style="
+        <!-- Sound Controls -->
+        <div id="soundControls" style="
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 150;
-            min-width: 50px;
-            min-height: 50px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        ">🔊</button>
+            gap: 5px;
+            z-index: 150;
+        ">
+            <button id="soundToggle" style="
+                background: rgba(0,0,0,0.7);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 15px;
+                font-size: 18px;
+                cursor: pointer;
+                min-width: 50px;
+                min-height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            ">🔊</button>
+
+            <!-- Volume Control Sliders -->
+            <div id="volumeControls" style="
+                background: rgba(0,0,0,0.7);
+                color: white;
+                border-radius: 8px;
+                padding: 10px;
+                display: none;
+                flex-direction: column;
+                gap: 5px;
+                min-width: 120px;
+            ">
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 5px;">
+                    🎵 Music:
+                    <input type="range" id="musicVolume" min="0" max="100" value="15"
+                           style="flex: 1; height: 20px;">
+                    <span id="musicVolumeLabel" style="font-size: 10px;">15%</span>
+                </label>
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 5px;">
+                    🔊 SFX:
+                    <input type="range" id="sfxVolume" min="0" max="100" value="30"
+                           style="flex: 1; height: 20px;">
+                    <span id="sfxVolumeLabel" style="font-size: 10px;">30%</span>
+                </label>
+            </div>
+
+            <button id="volumeToggle" style="
+                background: rgba(0,0,0,0.7);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 16px;
+                cursor: pointer;
+                min-width: 35px;
+                min-height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            ">⚙️</button>
+        </div>
         
         <div id="instructions">
             <div><strong>🎮 Steuerung:</strong></div>
@@ -471,16 +517,44 @@
                 this.sounds = {};
                 this.masterVolume = 0.3;
                 this.isMuted = localStorage.getItem('gameSoundMuted') === 'true' || false;
+
+                // Background Music System
+                this.backgroundMusic = null;
+                this.backgroundMusicSource = null;
+                this.musicVolume = 0.15; // 15% volume for background music
+                this.sfxVolume = 0.30; // 30% volume for sound effects
+                this.musicGain = null;
+                this.sfxGain = null;
+                this.isMusicLoaded = false;
+                this.isMusicPlaying = false;
+                this.musicFadeTime = 1.0; // 1 second fade transitions
+
                 this.initAudio();
             }
 
             async initAudio() {
                 try {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // Create master gain
                     this.masterGain = this.audioContext.createGain();
                     this.masterGain.gain.value = this.masterVolume;
                     this.masterGain.connect(this.audioContext.destination);
+
+                    // Create separate gain nodes for music and SFX
+                    this.musicGain = this.audioContext.createGain();
+                    this.musicGain.gain.value = this.musicVolume;
+                    this.musicGain.connect(this.masterGain);
+
+                    this.sfxGain = this.audioContext.createGain();
+                    this.sfxGain.gain.value = this.sfxVolume;
+                    this.sfxGain.connect(this.masterGain);
+
                     this.createAdvancedSounds();
+                    console.log('🎵 Audio System initialized with Music/SFX separation');
+
+                    // Preload background music after audio context is ready
+                    this.preloadBackgroundMusic();
                 } catch (error) {
                     console.log('Audio not supported');
                 }
@@ -493,7 +567,7 @@
                 const gainNode = this.audioContext.createGain();
                 
                 oscillator.connect(gainNode);
-                gainNode.connect(this.masterGain);
+                gainNode.connect(this.sfxGain);
                 
                 oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
                 oscillator.type = type;
@@ -530,7 +604,7 @@
                 
                 source.connect(filter);
                 filter.connect(gainNode);
-                gainNode.connect(this.masterGain);
+                gainNode.connect(this.sfxGain);
                 
                 gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
@@ -681,7 +755,7 @@
                 delay.connect(feedback);
                 feedback.connect(delay);
                 delay.connect(wetGain);
-                wetGain.connect(this.masterGain);
+                wetGain.connect(this.sfxGain);
                 
                 oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
                 oscillator.type = 'sine';
@@ -744,20 +818,24 @@
             toggleMute() {
                 this.isMuted = !this.isMuted;
                 localStorage.setItem('gameSoundMuted', this.isMuted.toString());
-                
+
                 // Update button visual
                 const soundButton = document.getElementById('soundToggle');
                 if (soundButton) {
                     soundButton.textContent = this.isMuted ? '🔇' : '🔊';
                     soundButton.style.opacity = this.isMuted ? '0.6' : '1';
                 }
-                
+
                 // Stop any current sounds when muting
                 if (this.isMuted && this.audioContext) {
-                    // Stop all oscillators and sources
+                    // Stop background music and ambient sounds
+                    this.stopBackgroundMusic();
                     this.stopAmbient();
+                } else if (!this.isMuted && this.isMusicLoaded && window.gameState && gameState.isPlaying) {
+                    // Resume background music when unmuting during gameplay
+                    this.startBackgroundMusic();
                 }
-                
+
                 console.log('🔊 Audio', this.isMuted ? 'MUTED' : 'UNMUTED');
             }
             
@@ -776,6 +854,108 @@
                 if (this.audioContext && this.audioContext.state === 'suspended') {
                     this.audioContext.resume();
                 }
+            }
+
+            // Background Music System Methods
+            async preloadBackgroundMusic() {
+                const musicFiles = [
+                    'sounds/background/background.mp3',
+                    'sounds/background/game-music.mp3',
+                    'sounds/background/subway-theme.mp3'
+                ];
+
+                for (const file of musicFiles) {
+                    try {
+                        console.log(`🎵 Attempting to load: ${file}`);
+                        const response = await fetch(file);
+
+                        if (response.ok) {
+                            const arrayBuffer = await response.arrayBuffer();
+                            this.backgroundMusic = await this.audioContext.decodeAudioData(arrayBuffer);
+                            this.isMusicLoaded = true;
+                            console.log(`✅ Background music loaded: ${file}`);
+                            return; // Stop after first successful load
+                        }
+                    } catch (error) {
+                        console.warn(`❌ Failed to load: ${file} - ${error.message}`);
+                        continue;
+                    }
+                }
+
+                if (!this.isMusicLoaded) {
+                    console.log('ℹ️ No background music files found - continuing with procedural audio only');
+                }
+            }
+
+            startBackgroundMusic() {
+                if (!this.backgroundMusic || !this.audioContext || this.isMuted || this.isMusicPlaying) return;
+
+                try {
+                    // Create new audio source
+                    this.backgroundMusicSource = this.audioContext.createBufferSource();
+                    this.backgroundMusicSource.buffer = this.backgroundMusic;
+                    this.backgroundMusicSource.loop = true;
+
+                    // Connect to music gain node
+                    this.backgroundMusicSource.connect(this.musicGain);
+
+                    // Fade in music
+                    this.musicGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    this.musicGain.gain.linearRampToValueAtTime(this.musicVolume,
+                        this.audioContext.currentTime + this.musicFadeTime);
+
+                    // Start playing
+                    this.backgroundMusicSource.start(this.audioContext.currentTime);
+                    this.isMusicPlaying = true;
+
+                    // Handle end event (for non-looping)
+                    this.backgroundMusicSource.onended = () => {
+                        this.isMusicPlaying = false;
+                    };
+
+                    console.log('🎵 Background music started');
+                } catch (error) {
+                    console.error('Failed to start background music:', error);
+                }
+            }
+
+            stopBackgroundMusic() {
+                if (!this.backgroundMusicSource || !this.isMusicPlaying) return;
+
+                try {
+                    // Fade out music
+                    this.musicGain.gain.linearRampToValueAtTime(0,
+                        this.audioContext.currentTime + this.musicFadeTime);
+
+                    // Stop source after fade
+                    setTimeout(() => {
+                        if (this.backgroundMusicSource) {
+                            this.backgroundMusicSource.stop();
+                            this.backgroundMusicSource = null;
+                            this.isMusicPlaying = false;
+                        }
+                    }, this.musicFadeTime * 1000);
+
+                    console.log('🎵 Background music stopped');
+                } catch (error) {
+                    console.error('Failed to stop background music:', error);
+                }
+            }
+
+            setMusicVolume(volume) {
+                this.musicVolume = Math.max(0, Math.min(1, volume));
+                if (this.musicGain) {
+                    this.musicGain.gain.setValueAtTime(this.musicVolume, this.audioContext.currentTime);
+                }
+                console.log(`🎵 Music volume set to: ${(this.musicVolume * 100).toFixed(0)}%`);
+            }
+
+            setSfxVolume(volume) {
+                this.sfxVolume = Math.max(0, Math.min(1, volume));
+                if (this.sfxGain) {
+                    this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.audioContext.currentTime);
+                }
+                console.log(`🔊 SFX volume set to: ${(this.sfxVolume * 100).toFixed(0)}%`);
             }
         }
 
@@ -2475,7 +2655,10 @@
         function startGameInternal() {
             // Resume audio context
             audioManager.resume();
-            
+
+            // Start background music
+            audioManager.startBackgroundMusic();
+
             // Start ambient city sounds
             if (!ambientStarted) {
                 audioManager.play('ambient');
@@ -2563,8 +2746,9 @@
             
             gameState.isPlaying = false;
             gameState.isGameOver = true;
-            
-            // Stop ambient sounds
+
+            // Stop background music and ambient sounds
+            audioManager.stopBackgroundMusic();
             audioManager.stopAmbient();
             ambientStarted = false;
             
@@ -2588,8 +2772,9 @@
             
             gameState.isPlaying = false;
             gameState.isVictory = true;
-            
-            // Stop ambient sounds
+
+            // Stop background music and ambient sounds
+            audioManager.stopBackgroundMusic();
             audioManager.stopAmbient();
             ambientStarted = false;
             
@@ -4478,9 +4663,41 @@
                 soundToggleBtn.addEventListener('click', () => {
                     audioManager.toggleMute();
                 });
-                
+
                 // Set initial state
                 audioManager.setMuteState(audioManager.isMuted);
+            }
+
+            // Volume Toggle Button Event Listener
+            const volumeToggleBtn = document.getElementById('volumeToggle');
+            const volumeControls = document.getElementById('volumeControls');
+            if (volumeToggleBtn && volumeControls) {
+                volumeToggleBtn.addEventListener('click', () => {
+                    const isVisible = volumeControls.style.display !== 'none';
+                    volumeControls.style.display = isVisible ? 'none' : 'flex';
+                });
+            }
+
+            // Music Volume Slider Event Listener
+            const musicVolumeSlider = document.getElementById('musicVolume');
+            const musicVolumeLabel = document.getElementById('musicVolumeLabel');
+            if (musicVolumeSlider && musicVolumeLabel) {
+                musicVolumeSlider.addEventListener('input', (e) => {
+                    const volume = e.target.value / 100;
+                    audioManager.setMusicVolume(volume);
+                    musicVolumeLabel.textContent = `${e.target.value}%`;
+                });
+            }
+
+            // SFX Volume Slider Event Listener
+            const sfxVolumeSlider = document.getElementById('sfxVolume');
+            const sfxVolumeLabel = document.getElementById('sfxVolumeLabel');
+            if (sfxVolumeSlider && sfxVolumeLabel) {
+                sfxVolumeSlider.addEventListener('input', (e) => {
+                    const volume = e.target.value / 100;
+                    audioManager.setSfxVolume(volume);
+                    sfxVolumeLabel.textContent = `${e.target.value}%`;
+                });
             }
             
             init();
