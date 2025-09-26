@@ -21,30 +21,41 @@ jobs:
     - name: Prepare Production Files
       run: |
         echo "🚀 Preparing SubwayRunner for production..."
-        
-        # Copy production HTML as main index
-        cp SubwayRunner/index.html index.html
-        
+
+        # Use the MAIN index.html directly (not SubwayRunner subdirectory)
+        # This contains our Portfolio redesign with dual leagues
+
         # Create deployment directory
         mkdir -p deploy
-        
-        # Copy all necessary files
+
+        # Copy main index.html (contains all inline JS/CSS)
         cp index.html deploy/
-        
-        # Copy JavaScript modules for gesture control
-        echo "📁 Copying JavaScript modules..."
-        cp -r SubwayRunner/js deploy/
+
+        # Copy JavaScript modules if they exist
+        echo "📁 Checking for JavaScript modules..."
+        if [ -d "js" ]; then
+            cp -r js deploy/
+            echo "✅ JavaScript modules copied"
+        elif [ -d "SubwayRunner/js" ]; then
+            cp -r SubwayRunner/js deploy/
+            echo "✅ JavaScript modules copied from SubwayRunner"
+        fi
 
         # Copy CSS files if they exist
-        if [ -d "SubwayRunner/css" ]; then
+        if [ -d "css" ]; then
+            cp -r css deploy/
+        elif [ -d "SubwayRunner/css" ]; then
             cp -r SubwayRunner/css deploy/
         fi
 
         # Copy sounds directory for background music and SFX
         echo "🎵 Copying audio assets..."
-        if [ -d "SubwayRunner/sounds" ]; then
-            cp -r SubwayRunner/sounds deploy/
+        if [ -d "sounds" ]; then
+            cp -r sounds deploy/
             echo "✅ Audio assets copied successfully"
+        elif [ -d "SubwayRunner/sounds" ]; then
+            cp -r SubwayRunner/sounds deploy/
+            echo "✅ Audio assets copied successfully from SubwayRunner"
         else
             echo "⚠️ Warning: sounds directory not found"
         fi
@@ -131,7 +142,7 @@ jobs:
         echo "🔍 Validating deployment setup..."
         echo "📋 Repository: endlessrunner2"
         echo "🎯 Target: https://ki-revolution.at/"
-        echo "📁 Source: SubwayRunner/index.html"
+        echo "📁 Source: ROOT index.html (Portfolio redesign)"
         echo "✅ Configuration validated"
         
     - name: Deploy to Hostinger via FTP
