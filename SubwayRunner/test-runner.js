@@ -145,7 +145,7 @@ class TestRunner {
             }
             
             // Test 2: Level progression
-            const hasLevelProgression = content.includes('currentLevel * 1000') && content.includes('nextLevelScore');
+            const hasLevelProgression = content.includes('currentLevel * 500') && content.includes('nextLevelScore');
             if (!hasLevelProgression) {
                 throw new Error('Level progression logic not found');
             }

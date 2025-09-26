@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ SubwayRunner V5.3.5-GAME-START-FIX - Endless 3D Runner</title>
+    <title>🎮 SubwayRunner V6.0-TEN-LEVELS - Complete 10-Level Adventure</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -377,7 +377,7 @@
         <div id="ui">
             <div>🏆 Score: <span id="score">0</span></div>
             <div id="levelIndicator" style="font-size: 20px; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                🎮 LEVEL <span id="currentLevel">1</span>/5
+                🎮 LEVEL <span id="currentLevel">1</span>/10
             </div>
             <div>⚡ Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
@@ -1517,7 +1517,7 @@
             levelTransition: false,
             levelTransitionStartTime: 0,
             levelTransitionDuration: 3000, // 3 seconds
-            levelThresholds: [0, 500, 1000, 1500, 2000], // Points needed for each level
+            levelThresholds: [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500], // Points needed for each level (10 levels)
             levelSpeeds: {
                 1: { min: 0.08, max: 0.15 },
                 2: { min: 0.15, max: 0.22 },
@@ -1537,7 +1537,7 @@
 
         // ==================== LEVEL SYSTEM V3.3 ====================
         let currentLevel = 1;
-        const LEVEL_PROGRESSION_THRESHOLD = 1000; // Points needed per level
+        const LEVEL_PROGRESSION_THRESHOLD = 500; // Points needed per level
         let nextLevelScore = LEVEL_PROGRESSION_THRESHOLD;
         
         // Level Manager
@@ -1628,13 +1628,13 @@
                     return; // Wait at least 2 seconds between level changes
                 }
                 
-                nextLevelScore = currentLevel * 1000; // Update for test compatibility
+                nextLevelScore = currentLevel * 500; // Update for test compatibility
                 const nextLevelThreshold = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
                 if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
                     this.lastLevelChange = now;
                     currentLevel++; // INCREMENT BEFORE LOADING!
                     this.loadLevel(currentLevel);
-                    nextLevelScore = currentLevel * 1000;
+                    nextLevelScore = currentLevel * 500;
                 }
             },
             
@@ -1842,9 +1842,1392 @@
             }
         };
 
+        // Level 3: Desert Highway
+        const Level3 = {
+            id: 3,
+            name: "Desert Highway",
+            description: "Sandy highway through endless desert",
+            fogColor: 0xFDB462,
+            fogDensity: 0.008,
+
+            load: function(scene, renderer) {
+                console.log('🏜️ Loading Level 3: Desert Highway');
+
+                // Set desert atmosphere
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                // Create desert environment
+                this.createEnvironment(scene);
+            },
+
+            createEnvironment: function(scene) {
+                this.desertObjects = [];
+
+                // Create cacti obstacles (desert-specific)
+                for (let i = 0; i < 15; i++) {
+                    const cactus = this.createCactus();
+                    cactus.position.set(
+                        (Math.random() - 0.5) * 20, // X: -10 to 10
+                        0,
+                        -50 - Math.random() * 200    // Z: spread along track
+                    );
+                    scene.add(cactus);
+                    this.desertObjects.push(cactus);
+                }
+
+                // Create sand dunes
+                for (let i = 0; i < 8; i++) {
+                    const dune = this.createSandDune();
+                    dune.position.set(
+                        (Math.random() - 0.5) * 30,
+                        -1,
+                        -30 - Math.random() * 150
+                    );
+                    scene.add(dune);
+                    this.desertObjects.push(dune);
+                }
+
+                // Create desert road markers
+                for (let i = 0; i < 20; i++) {
+                    const marker = this.createRoadMarker();
+                    marker.position.set(
+                        0,
+                        0.1,
+                        -i * 10
+                    );
+                    scene.add(marker);
+                    this.desertObjects.push(marker);
+                }
+            },
+
+            createCactus: function() {
+                const group = new THREE.Group();
+
+                // Main cactus trunk
+                const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 2.5, 8);
+                const cactusColor = 0x4F7942; // Dark green
+                const trunkMaterial = new THREE.MeshLambertMaterial({ color: cactusColor });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = 1.25;
+                group.add(trunk);
+
+                // Cactus arms (random configuration)
+                if (Math.random() > 0.3) {
+                    const armGeometry = new THREE.CylinderGeometry(0.2, 0.25, 1.0, 6);
+                    const armMaterial = new THREE.MeshLambertMaterial({ color: cactusColor });
+
+                    // Left arm
+                    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+                    leftArm.position.set(-0.6, 1.8, 0);
+                    leftArm.rotation.z = Math.PI / 2;
+                    group.add(leftArm);
+
+                    // Right arm (50% chance)
+                    if (Math.random() > 0.5) {
+                        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+                        rightArm.position.set(0.6, 1.5, 0);
+                        rightArm.rotation.z = -Math.PI / 2;
+                        group.add(rightArm);
+                    }
+                }
+
+                return group;
+            },
+
+            createSandDune: function() {
+                const geometry = new THREE.SphereGeometry(Math.random() * 3 + 2, 8, 6);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0xF4A460, // Sandy brown
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const dune = new THREE.Mesh(geometry, material);
+                dune.scale.y = 0.3; // Flatten to make it dune-like
+                return dune;
+            },
+
+            createRoadMarker: function() {
+                const geometry = new THREE.BoxGeometry(0.3, 0.1, 2);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0xFFFFFF, // White road line
+                    emissive: 0x222222
+                });
+                return new THREE.Mesh(geometry, material);
+            },
+
+            update: function(deltaTime) {
+                // Move desert objects towards player
+                if (this.desertObjects) {
+                    this.desertObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+
+                        // Respawn objects that passed the player
+                        if (obj.position.z > 10) {
+                            obj.position.z = -Math.random() * 200 - 50;
+
+                            // Randomize cactus positions
+                            if (obj.children && obj.children[0] && obj.children[0].geometry.type === 'CylinderGeometry') {
+                                obj.position.x = (Math.random() - 0.5) * 20;
+                            }
+                        }
+                    });
+                }
+
+                // Desert wind effect (subtle camera shake)
+                if (Math.random() > 0.98) {
+                    camera.position.x += (Math.random() - 0.5) * 0.02;
+                    camera.position.y += (Math.random() - 0.5) * 0.01;
+                }
+            },
+
+            cleanup: function() {
+                console.log('🏜️ Cleaning up Desert Highway level');
+                if (this.desertObjects) {
+                    this.desertObjects.forEach(obj => {
+                        if (obj.parent) {
+                            obj.parent.remove(obj);
+                        }
+                    });
+                    this.desertObjects = [];
+                }
+            }
+        };
+
+        // Level 4: Arctic Express
+        const Level4 = {
+            id: 4,
+            name: "Arctic Express",
+            description: "Frozen tundra with ice and snow",
+            fogColor: 0xB0E0E6,
+            fogDensity: 0.012,
+
+            load: function(scene, renderer) {
+                console.log('❄️ Loading Level 4: Arctic Express');
+
+                // Set arctic atmosphere
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                // Create arctic environment
+                this.createEnvironment(scene);
+            },
+
+            createEnvironment: function(scene) {
+                this.arcticObjects = [];
+
+                // Create ice formations
+                for (let i = 0; i < 12; i++) {
+                    const ice = this.createIceFormation();
+                    ice.position.set(
+                        (Math.random() - 0.5) * 25,
+                        0,
+                        -40 - Math.random() * 180
+                    );
+                    scene.add(ice);
+                    this.arcticObjects.push(ice);
+                }
+
+                // Create snow drifts
+                for (let i = 0; i < 10; i++) {
+                    const snowDrift = this.createSnowDrift();
+                    snowDrift.position.set(
+                        (Math.random() - 0.5) * 35,
+                        -0.5,
+                        -20 - Math.random() * 160
+                    );
+                    scene.add(snowDrift);
+                    this.arcticObjects.push(snowDrift);
+                }
+
+                // Create frozen trees
+                for (let i = 0; i < 8; i++) {
+                    const frozenTree = this.createFrozenTree();
+                    frozenTree.position.set(
+                        (Math.random() - 0.5) * 30,
+                        0,
+                        -60 - Math.random() * 140
+                    );
+                    scene.add(frozenTree);
+                    this.arcticObjects.push(frozenTree);
+                }
+
+                // Create ice crystals floating
+                for (let i = 0; i < 20; i++) {
+                    const crystal = this.createIceCrystal();
+                    crystal.position.set(
+                        (Math.random() - 0.5) * 40,
+                        Math.random() * 8 + 3,
+                        -Math.random() * 300
+                    );
+                    scene.add(crystal);
+                    this.arcticObjects.push(crystal);
+                }
+            },
+
+            createIceFormation: function() {
+                const group = new THREE.Group();
+
+                // Main ice block
+                const geometry = new THREE.BoxGeometry(
+                    1 + Math.random() * 2,
+                    2 + Math.random() * 3,
+                    1 + Math.random() * 2
+                );
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0xC0DEEB,
+                    transparent: true,
+                    opacity: 0.8,
+                    shininess: 100
+                });
+                const ice = new THREE.Mesh(geometry, material);
+                group.add(ice);
+
+                // Ice spikes
+                for (let i = 0; i < Math.random() * 3 + 1; i++) {
+                    const spikeGeometry = new THREE.ConeGeometry(0.2, 1 + Math.random(), 6);
+                    const spike = new THREE.Mesh(spikeGeometry, material);
+                    spike.position.set(
+                        (Math.random() - 0.5) * 2,
+                        1.5 + Math.random(),
+                        (Math.random() - 0.5) * 2
+                    );
+                    group.add(spike);
+                }
+
+                return group;
+            },
+
+            createSnowDrift: function() {
+                const geometry = new THREE.SphereGeometry(2 + Math.random() * 3, 8, 6);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0xFFFAFA, // Snow white
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const drift = new THREE.Mesh(geometry, material);
+                drift.scale.y = 0.4; // Flatten for drift appearance
+                drift.scale.x = 1.2 + Math.random() * 0.5;
+                drift.scale.z = 1.2 + Math.random() * 0.5;
+                return drift;
+            },
+
+            createFrozenTree: function() {
+                const group = new THREE.Group();
+
+                // Tree trunk (darker, frozen)
+                const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, 3, 8);
+                const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x2F4F4F }); // Dark slate gray
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = 1.5;
+                group.add(trunk);
+
+                // Frozen branches
+                const branchMaterial = new THREE.MeshLambertMaterial({ color: 0x4682B4 }); // Steel blue
+
+                for (let i = 0; i < 4; i++) {
+                    const branchGeometry = new THREE.ConeGeometry(0.8, 1.2, 8);
+                    const branch = new THREE.Mesh(branchGeometry, branchMaterial);
+                    branch.position.set(0, 2.5 - i * 0.6, 0);
+                    branch.scale.set(1 - i * 0.15, 1, 1 - i * 0.15);
+                    group.add(branch);
+                }
+
+                return group;
+            },
+
+            createIceCrystal: function() {
+                const geometry = new THREE.OctahedronGeometry(0.1 + Math.random() * 0.2);
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0xE0FFFF, // Light cyan
+                    transparent: true,
+                    opacity: 0.7,
+                    shininess: 200
+                });
+                const crystal = new THREE.Mesh(geometry, material);
+                crystal.animationSpeed = 1 + Math.random() * 2;
+                return crystal;
+            },
+
+            update: function(deltaTime) {
+                // Move arctic objects towards player
+                if (this.arcticObjects) {
+                    this.arcticObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+
+                        // Respawn objects that passed the player
+                        if (obj.position.z > 15) {
+                            obj.position.z = -Math.random() * 250 - 50;
+                            obj.position.x = (Math.random() - 0.5) * 30;
+                        }
+
+                        // Animate floating ice crystals
+                        if (obj.children.length === 0 && obj.geometry && obj.geometry.type === 'OctahedronGeometry') {
+                            obj.rotation.x += deltaTime * 0.001 * obj.animationSpeed;
+                            obj.rotation.y += deltaTime * 0.0015 * obj.animationSpeed;
+                            obj.position.y += Math.sin(Date.now() * 0.002 + obj.position.x) * 0.01;
+                        }
+                    });
+                }
+
+                // Arctic wind effect with snow particles
+                if (Math.random() > 0.95) {
+                    camera.position.x += (Math.random() - 0.5) * 0.03;
+                    camera.rotation.z += (Math.random() - 0.5) * 0.002;
+                }
+            },
+
+            cleanup: function() {
+                console.log('❄️ Cleaning up Arctic Express level');
+                if (this.arcticObjects) {
+                    this.arcticObjects.forEach(obj => {
+                        if (obj.parent) {
+                            obj.parent.remove(obj);
+                        }
+                    });
+                    this.arcticObjects = [];
+                }
+            }
+        };
+
+        // Level 5: Jungle Temple
+        const Level5 = {
+            id: 5,
+            name: "Jungle Temple",
+            description: "Ancient temple in dense jungle",
+            fogColor: 0x228B22,
+            fogDensity: 0.020,
+
+            load: function(scene, renderer) {
+                console.log('🌿 Loading Level 5: Jungle Temple');
+
+                // Set jungle atmosphere
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                // Create jungle environment
+                this.createEnvironment(scene);
+            },
+
+            createEnvironment: function(scene) {
+                this.jungleObjects = [];
+
+                // Create ancient temple pillars
+                for (let i = 0; i < 8; i++) {
+                    const pillar = this.createTemplePillar();
+                    pillar.position.set(
+                        (Math.random() - 0.5) * 20,
+                        0,
+                        -60 - Math.random() * 160
+                    );
+                    scene.add(pillar);
+                    this.jungleObjects.push(pillar);
+                }
+
+                // Create large jungle trees
+                for (let i = 0; i < 15; i++) {
+                    const tree = this.createJungleTree();
+                    tree.position.set(
+                        (Math.random() - 0.5) * 40,
+                        0,
+                        -30 - Math.random() * 200
+                    );
+                    scene.add(tree);
+                    this.jungleObjects.push(tree);
+                }
+
+                // Create overgrown vines
+                for (let i = 0; i < 12; i++) {
+                    const vine = this.createVine();
+                    vine.position.set(
+                        (Math.random() - 0.5) * 30,
+                        3 + Math.random() * 4,
+                        -40 - Math.random() * 180
+                    );
+                    scene.add(vine);
+                    this.jungleObjects.push(vine);
+                }
+
+                // Create ancient stone blocks
+                for (let i = 0; i < 10; i++) {
+                    const block = this.createAncientBlock();
+                    block.position.set(
+                        (Math.random() - 0.5) * 25,
+                        0,
+                        -50 - Math.random() * 150
+                    );
+                    scene.add(block);
+                    this.jungleObjects.push(block);
+                }
+
+                // Create jungle flowers (glowing)
+                for (let i = 0; i < 18; i++) {
+                    const flower = this.createJungleFlower();
+                    flower.position.set(
+                        (Math.random() - 0.5) * 35,
+                        0.5 + Math.random() * 2,
+                        -Math.random() * 250
+                    );
+                    scene.add(flower);
+                    this.jungleObjects.push(flower);
+                }
+            },
+
+            createTemplePillar: function() {
+                const group = new THREE.Group();
+
+                // Main pillar
+                const geometry = new THREE.CylinderGeometry(0.8, 1, 6, 12);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0x8FBC8F, // Dark sea green (weathered stone)
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const pillar = new THREE.Mesh(geometry, material);
+                pillar.position.y = 3;
+                group.add(pillar);
+
+                // Pillar capital (decorative top)
+                const capGeometry = new THREE.BoxGeometry(2, 0.5, 2);
+                const cap = new THREE.Mesh(capGeometry, material);
+                cap.position.y = 6.2;
+                group.add(cap);
+
+                // Moss and vegetation
+                const mossGeometry = new THREE.SphereGeometry(0.3, 8, 6);
+                const mossMaterial = new THREE.MeshLambertMaterial({ color: 0x006400 }); // Dark green
+
+                for (let i = 0; i < 3; i++) {
+                    const moss = new THREE.Mesh(mossGeometry, mossMaterial);
+                    moss.position.set(
+                        (Math.random() - 0.5) * 1.5,
+                        1 + Math.random() * 4,
+                        (Math.random() - 0.5) * 1.5
+                    );
+                    moss.scale.set(
+                        0.5 + Math.random() * 0.7,
+                        0.3 + Math.random() * 0.4,
+                        0.5 + Math.random() * 0.7
+                    );
+                    group.add(moss);
+                }
+
+                return group;
+            },
+
+            createJungleTree: function() {
+                const group = new THREE.Group();
+
+                // Large trunk
+                const trunkGeometry = new THREE.CylinderGeometry(0.5, 0.8, 5, 8);
+                const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Saddle brown
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = 2.5;
+                group.add(trunk);
+
+                // Dense canopy
+                const canopyMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 }); // Forest green
+
+                for (let i = 0; i < 5; i++) {
+                    const canopyGeometry = new THREE.SphereGeometry(1.5 + Math.random(), 8, 6);
+                    const canopy = new THREE.Mesh(canopyGeometry, canopyMaterial);
+                    canopy.position.set(
+                        (Math.random() - 0.5) * 2,
+                        4.5 + Math.random() * 2,
+                        (Math.random() - 0.5) * 2
+                    );
+                    group.add(canopy);
+                }
+
+                // Hanging vines from tree
+                for (let i = 0; i < 3; i++) {
+                    const vineGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2 + Math.random() * 3, 6);
+                    const vineMaterial = new THREE.MeshLambertMaterial({ color: 0x556B2F }); // Dark olive green
+                    const vine = new THREE.Mesh(vineGeometry, vineMaterial);
+                    vine.position.set(
+                        (Math.random() - 0.5) * 3,
+                        4 - Math.random() * 2,
+                        (Math.random() - 0.5) * 3
+                    );
+                    group.add(vine);
+                }
+
+                return group;
+            },
+
+            createVine: function() {
+                const geometry = new THREE.CylinderGeometry(0.08, 0.08, 3 + Math.random() * 4, 8);
+                const material = new THREE.MeshLambertMaterial({ color: 0x6B8E23 }); // Olive drab
+                const vine = new THREE.Mesh(geometry, material);
+                vine.animationSpeed = 0.5 + Math.random();
+                return vine;
+            },
+
+            createAncientBlock: function() {
+                const group = new THREE.Group();
+
+                // Main stone block
+                const geometry = new THREE.BoxGeometry(
+                    1.5 + Math.random(),
+                    1 + Math.random() * 2,
+                    1.5 + Math.random()
+                );
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0x696969, // Dim gray (ancient stone)
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const block = new THREE.Mesh(geometry, material);
+                group.add(block);
+
+                // Ancient carvings (simple geometric patterns)
+                for (let i = 0; i < 2; i++) {
+                    const carvingGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.3);
+                    const carvingMaterial = new THREE.MeshLambertMaterial({ color: 0x2F4F4F }); // Dark slate gray
+                    const carving = new THREE.Mesh(carvingGeometry, carvingMaterial);
+                    carving.position.set(
+                        0.8,
+                        (Math.random() - 0.5) * 1.5,
+                        (Math.random() - 0.5) * 1.5
+                    );
+                    group.add(carving);
+                }
+
+                return group;
+            },
+
+            createJungleFlower: function() {
+                const group = new THREE.Group();
+
+                // Flower petals
+                const petalGeometry = new THREE.ConeGeometry(0.2, 0.5, 6);
+                const petalMaterial = new THREE.MeshLambertMaterial({
+                    color: Math.random() > 0.5 ? 0xFF69B4 : 0xFF4500, // Hot pink or orange red
+                    emissive: 0x111111 // Slight glow
+                });
+
+                for (let i = 0; i < 6; i++) {
+                    const petal = new THREE.Mesh(petalGeometry, petalMaterial);
+                    petal.position.set(
+                        Math.cos(i * Math.PI / 3) * 0.3,
+                        0.5,
+                        Math.sin(i * Math.PI / 3) * 0.3
+                    );
+                    petal.rotation.z = i * Math.PI / 3;
+                    group.add(petal);
+                }
+
+                // Flower center
+                const centerGeometry = new THREE.SphereGeometry(0.15, 8, 6);
+                const centerMaterial = new THREE.MeshLambertMaterial({
+                    color: 0xFFD700, // Gold
+                    emissive: 0x222200
+                });
+                const center = new THREE.Mesh(centerGeometry, centerMaterial);
+                center.position.y = 0.5;
+                group.add(center);
+
+                group.glowIntensity = Math.random() * 2 + 1;
+
+                return group;
+            },
+
+            update: function(deltaTime) {
+                // Move jungle objects towards player
+                if (this.jungleObjects) {
+                    this.jungleObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+
+                        // Respawn objects that passed the player
+                        if (obj.position.z > 20) {
+                            obj.position.z = -Math.random() * 300 - 60;
+                            obj.position.x = (Math.random() - 0.5) * 35;
+                        }
+
+                        // Animate hanging vines
+                        if (obj.animationSpeed && obj.geometry && obj.geometry.type === 'CylinderGeometry') {
+                            obj.rotation.z = Math.sin(Date.now() * 0.001 * obj.animationSpeed) * 0.1;
+                        }
+
+                        // Animate glowing flowers
+                        if (obj.glowIntensity) {
+                            const glow = Math.sin(Date.now() * 0.003 * obj.glowIntensity) * 0.3 + 0.7;
+                            obj.children.forEach(child => {
+                                if (child.material && child.material.emissive) {
+                                    child.material.emissive.setScalar(0.1 * glow);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // Jungle ambience (rustling leaves effect)
+                if (Math.random() > 0.92) {
+                    camera.position.y += (Math.random() - 0.5) * 0.01;
+                    // Subtle green tint variation
+                    scene.fog.color.setHex(0x228B22 + Math.floor(Math.random() * 0x111111));
+                }
+            },
+
+            cleanup: function() {
+                console.log('🌿 Cleaning up Jungle Temple level');
+                if (this.jungleObjects) {
+                    this.jungleObjects.forEach(obj => {
+                        if (obj.parent) {
+                            obj.parent.remove(obj);
+                        }
+                    });
+                    this.jungleObjects = [];
+                }
+            }
+        };
+
+        // Level 6: Space Station
+        const Level6 = {
+            id: 6,
+            name: "Space Station",
+            description: "High-tech space station in the cosmos",
+            fogColor: 0x1a0d2e,
+            fogDensity: 0.005,
+
+            load: function(scene, renderer) {
+                console.log('🚀 Loading Level 6: Space Station');
+
+                // Set space atmosphere
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                // Create space station environment
+                this.createEnvironment(scene);
+            },
+
+            createEnvironment: function(scene) {
+                this.spaceObjects = [];
+
+                // Create space station modules
+                for (let i = 0; i < 10; i++) {
+                    const module = this.createSpaceModule();
+                    module.position.set(
+                        (Math.random() - 0.5) * 30,
+                        Math.random() * 5 + 2,
+                        -60 - Math.random() * 180
+                    );
+                    scene.add(module);
+                    this.spaceObjects.push(module);
+                }
+
+                // Create energy conduits
+                for (let i = 0; i < 15; i++) {
+                    const conduit = this.createEnergyConduit();
+                    conduit.position.set(
+                        (Math.random() - 0.5) * 25,
+                        1 + Math.random() * 6,
+                        -40 - Math.random() * 200
+                    );
+                    scene.add(conduit);
+                    this.spaceObjects.push(conduit);
+                }
+
+                // Create holographic panels
+                for (let i = 0; i < 12; i++) {
+                    const panel = this.createHolographicPanel();
+                    panel.position.set(
+                        (Math.random() - 0.5) * 35,
+                        2 + Math.random() * 4,
+                        -50 - Math.random() * 160
+                    );
+                    scene.add(panel);
+                    this.spaceObjects.push(panel);
+                }
+
+                // Create floating asteroids
+                for (let i = 0; i < 8; i++) {
+                    const asteroid = this.createAsteroid();
+                    asteroid.position.set(
+                        (Math.random() - 0.5) * 40,
+                        3 + Math.random() * 8,
+                        -70 - Math.random() * 150
+                    );
+                    scene.add(asteroid);
+                    this.spaceObjects.push(asteroid);
+                }
+
+                // Create energy orbs
+                for (let i = 0; i < 20; i++) {
+                    const orb = this.createEnergyOrb();
+                    orb.position.set(
+                        (Math.random() - 0.5) * 45,
+                        1 + Math.random() * 10,
+                        -Math.random() * 300
+                    );
+                    scene.add(orb);
+                    this.spaceObjects.push(orb);
+                }
+            },
+
+            createSpaceModule: function() {
+                const group = new THREE.Group();
+
+                // Main module hull
+                const hullGeometry = new THREE.BoxGeometry(3, 2, 4);
+                const hullMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x4a4a4a,
+                    shininess: 100,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const hull = new THREE.Mesh(hullGeometry, hullMaterial);
+                hull.position.y = 1;
+                group.add(hull);
+
+                // Glowing windows
+                for (let i = 0; i < 4; i++) {
+                    const windowGeometry = new THREE.PlaneGeometry(0.5, 0.8);
+                    const windowMaterial = new THREE.MeshLambertMaterial({
+                        color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF, // Cyan or Magenta
+                        transparent: true,
+                        opacity: 0.8,
+                        emissive: 0x222222
+                    });
+                    const window = new THREE.Mesh(windowGeometry, windowMaterial);
+                    window.position.set(
+                        1.5,
+                        0.5 + Math.random(),
+                        -1.8 + i * 1.2
+                    );
+                    group.add(window);
+                }
+
+                // Antenna array
+                const antennaGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 6);
+                const antennaMaterial = new THREE.MeshLambertMaterial({
+                    color: 0xFFD700,
+                    emissive: 0x111100
+                });
+
+                for (let i = 0; i < 3; i++) {
+                    const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
+                    antenna.position.set(
+                        (Math.random() - 0.5) * 2,
+                        2 + Math.random(),
+                        (Math.random() - 0.5) * 3
+                    );
+                    antenna.rotation.z = (Math.random() - 0.5) * 0.5;
+                    group.add(antenna);
+                }
+
+                group.animationSpeed = 0.5 + Math.random();
+
+                return group;
+            },
+
+            createEnergyConduit: function() {
+                const group = new THREE.Group();
+
+                // Main conduit tube
+                const tubeGeometry = new THREE.CylinderGeometry(0.3, 0.3, 5, 8);
+                const tubeMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x666666,
+                    shininess: 50,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+                tube.rotation.x = Math.PI / 2;
+                group.add(tube);
+
+                // Energy flow inside
+                const energyGeometry = new THREE.CylinderGeometry(0.2, 0.2, 5.2, 6);
+                const energyMaterial = new THREE.MeshLambertMaterial({
+                    color: 0x00FF00, // Electric green
+                    transparent: true,
+                    opacity: 0.6,
+                    emissive: 0x003300
+                });
+                const energyFlow = new THREE.Mesh(energyGeometry, energyMaterial);
+                energyFlow.rotation.x = Math.PI / 2;
+                group.add(energyFlow);
+
+                group.pulseSpeed = 2 + Math.random() * 3;
+
+                return group;
+            },
+
+            createHolographicPanel: function() {
+                const geometry = new THREE.PlaneGeometry(2, 1.5);
+                const material = new THREE.MeshLambertMaterial({
+                    color: Math.random() > 0.5 ? 0x00CCFF : 0xFF0080, // Light blue or hot pink
+                    transparent: true,
+                    opacity: 0.4,
+                    emissive: 0x111122,
+                    side: THREE.DoubleSide
+                });
+                const panel = new THREE.Mesh(geometry, material);
+
+                panel.flickerSpeed = 3 + Math.random() * 5;
+                panel.rotation.y = Math.random() * Math.PI;
+
+                return panel;
+            },
+
+            createAsteroid: function() {
+                const geometry = new THREE.SphereGeometry(1 + Math.random() * 2, 8, 6);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0x8B4513, // Saddle brown
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const asteroid = new THREE.Mesh(geometry, material);
+
+                // Random deformation for asteroid look
+                asteroid.scale.set(
+                    0.8 + Math.random() * 0.4,
+                    0.7 + Math.random() * 0.6,
+                    0.9 + Math.random() * 0.2
+                );
+
+                asteroid.rotationSpeed = {
+                    x: (Math.random() - 0.5) * 0.02,
+                    y: (Math.random() - 0.5) * 0.02,
+                    z: (Math.random() - 0.5) * 0.02
+                };
+
+                return asteroid;
+            },
+
+            createEnergyOrb: function() {
+                const geometry = new THREE.SphereGeometry(0.2 + Math.random() * 0.3, 12, 8);
+                const colors = [0xFF0080, 0x00FFFF, 0xFFFF00, 0xFF4500]; // Hot pink, cyan, yellow, orange red
+                const material = new THREE.MeshLambertMaterial({
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    transparent: true,
+                    opacity: 0.8,
+                    emissive: 0x444444
+                });
+                const orb = new THREE.Mesh(geometry, material);
+
+                orb.glowIntensity = 2 + Math.random() * 3;
+                orb.floatSpeed = 1 + Math.random() * 2;
+
+                return orb;
+            },
+
+            update: function(deltaTime) {
+                // Move space objects towards player
+                if (this.spaceObjects) {
+                    this.spaceObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+
+                        // Respawn objects that passed the player
+                        if (obj.position.z > 25) {
+                            obj.position.z = -Math.random() * 350 - 70;
+                            obj.position.x = (Math.random() - 0.5) * 40;
+                        }
+
+                        // Animate space station modules
+                        if (obj.animationSpeed) {
+                            obj.rotation.y += deltaTime * 0.0005 * obj.animationSpeed;
+
+                            // Pulsing windows
+                            obj.children.forEach(child => {
+                                if (child.material && child.material.emissive) {
+                                    const pulse = Math.sin(Date.now() * 0.003 * obj.animationSpeed) * 0.3 + 0.7;
+                                    child.material.emissive.setScalar(0.15 * pulse);
+                                }
+                            });
+                        }
+
+                        // Animate energy conduits
+                        if (obj.pulseSpeed) {
+                            const pulse = Math.sin(Date.now() * 0.005 * obj.pulseSpeed) * 0.4 + 0.8;
+                            obj.children.forEach(child => {
+                                if (child.material && child.material.color.g === 1) { // Green energy
+                                    child.material.opacity = 0.4 + pulse * 0.4;
+                                    child.material.emissive.setScalar(0.05 * pulse);
+                                }
+                            });
+                        }
+
+                        // Animate holographic panels
+                        if (obj.flickerSpeed) {
+                            const flicker = Math.sin(Date.now() * 0.01 * obj.flickerSpeed) * 0.3 + 0.7;
+                            obj.material.opacity = 0.2 + flicker * 0.3;
+                            obj.rotation.y += deltaTime * 0.001;
+                        }
+
+                        // Animate asteroids
+                        if (obj.rotationSpeed) {
+                            obj.rotation.x += obj.rotationSpeed.x;
+                            obj.rotation.y += obj.rotationSpeed.y;
+                            obj.rotation.z += obj.rotationSpeed.z;
+                        }
+
+                        // Animate energy orbs
+                        if (obj.glowIntensity && obj.floatSpeed) {
+                            const glow = Math.sin(Date.now() * 0.004 * obj.glowIntensity) * 0.4 + 0.8;
+                            obj.material.emissive.setScalar(0.2 * glow);
+                            obj.position.y += Math.sin(Date.now() * 0.002 * obj.floatSpeed + obj.position.x) * 0.02;
+                            obj.rotation.y += deltaTime * 0.002;
+                        }
+                    });
+                }
+
+                // Space ambience (subtle cosmic drift)
+                if (Math.random() > 0.98) {
+                    camera.position.x += (Math.random() - 0.5) * 0.01;
+                    camera.position.y += (Math.random() - 0.5) * 0.005;
+
+                    // Subtle color shift in fog
+                    const colorVariation = Math.floor(Math.random() * 0x080808);
+                    scene.fog.color.setHex(0x1a0d2e + colorVariation);
+                }
+            },
+
+            cleanup: function() {
+                console.log('🚀 Cleaning up Space Station level');
+                if (this.spaceObjects) {
+                    this.spaceObjects.forEach(obj => {
+                        if (obj.parent) {
+                            obj.parent.remove(obj);
+                        }
+                    });
+                    this.spaceObjects = [];
+                }
+            }
+        };
+
+        // Level 7: Volcano Run
+        const Level7 = {
+            id: 7,
+            name: "Volcano Run",
+            description: "Dangerous volcanic landscape with lava",
+            fogColor: 0x8B0000,
+            fogDensity: 0.018,
+
+            load: function(scene, renderer) {
+                console.log('🌋 Loading Level 7: Volcano Run');
+
+                // Set volcanic atmosphere
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                // Create volcanic environment
+                this.createEnvironment(scene);
+            },
+
+            createEnvironment: function(scene) {
+                this.volcanoObjects = [];
+
+                // Create lava geysers
+                for (let i = 0; i < 6; i++) {
+                    const geyser = this.createLavaGeyser();
+                    geyser.position.set(
+                        (Math.random() - 0.5) * 25,
+                        0,
+                        -80 - Math.random() * 120
+                    );
+                    scene.add(geyser);
+                    this.volcanoObjects.push(geyser);
+                }
+
+                // Create volcanic rocks
+                for (let i = 0; i < 18; i++) {
+                    const rock = this.createVolcanicRock();
+                    rock.position.set(
+                        (Math.random() - 0.5) * 35,
+                        0,
+                        -40 - Math.random() * 200
+                    );
+                    scene.add(rock);
+                    this.volcanoObjects.push(rock);
+                }
+
+                // Create lava pools
+                for (let i = 0; i < 8; i++) {
+                    const pool = this.createLavaPool();
+                    pool.position.set(
+                        (Math.random() - 0.5) * 30,
+                        -0.5,
+                        -50 - Math.random() * 150
+                    );
+                    scene.add(pool);
+                    this.volcanoObjects.push(pool);
+                }
+
+                // Create burning embers
+                for (let i = 0; i < 25; i++) {
+                    const ember = this.createBurningEmber();
+                    ember.position.set(
+                        (Math.random() - 0.5) * 40,
+                        2 + Math.random() * 8,
+                        -Math.random() * 250
+                    );
+                    scene.add(ember);
+                    this.volcanoObjects.push(ember);
+                }
+            },
+
+            createLavaGeyser: function() {
+                const group = new THREE.Group();
+
+                // Geyser base
+                const baseGeometry = new THREE.CylinderGeometry(1.2, 1.5, 1, 8);
+                const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x2F1B14 }); // Dark brown
+                const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                base.position.y = 0.5;
+                group.add(base);
+
+                // Lava stream
+                const streamGeometry = new THREE.CylinderGeometry(0.3, 0.8, 4, 8);
+                const streamMaterial = new THREE.MeshLambertMaterial({
+                    color: 0xFF4500, // Orange red
+                    emissive: 0x330000,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const stream = new THREE.Mesh(streamGeometry, streamMaterial);
+                stream.position.y = 2.5;
+                group.add(stream);
+
+                group.eruptionTimer = Math.random() * 5000;
+                group.eruptionSpeed = 2 + Math.random() * 3;
+
+                return group;
+            },
+
+            createVolcanicRock: function() {
+                const geometry = new THREE.SphereGeometry(0.8 + Math.random() * 1.5, 8, 6);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0x654321, // Dark goldenrod
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const rock = new THREE.Mesh(geometry, material);
+
+                // Random deformation for natural rock look
+                rock.scale.set(
+                    0.7 + Math.random() * 0.6,
+                    0.8 + Math.random() * 0.4,
+                    0.7 + Math.random() * 0.6
+                );
+
+                // Some rocks glow with heat
+                if (Math.random() > 0.6) {
+                    material.emissive = new THREE.Color(0x220000);
+                    rock.isHot = true;
+                }
+
+                return rock;
+            },
+
+            createLavaPool: function() {
+                const geometry = new THREE.CircleGeometry(2 + Math.random() * 2, 12);
+                const material = new THREE.MeshLambertMaterial({
+                    color: 0xFF6347, // Tomato red
+                    emissive: 0x442200,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const pool = new THREE.Mesh(geometry, material);
+                pool.rotation.x = -Math.PI / 2;
+                pool.bubbleIntensity = 1 + Math.random() * 2;
+
+                return pool;
+            },
+
+            createBurningEmber: function() {
+                const geometry = new THREE.SphereGeometry(0.1 + Math.random() * 0.2, 6, 4);
+                const colors = [0xFF4500, 0xFF6347, 0xDC143C, 0xB22222]; // Orange to deep red
+                const material = new THREE.MeshLambertMaterial({
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    emissive: 0x331100,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const ember = new THREE.Mesh(geometry, material);
+
+                ember.glowSpeed = 2 + Math.random() * 4;
+                ember.floatSpeed = 0.5 + Math.random() * 1.5;
+                ember.driftSpeed = {
+                    x: (Math.random() - 0.5) * 0.02,
+                    y: 0.01 + Math.random() * 0.02
+                };
+
+                return ember;
+            },
+
+            update: function(deltaTime) {
+                // Move volcano objects towards player
+                if (this.volcanoObjects) {
+                    this.volcanoObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+
+                        // Respawn objects that passed the player
+                        if (obj.position.z > 20) {
+                            obj.position.z = -Math.random() * 300 - 60;
+                            obj.position.x = (Math.random() - 0.5) * 35;
+                        }
+
+                        // Animate lava geysers
+                        if (obj.eruptionTimer !== undefined) {
+                            obj.eruptionTimer += deltaTime;
+
+                            // Eruption cycle
+                            const eruption = Math.sin(obj.eruptionTimer * 0.002 * obj.eruptionSpeed) * 0.5 + 0.5;
+                            const stream = obj.children.find(child => child.material && child.material.color.r > 0.8);
+                            if (stream) {
+                                stream.scale.y = 0.5 + eruption * 1.5;
+                                stream.material.emissive.setScalar(0.2 + eruption * 0.3);
+                            }
+                        }
+
+                        // Animate hot volcanic rocks
+                        if (obj.isHot) {
+                            const heat = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+                            obj.material.emissive.setScalar(0.1 * heat);
+                        }
+
+                        // Animate lava pools bubbling
+                        if (obj.bubbleIntensity) {
+                            const bubble = Math.sin(Date.now() * 0.008 * obj.bubbleIntensity) * 0.4 + 0.8;
+                            obj.material.emissive.setScalar(0.15 * bubble);
+                            obj.scale.set(bubble * 0.1 + 0.95, 1, bubble * 0.1 + 0.95);
+                        }
+
+                        // Animate burning embers
+                        if (obj.glowSpeed && obj.floatSpeed) {
+                            const glow = Math.sin(Date.now() * 0.006 * obj.glowSpeed) * 0.4 + 0.8;
+                            obj.material.emissive.setScalar(0.25 * glow);
+
+                            // Floating motion
+                            obj.position.y += Math.sin(Date.now() * 0.003 * obj.floatSpeed) * 0.02;
+
+                            // Drift motion
+                            obj.position.x += obj.driftSpeed.x;
+                            obj.position.y += obj.driftSpeed.y;
+
+                            // Reset if drifted too far
+                            if (obj.position.y > 15 || Math.abs(obj.position.x) > 25) {
+                                obj.position.x = (Math.random() - 0.5) * 40;
+                                obj.position.y = 2 + Math.random() * 8;
+                            }
+                        }
+                    });
+                }
+
+                // Volcanic ambience effects
+                if (Math.random() > 0.94) {
+                    // Screen shake from volcanic activity
+                    camera.position.x += (Math.random() - 0.5) * 0.04;
+                    camera.position.y += (Math.random() - 0.5) * 0.02;
+
+                    // Heat shimmer effect
+                    const heatVariation = Math.floor(Math.random() * 0x110000);
+                    scene.fog.color.setHex(0x8B0000 + heatVariation);
+                }
+            },
+
+            cleanup: function() {
+                console.log('🌋 Cleaning up Volcano Run level');
+                if (this.volcanoObjects) {
+                    this.volcanoObjects.forEach(obj => {
+                        if (obj.parent) {
+                            obj.parent.remove(obj);
+                        }
+                    });
+                    this.volcanoObjects = [];
+                }
+            }
+        };
+
+        // Level 8: Underwater Tunnel
+        const Level8 = {
+            id: 8,
+            name: "Underwater Tunnel",
+            description: "Deep ocean tunnel with sea creatures",
+            fogColor: 0x006994,
+            fogDensity: 0.022,
+            load: function(scene, renderer) {
+                console.log('🌊 Loading Level 8: Underwater Tunnel');
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+                this.createEnvironment(scene);
+            },
+            createEnvironment: function(scene) {
+                this.underwaterObjects = [];
+                for (let i = 0; i < 20; i++) {
+                    const bubble = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.1 + Math.random() * 0.3, 8, 6),
+                        new THREE.MeshLambertMaterial({ color: 0x87CEEB, transparent: true, opacity: 0.6 })
+                    );
+                    bubble.position.set((Math.random() - 0.5) * 40, Math.random() * 10, -Math.random() * 250);
+                    bubble.floatSpeed = 0.02 + Math.random() * 0.03;
+                    scene.add(bubble);
+                    this.underwaterObjects.push(bubble);
+                }
+                for (let i = 0; i < 12; i++) {
+                    const coral = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.3, 0.5, 2, 6),
+                        new THREE.MeshLambertMaterial({ color: 0xFF6347 })
+                    );
+                    coral.position.set((Math.random() - 0.5) * 30, 1, -50 - Math.random() * 150);
+                    scene.add(coral);
+                    this.underwaterObjects.push(coral);
+                }
+            },
+            update: function(deltaTime) {
+                if (this.underwaterObjects) {
+                    this.underwaterObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+                        if (obj.position.z > 15) {
+                            obj.position.z = -Math.random() * 300 - 50;
+                        }
+                        if (obj.floatSpeed) {
+                            obj.position.y += obj.floatSpeed;
+                            if (obj.position.y > 12) obj.position.y = 0;
+                        }
+                    });
+                }
+            },
+            cleanup: function() {
+                console.log('🌊 Cleaning up Underwater Tunnel level');
+                if (this.underwaterObjects) {
+                    this.underwaterObjects.forEach(obj => obj.parent && obj.parent.remove(obj));
+                    this.underwaterObjects = [];
+                }
+            }
+        };
+
+        // Level 9: Crystal Caves
+        const Level9 = {
+            id: 9,
+            name: "Crystal Caves",
+            description: "Magical caves filled with glowing crystals",
+            fogColor: 0x4B0082,
+            fogDensity: 0.015,
+            load: function(scene, renderer) {
+                console.log('💎 Loading Level 9: Crystal Caves');
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+                this.createEnvironment(scene);
+            },
+            createEnvironment: function(scene) {
+                this.crystalObjects = [];
+                for (let i = 0; i < 25; i++) {
+                    const crystal = new THREE.Mesh(
+                        new THREE.OctahedronGeometry(0.5 + Math.random() * 1.5),
+                        new THREE.MeshPhongMaterial({
+                            color: [0xFF00FF, 0x00FFFF, 0xFFFF00, 0xFF0080][Math.floor(Math.random() * 4)],
+                            transparent: true, opacity: 0.8, shininess: 200, emissive: 0x222222
+                        })
+                    );
+                    crystal.position.set((Math.random() - 0.5) * 35, Math.random() * 8 + 1, -Math.random() * 250);
+                    crystal.glowSpeed = 1 + Math.random() * 3;
+                    scene.add(crystal);
+                    this.crystalObjects.push(crystal);
+                }
+            },
+            update: function(deltaTime) {
+                if (this.crystalObjects) {
+                    this.crystalObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+                        if (obj.position.z > 20) {
+                            obj.position.z = -Math.random() * 300 - 60;
+                        }
+                        const glow = Math.sin(Date.now() * 0.005 * obj.glowSpeed) * 0.3 + 0.7;
+                        obj.material.emissive.setScalar(0.2 * glow);
+                        obj.rotation.y += deltaTime * 0.002;
+                    });
+                }
+            },
+            cleanup: function() {
+                console.log('💎 Cleaning up Crystal Caves level');
+                if (this.crystalObjects) {
+                    this.crystalObjects.forEach(obj => obj.parent && obj.parent.remove(obj));
+                    this.crystalObjects = [];
+                }
+            }
+        };
+
+        // Level 10: Rainbow Road
+        const Level10 = {
+            id: 10,
+            name: "Rainbow Road",
+            description: "Magical rainbow highway in the sky",
+            fogColor: 0xFF69B4,
+            fogDensity: 0.010,
+            load: function(scene, renderer) {
+                console.log('🌈 Loading Level 10: Rainbow Road');
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+                this.createEnvironment(scene);
+            },
+            createEnvironment: function(scene) {
+                this.rainbowObjects = [];
+                const colors = [0xFF0000, 0xFF8000, 0xFFFF00, 0x00FF00, 0x0080FF, 0x8000FF];
+                for (let i = 0; i < 30; i++) {
+                    const star = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.2 + Math.random() * 0.4, 8, 6),
+                        new THREE.MeshLambertMaterial({
+                            color: colors[Math.floor(Math.random() * colors.length)],
+                            emissive: 0x333333, transparent: true, opacity: 0.9
+                        })
+                    );
+                    star.position.set((Math.random() - 0.5) * 50, Math.random() * 12 + 2, -Math.random() * 300);
+                    star.twinkleSpeed = 2 + Math.random() * 4;
+                    scene.add(star);
+                    this.rainbowObjects.push(star);
+                }
+                for (let i = 0; i < 8; i++) {
+                    const cloud = new THREE.Mesh(
+                        new THREE.SphereGeometry(2 + Math.random() * 3, 8, 6),
+                        new THREE.MeshLambertMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.7 })
+                    );
+                    cloud.position.set((Math.random() - 0.5) * 40, 5 + Math.random() * 5, -80 - Math.random() * 120);
+                    cloud.scale.y = 0.6;
+                    scene.add(cloud);
+                    this.rainbowObjects.push(cloud);
+                }
+            },
+            update: function(deltaTime) {
+                if (this.rainbowObjects) {
+                    this.rainbowObjects.forEach(obj => {
+                        obj.position.z += gameState.speed;
+                        if (obj.position.z > 25) {
+                            obj.position.z = -Math.random() * 350 - 80;
+                        }
+                        if (obj.twinkleSpeed) {
+                            const twinkle = Math.sin(Date.now() * 0.008 * obj.twinkleSpeed) * 0.4 + 0.8;
+                            obj.material.emissive.setScalar(0.3 * twinkle);
+                            obj.position.y += Math.sin(Date.now() * 0.003) * 0.01;
+                        }
+                    });
+                }
+                if (Math.random() > 0.95) {
+                    const rainbowColors = [0xFF69B4, 0xFF0080, 0x8000FF, 0x0080FF];
+                    scene.fog.color.setHex(rainbowColors[Math.floor(Math.random() * rainbowColors.length)]);
+                }
+            },
+            cleanup: function() {
+                console.log('🌈 Cleaning up Rainbow Road level');
+                if (this.rainbowObjects) {
+                    this.rainbowObjects.forEach(obj => obj.parent && obj.parent.remove(obj));
+                    this.rainbowObjects = [];
+                }
+            }
+        };
+
         // Register levels
         LevelManager.registerLevel(1, Level1);
         LevelManager.registerLevel(2, Level2);
+        LevelManager.registerLevel(3, Level3);
+        LevelManager.registerLevel(4, Level4);
+        LevelManager.registerLevel(5, Level5);
+        LevelManager.registerLevel(6, Level6);
+        LevelManager.registerLevel(7, Level7);
+        LevelManager.registerLevel(8, Level8);
+        LevelManager.registerLevel(9, Level9);
+        LevelManager.registerLevel(10, Level10);
         
         // HEIGHT LEVEL SYSTEM (V4.0)
         const HEIGHT_LEVELS = {
