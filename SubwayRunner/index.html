@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 SubwayRunner V6.2.2-10LEVEL-CONFIRMED - Professional Validation Complete</title>
+    <title>🎮 SubwayRunner V6.2.3-10LEVEL-CONFIRMED - Professional Validation Complete</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -3453,7 +3453,7 @@
         const SPEED_LERP_FACTOR = 0.05;
 
         function init() {
-            console.log('🚀 Initializing SubwayRunner V6.2.2...');
+            console.log('🚀 Initializing SubwayRunner V6.2.3...');
             try {
                 // SENIOR DEVELOPER: Initialize optimization systems first
                 DeviceOptimizer.init();
@@ -4060,9 +4060,7 @@
                 case 'duckbeam':
                     // Use pooled geometry and material
                     obstacleGeometry = PerformancePool.getGeometry('duckbeam');
-                    obstacleMaterial = PerformancePool.getMaterial('duckbeam'); 
-                        color: 0x4682B4
-                    });
+                    obstacleMaterial = PerformancePool.getMaterial('duckbeam');
                     height = 0.3;
                     // Add support struts
                     const strutGeom = new THREE.CylinderGeometry(0.05, 0.05, 1.8);

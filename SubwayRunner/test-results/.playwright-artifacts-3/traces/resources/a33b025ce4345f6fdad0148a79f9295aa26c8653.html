@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 SubwayRunner V6.2.1-SENIOR-OPTIMIZED - Agent-Based Performance & Balance</title>
+    <title>🎮 SubwayRunner V6.2.2-10LEVEL-CONFIRMED - Professional Validation Complete</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -1517,7 +1517,7 @@
             levelTransition: false,
             levelTransitionStartTime: 0,
             levelTransitionDuration: 3000, // 3 seconds
-            levelThresholds: [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500], // Points needed for each level (10 levels)
+            levelThresholds: [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000], // Score needed to REACH each level (2-10, plus extra)
             levelSpeeds: {
                 1: { min: 0.08, max: 0.12 },  // Sehr langsam - Tutorial
                 2: { min: 0.10, max: 0.15 },  // FIXED: Sanfter Anstieg (war 0.12-0.18)
@@ -3453,7 +3453,7 @@
         const SPEED_LERP_FACTOR = 0.05;
 
         function init() {
-            console.log('🚀 Initializing SubwayRunner V6.2.1...');
+            console.log('🚀 Initializing SubwayRunner V6.2.2...');
             try {
                 // SENIOR DEVELOPER: Initialize optimization systems first
                 DeviceOptimizer.init();
@@ -3479,6 +3479,14 @@
 
                 // Initialize 10-Level System
                 initializeLevelSystem();
+
+                // PROFESSIONAL DEBUG FEATURES: Console commands available
+                console.log('🔧 PROFESSIONAL DEBUG COMMANDS AVAILABLE:');
+                console.log('📊 debugLevelSystem() - Complete level diagnostic');
+                console.log('🚀 jumpToLevel(X) - Jump to level X (1-10)');
+                console.log('🔍 window.DEBUG_LEVELS = true - Enable detailed logging');
+                console.log('⚡ Example: jumpToLevel(5) or debugLevelSystem()');
+                console.log('');
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -4052,9 +4060,7 @@
                 case 'duckbeam':
                     // Use pooled geometry and material
                     obstacleGeometry = PerformancePool.getGeometry('duckbeam');
-                    obstacleMaterial = PerformancePool.getMaterial('duckbeam'); 
-                        color: 0x4682B4
-                    });
+                    obstacleMaterial = PerformancePool.getMaterial('duckbeam');
                     height = 0.3;
                     // Add support struts
                     const strutGeom = new THREE.CylinderGeometry(0.05, 0.05, 1.8);
@@ -5955,15 +5961,84 @@
 
         function checkLevelProgression() {
             if (gameState.levelTransition) return;
-            
+
             const nextLevel = gameState.currentLevel + 1;
             if (nextLevel > 10) return; // Max 10 levels
-            
+
             const threshold = gameState.levelThresholds[nextLevel - 1];
+
+            // PROFESSIONAL DEBUGGING: Detailed progression logging
+            if (typeof window.DEBUG_LEVELS !== 'undefined' && window.DEBUG_LEVELS) {
+                console.log(`🔍 Level Check: Current=${gameState.currentLevel}, Next=${nextLevel}, Score=${gameState.score}, Threshold=${threshold}`);
+            }
+
             if (gameState.score >= threshold) {
+                console.log(`🎉 LEVEL PROGRESSION TRIGGERED: ${gameState.currentLevel} → ${nextLevel} (Score: ${gameState.score}/${threshold})`);
                 triggerLevelTransition(nextLevel);
             }
         }
+
+        // PROFESSIONAL FEATURE: Level System Diagnostics
+        window.debugLevelSystem = function() {
+            console.log('\n🔧 LEVEL SYSTEM DIAGNOSTIC REPORT');
+            console.log('=' + '='.repeat(50));
+
+            console.log(`Current Level: ${gameState.currentLevel}`);
+            console.log(`Current Score: ${gameState.score}`);
+            console.log(`Level Transition Active: ${gameState.levelTransition}`);
+
+            console.log('\n📊 Level Configuration Status:');
+            for (let level = 1; level <= 10; level++) {
+                const speeds = gameState.levelSpeeds[level];
+                const spawn = gameState.levelSpawnRates[level];
+                const theme = LEVEL_THEMES[level];
+                const threshold = gameState.levelThresholds[level - 1];
+
+                const status = speeds && spawn && theme ? '✅' : '❌';
+                console.log(`${status} Level ${level}: ${theme?.name || 'MISSING'} | Speed: ${speeds ? `${speeds.min}-${speeds.max}` : 'MISSING'} | Spawn: ${spawn || 'MISSING'} | Threshold: ${threshold || 'MISSING'}`);
+            }
+
+            console.log('\n🎯 Next Level Info:');
+            const nextLevel = gameState.currentLevel + 1;
+            if (nextLevel <= 10) {
+                const nextThreshold = gameState.levelThresholds[nextLevel - 1];
+                const needed = nextThreshold - gameState.score;
+                console.log(`Next: Level ${nextLevel} (Need ${needed} more points)`);
+            } else {
+                console.log('🏆 Max level reached!');
+            }
+
+            console.log('=' + '='.repeat(50));
+            return {
+                currentLevel: gameState.currentLevel,
+                score: gameState.score,
+                nextLevelIn: nextLevel <= 10 ? gameState.levelThresholds[nextLevel - 1] - gameState.score : 0
+            };
+        };
+
+        // PROFESSIONAL FEATURE: Force level progression (testing)
+        window.jumpToLevel = function(targetLevel) {
+            if (targetLevel < 1 || targetLevel > 10) {
+                console.error(`❌ Invalid level: ${targetLevel}. Must be 1-10.`);
+                return false;
+            }
+
+            if (targetLevel <= gameState.currentLevel) {
+                console.warn(`⚠️ Cannot go backwards. Current: ${gameState.currentLevel}, Target: ${targetLevel}`);
+                return false;
+            }
+
+            console.log(`🚀 Jumping to Level ${targetLevel}...`);
+
+            // Set score to trigger progression
+            const requiredThreshold = gameState.levelThresholds[targetLevel - 1];
+            gameState.score = requiredThreshold;
+
+            // Force progression check
+            checkLevelProgression();
+
+            return true;
+        };
 
         function triggerLevelTransition(nextLevel) {
             if (gameState.levelTransition) return;

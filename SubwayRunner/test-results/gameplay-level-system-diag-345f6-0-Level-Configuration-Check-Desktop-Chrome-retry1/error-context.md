@@ -56,5 +56,5 @@
     - button "🎮 Challenge starten!" [ref=e47] [cursor=pointer]
   - generic [ref=e48]:
     - generic [ref=e49]: 🏆 TOP 10
-    - generic [ref=e50]: Lade Bestenliste...
+    - generic [ref=e50]: Keine Scores vorhanden
 ```
