@@ -146,6 +146,49 @@ npm run test    # Must pass before deployment
 git add . && git commit -m "message" && git push
 ```
 
+## Level System & Difficulty Curve
+
+### 10-Level Progression System
+**Philosophy**: Non-lineare Schwierigkeitskurve mit strategischer Entspannung
+
+#### **Level-Aufbau**:
+- **Level 1-2**: Tutorial/Einstieg (sehr leicht bis leicht)
+- **Level 3**: **PEAK Schwierigkeit** - Reality Check für Spieler
+- **Level 4-5**: Strategische Entspannung (mittelschwer)
+- **Level 6-10**: Progressive Steigerung zum Endgame
+
+#### **Speed Configuration**:
+```javascript
+levelSpeeds: {
+    1: { min: 0.08, max: 0.12 },  // Tutorial
+    2: { min: 0.12, max: 0.18 },  // Einstieg
+    3: { min: 0.18, max: 0.28 },  // PEAK!
+    4: { min: 0.16, max: 0.24 },  // Entspannung
+    5: { min: 0.20, max: 0.30 },  // Aufbau
+    6-10: Progressive Steigerung  // Endgame
+}
+```
+
+#### **Spawn-Rate Progression**:
+```javascript
+levelSpawnRates: {
+    1: 0.005,  // Wenige Obstacles
+    3: 0.012,  // PEAK Obstacles
+    4: 0.009,  // Reduziert (Entspannung)
+    10: 0.016  // Maximum
+}
+```
+
+#### **Level Themes**:
+1. Classic Subway, 2. Neon Night, 3. Ancient Temple
+4. **Cyber Tunnel**, 5. Jungle Temple, 6. Space Station
+7. Volcano Run, 8. Underwater Tunnel, 9. Crystal Caves, 10. Rainbow Road
+
+### **Design Philosophy**:
+- **Level 3 Reality Check**: Testet Fähigkeiten, viele Spieler scheitern hier
+- **Post-Peak Entspannung**: Level 4 reduziert Stress, motiviert weiterzuspielen
+- **Endgame Progression**: Level 6-10 steigern sich kontinuierlich aber fair
+
 ## Critical Game Rules
 
 ### Collectibles
