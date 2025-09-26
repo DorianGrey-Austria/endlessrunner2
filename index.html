@@ -1339,8 +1339,14 @@
             }
 
             isHighscore(score) {
-                if (highscores.length < 10) return true;
-                return score > highscores[9].score;
+                // DUAL LEAGUE SYSTEM - Check highscore within the selected league
+                const controlType = window.selectedControlType || 'classic';
+                const leagueScores = highscores
+                    .filter(s => (s.control_type || 'classic') === controlType)
+                    .sort((a, b) => b.score - a.score);
+
+                if (leagueScores.length < 10) return true;
+                return score > leagueScores[9].score;
             }
 
             displayHighscores() {
@@ -1384,7 +1390,20 @@
 
         const highscoreManager = new HighscoreManager();
 
+        // DUAL LEAGUE TAB NAVIGATION
+        function showLeague(leagueType) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content visibility
+            document.querySelectorAll('.league-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${leagueType}League`).classList.add('active');
+        }
+
         // Make functions globally available for onclick handlers
+        window.showLeague = showLeague; // DUAL LEAGUE NAVIGATION
+
         window.startGame = function() {
             console.log('startGame called');
             try {
