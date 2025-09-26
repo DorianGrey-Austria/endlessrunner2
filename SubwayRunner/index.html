@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.2-BACKGROUND-MUSIC</title>
+    <title>🎵 SubwayRunner V5.2.1-PROFESSIONAL-AUDIO - Endless 3D Runner</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -521,13 +521,31 @@
                 // Background Music System
                 this.backgroundMusic = null;
                 this.backgroundMusicSource = null;
-                this.musicVolume = 0.15; // 15% volume for background music
-                this.sfxVolume = 0.30; // 30% volume for sound effects
+                this.musicVolume = 0.12; // Optimized 12% for better balance
+                this.sfxVolume = 0.35; // Enhanced 35% for clear feedback
                 this.musicGain = null;
                 this.sfxGain = null;
                 this.isMusicLoaded = false;
                 this.isMusicPlaying = false;
-                this.musicFadeTime = 1.0; // 1 second fade transitions
+                this.musicFadeTime = 0.8; // Faster transitions
+
+                // PROFESSIONAL MIXING ENHANCEMENTS
+                this.duckingGain = null; // Music ducking during intense SFX
+                this.musicEQ = null; // EQ for frequency separation
+                this.sfxEQ = null; // EQ for SFX clarity
+                this.compressor = null; // Dynamic range control
+                this.isDucking = false;
+                this.duckingLevel = 0.3; // Duck music to 30% during SFX
+                this.duckingTime = 0.2; // 200ms duck transitions
+
+                // Mobile optimization flags
+                this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                this.audioLatency = this.isMobile ? 0.1 : 0.05; // Higher latency for mobile
+
+                // Speed-responsive mixing
+                this.baseVolumeMusic = 0.12;
+                this.baseVolumeSFX = 0.35;
+                this.speedBoostMax = 0.25; // Max 25% volume boost at high speed
 
                 this.initAudio();
             }
@@ -544,14 +562,55 @@
                     // Create separate gain nodes for music and SFX
                     this.musicGain = this.audioContext.createGain();
                     this.musicGain.gain.value = this.musicVolume;
-                    this.musicGain.connect(this.masterGain);
+
+                    // Create ducking gain node for music
+                    this.duckingGain = this.audioContext.createGain();
+                    this.duckingGain.gain.value = 1.0;
+
+                    // Create EQ nodes for frequency separation
+                    this.musicEQ = this.audioContext.createBiquadFilter();
+                    this.musicEQ.type = 'lowpass';
+                    this.musicEQ.frequency.value = 8000; // Roll off highs for music
+                    this.musicEQ.Q.value = 0.7;
+
+                    this.sfxEQ = this.audioContext.createBiquadFilter();
+                    this.sfxEQ.type = 'highpass';
+                    this.sfxEQ.frequency.value = 200; // Clear lows for SFX clarity
+                    this.sfxEQ.Q.value = 0.5;
+
+                    // Create compressor for dynamic range control
+                    this.compressor = this.audioContext.createDynamicsCompressor();
+                    this.compressor.threshold.setValueAtTime(-24, this.audioContext.currentTime);
+                    this.compressor.knee.setValueAtTime(30, this.audioContext.currentTime);
+                    this.compressor.ratio.setValueAtTime(12, this.audioContext.currentTime);
+                    this.compressor.attack.setValueAtTime(0.003, this.audioContext.currentTime);
+                    this.compressor.release.setValueAtTime(0.25, this.audioContext.currentTime);
+
+                    // Connect audio chain: Music -> EQ -> Ducking -> Master
+                    this.musicGain.connect(this.musicEQ);
+                    this.musicEQ.connect(this.duckingGain);
+                    this.duckingGain.connect(this.compressor);
 
                     this.sfxGain = this.audioContext.createGain();
                     this.sfxGain.gain.value = this.sfxVolume;
-                    this.sfxGain.connect(this.masterGain);
+
+                    // Connect SFX chain: SFX -> EQ -> Compressor
+                    this.sfxGain.connect(this.sfxEQ);
+                    this.sfxEQ.connect(this.compressor);
+
+                    // Final connection to master
+                    this.compressor.connect(this.masterGain);
 
                     this.createAdvancedSounds();
-                    console.log('🎵 Audio System initialized with Music/SFX separation');
+                    console.log('🎵 Professional Audio System initialized:');
+                    console.log('   - Music: 12% with lowpass EQ (8kHz)');
+                    console.log('   - SFX: 35% with highpass EQ (200Hz)');
+                    console.log('   - Ducking system active');
+                    console.log('   - Dynamic range compressor enabled');
+                    console.log('   - Mobile optimization:', this.isMobile ? 'ON' : 'OFF');
+
+                    // Initialize A/B testing framework
+                    this.initABTesting();
 
                     // Preload background music after audio context is ready
                     this.preloadBackgroundMusic();
@@ -789,26 +848,33 @@
                 this.ambientPlaying = false;
             }
             
-            // Dynamic sound based on game speed
+            // OPTIMIZED SPEED-DEPENDENT AUDIO (No longer modifies master gain)
             playSpeedDependentSound(soundName, speedMultiplier = 1) {
-                const originalVolume = this.masterGain.gain.value;
-                const speedVolume = Math.min(originalVolume * (0.8 + speedMultiplier * 0.4), 1.0);
-                
-                this.masterGain.gain.value = speedVolume;
-                this.play(soundName);
-                
-                // Restore original volume
-                setTimeout(() => {
-                    this.masterGain.gain.value = originalVolume;
-                }, 200);
+                if (this.isMuted) return;
+
+                // Use the new speed-responsive system instead of direct gain manipulation
+                const speedRatio = Math.min(speedMultiplier, 1.0);
+                const intensity = speedRatio;
+
+                // Update the entire mixing system for this speed
+                this.updateSpeedResponsiveAudio(speedRatio, intensity);
+
+                // Play the sound with potential ducking
+                const duckingSounds = ['whoosh', 'jump', 'duck'];
+                if (duckingSounds.includes(soundName) && speedRatio > 0.6) {
+                    this.playWithDucking(soundName, 0.5, 0.4);
+                } else {
+                    this.play(soundName);
+                }
             }
             
             play(soundName) {
                 if (this.isMuted) return; // Don't play if muted
-                
+
                 if (this.sounds[soundName]) {
                     try {
                         this.sounds[soundName]();
+                        this.trackAudioEvent('play', soundName); // A/B testing tracking
                     } catch (error) {
                         console.warn('Audio playback error:', error);
                     }
@@ -957,8 +1023,285 @@
                 }
                 console.log(`🔊 SFX volume set to: ${(this.sfxVolume * 100).toFixed(0)}%`);
             }
+
+            // PROFESSIONAL DUCKING SYSTEM
+            duckMusic(intensity = 1.0, duration = 0.5) {
+                if (!this.duckingGain || this.isDucking) return;
+
+                this.isDucking = true;
+                const duckLevel = this.duckingLevel * intensity; // Adaptive ducking based on SFX intensity
+                const currentTime = this.audioContext.currentTime;
+
+                // Duck music down
+                this.duckingGain.gain.setValueAtTime(this.duckingGain.gain.value, currentTime);
+                this.duckingGain.gain.exponentialRampToValueAtTime(duckLevel, currentTime + this.duckingTime);
+
+                // Restore music after duration
+                setTimeout(() => {
+                    if (this.duckingGain && this.audioContext) {
+                        const restoreTime = this.audioContext.currentTime;
+                        this.duckingGain.gain.setValueAtTime(this.duckingGain.gain.value, restoreTime);
+                        this.duckingGain.gain.exponentialRampToValueAtTime(1.0, restoreTime + this.duckingTime);
+
+                        setTimeout(() => { this.isDucking = false; }, this.duckingTime * 1000);
+                    }
+                }, duration * 1000);
+            }
+
+            // ADAPTIVE SPEED-RESPONSIVE MIXING
+            updateSpeedResponsiveAudio(speedRatio, intensity = 1.0) {
+                if (!this.audioContext) return;
+
+                const currentTime = this.audioContext.currentTime;
+
+                // Music: Subtle volume increase at high speed (background presence)
+                const musicSpeedBoost = this.baseVolumeMusic * (1 + (speedRatio * 0.15));
+                if (this.musicGain) {
+                    this.musicGain.gain.setValueAtTime(musicSpeedBoost, currentTime);
+                }
+
+                // SFX: More pronounced boost for gameplay feedback
+                const sfxSpeedBoost = this.baseVolumeSFX * (1 + (speedRatio * this.speedBoostMax));
+                if (this.sfxGain) {
+                    this.sfxGain.gain.setValueAtTime(sfxSpeedBoost, currentTime);
+                }
+
+                // Compressor: Tighter compression at high intensity
+                if (this.compressor && intensity > 0.7) {
+                    const adaptiveThreshold = -24 + (intensity * 6); // Looser threshold for intense moments
+                    this.compressor.threshold.setValueAtTime(adaptiveThreshold, currentTime);
+                }
+
+                // EQ adjustments for speed
+                if (speedRatio > 0.6) {
+                    // Brighten music slightly at high speed
+                    if (this.musicEQ) {
+                        const highFreq = 8000 + (speedRatio * 2000);
+                        this.musicEQ.frequency.exponentialRampToValueAtTime(highFreq, currentTime + 0.1);
+                    }
+
+                    // Enhance SFX clarity at high speed
+                    if (this.sfxEQ) {
+                        const lowCut = 200 + (speedRatio * 100);
+                        this.sfxEQ.frequency.exponentialRampToValueAtTime(lowCut, currentTime + 0.1);
+                    }
+                }
+            }
+
+            // MOBILE-OPTIMIZED AUDIO TRIGGERING
+            playWithDucking(soundName, duckIntensity = 0.7, duckDuration = 0.3) {
+                if (this.isMuted) return;
+
+                // Determine if this sound should trigger ducking
+                const duckingSounds = ['collision', 'powerup', 'success'];
+                const shouldDuck = duckingSounds.includes(soundName);
+
+                if (shouldDuck && this.isMusicPlaying) {
+                    this.duckMusic(duckIntensity, duckDuration);
+                }
+
+                this.play(soundName);
+            }
+
+            // ENHANCED COLLISION AUDIO WITH INTELLIGENT MIXING
+            playCollisionAudio(collisionIntensity = 1.0) {
+                if (this.isMuted) return;
+
+                // Duck music heavily for collision
+                this.duckMusic(1.0, 1.2);
+
+                // Apply compression boost for impact
+                if (this.compressor) {
+                    const currentTime = this.audioContext.currentTime;
+                    this.compressor.threshold.setValueAtTime(-18, currentTime); // Looser for impact
+
+                    // Restore after collision
+                    setTimeout(() => {
+                        if (this.compressor) {
+                            this.compressor.threshold.setValueAtTime(-24, this.audioContext.currentTime);
+                        }
+                    }, 1500);
+                }
+
+                this.play('collision');
+            }
+
+            // A/B TESTING FRAMEWORK FOR AUDIO MIXING
+            initABTesting() {
+                this.abTestConfig = {
+                    enabled: localStorage.getItem('audioABTesting') === 'true' || false,
+                    variant: localStorage.getItem('audioVariant') || 'A',
+                    startTime: Date.now(),
+                    interactions: 0,
+                    collisions: 0,
+                    soundsPlayed: {}
+                };
+
+                // Variant A: Current optimized settings (default)
+                this.variantA = {
+                    musicVolume: 0.12,
+                    sfxVolume: 0.35,
+                    duckingLevel: 0.3,
+                    musicEQFreq: 8000,
+                    sfxEQFreq: 200
+                };
+
+                // Variant B: Alternative balanced settings
+                this.variantB = {
+                    musicVolume: 0.18,
+                    sfxVolume: 0.28,
+                    duckingLevel: 0.5,
+                    musicEQFreq: 6000,
+                    sfxEQFreq: 300
+                };
+
+                this.applyABVariant();
+            }
+
+            applyABVariant() {
+                if (!this.abTestConfig.enabled) return;
+
+                const variant = this.abTestConfig.variant === 'B' ? this.variantB : this.variantA;
+
+                this.musicVolume = variant.musicVolume;
+                this.sfxVolume = variant.sfxVolume;
+                this.duckingLevel = variant.duckingLevel;
+
+                if (this.musicGain) this.musicGain.gain.value = this.musicVolume;
+                if (this.sfxGain) this.sfxGain.gain.value = this.sfxVolume;
+                if (this.musicEQ) this.musicEQ.frequency.value = variant.musicEQFreq;
+                if (this.sfxEQ) this.sfxEQ.frequency.value = variant.sfxEQFreq;
+
+                console.log(`🧪 A/B Test Variant ${this.abTestConfig.variant} applied:`, variant);
+            }
+
+            // Track audio events for A/B testing
+            trackAudioEvent(eventType, soundName = '') {
+                if (!this.abTestConfig.enabled) return;
+
+                this.abTestConfig.interactions++;
+
+                if (eventType === 'collision') {
+                    this.abTestConfig.collisions++;
+                }
+
+                if (soundName) {
+                    this.abTestConfig.soundsPlayed[soundName] =
+                        (this.abTestConfig.soundsPlayed[soundName] || 0) + 1;
+                }
+
+                // Auto-save metrics
+                localStorage.setItem('audioABMetrics', JSON.stringify(this.abTestConfig));
+            }
+
+            // Switch A/B test variant
+            switchABVariant() {
+                this.abTestConfig.variant = this.abTestConfig.variant === 'A' ? 'B' : 'A';
+                localStorage.setItem('audioVariant', this.abTestConfig.variant);
+                this.applyABVariant();
+                return this.abTestConfig.variant;
+            }
+
+            // Get A/B test results
+            getABTestResults() {
+                const sessionTime = (Date.now() - this.abTestConfig.startTime) / 1000 / 60; // minutes
+                const collisionRate = this.abTestConfig.collisions / Math.max(this.abTestConfig.interactions, 1);
+
+                return {
+                    variant: this.abTestConfig.variant,
+                    sessionTimeMinutes: sessionTime.toFixed(2),
+                    totalInteractions: this.abTestConfig.interactions,
+                    collisions: this.abTestConfig.collisions,
+                    collisionRate: (collisionRate * 100).toFixed(2) + '%',
+                    soundsPlayed: this.abTestConfig.soundsPlayed
+                };
+            }
         }
 
+        // GLOBAL DEBUG FUNCTIONS FOR AUDIO TESTING
+        window.AudioDebug = {
+            // Test ducking system
+            testDucking: (intensity = 0.7, duration = 1.0) => {
+                console.log(`🎛️ Testing ducking: ${intensity * 100}% for ${duration}s`);
+                audioManager.duckMusic(intensity, duration);
+            },
+
+            // Test speed-responsive audio
+            testSpeedAudio: (speedRatio = 0.8) => {
+                console.log(`⚡ Testing speed audio at ${speedRatio * 100}%`);
+                audioManager.updateSpeedResponsiveAudio(speedRatio, speedRatio);
+            },
+
+            // Test collision audio
+            testCollision: () => {
+                console.log('💥 Testing collision audio with full ducking');
+                audioManager.playCollisionAudio(1.0);
+            },
+
+            // Switch A/B test variant
+            switchVariant: () => {
+                const newVariant = audioManager.switchABVariant();
+                console.log(`🧪 Switched to A/B Variant ${newVariant}`);
+                return newVariant;
+            },
+
+            // Enable A/B testing
+            enableABTesting: () => {
+                localStorage.setItem('audioABTesting', 'true');
+                audioManager.abTestConfig.enabled = true;
+                audioManager.applyABVariant();
+                console.log('🧪 A/B Testing enabled');
+            },
+
+            // Get current audio metrics
+            getMetrics: () => {
+                const results = audioManager.getABTestResults();
+                console.log('📊 Audio A/B Test Metrics:', results);
+                return results;
+            },
+
+            // Test mobile optimizations
+            toggleMobileMode: () => {
+                audioManager.isMobile = !audioManager.isMobile;
+                console.log('📱 Mobile mode:', audioManager.isMobile ? 'ON' : 'OFF');
+                console.log('   - Audio latency:', audioManager.audioLatency);
+            },
+
+            // Test all sound effects
+            testAllSounds: () => {
+                const sounds = ['jump', 'land', 'duck', 'collision', 'coin', 'success', 'whoosh', 'powerup', 'nearmiss', 'engine'];
+                let delay = 0;
+                sounds.forEach(sound => {
+                    setTimeout(() => {
+                        console.log(`🔊 Testing: ${sound}`);
+                        audioManager.play(sound);
+                    }, delay);
+                    delay += 800;
+                });
+            },
+
+            // Show current audio settings
+            showSettings: () => {
+                console.log('🎵 Current Audio Settings:');
+                console.log(`   Music Volume: ${(audioManager.musicVolume * 100).toFixed(0)}%`);
+                console.log(`   SFX Volume: ${(audioManager.sfxVolume * 100).toFixed(0)}%`);
+                console.log(`   Ducking Level: ${(audioManager.duckingLevel * 100).toFixed(0)}%`);
+                console.log(`   Mobile Mode: ${audioManager.isMobile}`);
+                console.log(`   A/B Testing: ${audioManager.abTestConfig?.enabled || false}`);
+                console.log(`   Current Variant: ${audioManager.abTestConfig?.variant || 'A'}`);
+            }
+        };
+
+        // Show available debug commands
+        console.log('🎛️ Audio Debug Commands Available:');
+        console.log('   AudioDebug.testDucking(0.7, 1.0) - Test music ducking');
+        console.log('   AudioDebug.testSpeedAudio(0.8) - Test speed-responsive audio');
+        console.log('   AudioDebug.testCollision() - Test collision sound');
+        console.log('   AudioDebug.switchVariant() - Switch A/B test variant');
+        console.log('   AudioDebug.enableABTesting() - Enable A/B testing');
+        console.log('   AudioDebug.getMetrics() - Show A/B test results');
+        console.log('   AudioDebug.testAllSounds() - Test all sound effects');
+        console.log('   AudioDebug.showSettings() - Show current settings');
         const audioManager = new AudioManager();
         audioManager.ambientPlaying = false;
         
@@ -3401,7 +3744,8 @@
                         if (precision > 0.8) {
                             audioManager.play('success'); // Perfect avoidance
                         } else {
-                            audioManager.playSpeedDependentSound('coin', gameState.speed / gameState.maxSpeed);
+                            audioManager.trackAudioEvent('success');
+                        audioManager.playSpeedDependentSound('coin', gameState.speed / gameState.maxSpeed);
                         }
                         
                         // Spectacular success particle effects
@@ -3627,8 +3971,9 @@
             // Slow motion for dramatic effect
             startSlowMotion(1000);
             
-            // Type-specific collision audio
-            audioManager.play('collision');
+            // Enhanced collision audio with professional mixing
+            audioManager.trackAudioEvent('collision'); // Track for A/B testing
+            audioManager.playCollisionAudio(1.0);
             
             // Lose life
             loseLife();
@@ -3689,8 +4034,8 @@
             
             addScore(nearMissBonus); // SAFE SCORE UPDATE
             
-            // Near-miss audio feedback
-            audioManager.play('nearmiss');
+            // Near-miss with subtle ducking
+            audioManager.playWithDucking('nearmiss', 0.3, 0.4);
             
             // Visual feedback for near miss
             const effectPos = obstacle.mesh.position.clone();
@@ -3913,29 +4258,37 @@
             });
         }
         
-        // Dynamic audio system that responds to speed
+        // PROFESSIONAL DYNAMIC AUDIO SYSTEM
         let lastEngineTime = 0;
         function updateDynamicAudio() {
             const currentTime = performance.now();
             const speedRatio = gameState.speed / gameState.maxSpeed;
-            
-            // Engine sound every 800ms, pitch increases with speed
-            if (currentTime - lastEngineTime > 800) {
+            const gameIntensity = Math.min(speedRatio + (gameState.currentLevel - 1) * 0.2, 1.0);
+
+            // Update the professional mixing system
+            audioManager.updateSpeedResponsiveAudio(speedRatio, gameIntensity);
+
+            // Engine sound with adaptive timing
+            const engineInterval = 800 - (speedRatio * 300); // Faster engine at high speed
+            if (currentTime - lastEngineTime > engineInterval) {
                 audioManager.play('engine');
                 lastEngineTime = currentTime;
             }
-            
-            // High-speed wind effects
+
+            // Enhanced high-speed wind effects with ducking
             if (speedRatio > 0.7 && Math.random() > 0.95) {
-                // Occasional high-speed wind whoosh
-                audioManager.createNoise(0.08, 4000 + speedRatio * 2000);
+                // Brief music duck for wind whoosh
+                if (speedRatio > 0.85) {
+                    audioManager.duckMusic(0.4, 0.8);
+                }
+                audioManager.createNoise(0.06, 4000 + speedRatio * 2000); // Reduced volume
             }
-            
-            // Master volume adjustment based on speed for intensity
-            const baseVolume = 0.3;
-            const speedVolume = baseVolume * (0.8 + speedRatio * 0.4);
-            if (audioManager.audioContext && audioManager.masterGain) {
-                audioManager.masterGain.gain.setValueAtTime(speedVolume, audioManager.audioContext.currentTime);
+
+            // Adaptive ambient control based on speed
+            if (speedRatio > 0.8 && !audioManager.ambientPlaying) {
+                audioManager.play('ambient'); // Add ambient at high speed for atmosphere
+            } else if (speedRatio < 0.3 && audioManager.ambientPlaying) {
+                audioManager.stopAmbient(); // Reduce ambient at low speed
             }
         }
         
