@@ -1,0 +1,60 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - text: "🏆 Score:"
+      - generic [ref=e6]: "0"
+    - generic [ref=e7]:
+      - text: 🎮 LEVEL
+      - generic [ref=e8]: "1"
+      - text: /10
+    - generic [ref=e9]:
+      - text: "⚡ Speed:"
+      - generic [ref=e10]: "100"
+    - generic [ref=e11]:
+      - text: "❤️ Leben:"
+      - generic [ref=e12]: "3"
+    - generic [ref=e13]:
+      - text: "⏱️ Zeit:"
+      - generic [ref=e14]: "60"
+      - text: s
+    - generic [ref=e15]:
+      - text: "🍎 Äpfel:"
+      - generic [ref=e16]: "0"
+    - generic [ref=e17]:
+      - text: "🥦 Brokkoli:"
+      - generic [ref=e18]: "0"
+    - generic [ref=e19]: V5.2-BACKGROUND-MUSIC
+  - generic [ref=e20]:
+    - button "🔊" [ref=e21] [cursor=pointer]
+    - button "⚙️" [ref=e22] [cursor=pointer]
+  - generic [ref=e23]:
+    - strong [ref=e25]: "🎮 Steuerung:"
+    - generic [ref=e26]: "A/D: Spurwechsel"
+    - generic [ref=e27]: "Leertaste/W: Springen 🦘"
+    - generic [ref=e28]: "S: Ducken 🦆"
+    - strong [ref=e30]: "💡 Tipps:"
+    - generic [ref=e31]: "🟠 Orange/Braun: Überspringen!"
+    - generic [ref=e32]: "🔵 Blau/Grau oben: Ducken!"
+    - generic [ref=e33]: "🔴 Stacheln: Beides möglich!"
+  - button "🎮 Gestensteuerung aktivieren" [ref=e35] [cursor=pointer]
+  - generic [ref=e36]:
+    - heading "🚇 Subway Runner 3D" [level=1] [ref=e37]
+    - heading "⏱️ 60-Sekunden Challenge!" [level=2] [ref=e38]
+    - paragraph [ref=e39]: Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!
+    - paragraph [ref=e40]:
+      - strong [ref=e41]: "🎯 Ziel:"
+      - text: 60 Sekunden überleben
+    - paragraph [ref=e42]:
+      - strong [ref=e43]: "⚡ Warnung:"
+      - text: Wird sehr schnell!
+    - paragraph [ref=e44]:
+      - strong [ref=e45]: "🎮 Steuerung:"
+    - paragraph [ref=e46]: "A/D: Spurwechsel | W/Space: Springen | S: Ducken"
+    - button "🎮 Challenge starten!" [ref=e47] [cursor=pointer]
+  - generic [ref=e48]:
+    - generic [ref=e49]: 🏆 TOP 10
+    - generic [ref=e50]: Lade Bestenliste...
+```
