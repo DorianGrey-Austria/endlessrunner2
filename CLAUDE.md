@@ -1,341 +1,45 @@
-# CLAUDE.md
+# CLAUDE.md - EndlessRunner
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## 🚨 CRITICAL DEPLOYMENT WORKFLOW
-
-**MANDATORY**: After every code change, immediately deploy with:
+## 🚨 DEPLOYMENT WORKFLOW
+**MANDATORY**: Nach jeder Änderung sofort deployen:
 ```bash
 git add . && git commit -m "🎮 Version X.Y.Z: [description]" && git push
 ```
+**Live URL**: https://ki-revolution.at/ (Chrome verwenden!)
 
-**Live URL**: https://ki-revolution.at/ (test in Chrome, not Safari)
+## Architektur
+**SubwayRunner** = Haupt-Produktionsspiel (Vanilla JS + Three.js)
+- **Production**: Root `index.html` (5000+ lines) → ki-revolution.at
+- **Development**: SubwayRunner/ mit React + TypeScript
 
-## Repository Architecture
-
-This is a collection of endless runner games showcasing different technologies:
-
-### Primary Projects
-- **SubwayRunner**: Main production game (Vanilla JS + Three.js) - deployed to https://ki-revolution.at/
-- **GestureRunnerPro**: Godot 4.3 webcam gesture-controlled runner
-- **EndlessRunner-MVP**: Feature-rich browser runner (10k+ lines)
-- **godot-mcp**: MCP server for AI-driven Godot integration
-- **Endless3D**: 3D runner with modular world system
-
-**Focus**: SubwayRunner is the primary production game.
-
-## SubwayRunner Architecture
-
-### Dual System
-- **Production**: Root `index.html` (~5000+ lines embedded JavaScript) - deployed to https://ki-revolution.at/
-- **Development**: SubwayRunner directory with React + TypeScript in `src/` folder (Vite build system)
-- **Note**: GitHub Actions deploys root `index.html`, not SubwayRunner version
-
-### Core Technical Stack
-- **Three.js 0.158.0**: 3D graphics engine
-- **Game Loop**: 60 FPS with modular update system
-- **Collision**: 3D bounding box detection (tolerance 0.2-0.3)
-- **Performance**: Object pooling for obstacles/collectibles
-- **Integration**: Supabase backend, MediaPipe gestures, ES6 modules
-
-### Critical Game Constants (DO NOT CHANGE)
+## Core Constants (NICHT ÄNDERN)
 ```javascript
-BASE_SPEED = 0.12          // Extensively tested balance
-LANE_POSITIONS = [-2, 0, 2]  // Left, center, right
-JUMP_HEIGHT = 2.5          // Units, ~600ms duration
-SCORE_CAP = 999999         // Prevents overflow
-WIN_CONDITION = 30         // Kiwis to collect
+BASE_SPEED = 0.12
+LANE_POSITIONS = [-2, 0, 2]
+JUMP_HEIGHT = 2.5
+WIN_CONDITION = 30  // Kiwis
 ```
 
-### Main Game Loop Structure
-```javascript
-function animate() {
-    requestAnimationFrame(animate);
-    if (gameState === 'playing') {
-        updatePlayer();      // Input, jumping, lane switching
-        updateObstacles();   // Move and spawn obstacles
-        updateCollectibles(); // Move and spawn collectibles
-        checkCollisions();   // 3D bounding box detection
-        updateScore();       // Direct updates (no queue)
-        updateSpeed();       // Progressive difficulty
-    }
-    renderer.render(scene, camera);
-}
-```
-
-## Essential Commands
-
-### SubwayRunner Development
+## Commands
 ```bash
 cd SubwayRunner
-
-# Testing (MANDATORY before deploy)
-npm run test              # 4-category test suite
-npm run test:playwright   # Full Playwright test suite
-npm run test:smoke        # Quick validation tests
-npm run test:cache        # Cache-busting validation
-npm run test:performance  # FPS and performance monitoring
-npm run test:auto         # Auto-generated tests
-npm run self-test         # Pre-deployment validation
-npm run predeploy         # Full validation pipeline
-
-# Development servers
-python3 -m http.server 8001   # Production testing
-npm run dev                   # React dev (port 5173)
-npm run serve                 # Live-server watch mode
-
-# Building & Validation
-npm run build             # TypeScript + Vite production
-npm run lint              # ESLint validation
-npm run generate:tests    # Auto-generate test suites
-npm run validate          # Generate tests + self-test
+npm run test        # PFLICHT vor Deploy
+npm run self-test   # Pre-Deploy Check
+python3 -m http.server 8001  # Local Test
 ```
 
-### Other Projects
-```bash
-# Godot projects
-godot --path GestureRunnerPro
-godot --path GestureRunnerPro --headless --export-release "HTML5" web_export/
-
-# MCP development
-cd godot-mcp
-npm run build && npm run inspector
-npm run watch
-```
+## Level System (10 Level)
+- **Level 1-2**: Tutorial (leicht)
+- **Level 3**: PEAK Schwierigkeit
+- **Level 4-5**: Entspannung
+- **Level 6-10**: Progressive Steigerung
 
 ## Version Management
+1. Update `index.html` title UND `package.json`
+2. Format: `🎮 Version X.Y.Z: [description]`
+3. Nie gleiche Version 2x deployen
 
-### Current Status
-- **ACTIVE**: V6.2.0-SENIOR-OPTIMIZED (Agent-Based Performance & Balance)
-- **PREVIOUS**: V6.1.0-COMPLETE-LEVELS (Perfect 10-Level Difficulty Curve)
-- **BREAKTHROUGH**: BMAD Method Agents successfully implemented and operational
-
-### Version Update Process (MANDATORY)
-1. Update BOTH root `index.html` title tag AND `SubwayRunner/package.json` version
-2. Increment version numbers (e.g., V6.2 → V6.3, 6.2.1 → 6.2.2)
-3. Use emoji commit format: `🎮 Version X.Y.Z: [description]`
-4. Never deploy same version twice
-
-### Backup System
-Emergency rollback available via `.backup` files in SubwayRunner/:
-```bash
-ls SubwayRunner/*.backup
-cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html
-```
-
-## Automated Deployment
-
-### GitHub Actions CI/CD
-- **Trigger**: Push to main branch
-- **Workflow**: `.github/workflows/hostinger-deploy.yml`
-- **Process**: Copies root `index.html` (not SubwayRunner version) to production
-- **Target**: Hostinger FTP → https://ki-revolution.at/
-- **Time**: ~2-3 minutes
-- **Assets**: Includes sounds/, js/, css/ directories if present
-
-## Testing System
-
-### Test Suite (`npm run test`)
-**4 Categories**:
-1. **Syntax**: Unclosed tags, Three.js loading, GameCore init
-2. **Structure**: Level system, essential functions
-3. **Performance**: File size, line count monitoring
-4. **Game Logic**: Score system, collision detection
-
-### Playwright Testing Framework
-- **Config**: `playwright.config.js` in SubwayRunner directory
-- **Reports**: `tests/reports/html-report/` and `tests/reports/game-dashboard.html`
-- **Test Categories**:
-  - **Core Gameplay**: Basic functionality validation
-  - **Cache Busting**: Deployment verification tests
-  - **Performance**: FPS monitoring and memory tracking
-  - **Auto-Generated**: Tests created from code analysis
-  - **Mobile**: iPhone 12 device testing
-- **Devices**: Desktop Chrome, Mobile iPhone 12
-- **Features**: Video/screenshot capture, comprehensive reporting, localhost:8001
-
-### Pre-deployment Checklist
-```bash
-npm run test    # Must pass before deployment
-# Only deploy if tests pass
-git add . && git commit -m "message" && git push
-```
-
-## Level System & Difficulty Curve
-
-### 10-Level Progression System
-**Philosophy**: Non-lineare Schwierigkeitskurve mit strategischer Entspannung
-
-#### **Level-Aufbau**:
-- **Level 1-2**: Tutorial/Einstieg (sehr leicht bis leicht)
-- **Level 3**: **PEAK Schwierigkeit** - Reality Check für Spieler
-- **Level 4-5**: Strategische Entspannung (mittelschwer)
-- **Level 6-10**: Progressive Steigerung zum Endgame
-
-#### **Speed Configuration**:
-```javascript
-levelSpeeds: {
-    1: { min: 0.08, max: 0.12 },  // Tutorial
-    2: { min: 0.12, max: 0.18 },  // Einstieg
-    3: { min: 0.18, max: 0.28 },  // PEAK!
-    4: { min: 0.16, max: 0.24 },  // Entspannung
-    5: { min: 0.20, max: 0.30 },  // Aufbau
-    6-10: Progressive Steigerung  // Endgame
-}
-```
-
-#### **Spawn-Rate Progression**:
-```javascript
-levelSpawnRates: {
-    1: 0.005,  // Wenige Obstacles
-    3: 0.012,  // PEAK Obstacles
-    4: 0.009,  // Reduziert (Entspannung)
-    10: 0.016  // Maximum
-}
-```
-
-#### **Level Themes**:
-1. Classic Subway, 2. Neon Night, 3. Ancient Temple
-4. **Cyber Tunnel**, 5. Jungle Temple, 6. Space Station
-7. Volcano Run, 8. Underwater Tunnel, 9. Crystal Caves, 10. Rainbow Road
-
-### **Design Philosophy**:
-- **Level 3 Reality Check**: Testet Fähigkeiten, viele Spieler scheitern hier
-- **Post-Peak Entspannung**: Level 4 reduziert Stress, motiviert weiterzuspielen
-- **Endgame Progression**: Level 6-10 steigern sich kontinuierlich aber fair
-
-## 🤖 Agent-Based Development System (V6.2.0)
-
-### **BMAD Method Integration**
-Drei spezialisierte Agents wurden erfolgreich implementiert für kontinuierliche Code-Optimierung:
-
-#### **🎮 Game Test Orchestrator**
-- **Expertise**: Three.js Testing, Gameplay Automation, Level Progression Validation
-- **Location**: `~/.claude/agents/game-test-orchestrator.md`
-- **Features**: Automated 10-level testing, FPS monitoring, collision detection validation
-
-#### **⚖️ Level Balance Analyst**
-- **Expertise**: Mathematical Game Balancing, Player Retention Optimization
-- **Location**: `~/.claude/agents/level-balance-analyst.md`
-- **Impact**: Fixed Level 3-4 regression bug, +40% projected player retention
-
-#### **⚡ Three.js Performance Optimizer**
-- **Expertise**: WebGL Optimization, Memory Management, Mobile Performance
-- **Location**: `~/.claude/agents/threejs-performance-optimizer.md`
-- **Results**: -40% memory usage, +15-25 FPS on mobile devices
-
-### **V6.2.0 Agent-Driven Improvements**
-
-#### **Performance Optimizations** ✅
-```javascript
-// Performance Pool System - Shared Geometries/Materials
-const PerformancePool = {
-    geometries: new Map(),    // Reusable geometries
-    materials: new Map(),     // Shared materials
-    // Eliminated: 80+ new geometry/material calls per level
-}
-
-// Mobile Device Optimization
-const DeviceOptimizer = {
-    isMobile: /Android|iPhone/.test(navigator.userAgent),
-    applyOptimalSettings()    // Auto-adapts quality for device
-}
-```
-
-#### **Level Balance Fixes** ✅
-```javascript
-// Fixed Regression Issues (Level Balance Analyst)
-levelSpeeds: {
-    2: { min: 0.10, max: 0.15 },  // FIXED: Sanfter Anstieg
-    3: { min: 0.14, max: 0.20 },  // FIXED: Kontrollierter Peak
-    4: { min: 0.19, max: 0.27 },  // FIXED: Eliminiert Regression
-}
-// Projected: 67% → 27% player drop-off reduction
-```
-
-#### **Memory Management** ✅
-```javascript
-// Critical Memory Leak Fixes
-if (oldest && oldest.mesh) {
-    scene.remove(oldest.mesh);
-    // NEW: Proper cleanup
-    if (oldest.mesh.geometry) oldest.mesh.geometry.dispose();
-    if (oldest.mesh.material) oldest.mesh.material.dispose();
-}
-```
-
-#### **Production-Ready Features** ✅
-- **Error Handling**: Graceful degradation, unhandled rejection catching
-- **Device Detection**: Automatic quality scaling based on GPU/memory
-- **Performance Monitoring**: Real-time FPS and memory tracking
-- **Cross-Device Optimization**: Mobile vs. desktop adaptive settings
-
-### **Agent Feedback Loop**
-```
-Code Changes → Agent Analysis → Optimization Recommendations → Implementation → Validation
-```
-
-**Success Metrics V6.2.0**:
-- 🚀 **Performance Score**: 6.5/10 → 9.0/10 (projected)
-- 📱 **Mobile FPS**: +15-25 improvement
-- 🎮 **Player Retention**: +40% projected improvement
-- 💾 **Memory Usage**: -40% reduction
-- 🧪 **Test Coverage**: Comprehensive gameplay testing framework
-
-## Critical Game Rules
-
-### Collectibles
-- **Allowed**: Kiwis (brown), Broccolis (green), Mystery Boxes (golden)
-- **Forbidden**: Power-ups, geometric shapes, score tokens
-
-### Spawn Logic
-- Collectibles: 30+ units behind obstacles, never parallel
-- Speed-dependent spacing increases with game speed
-- Balance: 85% kiwis, 15% broccoli
-- Limits: Max 40 collectibles total, 10 simultaneous
-
-## 🚨 CRITICAL BUG ALERT
-
-**Player Disappearing Bug** (since V5.1.0):
-- Player becomes invisible after 3-5 seconds
-- Game unplayable on tablets
-- All position-based fixes attempted and failed
-- See TROUBLESHOOTING_PLAYER_DISAPPEARING_BUG.md for details
-- **Emergency fallback**: Rollback to V4.3-STABLE
-
-## Cross-Project Integration
-
-### GestureRunnerPro (Godot 4.3)
-- **Autoload**: GameCore, AudioManager, SaveSystem, Analytics
-- **Architecture**: Scene-based (Main → Gameplay → UI)
-- **Gesture**: MediaPipe via JavaScript bridge
-
-### godot-mcp (MCP Server)
-- **Purpose**: AI-driven Godot development
-- **Tools**: Scene manipulation, script generation
-- **Debug**: `npm run inspector` for MCP communication
-
-## Standard Workflow
-
-1. **Research**: `git log --grep="feature"` and check `.backup` files
-2. **Calculate**: Spawn rates with `spawnRate * fps * timeSeconds`
-3. **Version**: Update both HTML title and package.json
-4. **Test**: `npm run test` + verify 30+ seconds gameplay
-5. **Deploy**: Only if tests pass
-6. **Verify**: Check live at https://ki-revolution.at/
-
-## Quick Reference
-
-```bash
-# Most common workflow
-cd SubwayRunner
-npm run test
-python3 -m http.server 8001
-git add . && git commit -m "🎮 Version X.Y.Z: description" && git push
-
-# Emergency restore
-ls SubwayRunner/*.backup
-cp SubwayRunner/index.html.V[version].backup SubwayRunner/index.html
-```
-
-**Auto-deployment after every change is mandatory. Always provide live URL as 🌐 https://ki-revolution.at/**
+## Workflow
+1. Test → `npm run test`
+2. Deploy → `git add . && git commit && git push`
+3. Verify → https://ki-revolution.at/

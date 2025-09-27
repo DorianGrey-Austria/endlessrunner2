@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V6.2.4-SIMPLIFIED-MENU</title>
+    <title>Subway Runner 3D - V6.2.5-MULTI-JUMP</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
@@ -696,7 +696,6 @@
 
                 <div class="menu-secondary">
                     <button onclick="showLeaderboard()">🏆 Leaderboard</button>
-                    <button onclick="showSettings()">⚙️ Settings</button>
                 </div>
             </div>
 
@@ -1475,6 +1474,8 @@
             jumpVelocity: 0,
             jumpStartTime: 0,  // BUGFIX: Track jump start time for safety
             maxJumpDuration: 2000, // Maximum 2 seconds jump duration
+            jumpCount: 0,  // Current number of jumps performed
+            maxJumps: 2,   // Allow double-jump (1 ground + 1 air jump)
             obstacles: [],
             invulnerable: false,
             invulnerabilityTime: 0,
@@ -2526,6 +2527,7 @@
             gameState.playerAction = 'running';
             gameState.playerY = 0;
             gameState.jumpVelocity = 0;
+            gameState.jumpCount = 0; // Reset jump counter
             gameState.invulnerable = false;
             gameState.invulnerabilityTime = 0;
             gameState.timeScale = 1.0;
@@ -2878,7 +2880,6 @@
 
                     <div class="menu-secondary">
                         <button onclick="showLeaderboard()">🏆 Leaderboard</button>
-                        <button onclick="showSettings()">⚙️ Settings</button>
                     </div>
                 </div>
 
@@ -3062,22 +3063,34 @@
                 case 'KeyW':
                 case 'Space':
                     event.preventDefault();
-                    if (gameState.playerAction === 'running') {
-                        gameState.playerAction = 'jumping';
-                        gameState.jumpVelocity = 10;
-                        gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time // Höherer Sprung
+                    // Multi-Jump System: Allow jump if jumpCount < maxJumps
+                    if (gameState.jumpCount < gameState.maxJumps) {
+                        // Set action to jumping (if not already)
+                        if (gameState.playerAction !== 'jumping') {
+                            gameState.playerAction = 'jumping';
+                        }
+
+                        // Apply jump velocity (stronger for first jump, weaker for air jumps)
+                        const jumpPower = gameState.jumpCount === 0 ? 10 : 8; // Ground jump vs air jump
+                        gameState.jumpVelocity = jumpPower;
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
-                        
+                        gameState.jumpCount++; // Increment jump counter
+
                         // Audio & Visual Feedback with speed dynamics
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
-                        
-                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
-                        // Removed automatic jump particles - only success particles when avoiding obstacles
-                        
+
+                        // Enhanced particle jump effect (different color for air jumps)
+                        const jumpColor = gameState.jumpCount === 1 ? 0xFFFF00 : 0x00FFFF; // Yellow for first, cyan for second
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, gameState.playerY + 0.1, player.position.z),
+                            jumpColor,
+                            'jump'
+                        );
+
                         // Track jump for skill combos
-                        trackPlayerMove('jumping');
+                        trackPlayerMove(gameState.jumpCount === 1 ? 'jumping' : 'multi-jumping');
                     }
                     break;
                 case 'ArrowDown':
@@ -5669,6 +5682,7 @@
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
+                        gameState.jumpCount = 0; // Reset jump counter on timeout
                     }
                     
                     // Landing with safety check
@@ -5676,6 +5690,7 @@
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
+                        gameState.jumpCount = 0; // Reset jump counter on landing
                     }
                     
                     // BUGFIX: Enhanced safety check - trigger earlier at Y < -2
@@ -5684,6 +5699,7 @@
                         gameState.playerY = 0;
                         gameState.jumpVelocity = 0;
                         gameState.playerAction = 'running';
+                        gameState.jumpCount = 0; // Reset jump counter on forced landing
                         
                         // Landing Audio & Visual
                         audioManager.play('land');
@@ -6606,15 +6622,29 @@
             } else {
                 // Vertical swipe
                 if (Math.abs(deltaY) > gameState.touchThreshold) {
-                    if (deltaY < 0 && gameState.playerAction === 'running') {
-                        // Swipe up - jump
-                        gameState.playerAction = 'jumping';
-                        gameState.jumpVelocity = 10;
+                    if (deltaY < 0 && gameState.jumpCount < gameState.maxJumps) {
+                        // Swipe up - multi-jump
+                        if (gameState.playerAction !== 'jumping') {
+                            gameState.playerAction = 'jumping';
+                        }
+
+                        // Apply jump velocity (stronger for first jump, weaker for air jumps)
+                        const jumpPower = gameState.jumpCount === 0 ? 10 : 8;
+                        gameState.jumpVelocity = jumpPower;
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
+                        gameState.jumpCount++; // Increment jump counter
+
                         audioManager.play('jump');
-                        // Sprung-Partikel (nur bei erfolgreichem Obstacle-Avoidance)
-                        // Removed automatic jump particles - only success particles when avoiding obstacles
-                        trackPlayerMove('jumping');
+
+                        // Enhanced particle jump effect
+                        const jumpColor = gameState.jumpCount === 1 ? 0xFFFF00 : 0x00FFFF;
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, gameState.playerY + 0.1, player.position.z),
+                            jumpColor,
+                            'jump'
+                        );
+
+                        trackPlayerMove(gameState.jumpCount === 1 ? 'jumping' : 'multi-jumping');
                     } else if (deltaY > 0 && gameState.playerAction === 'running') {
                         // Swipe down - duck
                         gameState.playerAction = 'ducking';
@@ -7077,25 +7107,34 @@
                     break;
                     
                 case 'JUMP':
-                    if (gameState.playerAction === 'running') {
-                        gameState.playerAction = 'jumping';
-                        gameState.jumpVelocity = 10;
+                    if (gameState.jumpCount < gameState.maxJumps) {
+                        // Set action to jumping (if not already)
+                        if (gameState.playerAction !== 'jumping') {
+                            gameState.playerAction = 'jumping';
+                        }
+
+                        // Apply jump velocity (stronger for first jump, weaker for air jumps)
+                        const jumpPower = gameState.jumpCount === 0 ? 10 : 8;
+                        gameState.jumpVelocity = jumpPower;
                         gameState.jumpStartTime = Date.now(); // BUGFIX: Track jump start time
-                        
+                        gameState.jumpCount++; // Increment jump counter
+
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume();
-                        
+
+                        // Enhanced particle jump effect
+                        const jumpColor = gameState.jumpCount === 1 ? 0xFFFF00 : 0x00FFFF;
                         createParticleEffect(
-                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
+                            new THREE.Vector3(player.position.x, gameState.playerY + 0.1, player.position.z),
+                            jumpColor,
                             'jump'
                         );
-                        
-                        trackPlayerMove('jumping');
-                        
+
+                        trackPlayerMove(gameState.jumpCount === 1 ? 'jumping' : 'multi-jumping');
+
                         // Show feedback
-                        feedbackEl.textContent = '⬆️';
+                        feedbackEl.textContent = gameState.jumpCount === 1 ? '⬆️' : '⬆️⬆️';
                         feedbackEl.classList.add('show');
                         setTimeout(() => feedbackEl.classList.remove('show'), 500);
                     }
