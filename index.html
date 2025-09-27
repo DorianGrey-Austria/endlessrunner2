@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V6.3.3-MULTI-ROW-MUSIC-GRID</title>
+    <title>Subway Runner 3D - V6.4.0-10LEVEL-VISUAL-ENHANCEMENT</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
@@ -196,16 +196,61 @@
             display: none;
         }
         
-        /* PROFESSIONAL MENU SYSTEM */
+        /* RETRO ARCADE CABINET SYSTEM */
         .menu-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            background:
+                radial-gradient(ellipse at center, #1a0d00 0%, #0d0600 100%),
+                linear-gradient(135deg, #2d1810 0%, #1a0d00 50%, #0d0600 100%);
             z-index: 1000;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', 'Monaco', monospace;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .menu-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 140, 0, 0.03) 2px,
+                    rgba(255, 140, 0, 0.03) 4px
+                );
+            pointer-events: none;
+            animation: scanlines 0.1s linear infinite;
+        }
+
+        .menu-container::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 6px solid #8B4513;
+            border-radius: 25px;
+            box-shadow:
+                inset 0 0 30px rgba(255, 140, 0, 0.2),
+                inset 0 0 60px rgba(139, 69, 19, 0.3),
+                0 0 20px rgba(139, 69, 19, 0.8),
+                0 0 40px rgba(255, 140, 0, 0.3);
+            pointer-events: none;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(4px); }
         }
 
         .menu-screen {
@@ -214,84 +259,213 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            color: white;
+            color: #FFD700;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s ease-in-out;
+            z-index: 10;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
         }
 
         .menu-screen.active {
             opacity: 1;
             visibility: visible;
+            animation: crt-flicker 0.5s ease-in;
+        }
+
+        @keyframes crt-flicker {
+            0%, 100% { opacity: 1; filter: brightness(1) contrast(1); }
+            25% { opacity: 0.9; filter: brightness(1.1) contrast(1.2); }
+            50% { opacity: 1; filter: brightness(0.95) contrast(1.1); }
+            75% { opacity: 0.95; filter: brightness(1.05) contrast(0.9); }
         }
 
         .menu-screen h1 {
-            font-size: 3rem;
+            font-size: 3.5rem;
             margin-bottom: 2rem;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: none;
+            color: #FF8C00;
+            text-shadow:
+                0 0 10px #FF8C00,
+                0 0 20px #FF8C00,
+                0 0 30px #FFD700,
+                2px 2px 0px #8B4513,
+                4px 4px 0px #654321;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            animation: title-glow 2s ease-in-out infinite alternate;
+            text-transform: uppercase;
+            transform: perspective(500px) rotateX(5deg);
+        }
+
+        @keyframes title-glow {
+            0% { text-shadow: 0 0 5px #FF8C00, 0 0 10px #FF8C00, 0 0 15px #FFD700, 2px 2px 0px #8B4513; }
+            100% { text-shadow: 0 0 15px #FF8C00, 0 0 25px #FF8C00, 0 0 35px #FFD700, 2px 2px 0px #8B4513; }
         }
 
         .menu-screen h2 {
             font-size: 2rem;
             margin-bottom: 1.5rem;
-            color: #ffffff;
+            color: #4ecdc4;
+            text-shadow:
+                0 0 8px #4ecdc4,
+                0 0 15px #4ecdc4,
+                1px 1px 0px #2a5d5a;
+            font-weight: bold;
+            letter-spacing: 0.05em;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 25px;
+            background: linear-gradient(135deg, #FF8C00 0%, #B8860B 100%);
+            border: 4px solid #8B4513;
+            color: #FFD700;
+            padding: 18px 35px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 0;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+            margin: 15px;
+            box-shadow:
+                0 6px 0 #654321,
+                0 8px 20px rgba(0,0,0,0.8),
+                inset 0 2px 0 rgba(255, 215, 0, 0.3);
+            text-shadow: 2px 2px 0px #8B4513;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent);
+            transition: left 0.5s ease;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            transform: translateY(2px);
+            box-shadow:
+                0 4px 0 #654321,
+                0 6px 15px rgba(0,0,0,0.6),
+                inset 0 2px 0 rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:active {
+            transform: translateY(4px);
+            box-shadow:
+                0 2px 0 #654321,
+                0 4px 10px rgba(0,0,0,0.4);
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 12px 25px;
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.8) 0%, rgba(101, 67, 33, 0.8) 100%);
+            border: 3px solid #8B4513;
+            color: #FFD700;
+            padding: 15px 28px;
             font-size: 1rem;
-            border-radius: 20px;
+            font-weight: bold;
+            border-radius: 0;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             margin: 10px;
+            box-shadow:
+                0 4px 0 #5d2f14,
+                0 6px 15px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(255, 215, 0, 0.2);
+            text-shadow: 1px 1px 0px #654321;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .btn-secondary:hover {
-            background: rgba(255,255,255,0.2);
-            border-color: rgba(255,255,255,0.5);
+            background: linear-gradient(135deg, rgba(255, 140, 0, 0.3) 0%, rgba(139, 69, 19, 0.9) 100%);
+            border-color: #FF8C00;
+            transform: translateY(1px);
+            box-shadow:
+                0 3px 0 #5d2f14,
+                0 5px 12px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(3px);
+            box-shadow:
+                0 1px 0 #5d2f14,
+                0 3px 8px rgba(0,0,0,0.4);
         }
 
         .control-option {
             display: inline-block;
             margin: 20px;
-            padding: 30px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid transparent;
-            border-radius: 15px;
+            padding: 35px 25px;
+            background:
+                linear-gradient(135deg, rgba(139, 69, 19, 0.4) 0%, rgba(101, 67, 33, 0.6) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 140, 0, 0.1) 2px, rgba(255, 140, 0, 0.1) 4px);
+            border: 4px solid #8B4513;
+            border-radius: 0;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 200px;
+            transition: all 0.2s ease;
+            min-width: 220px;
+            color: #FFD700;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow:
+                0 6px 0 #654321,
+                0 8px 20px rgba(0,0,0,0.7),
+                inset 0 2px 0 rgba(255, 215, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 1px,
+                rgba(255, 140, 0, 0.05) 1px,
+                rgba(255, 140, 0, 0.05) 2px
+            );
+            pointer-events: none;
         }
 
         .control-option:hover, .control-option.selected {
-            background: rgba(255,255,255,0.2);
-            border-color: #4ecdc4;
-            transform: translateY(-5px);
+            background:
+                linear-gradient(135deg, rgba(255, 140, 0, 0.6) 0%, rgba(139, 69, 19, 0.8) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 215, 0, 0.2) 2px, rgba(255, 215, 0, 0.2) 4px);
+            border-color: #FF8C00;
+            transform: translateY(2px);
+            box-shadow:
+                0 4px 0 #654321,
+                0 6px 15px rgba(0,0,0,0.6),
+                inset 0 2px 0 rgba(255, 215, 0, 0.4),
+                0 0 20px rgba(255, 140, 0, 0.3);
+            color: #FFFFFF;
+        }
+
+        .control-option:active {
+            transform: translateY(4px);
+            box-shadow:
+                0 2px 0 #654321,
+                0 4px 10px rgba(0,0,0,0.5);
         }
 
         .rules-container {
@@ -324,23 +498,53 @@
         }
         
         #menu h1 {
-            margin-bottom: 20px;
-            font-size: 32px;
+            margin-bottom: 25px;
+            font-size: 3.2rem;
+            color: #FF8C00;
+            text-shadow:
+                0 0 10px #FF8C00,
+                0 0 20px #FFD700,
+                2px 2px 0px #8B4513;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
-        
+
         #menu button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 18px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #FF8C00 0%, #B8860B 100%);
+            color: #FFD700;
+            border: 4px solid #8B4513;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 0;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 25px;
+            box-shadow:
+                0 5px 0 #654321,
+                0 7px 15px rgba(0,0,0,0.7),
+                inset 0 2px 0 rgba(255, 215, 0, 0.3);
+            text-shadow: 2px 2px 0px #8B4513;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s ease;
         }
-        
+
         #menu button:hover {
-            background: #45a049;
+            background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+            transform: translateY(2px);
+            box-shadow:
+                0 3px 0 #654321,
+                0 5px 12px rgba(0,0,0,0.6),
+                inset 0 2px 0 rgba(255, 215, 0, 0.5);
+        }
+
+        #menu button:active {
+            transform: translateY(4px);
+            box-shadow:
+                0 1px 0 #654321,
+                0 3px 8px rgba(0,0,0,0.5);
         }
         
         #timer {
@@ -606,88 +810,140 @@
         }
 
         .control-option.primary {
-            background: linear-gradient(135deg, rgba(26, 32, 44, 0.95) 0%, rgba(45, 55, 72, 0.95) 100%);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 32px 24px;
+            background:
+                linear-gradient(135deg, rgba(139, 69, 19, 0.7) 0%, rgba(101, 67, 33, 0.9) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 140, 0, 0.1) 3px, rgba(255, 140, 0, 0.1) 6px);
+            border: 5px solid #8B4513;
+            border-radius: 0;
+            padding: 40px 30px;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
             position: relative;
-            backdrop-filter: blur(20px);
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            min-height: 160px;
+                0 8px 0 #654321,
+                0 12px 25px rgba(0, 0, 0, 0.8),
+                inset 0 3px 0 rgba(255, 215, 0, 0.3),
+                inset 0 0 20px rgba(255, 140, 0, 0.1);
+            min-height: 180px;
+            color: #FFD700;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        .control-option.primary::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 140, 0, 0.1) 2px,
+                rgba(255, 140, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: -1;
         }
 
         .control-option.primary:hover {
-            transform: translateY(-8px) scale(1.02);
+            transform: translateY(3px);
+            background:
+                linear-gradient(135deg, rgba(255, 140, 0, 0.8) 0%, rgba(139, 69, 19, 0.9) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 215, 0, 0.2) 3px, rgba(255, 215, 0, 0.2) 6px);
+            border-color: #FF8C00;
             box-shadow:
-                0 20px 60px rgba(0, 0, 0, 0.3),
-                0 0 0 2px rgba(255, 255, 255, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
+                0 5px 0 #654321,
+                0 8px 20px rgba(0, 0, 0, 0.7),
+                inset 0 3px 0 rgba(255, 215, 0, 0.5),
+                0 0 30px rgba(255, 140, 0, 0.4);
+            color: #FFFFFF;
         }
 
         .control-option.primary.recommended {
             border-color: #4ecdc4;
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.2),
-                0 0 32px rgba(78, 205, 196, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                0 8px 0 #2a5d5a,
+                0 12px 25px rgba(0, 0, 0, 0.8),
+                inset 0 3px 0 rgba(78, 205, 196, 0.4),
+                0 0 30px rgba(78, 205, 196, 0.3);
         }
 
         .control-option.primary.recommended:hover {
             box-shadow:
-                0 20px 60px rgba(0, 0, 0, 0.3),
-                0 0 60px rgba(78, 205, 196, 0.5),
-                0 0 0 2px #4ecdc4,
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                0 5px 0 #2a5d5a,
+                0 8px 20px rgba(0, 0, 0, 0.7),
+                0 0 40px rgba(78, 205, 196, 0.6),
+                inset 0 3px 0 rgba(78, 205, 196, 0.6);
+            border-color: #4ecdc4;
         }
 
         .control-option.primary .control-icon {
-            font-size: 3rem;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+            font-size: 3.5rem;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+            text-shadow:
+                0 0 5px #FFD700,
+                0 0 10px #FF8C00;
         }
 
         .control-option.primary .control-content h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.8rem;
+            font-weight: bold;
             margin: 0;
-            letter-spacing: -0.01em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #8B4513;
         }
 
         .control-option.primary .control-content p {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin: 8px 0;
+            font-size: 1rem;
+            color: rgba(255, 215, 0, 0.9);
+            margin: 10px 0;
             line-height: 1.4;
+            font-weight: bold;
+            text-shadow: 1px 1px 0px #654321;
         }
 
         .instant-badge {
-            background: linear-gradient(135deg, #4ecdc4 0%, #44b3a6 100%);
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+            background: linear-gradient(135deg, #4ecdc4 0%, #2a5d5a 100%);
+            color: #FFD700;
+            padding: 8px 18px;
+            border-radius: 0;
+            border: 2px solid #2a5d5a;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 0px #1a4441;
+            box-shadow:
+                0 3px 0 #1a4441,
+                0 5px 10px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(78, 205, 196, 0.3);
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .setup-badge {
-            background: linear-gradient(135deg, #ff8844 0%, #ff6b35 100%);
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-            box-shadow: 0 2px 8px rgba(255, 136, 68, 0.3);
+            background: linear-gradient(135deg, #FF8C00 0%, #B8860B 100%);
+            color: #FFD700;
+            padding: 8px 18px;
+            border-radius: 0;
+            border: 2px solid #8B4513;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 0px #654321;
+            box-shadow:
+                0 3px 0 #654321,
+                0 5px 10px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 140, 0, 0.3);
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         /* SECONDARY OPTIONS (25% Visual Weight) */
@@ -723,62 +979,98 @@
             flex-wrap: wrap;
         }
 
-        /* ENHANCED MUSIC BUTTONS */
+        /* RETRO MUSIC BUTTONS */
         .music-btn-enhanced {
-            background: linear-gradient(135deg, rgba(26, 32, 44, 0.9) 0%, rgba(45, 55, 72, 0.9) 100%);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            min-width: 120px;
-            height: 70px;
-            border-radius: 16px;
+            background:
+                linear-gradient(135deg, rgba(139, 69, 19, 0.6) 0%, rgba(101, 67, 33, 0.8) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 140, 0, 0.05) 2px, rgba(255, 140, 0, 0.05) 4px);
+            border: 3px solid #8B4513;
+            color: #FFD700;
+            min-width: 130px;
+            height: 75px;
+            border-radius: 0;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 6px;
             position: relative;
-            backdrop-filter: blur(20px);
             box-shadow:
-                0 4px 16px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                0 4px 0 #654321,
+                0 6px 15px rgba(0, 0, 0, 0.7),
+                inset 0 2px 0 rgba(255, 215, 0, 0.2);
             text-align: center;
-            padding: 8px 12px;
+            padding: 10px 15px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            overflow: hidden;
+        }
+
+        .music-btn-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 1px,
+                rgba(255, 140, 0, 0.03) 1px,
+                rgba(255, 140, 0, 0.03) 2px
+            );
+            pointer-events: none;
         }
 
         .music-btn-enhanced:hover {
-            transform: translateY(-4px) scale(1.05);
+            transform: translateY(2px);
+            background:
+                linear-gradient(135deg, rgba(255, 140, 0, 0.7) 0%, rgba(139, 69, 19, 0.9) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 215, 0, 0.1) 2px, rgba(255, 215, 0, 0.1) 4px);
+            border-color: #FF8C00;
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                0 0 20px var(--track-color),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            border-color: var(--track-color);
-            background: linear-gradient(135deg, var(--track-color) 0%, rgba(45, 55, 72, 0.9) 100%);
+                0 2px 0 #654321,
+                0 4px 12px rgba(0, 0, 0, 0.6),
+                0 0 15px var(--track-color),
+                inset 0 2px 0 rgba(255, 215, 0, 0.4);
+            color: #FFFFFF;
         }
 
         .music-btn-enhanced.selected {
-            background: linear-gradient(135deg, var(--track-color) 0%, rgba(26, 32, 44, 0.8) 100%);
+            background:
+                linear-gradient(135deg, var(--track-color) 0%, rgba(139, 69, 19, 0.8) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 215, 0, 0.2) 2px, rgba(255, 215, 0, 0.2) 4px);
             border-color: var(--track-color);
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.4),
-                0 0 30px var(--track-color),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
+                0 4px 0 #654321,
+                0 6px 15px rgba(0, 0, 0, 0.8),
+                0 0 25px var(--track-color),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3);
+            transform: translateY(1px) scale(1.05);
+            color: #FFFFFF;
         }
 
         .music-btn-enhanced.previewing {
-            animation: enhanced-pulse 1.5s infinite;
+            animation: retro-pulse 1.5s infinite;
         }
 
-        @keyframes enhanced-pulse {
+        @keyframes retro-pulse {
             0%, 100% {
-                transform: scale(1.05);
-                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 0 20px var(--track-color);
+                transform: translateY(1px);
+                box-shadow:
+                    0 4px 0 #654321,
+                    0 6px 15px rgba(0, 0, 0, 0.7),
+                    0 0 15px var(--track-color);
             }
             50% {
-                transform: scale(1.15);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px var(--track-color);
+                transform: translateY(0px) scale(1.02);
+                box-shadow:
+                    0 5px 0 #654321,
+                    0 8px 20px rgba(0, 0, 0, 0.8),
+                    0 0 30px var(--track-color);
             }
         }
 
@@ -1640,7 +1932,8 @@
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V6.3.1-MODERN-UI<br>
+            🌟 V6.4.0-10LEVEL-VISUAL-ENHANCEMENT<br>
+            🎨 10 Unique Visual Themes<br>
             📅 27.09.2025
         </div>
         
@@ -1671,6 +1964,15 @@
             <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
+
+            <!-- 🌟 NEW: Level Display -->
+            <div id="levelDisplay" style="color: #FFD700; font-weight: bold; margin-top: 8px;">
+                <div><span id="currentLevel">Level 1</span></div>
+                <div id="levelName" style="font-size: 14px; margin-top: 2px;">Classic Subway</div>
+                <div style="background: rgba(0,0,0,0.3); border-radius: 10px; width: 80px; height: 6px; overflow: hidden; margin-top: 4px;">
+                    <div id="levelProgress" style="background: #FFD700; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+            </div>
             
             <!-- NEW: Power-Up & Coins UI -->
             <div id="collectiblesCounter" style="color: #8BC34A; font-weight: bold;">
@@ -2697,6 +2999,11 @@
             // Environment state
             currentEnvironment: 'street', // 'street', 'tunnel', 'tunnel_entrance', 'tunnel_exit'
             environmentTransition: false,
+
+            // NEW: 10-Level Visual Theme System
+            currentLevel: 1,              // Current level (1-10)
+            levelTransitioning: false,    // Smooth transitions between levels
+            lastLevelChange: 0,           // Timestamp of last level change
             tunnelProgress: 0,
             tunnelStartTime: 0,
             tunnelDuration: 15000, // 15 seconds in tunnel
@@ -2724,9 +3031,1153 @@
             maxScorePerUpdate: 100 // Maximum score increase per throttled update
         };
 
+        // 🎨 10-LEVEL VISUAL THEME SYSTEM
+        const LEVEL_THEMES = {
+            1: {
+                name: "Classic Subway",
+                description: "Tutorial - Classic subway atmosphere",
+                skyColor: 0x87CEEB,          // Sky blue
+                fogColor: 0x87CEEB,          // Matching fog
+                fogDensity: 0.005,           // Light fog
+                groundColor: 0x333333,       // Dark asphalt
+                ambientColor: 0x404080,      // Cool ambient
+                ambientIntensity: 0.4,
+                directionalColor: 0xFFFFAA,  // Warm morning sun
+                directionalIntensity: 1.0,
+                rimLightColor: 0xFFE4B5,     // Warm rim light
+                particleType: 'dust',        // Floating dust particles
+                postEffects: ['bloom'],      // Subtle bloom for sunrays
+                kiwiThreshold: 3             // Level up at 3 kiwis
+            },
+            2: {
+                name: "Neon Night",
+                description: "Cyberpunk neon-lit streets",
+                skyColor: 0x0a0a2e,          // Dark blue night
+                fogColor: 0x1a1a3e,          // Purple night fog
+                fogDensity: 0.008,           // Medium fog
+                groundColor: 0x1a1a3e,       // Dark purple street
+                ambientColor: 0x4040C0,      // Blue ambient
+                ambientIntensity: 0.3,
+                directionalColor: 0xFF00FF,  // Magenta neon
+                directionalIntensity: 0.8,
+                rimLightColor: 0x00FFFF,     // Cyan rim
+                particleType: 'rain',        // Light rain effect
+                postEffects: ['bloom', 'chromatic'],
+                kiwiThreshold: 6             // Level up at 6 kiwis
+            },
+            3: {
+                name: "Ancient Temple",
+                description: "PEAK DIFFICULTY - Mystical jungle temple",
+                skyColor: 0x2D4A2B,          // Dark jungle green
+                fogColor: 0x556B2F,          // Jungle fog
+                fogDensity: 0.012,           // Dense jungle mist
+                groundColor: 0x8B4513,       // Temple stone
+                ambientColor: 0x2F4F2F,      // Dark forest green
+                ambientIntensity: 0.2,
+                directionalColor: 0xDAA520,  // Golden temple light
+                directionalIntensity: 0.6,
+                rimLightColor: 0x90EE90,     // Mystical green
+                particleType: 'fireflies',   // Magical fireflies
+                postEffects: ['vignette', 'dof'],
+                kiwiThreshold: 9             // Level up at 9 kiwis
+            },
+            4: {
+                name: "Cyber Tunnel",
+                description: "Digital matrix environment",
+                skyColor: 0x000020,          // Deep space
+                fogColor: 0x001F3F,          // Digital blue
+                fogDensity: 0.006,           // Reduced fog for relief
+                groundColor: 0x003366,       // Cyber blue
+                ambientColor: 0x0080FF,      // Bright cyber blue
+                ambientIntensity: 0.5,
+                directionalColor: 0x00FFFF,  // Cyan laser
+                directionalIntensity: 0.9,
+                rimLightColor: 0xFF00FF,     // Magenta highlights
+                particleType: 'digital',     // Digital rain
+                postEffects: ['scanlines', 'bloom'],
+                kiwiThreshold: 12            // Level up at 12 kiwis
+            },
+            5: {
+                name: "Jungle Temple",
+                description: "Lush tropical environment",
+                skyColor: 0x228B22,          // Forest green
+                fogColor: 0x90EE90,          // Light green fog
+                fogDensity: 0.009,           // Humid atmosphere
+                groundColor: 0x8FBC8F,       // Moss covered stone
+                ambientColor: 0x32CD32,      // Lime green
+                ambientIntensity: 0.4,
+                directionalColor: 0xF0E68C,  // Khaki sunlight
+                directionalIntensity: 0.7,
+                rimLightColor: 0xFFFF99,     // Warm yellow
+                particleType: 'leaves',      // Falling leaves
+                postEffects: ['dof', 'bloom'],
+                kiwiThreshold: 15            // Level up at 15 kiwis
+            },
+            6: {
+                name: "Space Station",
+                description: "Futuristic space environment",
+                skyColor: 0x000011,          // Deep space black
+                fogColor: 0x111133,          // Space fog
+                fogDensity: 0.003,           // Minimal fog
+                groundColor: 0x708090,       // Metallic gray
+                ambientColor: 0x4169E1,      // Royal blue
+                ambientIntensity: 0.3,
+                directionalColor: 0xFFFFFF,  // Pure white light
+                directionalIntensity: 1.2,
+                rimLightColor: 0x87CEEB,     // Sky blue rim
+                particleType: 'stars',       // Starfield
+                postEffects: ['lensflare', 'bloom'],
+                kiwiThreshold: 18            // Level up at 18 kiwis
+            },
+            7: {
+                name: "Volcano Run",
+                description: "Fiery volcanic landscape",
+                skyColor: 0x2F1B14,          // Ash gray sky
+                fogColor: 0x8B0000,          // Dark red fog
+                fogDensity: 0.015,           // Heavy ash
+                groundColor: 0x800000,       // Dark red lava rock
+                ambientColor: 0xFF4500,      // Orange red
+                ambientIntensity: 0.6,
+                directionalColor: 0xFF6347,  // Tomato red
+                directionalIntensity: 0.8,
+                rimLightColor: 0xFFD700,     // Gold highlights
+                particleType: 'sparks',      // Lava sparks
+                postEffects: ['heat', 'bloom'],
+                kiwiThreshold: 21            // Level up at 21 kiwis
+            },
+            8: {
+                name: "Underwater Tunnel",
+                description: "Deep ocean environment",
+                skyColor: 0x006064,          // Deep teal
+                fogColor: 0x4DD0E1,          // Aqua fog
+                fogDensity: 0.020,           // Heavy water effect
+                groundColor: 0x2E7D32,       // Sea green
+                ambientColor: 0x26C6DA,      // Light cyan
+                ambientIntensity: 0.5,
+                directionalColor: 0x81C784,  // Light green
+                directionalIntensity: 0.6,
+                rimLightColor: 0xB2DFDB,     // Teal highlight
+                particleType: 'bubbles',     // Water bubbles
+                postEffects: ['wave', 'caustics'],
+                kiwiThreshold: 24            // Level up at 24 kiwis
+            },
+            9: {
+                name: "Crystal Caves",
+                description: "Magical crystal environment",
+                skyColor: 0x2E2E2E,          // Dark cave
+                fogColor: 0x9C27B0,          // Purple magic fog
+                fogDensity: 0.018,           // Magical mist
+                groundColor: 0x4A148C,       // Deep purple
+                ambientColor: 0xE91E63,      // Pink magic
+                ambientIntensity: 0.4,
+                directionalColor: 0xAB47BC,  // Purple light
+                directionalIntensity: 0.9,
+                rimLightColor: 0xF8BBD9,     // Pink highlights
+                particleType: 'sparkles',    // Magic sparkles
+                postEffects: ['refraction', 'bloom'],
+                kiwiThreshold: 27            // Level up at 27 kiwis
+            },
+            10: {
+                name: "Rainbow Road",
+                description: "FINALE - Spectacular rainbow finale",
+                skyColor: 0x191970,          // Midnight blue
+                fogColor: 0x9370DB,          // Medium orchid
+                fogDensity: 0.010,           // Moderate fog
+                groundColor: 0x4B0082,       // Indigo
+                ambientColor: 0xFF69B4,      // Hot pink
+                ambientIntensity: 0.7,
+                directionalColor: 0xFFFF00,  // Yellow (cycling)
+                directionalIntensity: 1.0,
+                rimLightColor: 0xFF1493,     // Deep pink
+                particleType: 'confetti',    // Celebration particles
+                postEffects: ['rainbow', 'motion', 'bloom'],
+                kiwiThreshold: 30            // Victory at 30 kiwis
+            }
+        };
+
+        // 🌟 DYNAMIC ENVIRONMENT MANAGER
+        class EnvironmentManager {
+            constructor() {
+                this.currentTheme = null;
+                this.transitionDuration = 3000; // 3 seconds for smooth transitions
+                this.transitionStartTime = 0;
+                this.isTransitioning = false;
+                this.ambientLight = null;
+                this.directionalLight = null;
+                this.rimLight = null;
+                this.particleSystem = null;
+            }
+
+            init(scene) {
+                this.scene = scene;
+                this.setupLights();
+                this.applyLevelTheme(1); // Start with level 1
+
+                // Initialize particle manager
+                if (particleManager) {
+                    particleManager.init(scene);
+                }
+
+                // Initialize post-processing
+                if (postProcessing && renderer) {
+                    postProcessing.init(renderer, scene, camera);
+                }
+            }
+
+            setupLights() {
+                // Ambient light for overall illumination
+                this.ambientLight = new THREE.AmbientLight(0x404080, 0.4);
+                this.scene.add(this.ambientLight);
+
+                // Main directional light (sun/moon)
+                this.directionalLight = new THREE.DirectionalLight(0xFFFFAA, 1.0);
+                this.directionalLight.position.set(10, 10, 5);
+                this.directionalLight.castShadow = true;
+                this.directionalLight.shadow.mapSize.width = 2048;
+                this.directionalLight.shadow.mapSize.height = 2048;
+                this.directionalLight.shadow.camera.near = 0.5;
+                this.directionalLight.shadow.camera.far = 50;
+                this.scene.add(this.directionalLight);
+
+                // Rim light for atmosphere
+                this.rimLight = new THREE.DirectionalLight(0xFFE4B5, 0.3);
+                this.rimLight.position.set(-10, 5, -5);
+                this.scene.add(this.rimLight);
+            }
+
+            applyLevelTheme(level, smooth = false) {
+                const theme = LEVEL_THEMES[level];
+                if (!theme) {
+                    console.warn(`Level theme ${level} not found, using level 1`);
+                    theme = LEVEL_THEMES[1];
+                }
+
+                console.log(`🎨 Applying level ${level} theme: ${theme.name}`);
+
+                if (smooth && this.currentTheme) {
+                    this.startTransition(theme);
+                } else {
+                    this.applyThemeImmediate(theme);
+                }
+
+                this.currentTheme = theme;
+                gameState.currentLevel = level;
+            }
+
+            applyThemeImmediate(theme) {
+                // Update scene background and fog
+                this.scene.background = new THREE.Color(theme.skyColor);
+                this.scene.fog.color = new THREE.Color(theme.fogColor);
+                this.scene.fog.density = theme.fogDensity;
+                gameState.currentFogDensity = theme.fogDensity;
+                gameState.targetFogDensity = theme.fogDensity;
+
+                // Update lighting
+                this.ambientLight.color.setHex(theme.ambientColor);
+                this.ambientLight.intensity = theme.ambientIntensity;
+
+                this.directionalLight.color.setHex(theme.directionalColor);
+                this.directionalLight.intensity = theme.directionalIntensity;
+
+                this.rimLight.color.setHex(theme.rimLightColor);
+
+                // Update renderer clear color
+                if (renderer) {
+                    renderer.setClearColor(theme.skyColor);
+                }
+
+                console.log(`✅ Applied theme: ${theme.name} (${theme.description})`);
+
+                // Update particles for this theme
+                if (particleManager) {
+                    particleManager.createLevelParticles(theme);
+                }
+
+                // Apply post-processing effects
+                if (postProcessing) {
+                    postProcessing.applyLevelEffects(theme);
+                }
+            }
+
+            startTransition(newTheme) {
+                if (this.isTransitioning) return;
+
+                this.isTransitioning = true;
+                this.transitionStartTime = performance.now();
+                this.oldTheme = this.currentTheme;
+                this.newTheme = newTheme;
+
+                console.log(`🌟 Starting transition to: ${newTheme.name}`);
+            }
+
+            updateTransition() {
+                if (!this.isTransitioning) return;
+
+                const elapsed = performance.now() - this.transitionStartTime;
+                const progress = Math.min(elapsed / this.transitionDuration, 1.0);
+                const eased = this.easeInOutCubic(progress);
+
+                if (this.oldTheme && this.newTheme) {
+                    // Interpolate colors
+                    const skyColor = this.lerpColor(this.oldTheme.skyColor, this.newTheme.skyColor, eased);
+                    const fogColor = this.lerpColor(this.oldTheme.fogColor, this.newTheme.fogColor, eased);
+                    const ambientColor = this.lerpColor(this.oldTheme.ambientColor, this.newTheme.ambientColor, eased);
+
+                    // Apply interpolated values
+                    this.scene.background.setHex(skyColor);
+                    this.scene.fog.color.setHex(fogColor);
+                    this.scene.fog.density = THREE.MathUtils.lerp(this.oldTheme.fogDensity, this.newTheme.fogDensity, eased);
+                    this.ambientLight.color.setHex(ambientColor);
+                    this.ambientLight.intensity = THREE.MathUtils.lerp(this.oldTheme.ambientIntensity, this.newTheme.ambientIntensity, eased);
+
+                    if (renderer) {
+                        renderer.setClearColor(skyColor);
+                    }
+                }
+
+                if (progress >= 1.0) {
+                    this.isTransitioning = false;
+                    this.applyThemeImmediate(this.newTheme);
+                    console.log(`✅ Transition completed to: ${this.newTheme.name}`);
+                }
+            }
+
+            checkLevelProgression() {
+                const currentKiwis = gameState.collectedKiwis;
+                const currentLevel = gameState.currentLevel;
+                const theme = LEVEL_THEMES[currentLevel];
+
+                // Check if we should level up
+                if (theme && currentKiwis >= theme.kiwiThreshold && currentLevel < 10) {
+                    const nextLevel = currentLevel + 1;
+                    console.log(`🎯 Level up! ${currentKiwis} kiwis >= ${theme.kiwiThreshold} threshold`);
+                    this.applyLevelTheme(nextLevel, true); // Smooth transition
+
+                    // Show level up notification
+                    this.showLevelUpNotification(nextLevel);
+
+                    // Play level up sound
+                    if (audioManager) {
+                        audioManager.play('powerup');
+                    }
+                }
+            }
+
+            showLevelUpNotification(level) {
+                const theme = LEVEL_THEMES[level];
+                if (!theme) return;
+
+                // Create temporary notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    padding: 20px 40px;
+                    border-radius: 15px;
+                    font-size: 24px;
+                    font-weight: bold;
+                    text-align: center;
+                    z-index: 9999;
+                    animation: levelUpAnim 3s ease-out forwards;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                `;
+
+                notification.innerHTML = `
+                    <div style="font-size: 18px; margin-bottom: 5px;">LEVEL ${level}</div>
+                    <div style="font-size: 28px;">${theme.name}</div>
+                    <div style="font-size: 14px; margin-top: 5px; opacity: 0.9;">${theme.description}</div>
+                `;
+
+                // Add CSS animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes levelUpAnim {
+                        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                document.body.appendChild(notification);
+
+                // Remove after animation
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                    if (style.parentNode) {
+                        style.parentNode.removeChild(style);
+                    }
+                }, 3000);
+            }
+
+            // Utility functions
+            lerpColor(color1, color2, t) {
+                const c1 = new THREE.Color(color1);
+                const c2 = new THREE.Color(color2);
+                return c1.lerp(c2, t).getHex();
+            }
+
+            easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            update() {
+                this.updateTransition();
+                this.checkLevelProgression();
+
+                // Update particle system
+                if (particleManager) {
+                    particleManager.update();
+                }
+
+                // Update post-processing effects
+                if (postProcessing) {
+                    postProcessing.update();
+                }
+            }
+        }
+
+        // 🎆 PARTICLE SYSTEM MANAGER
+        class ParticleSystemManager {
+            constructor() {
+                this.particleSystems = new Map();
+                this.activeParticles = [];
+                this.particleCount = 0;
+                this.maxParticles = 2000; // Performance limit
+            }
+
+            init(scene) {
+                this.scene = scene;
+                this.setupParticleTypes();
+            }
+
+            setupParticleTypes() {
+                // Create particle geometries and materials for each type
+                this.particleGeometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(this.maxParticles * 3);
+                const colors = new Float32Array(this.maxParticles * 3);
+                const sizes = new Float32Array(this.maxParticles);
+
+                this.particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                this.particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                this.particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            }
+
+            createLevelParticles(levelTheme) {
+                this.clearAllParticles();
+
+                const type = levelTheme.particleType;
+                console.log(`🎆 Creating particles for ${levelTheme.name}: ${type}`);
+
+                switch (type) {
+                    case 'dust':
+                        this.createDustParticles();
+                        break;
+                    case 'rain':
+                        this.createRainParticles();
+                        break;
+                    case 'fireflies':
+                        this.createFireflyParticles();
+                        break;
+                    case 'digital':
+                        this.createDigitalRainParticles();
+                        break;
+                    case 'leaves':
+                        this.createFallingLeavesParticles();
+                        break;
+                    case 'stars':
+                        this.createStarfieldParticles();
+                        break;
+                    case 'sparks':
+                        this.createVolcanicSparksParticles();
+                        break;
+                    case 'bubbles':
+                        this.createBubbleParticles();
+                        break;
+                    case 'sparkles':
+                        this.createMagicSparklesParticles();
+                        break;
+                    case 'confetti':
+                        this.createConfettiParticles();
+                        break;
+                    default:
+                        console.warn(`Unknown particle type: ${type}`);
+                }
+            }
+
+            createDustParticles() {
+                for (let i = 0; i < 50; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 20,
+                            Math.random() * 5 + 2,
+                            Math.random() * 30 - 15
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.02,
+                            Math.random() * 0.01,
+                            0.02 + Math.random() * 0.02
+                        ),
+                        color: new THREE.Color(0.7, 0.6, 0.5),
+                        size: 0.1 + Math.random() * 0.2,
+                        life: 20 + Math.random() * 10,
+                        type: 'dust'
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createRainParticles() {
+                for (let i = 0; i < 200; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 40,
+                            5 + Math.random() * 10,
+                            Math.random() * 60 - 30
+                        ),
+                        velocity: new THREE.Vector3(
+                            -0.02,
+                            -0.3 - Math.random() * 0.1,
+                            0.05
+                        ),
+                        color: new THREE.Color(0.6, 0.8, 1.0),
+                        size: 0.05 + Math.random() * 0.1,
+                        life: 15 + Math.random() * 5,
+                        type: 'rain'
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createFireflyParticles() {
+                for (let i = 0; i < 30; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 25,
+                            1 + Math.random() * 3,
+                            Math.random() * 40 - 20
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.05,
+                            (Math.random() - 0.5) * 0.02,
+                            0.01 + Math.random() * 0.02
+                        ),
+                        color: new THREE.Color(0.5 + Math.random() * 0.5, 1.0, 0.3),
+                        size: 0.2 + Math.random() * 0.3,
+                        life: 30 + Math.random() * 20,
+                        type: 'firefly',
+                        glowIntensity: 0.5 + Math.random() * 0.5
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createDigitalRainParticles() {
+                for (let i = 0; i < 100; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 30,
+                            5 + Math.random() * 10,
+                            Math.random() * 50 - 25
+                        ),
+                        velocity: new THREE.Vector3(
+                            0,
+                            -0.2 - Math.random() * 0.1,
+                            0.03
+                        ),
+                        color: new THREE.Color(0.0, 1.0, 1.0),
+                        size: 0.15 + Math.random() * 0.2,
+                        life: 20 + Math.random() * 10,
+                        type: 'digital'
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createFallingLeavesParticles() {
+                for (let i = 0; i < 40; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 25,
+                            5 + Math.random() * 5,
+                            Math.random() * 40 - 20
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.05,
+                            -0.05 - Math.random() * 0.03,
+                            0.02 + Math.random() * 0.02
+                        ),
+                        color: new THREE.Color(0.2 + Math.random() * 0.3, 0.8, 0.1 + Math.random() * 0.3),
+                        size: 0.3 + Math.random() * 0.4,
+                        life: 25 + Math.random() * 15,
+                        type: 'leaf',
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: (Math.random() - 0.5) * 0.1
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createStarfieldParticles() {
+                for (let i = 0; i < 150; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 100,
+                            Math.random() * 15 + 5,
+                            Math.random() * 100 - 50
+                        ),
+                        velocity: new THREE.Vector3(0, 0, 0.01 + Math.random() * 0.02),
+                        color: new THREE.Color(0.8 + Math.random() * 0.2, 0.8 + Math.random() * 0.2, 1.0),
+                        size: 0.1 + Math.random() * 0.3,
+                        life: 50 + Math.random() * 30,
+                        type: 'star',
+                        twinkle: Math.random() * Math.PI * 2
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createVolcanicSparksParticles() {
+                for (let i = 0; i < 80; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 20,
+                            Math.random() * 2,
+                            Math.random() * 30 - 15
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.1,
+                            0.1 + Math.random() * 0.2,
+                            0.02 + Math.random() * 0.03
+                        ),
+                        color: new THREE.Color(1.0, 0.3 + Math.random() * 0.4, 0.0),
+                        size: 0.1 + Math.random() * 0.2,
+                        life: 10 + Math.random() * 8,
+                        type: 'spark'
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createBubbleParticles() {
+                for (let i = 0; i < 60; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 25,
+                            Math.random() * 3,
+                            Math.random() * 40 - 20
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.02,
+                            0.05 + Math.random() * 0.05,
+                            0.01 + Math.random() * 0.02
+                        ),
+                        color: new THREE.Color(0.7, 0.9, 1.0),
+                        size: 0.2 + Math.random() * 0.4,
+                        life: 20 + Math.random() * 15,
+                        type: 'bubble'
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createMagicSparklesParticles() {
+                for (let i = 0; i < 70; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 25,
+                            Math.random() * 4 + 1,
+                            Math.random() * 35 - 18
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.03,
+                            (Math.random() - 0.5) * 0.03,
+                            0.01 + Math.random() * 0.02
+                        ),
+                        color: new THREE.Color(
+                            0.5 + Math.random() * 0.5,
+                            0.3 + Math.random() * 0.7,
+                            0.8 + Math.random() * 0.2
+                        ),
+                        size: 0.15 + Math.random() * 0.25,
+                        life: 15 + Math.random() * 10,
+                        type: 'sparkle',
+                        sparklePhase: Math.random() * Math.PI * 2
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createConfettiParticles() {
+                for (let i = 0; i < 100; i++) {
+                    const particle = this.createParticle({
+                        position: new THREE.Vector3(
+                            (Math.random() - 0.5) * 30,
+                            5 + Math.random() * 5,
+                            Math.random() * 40 - 20
+                        ),
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.1,
+                            -0.02 - Math.random() * 0.05,
+                            0.02 + Math.random() * 0.03
+                        ),
+                        color: new THREE.Color(
+                            Math.random(),
+                            Math.random(),
+                            Math.random()
+                        ),
+                        size: 0.2 + Math.random() * 0.3,
+                        life: 25 + Math.random() * 15,
+                        type: 'confetti',
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: (Math.random() - 0.5) * 0.2
+                    });
+                    this.activeParticles.push(particle);
+                }
+            }
+
+            createParticle(params) {
+                const geometry = new THREE.SphereGeometry(params.size, 8, 6);
+                const material = new THREE.MeshBasicMaterial({
+                    color: params.color,
+                    transparent: true,
+                    opacity: 0.7
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(params.position);
+
+                this.scene.add(mesh);
+
+                return {
+                    mesh: mesh,
+                    velocity: params.velocity,
+                    life: params.life,
+                    maxLife: params.life,
+                    type: params.type,
+                    ...params
+                };
+            }
+
+            update() {
+                // Update existing particles
+                for (let i = this.activeParticles.length - 1; i >= 0; i--) {
+                    const particle = this.activeParticles[i];
+
+                    // Update position
+                    particle.mesh.position.add(particle.velocity);
+
+                    // Apply gravity for certain types
+                    if (['spark', 'confetti', 'leaf'].includes(particle.type)) {
+                        particle.velocity.y -= 0.002; // Gravity
+                    }
+
+                    // Special behaviors per type
+                    this.updateParticleByType(particle);
+
+                    // Age particle
+                    particle.life -= 0.16; // ~60fps
+
+                    // Update opacity based on life
+                    const lifeRatio = particle.life / particle.maxLife;
+                    particle.mesh.material.opacity = Math.max(0, lifeRatio * 0.7);
+
+                    // Remove dead particles
+                    if (particle.life <= 0 || particle.mesh.position.z > 20) {
+                        this.scene.remove(particle.mesh);
+                        this.activeParticles.splice(i, 1);
+                    }
+                }
+
+                // Spawn replacement particles periodically
+                this.spawnReplacementParticles();
+            }
+
+            updateParticleByType(particle) {
+                const time = performance.now() * 0.001;
+
+                switch (particle.type) {
+                    case 'firefly':
+                        // Flickering glow effect
+                        const glow = 0.3 + Math.sin(time * 5 + particle.glowIntensity * 10) * 0.2;
+                        particle.mesh.material.opacity = glow;
+                        break;
+
+                    case 'star':
+                        // Twinkling effect
+                        const twinkle = 0.5 + Math.sin(time * 3 + particle.twinkle) * 0.3;
+                        particle.mesh.material.opacity = twinkle;
+                        break;
+
+                    case 'digital':
+                        // Flickering digital effect
+                        if (Math.random() < 0.1) {
+                            particle.mesh.material.opacity = Math.random() * 0.8;
+                        }
+                        break;
+
+                    case 'sparkle':
+                        // Sparkling effect
+                        const sparkle = 0.4 + Math.sin(time * 8 + particle.sparklePhase) * 0.4;
+                        particle.mesh.scale.setScalar(sparkle);
+                        break;
+
+                    case 'confetti':
+                    case 'leaf':
+                        // Rotation
+                        particle.mesh.rotation.z += particle.rotationSpeed;
+                        break;
+
+                    case 'bubble':
+                        // Wobbling motion
+                        particle.velocity.x += Math.sin(time * 4) * 0.001;
+                        break;
+                }
+            }
+
+            spawnReplacementParticles() {
+                // Respawn particles that have died to maintain density
+                if (this.activeParticles.length < this.maxParticles * 0.3) {
+                    const currentLevel = gameState.currentLevel;
+                    const theme = LEVEL_THEMES[currentLevel];
+                    if (theme) {
+                        // Spawn a few replacement particles
+                        const spawnCount = Math.min(5, this.maxParticles - this.activeParticles.length);
+                        for (let i = 0; i < spawnCount; i++) {
+                            this.createSingleParticle(theme.particleType);
+                        }
+                    }
+                }
+            }
+
+            createSingleParticle(type) {
+                // Simplified single particle spawning for performance
+                switch (type) {
+                    case 'dust':
+                        this.createDustParticles();
+                        break;
+                    // Add other types as needed for performance
+                }
+            }
+
+            clearAllParticles() {
+                this.activeParticles.forEach(particle => {
+                    this.scene.remove(particle.mesh);
+                });
+                this.activeParticles = [];
+            }
+
+            dispose() {
+                this.clearAllParticles();
+            }
+        }
+
+        // 🌈 POST-PROCESSING EFFECTS MANAGER
+        class PostProcessingManager {
+            constructor() {
+                this.activeEffects = new Set();
+                this.bloomEnabled = false;
+                this.vignetteIntensity = 0;
+                this.chromaticAberration = 0;
+                this.scanLines = false;
+                this.motionBlur = false;
+                this.heatDistortion = 0;
+                this.rainbowCycling = false;
+                this.time = 0;
+            }
+
+            init(renderer, scene, camera) {
+                this.renderer = renderer;
+                this.scene = scene;
+                this.camera = camera;
+                console.log('🌈 Post-processing pipeline initialized');
+            }
+
+            applyLevelEffects(levelTheme) {
+                // Clear previous effects
+                this.clearAllEffects();
+
+                const effects = levelTheme.postEffects || [];
+                console.log(`🎨 Applying post-effects for ${levelTheme.name}:`, effects);
+
+                effects.forEach(effect => {
+                    this.enableEffect(effect, levelTheme);
+                });
+            }
+
+            enableEffect(effectName, theme) {
+                this.activeEffects.add(effectName);
+
+                switch (effectName) {
+                    case 'bloom':
+                        this.bloomEnabled = true;
+                        this.setupBloom(theme);
+                        break;
+
+                    case 'vignette':
+                        this.vignetteIntensity = 0.3;
+                        this.setupVignette();
+                        break;
+
+                    case 'chromatic':
+                        this.chromaticAberration = 0.002;
+                        break;
+
+                    case 'scanlines':
+                        this.scanLines = true;
+                        this.setupScanlines();
+                        break;
+
+                    case 'dof':
+                        this.setupDepthOfField();
+                        break;
+
+                    case 'motion':
+                        this.motionBlur = true;
+                        break;
+
+                    case 'heat':
+                        this.heatDistortion = 0.01;
+                        break;
+
+                    case 'wave':
+                        this.setupWaveDistortion();
+                        break;
+
+                    case 'caustics':
+                        this.setupCaustics();
+                        break;
+
+                    case 'refraction':
+                        this.setupRefraction();
+                        break;
+
+                    case 'rainbow':
+                        this.rainbowCycling = true;
+                        this.setupRainbowCycling();
+                        break;
+
+                    case 'lensflare':
+                        this.setupLensFlare();
+                        break;
+
+                    default:
+                        console.warn(`Unknown post-effect: ${effectName}`);
+                }
+            }
+
+            setupBloom(theme) {
+                // Simple bloom effect using fog and light intensity
+                if (this.renderer) {
+                    this.renderer.toneMapping = THREE.ReinhardToneMapping;
+                    this.renderer.toneMappingExposure = 1.5;
+                }
+                console.log('✨ Bloom effect enabled');
+            }
+
+            setupVignette() {
+                // CSS vignette effect (lightweight)
+                const vignetteStyle = document.querySelector('.vignette-overlay');
+                if (vignetteStyle) {
+                    vignetteStyle.classList.add('active');
+                }
+                console.log('🔵 Vignette effect enabled');
+            }
+
+            setupScanlines() {
+                // Add scanline effect to renderer
+                const canvas = this.renderer.domElement;
+                canvas.style.filter = 'contrast(1.1) brightness(1.1)';
+
+                // Create scanline overlay
+                this.createScanlineOverlay();
+                console.log('📺 Scanlines effect enabled');
+            }
+
+            createScanlineOverlay() {
+                const overlay = document.createElement('div');
+                overlay.id = 'scanlineOverlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 70;
+                    background: repeating-linear-gradient(
+                        0deg,
+                        transparent,
+                        transparent 2px,
+                        rgba(0, 255, 255, 0.03) 2px,
+                        rgba(0, 255, 255, 0.03) 4px
+                    );
+                    animation: scanlineMove 0.1s linear infinite;
+                `;
+
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes scanlineMove {
+                        0% { transform: translateY(0); }
+                        100% { transform: translateY(4px); }
+                    }
+                `;
+                document.head.appendChild(style);
+                document.body.appendChild(overlay);
+            }
+
+            setupDepthOfField() {
+                // Simulate DOF with fog adjustments
+                if (this.scene && this.scene.fog) {
+                    const originalDensity = this.scene.fog.density;
+                    this.scene.fog.density = originalDensity * 1.5;
+                }
+                console.log('🎯 Depth of Field effect enabled');
+            }
+
+            setupWaveDistortion() {
+                // Apply wave distortion through CSS
+                const canvas = this.renderer.domElement;
+                canvas.style.filter = 'contrast(1.2) hue-rotate(10deg)';
+                console.log('🌊 Wave distortion enabled');
+            }
+
+            setupCaustics() {
+                // Simulate underwater caustics with light animation
+                if (this.scene) {
+                    const causticsLight = new THREE.DirectionalLight(0x4DD0E1, 0.3);
+                    causticsLight.position.set(5, 10, 0);
+                    this.scene.add(causticsLight);
+                    this.causticsLight = causticsLight;
+                }
+                console.log('🌊 Caustics effect enabled');
+            }
+
+            setupRefraction() {
+                // Crystal refraction effect through prism colors
+                const canvas = this.renderer.domElement;
+                canvas.style.filter = 'hue-rotate(30deg) saturate(1.3)';
+                console.log('💎 Refraction effect enabled');
+            }
+
+            setupRainbowCycling() {
+                // Dynamic rainbow color cycling
+                this.rainbowCycling = true;
+                console.log('🌈 Rainbow cycling enabled');
+            }
+
+            setupLensFlare() {
+                // Add lens flare elements
+                if (this.scene) {
+                    const flareGeometry = new THREE.SphereGeometry(0.1, 16, 8);
+                    const flareMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xFFFFFF,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+
+                    for (let i = 0; i < 5; i++) {
+                        const flare = new THREE.Mesh(flareGeometry, flareMaterial);
+                        flare.position.set(
+                            Math.random() * 20 - 10,
+                            Math.random() * 5 + 5,
+                            Math.random() * 30 - 15
+                        );
+                        this.scene.add(flare);
+                    }
+                }
+                console.log('✨ Lens flare effect enabled');
+            }
+
+            update() {
+                this.time += 0.016; // ~60fps
+
+                // Update rainbow cycling
+                if (this.rainbowCycling && this.scene) {
+                    const hue = (this.time * 0.5) % 1.0;
+                    const rainbowColor = new THREE.Color().setHSL(hue, 0.8, 0.6);
+
+                    if (this.scene.fog) {
+                        this.scene.fog.color.lerp(rainbowColor, 0.02);
+                    }
+                }
+
+                // Update caustics animation
+                if (this.causticsLight) {
+                    this.causticsLight.intensity = 0.2 + Math.sin(this.time * 2) * 0.1;
+                    this.causticsLight.position.x = Math.sin(this.time) * 3;
+                }
+
+                // Update heat distortion
+                if (this.heatDistortion > 0) {
+                    const canvas = this.renderer.domElement;
+                    const distortion = Math.sin(this.time * 3) * this.heatDistortion;
+                    canvas.style.filter = `contrast(1.1) hue-rotate(${distortion * 10}deg)`;
+                }
+
+                // Update chromatic aberration
+                if (this.chromaticAberration > 0) {
+                    const canvas = this.renderer.domElement;
+                    const aberration = Math.sin(this.time * 4) * this.chromaticAberration * 100;
+                    canvas.style.filter += ` drop-shadow(${aberration}px 0 red) drop-shadow(-${aberration}px 0 cyan)`;
+                }
+            }
+
+            clearAllEffects() {
+                this.activeEffects.clear();
+                this.bloomEnabled = false;
+                this.vignetteIntensity = 0;
+                this.chromaticAberration = 0;
+                this.scanLines = false;
+                this.motionBlur = false;
+                this.heatDistortion = 0;
+                this.rainbowCycling = false;
+
+                // Reset renderer settings
+                if (this.renderer) {
+                    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                    this.renderer.toneMappingExposure = 1.2;
+                    this.renderer.domElement.style.filter = '';
+                }
+
+                // Remove overlays
+                const scanlineOverlay = document.getElementById('scanlineOverlay');
+                if (scanlineOverlay) {
+                    scanlineOverlay.remove();
+                }
+
+                const vignetteOverlay = document.querySelector('.vignette-overlay');
+                if (vignetteOverlay) {
+                    vignetteOverlay.classList.remove('active');
+                }
+
+                // Remove added lights
+                if (this.causticsLight && this.scene) {
+                    this.scene.remove(this.causticsLight);
+                    this.causticsLight = null;
+                }
+
+                console.log('🧹 All post-effects cleared');
+            }
+
+            dispose() {
+                this.clearAllEffects();
+            }
+        }
+
         // Three.js setup
         let scene, camera, renderer, player, track, obstacles = [];
         const LANE_POSITIONS = [-2, 0, 2];
+        let environmentManager = new EnvironmentManager();
+        let particleManager = new ParticleSystemManager();
+        let postProcessing = new PostProcessingManager();
         
         // Power-Up and Collectible arrays for tracking
         let powerUps = [];
@@ -2800,34 +4251,8 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            // Modern lighting system
-            // Ambient light for overall illumination
-            const ambientLight = new THREE.AmbientLight(0x404080, 0.4);
-            scene.add(ambientLight);
-
-            // Main directional light (sun)
-            const directionalLight = new THREE.DirectionalLight(0xFFE4B5, 1.2);
-            directionalLight.position.set(10, 15, 5);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            directionalLight.shadow.camera.near = 0.5;
-            directionalLight.shadow.camera.far = 50;
-            directionalLight.shadow.camera.left = -20;
-            directionalLight.shadow.camera.right = 20;
-            directionalLight.shadow.camera.top = 20;
-            directionalLight.shadow.camera.bottom = -20;
-            directionalLight.shadow.bias = -0.0005;
-            scene.add(directionalLight);
-
-            // Atmospheric hemisphere light for sky gradient
-            const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
-            scene.add(hemisphereLight);
-
-            // Rim lighting for urban atmosphere
-            const rimLight = new THREE.DirectionalLight(0x4A90E2, 0.3);
-            rimLight.position.set(-5, 8, -10);
-            scene.add(rimLight);
+            // 🌟 Initialize Environment Manager (replaces static lighting)
+            environmentManager.init(scene);
 
             // Enhance renderer for better visuals
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -3880,6 +5305,37 @@
             
             // Update collectible counters
             updateKiwiUI();
+
+            // 🌟 Update Level Display
+            updateLevelUI();
+        }
+
+        // 🎨 Level UI Update Function
+        function updateLevelUI() {
+            const levelElement = document.getElementById('currentLevel');
+            const levelNameElement = document.getElementById('levelName');
+            const levelProgressElement = document.getElementById('levelProgress');
+
+            if (levelElement) {
+                const currentLevel = gameState.currentLevel;
+                const theme = LEVEL_THEMES[currentLevel];
+
+                levelElement.textContent = `Level ${currentLevel}`;
+
+                if (levelNameElement && theme) {
+                    levelNameElement.textContent = theme.name;
+                    levelNameElement.style.color = `#${theme.rimLightColor.toString(16).padStart(6, '0')}`;
+                }
+
+                if (levelProgressElement && theme) {
+                    const kiwisNeeded = theme.kiwiThreshold;
+                    const currentKiwis = gameState.collectedKiwis;
+                    const progress = Math.min(currentKiwis / kiwisNeeded, 1.0) * 100;
+
+                    levelProgressElement.style.width = `${progress}%`;
+                    levelProgressElement.style.background = `#${theme.directionalColor.toString(16).padStart(6, '0')}`;
+                }
+            }
         }
 
         function showNameInputDialog(isVictory) {
@@ -7467,7 +8923,10 @@
                 
                 updateUI();
             }
-            
+
+            // 🌟 Update Environment Manager (level transitions, effects)
+            environmentManager.update();
+
             renderer.render(scene, camera);
         }
 
