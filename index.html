@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V6.2.5-MULTI-JUMP</title>
+    <title>Subway Runner 3D - V6.2.6-AUDIO-SYSTEM</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
@@ -570,13 +570,186 @@
     </style>
 </head>
 <body>
+    <!-- Background Audio System -->
+    <script>
+        // Background Music Audio System (adapted from fischseite)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create a DOM <audio> element for background music
+            const audio = document.createElement('audio');
+            audio.id = 'bg-audio';
+            audio.preload = 'auto';
+            audio.loop = true;
+            audio.volume = 0.4; // Lower volume for game
+            audio.style.display = 'none';
+            audio.setAttribute('aria-hidden', 'true');
+            audio.setAttribute('playsinline', '');
+
+            // Add source for background music
+            const source = document.createElement('source');
+            source.src = 'sounds/background-music.mp3';
+            source.type = 'audio/mpeg';
+            audio.appendChild(source);
+            document.body.appendChild(audio);
+
+            let soundEnabled = true;
+
+            // Sound Control Container
+            const soundContainer = document.createElement('div');
+            soundContainer.id = 'sound-control-container';
+            soundContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                transition: all 0.3s ease;
+            `;
+
+            // Sound Toggle Button
+            const button = document.createElement('button');
+            button.id = 'sound-toggle';
+            button.type = 'button';
+            button.setAttribute('aria-pressed', 'true');
+            button.textContent = '🔊';
+            button.style.cssText = `
+                background: rgba(0, 0, 0, 0.7);
+                color: #00ff00;
+                border: 2px solid rgba(0, 255, 0, 0.3);
+                padding: 10px 12px;
+                border-radius: 12px;
+                cursor: pointer;
+                backdrop-filter: blur(10px);
+                font-weight: 600;
+                font-size: 16px;
+                transition: all 0.3s ease;
+                min-width: 50px;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            `;
+
+            // Volume Control Slider
+            const volumeControl = document.createElement('div');
+            volumeControl.style.cssText = `
+                opacity: 0;
+                transform: translateY(-10px);
+                pointer-events: none;
+                transition: all 0.3s ease;
+                background: rgba(0, 0, 0, 0.8);
+                padding: 8px;
+                border-radius: 8px;
+                backdrop-filter: blur(10px);
+            `;
+
+            const volumeSlider = document.createElement('input');
+            volumeSlider.type = 'range';
+            volumeSlider.min = '0';
+            volumeSlider.max = '1';
+            volumeSlider.step = '0.1';
+            volumeSlider.value = '0.4';
+            volumeSlider.style.cssText = `
+                width: 80px;
+                height: 4px;
+                background: #333;
+                outline: none;
+                border-radius: 2px;
+                cursor: pointer;
+            `;
+
+            // Set initial audio volume
+            audio.volume = parseFloat(volumeSlider.value);
+
+            volumeSlider.addEventListener('input', function() {
+                audio.volume = this.value;
+            });
+
+            volumeControl.appendChild(volumeSlider);
+
+            // Update button appearance
+            function updateButton() {
+                button.textContent = soundEnabled ? '🔊' : '🔇';
+                button.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
+                button.style.color = soundEnabled ? '#00ff00' : '#ff0000';
+                button.style.borderColor = soundEnabled ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+            }
+
+            // Start audio function
+            function startAudio() {
+                audio.load();
+                return audio.play().then(() => {
+                    soundEnabled = true;
+                    updateButton();
+                }).catch(() => {
+                    soundEnabled = true;
+                    updateButton();
+                });
+            }
+
+            // Button click handler
+            button.addEventListener('click', function() {
+                soundEnabled = !soundEnabled;
+                if (soundEnabled) {
+                    startAudio();
+                } else {
+                    audio.pause();
+                }
+                updateButton();
+            });
+
+            // Auto-start audio on first user interaction
+            function handleFirstInteraction() {
+                if (soundEnabled && audio.paused) {
+                    startAudio();
+                }
+                // Remove listeners after first interaction
+                document.removeEventListener('click', handleFirstInteraction);
+                document.removeEventListener('keydown', handleFirstInteraction);
+            }
+
+            // Listen for first user interaction
+            document.addEventListener('click', handleFirstInteraction);
+            document.addEventListener('keydown', handleFirstInteraction);
+
+            // Visibility change handler
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    audio.pause();
+                } else if (soundEnabled) {
+                    audio.play().catch(() => {});
+                }
+            });
+
+            // Show/hide volume control on hover
+            soundContainer.addEventListener('mouseenter', () => {
+                volumeControl.style.opacity = '1';
+                volumeControl.style.transform = 'translateY(0)';
+                volumeControl.style.pointerEvents = 'auto';
+            });
+
+            soundContainer.addEventListener('mouseleave', () => {
+                volumeControl.style.opacity = '0';
+                volumeControl.style.transform = 'translateY(-10px)';
+                volumeControl.style.pointerEvents = 'none';
+            });
+
+            // Assemble sound control
+            soundContainer.appendChild(button);
+            soundContainer.appendChild(volumeControl);
+            document.body.appendChild(soundContainer);
+
+            updateButton();
+        });
+    </script>
+
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🚀 V3.6.1-COLLECTIBLE-BUGFIX<br>
-            📅 07.07.2025
+            🚀 V6.2.6-AUDIO-SYSTEM<br>
+            📅 27.09.2025
         </div>
         
         <!-- Visual Effects Overlays -->
