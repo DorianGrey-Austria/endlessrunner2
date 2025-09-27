@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V6.2.3-DEPLOYMENT-TEST</title>
+    <title>Subway Runner 3D - V6.2.4-SIMPLIFIED-MENU</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
@@ -666,7 +666,7 @@
         
         <!-- PROFESSIONAL MENU SYSTEM -->
         <div id="menu" class="menu-container">
-            <!-- Welcome Screen -->
+            <!-- Welcome Screen with Integrated Control Selection -->
             <div id="welcomeScreen" class="menu-screen active">
                 <h1>🏃 SUBWAY RUNNER 3D</h1>
                 <h2>⚡ 60 Second Challenge</h2>
@@ -676,31 +676,64 @@
                     <p>⬇️ Duck under high ones</p>
                     <p>⚡ Collect power-ups for boosts</p>
                 </div>
-                <button class="btn-primary" onclick="showControlSelection()">🎮 PLAY NOW</button>
+
+                <!-- Direct Control Selection -->
+                <h3 style="margin: 30px 0 20px 0; color: #4ecdc4;">Choose Your Control Style</h3>
+                <div class="control-options" style="margin-bottom: 30px;">
+                    <div class="control-option recommended" onclick="selectControl('classic')">
+                        <div class="control-icon">🎮</div>
+                        <h3>CLASSIC</h3>
+                        <p>Keyboard • Touch • Gamepad</p>
+                        <span class="badge">Start Instantly</span>
+                    </div>
+                    <div class="control-option" onclick="selectControl('gesture')">
+                        <div class="control-icon">👋</div>
+                        <h3>GESTURE</h3>
+                        <p>Camera Control • Hands-free</p>
+                        <span class="badge beta">Setup Required</span>
+                    </div>
+                </div>
+
                 <div class="menu-secondary">
                     <button onclick="showLeaderboard()">🏆 Leaderboard</button>
                     <button onclick="showSettings()">⚙️ Settings</button>
                 </div>
             </div>
 
-            <!-- Control Selection -->
-            <div id="controlScreen" class="menu-screen">
-                <h2>Choose Your Control Style</h2>
-                <div class="control-options">
-                    <div class="control-option recommended" onclick="selectControl('classic')">
-                        <div class="control-icon">🎮</div>
-                        <h3>CLASSIC</h3>
-                        <p>Keyboard • Touch • Gamepad</p>
-                        <span class="badge">Recommended</span>
+            <!-- Gesture Configuration Screen -->
+            <div id="gestureConfigScreen" class="menu-screen">
+                <h2>👋 Gesture Control Setup</h2>
+                <div class="gesture-setup-container">
+                    <div class="camera-preview">
+                        <canvas id="gestureCanvas" width="480" height="360" style="border: 2px solid #4ecdc4; border-radius: 10px; background: #000;"></canvas>
+                        <p style="margin-top: 10px; opacity: 0.8;">📹 Camera preview - Position yourself in frame</p>
                     </div>
-                    <div class="control-option" onclick="selectControl('gesture')">
-                        <div class="control-icon">👋</div>
-                        <h3>GESTURE</h3>
-                        <p>Camera Control • Hands-free</p>
-                        <span class="badge beta">Beta</span>
+
+                    <div class="gesture-controls" style="margin-top: 20px;">
+                        <button class="btn-primary" id="gestureToggle" onclick="toggleGestureControl()">🎥 Enable Camera</button>
+                        <button class="btn-secondary" id="calibrateBtn" onclick="calibrateGestures()" disabled>🎯 Calibrate</button>
+                    </div>
+
+                    <div class="gesture-status" style="margin-top: 20px;">
+                        <span id="gestureStatus">Gesten: Inaktiv</span>
+                        <div id="gestureFeedback" style="margin-top: 10px; opacity: 0.7;"></div>
+                    </div>
+
+                    <div class="gesture-instructions" style="margin-top: 30px; max-width: 500px;">
+                        <h4>📋 Instructions:</h4>
+                        <ul style="text-align: left; opacity: 0.9;">
+                            <li>🎥 Allow camera access when prompted</li>
+                            <li>👤 Position your face clearly in the frame</li>
+                            <li>🎯 Calibrate by looking left, center, right</li>
+                            <li>🎮 Head movements control lane switching</li>
+                        </ul>
+                    </div>
+
+                    <div class="gesture-actions" style="margin-top: 30px;">
+                        <button class="btn-primary" onclick="startGameFromGestureConfig()" id="startGameBtn" disabled>🚀 START GAME</button>
+                        <button class="btn-secondary" onclick="showWelcomeScreen()">⬅️ Back to Menu</button>
                     </div>
                 </div>
-                <button class="btn-back" onclick="showWelcomeScreen()">← Back</button>
             </div>
 
             <!-- Countdown Screen -->
@@ -2709,9 +2742,9 @@
         // PROFESSIONAL MENU NAVIGATION SYSTEM
         let selectedControlType = 'classic'; // Default selection
 
+        // Legacy function - no longer needed as control selection is now integrated
         function showControlSelection() {
-            document.getElementById('welcomeScreen').classList.remove('active');
-            document.getElementById('controlScreen').classList.add('active');
+            console.log('showControlSelection() called - but control selection is now integrated in welcome screen');
         }
 
         function selectControl(type) {
@@ -2721,11 +2754,57 @@
                 option.classList.remove('selected');
             });
             document.querySelector(`[onclick="selectControl('${type}')"]`).classList.add('selected');
+
+            // Direct action based on control type
+            if (type === 'classic') {
+                // Classic: Start game immediately
+                startClassicGame();
+            } else if (type === 'gesture') {
+                // Gesture: Show configuration screen
+                showGestureConfig();
+            }
         }
 
+        function startClassicGame() {
+            console.log('Starting classic game...');
+            // Set control type for game
+            window.selectedControlType = 'classic';
+            // Start the game directly
+            startGameFromMenu();
+        }
+
+        function showGestureConfig() {
+            console.log('Showing gesture configuration...');
+            // Hide welcome screen, show gesture config
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gestureConfigScreen').classList.add('active');
+        }
+
+        function showWelcomeScreen() {
+            // Hide all other screens
+            document.querySelectorAll('.menu-screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            // Show welcome screen
+            document.getElementById('welcomeScreen').classList.add('active');
+        }
+
+        function startGameFromGestureConfig() {
+            console.log('Starting game from gesture config...');
+            // Set control type for game
+            window.selectedControlType = 'gesture';
+            // Check if gesture is enabled
+            if (!gestureEnabled) {
+                alert('Please enable and calibrate gesture control first!');
+                return;
+            }
+            // Start the game
+            startGameFromMenu();
+        }
+
+        // Legacy function - no longer needed as rules screen is removed
         function showRules() {
-            document.getElementById('controlScreen').classList.remove('active');
-            document.getElementById('rulesScreen').classList.add('active');
+            console.log('showRules() called - but rules screen is no longer used');
         }
 
         function startGameFromMenu() {
@@ -2772,37 +2851,70 @@
             menu.innerHTML = `
                 <div id="welcomeScreen" class="menu-screen active">
                     <h1>🏃 SUBWAY RUNNER 3D</h1>
-                    <p style="margin-bottom: 2rem; opacity: 0.8;">High-Performance Mobile Game with Perfect Difficulty Balance</p>
-                    <button class="btn-primary" onclick="showControlSelection()">🎮 PLAY NOW</button>
+                    <h2>⚡ 60 Second Challenge</h2>
+                    <div class="game-rules">
+                        <p>⬅️➡️ Dodge obstacles</p>
+                        <p>⬆️ Jump over low objects</p>
+                        <p>⬇️ Duck under high ones</p>
+                        <p>⚡ Collect power-ups for boosts</p>
+                    </div>
+
+                    <!-- Direct Control Selection -->
+                    <h3 style="margin: 30px 0 20px 0; color: #4ecdc4;">Choose Your Control Style</h3>
+                    <div class="control-options" style="margin-bottom: 30px;">
+                        <div class="control-option recommended" onclick="selectControl('classic')">
+                            <div class="control-icon">🎮</div>
+                            <h3>CLASSIC</h3>
+                            <p>Keyboard • Touch • Gamepad</p>
+                            <span class="badge">Start Instantly</span>
+                        </div>
+                        <div class="control-option" onclick="selectControl('gesture')">
+                            <div class="control-icon">👋</div>
+                            <h3>GESTURE</h3>
+                            <p>Camera Control • Hands-free</p>
+                            <span class="badge beta">Setup Required</span>
+                        </div>
+                    </div>
+
+                    <div class="menu-secondary">
+                        <button onclick="showLeaderboard()">🏆 Leaderboard</button>
+                        <button onclick="showSettings()">⚙️ Settings</button>
+                    </div>
                 </div>
 
-                <div id="controlScreen" class="menu-screen">
-                    <h2>Choose Your Controls</h2>
-                    <div class="control-option selected" onclick="selectControl('classic')">
-                        <h3>🎮 Classic Controls</h3>
-                        <p>Simple tap controls</p>
-                        <p><strong>Recommended for beginners</strong></p>
-                    </div>
-                    <div class="control-option" onclick="selectControl('gesture')">
-                        <h3>👋 Gesture Controls</h3>
-                        <p>Use hand gestures via camera</p>
-                        <p><strong>Advanced players only</strong></p>
-                    </div>
-                    <button class="btn-primary" onclick="showRules()">Continue ➡️</button>
-                </div>
+                <div id="gestureConfigScreen" class="menu-screen">
+                    <h2>👋 Gesture Control Setup</h2>
+                    <div class="gesture-setup-container">
+                        <div class="camera-preview">
+                            <canvas id="gestureCanvas" width="480" height="360" style="border: 2px solid #4ecdc4; border-radius: 10px; background: #000;"></canvas>
+                            <p style="margin-top: 10px; opacity: 0.8;">📹 Camera preview - Position yourself in frame</p>
+                        </div>
 
-                <div id="rulesScreen" class="menu-screen">
-                    <div class="rules-container">
-                        <h2>Quick Rules</h2>
-                        <ul class="rules-list">
-                            <li>Dodge obstacles by switching lanes</li>
-                            <li>Collect power-ups and fruits for points</li>
-                            <li>Survive 60 seconds to achieve victory</li>
-                            <li>Speed increases every 10 seconds</li>
-                        </ul>
+                        <div class="gesture-controls" style="margin-top: 20px;">
+                            <button class="btn-primary" id="gestureToggle" onclick="toggleGestureControl()">🎥 Enable Camera</button>
+                            <button class="btn-secondary" id="calibrateBtn" onclick="calibrateGestures()" disabled>🎯 Calibrate</button>
+                        </div>
+
+                        <div class="gesture-status" style="margin-top: 20px;">
+                            <span id="gestureStatus">Gesten: Inaktiv</span>
+                            <div id="gestureFeedback" style="margin-top: 10px; opacity: 0.7;"></div>
+                        </div>
+
+                        <div class="gesture-instructions" style="margin-top: 30px; max-width: 500px;">
+                            <h4>📋 Instructions:</h4>
+                            <ul style="text-align: left; opacity: 0.9;">
+                                <li>🎥 Allow camera access when prompted</li>
+                                <li>👤 Position your face clearly in the frame</li>
+                                <li>🎯 Calibrate by looking left, center, right</li>
+                                <li>🎮 Head movements control lane switching</li>
+                            </ul>
+                        </div>
+
+                        <div class="gesture-actions" style="margin-top: 30px;">
+                            <button class="btn-primary" onclick="startGameFromGestureConfig()" id="startGameBtn" disabled>🚀 START GAME</button>
+                            <button class="btn-secondary" onclick="showWelcomeScreen()">⬅️ Back to Menu</button>
+                        </div>
                     </div>
-                    <button class="btn-primary" onclick="startGameFromMenu()">🚀 START GAME</button>
-                    <button class="btn-secondary" onclick="showControlSelection()">⬅️ Back</button>
                 </div>
             `;
 
@@ -7052,19 +7164,33 @@
                 // Disable gesture control
                 gestureEnabled = false;
                 gestureController.stop();
-                toggleBtn.textContent = '🎥 Gesten aktivieren';
+                toggleBtn.textContent = '🎥 Enable Camera';
                 toggleBtn.classList.remove('active');
                 calibrateBtn.disabled = true;
                 canvas.classList.remove('active');
                 document.getElementById('gestureStatus').textContent = 'Gesten: Inaktiv';
+
+                // Disable start game button in gesture config screen
+                const startGameBtn = document.getElementById('startGameBtn');
+                if (startGameBtn) {
+                    startGameBtn.disabled = true;
+                    startGameBtn.style.opacity = '0.5';
+                }
             } else {
                 // Enable gesture control
                 try {
                     await gestureController.start();
                     gestureEnabled = true;
-                    toggleBtn.textContent = '🎥 Gesten deaktivieren';
+                    toggleBtn.textContent = '🎥 Camera Active';
                     toggleBtn.classList.add('active');
                     calibrateBtn.disabled = false;
+
+                    // Enable start game button in gesture config screen
+                    const startGameBtn = document.getElementById('startGameBtn');
+                    if (startGameBtn) {
+                        startGameBtn.disabled = false;
+                        startGameBtn.style.opacity = '1';
+                    }
                     canvas.classList.add('active');
                     document.getElementById('gestureStatus').textContent = 'Gesten: Wird initialisiert...';
                 } catch (error) {

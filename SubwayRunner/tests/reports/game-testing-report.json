@@ -1,0 +1,55 @@
+{
+  "summary": {
+    "timestamp": "2025-09-27T13:40:22.015Z",
+    "duration": 23534,
+    "totalTests": 0,
+    "passed": 0,
+    "failed": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "gameMetrics": [],
+  "performance": {
+    "message": "No performance data collected"
+  },
+  "visualRegressions": [],
+  "cacheIssues": [],
+  "recommendations": [],
+  "testTiming": {
+    "7b73c7d27d3793f2fcab-00996adf733f6c59ecbe": {
+      "title": "Deployed version is immediately visible",
+      "startTime": 1758980403412,
+      "endTime": 1758980406009,
+      "duration": 2597,
+      "status": "failed"
+    },
+    "7b73c7d27d3793f2fcab-4c08a53134bb43e1d061": {
+      "title": "Multiple rapid refreshes show consistent version",
+      "startTime": 1758980408999,
+      "endTime": 1758980410867,
+      "duration": 1868,
+      "status": "failed"
+    },
+    "7b73c7d27d3793f2fcab-fd0984d6e2bc2557cb01": {
+      "title": "Browser cache invalidation works correctly",
+      "startTime": 1758980411523,
+      "endTime": 1758980416089,
+      "duration": 4566,
+      "status": "passed"
+    },
+    "7b73c7d27d3793f2fcab-5550c792909b1c721fe6": {
+      "title": "CDN cache bypassing works",
+      "startTime": 1758980416091,
+      "endTime": 1758980421487,
+      "duration": 5396,
+      "status": "passed"
+    },
+    "7b73c7d27d3793f2fcab-2a3efc387a3ca232f0fc": {
+      "title": "iOS Safari cache clearing simulation",
+      "startTime": 1758980421491,
+      "endTime": 1758980421781,
+      "duration": 290,
+      "status": "skipped"
+    }
+  }
+}

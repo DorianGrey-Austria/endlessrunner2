@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Game Testing Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .metric { display: inline-block; margin: 10px; padding: 15px; background: #f0f0f0; border-radius: 5px; }
+        .fps-good { background: #d4edda; }
+        .fps-warning { background: #fff3cd; }
+        .fps-danger { background: #f8d7da; }
+        .recommendation { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .severity-high { border-color: #dc3545; }
+        .severity-critical { border-color: #dc3545; background: #f8d7da; }
+        .severity-medium { border-color: #ffc107; }
+        .severity-low { border-color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Game Testing Dashboard</h1>
+        <p><strong>Generated:</strong> 2025-09-27T13:40:22.015Z</p>
+
+        <div class="card">
+            <h2>📊 Test Summary</h2>
+            <div class="metric">✅ Passed: 0</div>
+            <div class="metric">❌ Failed: 0</div>
+            <div class="metric">🔄 Flaky: 0</div>
+            <div class="metric">⏱️ Duration: 23.5s</div>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Performance Metrics</h2>
+            <div class="metric ">
+                🎯 Average FPS: N/A
+            </div>
+            <div class="metric">📉 Min FPS: N/A</div>
+            <div class="metric">📈 Max FPS: N/A</div>
+            <div class="metric">🧠 Peak Memory: N/A</div>
+        </div>
+
+        <div class="card">
+            <h2>💡 Recommendations</h2>
+            
+        </div>
+
+        <div class="card">
+            <h2>🔍 Detailed Results</h2>
+            <p>See <a href="html-report/index.html">Interactive Report</a> for detailed test results.</p>
+            <p>See <code>game-testing-report.json</code> for raw data.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,2 +1,193 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="0.03970500000000004">
+<testsuites id="" name="" tests="5" failures="2" skipped="1" errors="0" time="23.495755000000003">
+<testsuite name="integration/cache-busting.spec.js" timestamp="2025-09-27T13:39:58.703Z" hostname="Desktop-Chrome" tests="5" failures="2" skipped="1" time="14.78" errors="0">
+<testcase name="Cache-Busting Strategy › Deployed version is immediately visible" classname="integration/cache-busting.spec.js" time="3.315">
+<failure message="cache-busting.spec.js:11:3 Deployed version is immediately visible" type="FAILURE">
+<![CDATA[  [Desktop-Chrome] › integration/cache-busting.spec.js:11:3 › Cache-Busting Strategy › Deployed version is immediately visible 
+
+    Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)
+        at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:24:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)
+        at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:24:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[🧪 Testing cache-busting for immediate version visibility...
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/test-failed-2.png]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/video.webm]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/trace.zip]]
+🧪 Testing cache-busting for immediate version visibility...
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/test-failed-2.png]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/video.webm]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cache-Busting Strategy › Multiple rapid refreshes show consistent version" classname="integration/cache-busting.spec.js" time="1.748">
+<failure message="cache-busting.spec.js:115:3 Multiple rapid refreshes show consistent version" type="FAILURE">
+<![CDATA[  [Desktop-Chrome] › integration/cache-busting.spec.js:115:3 › Cache-Busting Strategy › Multiple rapid refreshes show consistent version 
+
+    Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)
+        at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:121:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)
+        at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:121:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[🔄 Testing version consistency across rapid refreshes...
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/video.webm]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/trace.zip]]
+🔄 Testing version consistency across rapid refreshes...
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/video.webm]]
+
+[[ATTACHMENT|../../test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Cache-Busting Strategy › Browser cache invalidation works correctly" classname="integration/cache-busting.spec.js" time="4.052">
+<system-out>
+<![CDATA[🗑️ Testing browser cache invalidation...
+🎮 Waiting for game to be ready...
+✅ Three.js loaded
+✅ Game ready for testing (742ms)
+🎮 Waiting for game to be ready...
+✅ Three.js loaded
+✅ Game ready for testing (551ms)
+Load time comparison: { first: [33m674[39m, second: [33m403[39m, difference: [33m-271[39m }
+]]>
+</system-out>
+</testcase>
+<testcase name="Cache-Busting Strategy › CDN cache bypassing works" classname="integration/cache-busting.spec.js" time="5.385">
+<system-out>
+<![CDATA[🌐 Testing CDN cache bypassing...
+Testing strategy: timestamp
+Testing strategy: version
+Testing strategy: random
+Testing strategy: combined
+]]>
+</system-out>
+</testcase>
+<testcase name="Cache-Busting Strategy › iOS Safari cache clearing simulation" classname="integration/cache-busting.spec.js" time="0.28">
+<properties>
+<property name="skip" value="iOS Safari specific test">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
 </testsuites>

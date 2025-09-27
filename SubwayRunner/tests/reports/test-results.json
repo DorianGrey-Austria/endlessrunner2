@@ -10,7 +10,9 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {},
+    "metadata": {
+      "actualWorkers": 1
+    },
     "preserveOutput": "always",
     "reporter": [
       [
@@ -55,7 +57,9 @@
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Desktop-Chrome",
         "name": "Desktop-Chrome",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -63,13 +67,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Desktop-Firefox",
         "name": "Desktop-Firefox",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -77,13 +83,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Desktop-Safari",
         "name": "Desktop-Safari",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -91,13 +99,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Mobile-iPhone12",
         "name": "Mobile-iPhone12",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -105,13 +115,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Mobile-iPhone12ProMax",
         "name": "Mobile-iPhone12ProMax",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -119,13 +131,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Mobile-GalaxyS21",
         "name": "Mobile-GalaxyS21",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -133,13 +147,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Tablet-iPadPro",
         "name": "Tablet-iPadPro",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -147,13 +163,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "Tablet-iPadAir",
         "name": "Tablet-iPadAir",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -161,13 +179,15 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "LowEnd-Mobile",
         "name": "LowEnd-Mobile",
         "testDir": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests",
@@ -175,35 +195,481 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
-    "version": "1.54.1",
-    "workers": 4,
+    "version": "1.55.1",
+    "workers": 2,
     "webServer": null
   },
-  "suites": [],
-  "errors": [
+  "suites": [
     {
-      "message": "TypeError: Cannot read properties of undefined (reading 'baseURL')",
-      "stack": "TypeError: Cannot read properties of undefined (reading 'baseURL')\n    at globalSetup (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/global-setup.js:18:27)",
-      "location": {
-        "file": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/global-setup.js",
-        "column": 27,
-        "line": 18
-      },
-      "snippet": "\u001b[90m   at \u001b[39mutils/global-setup.js:18\n\n  16 |     startTime: new Date().toISOString(),\n  17 |     testConfig: {\n> 18 |       baseURL: config.use.baseURL,\n     |                           ^\n  19 |       browser: process.env.BROWSER || 'chromium',\n  20 |       workers: config.workers,\n  21 |       retries: config.retries"
+      "title": "integration/cache-busting.spec.js",
+      "file": "integration/cache-busting.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Cache-Busting Strategy",
+          "file": "integration/cache-busting.spec.js",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Deployed version is immediately visible",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop-Chrome",
+                  "projectName": "Desktop-Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 1819,
+                      "error": {
+                        "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+                        "stack": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:24:27",
+                        "location": {
+                          "file": "<anonymous>",
+                          "column": 16,
+                          "line": 293
+                        }
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "<anonymous>",
+                            "column": 16,
+                            "line": 293
+                          },
+                          "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:24:27"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "🧪 Testing cache-busting for immediate version visibility...\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-27T13:39:59.094Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/test-failed-2.png"
+                        },
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "<anonymous>",
+                        "column": 16,
+                        "line": 293
+                      }
+                    },
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 1496,
+                      "error": {
+                        "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+                        "stack": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:24:27",
+                        "location": {
+                          "file": "<anonymous>",
+                          "column": 16,
+                          "line": 293
+                        }
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "<anonymous>",
+                            "column": 16,
+                            "line": 293
+                          },
+                          "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:24:27"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "🧪 Testing cache-busting for immediate version visibility...\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-09-27T13:40:03.411Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/test-failed-2.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--5e7c1-sion-is-immediately-visible-Desktop-Chrome-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "<anonymous>",
+                        "column": 16,
+                        "line": 293
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7b73c7d27d3793f2fcab-00996adf733f6c59ecbe",
+              "file": "integration/cache-busting.spec.js",
+              "line": 11,
+              "column": 3
+            },
+            {
+              "title": "Multiple rapid refreshes show consistent version",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop-Chrome",
+                  "projectName": "Desktop-Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 852,
+                      "error": {
+                        "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+                        "stack": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:121:29",
+                        "location": {
+                          "file": "<anonymous>",
+                          "column": 16,
+                          "line": 293
+                        }
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "<anonymous>",
+                            "column": 16,
+                            "line": 293
+                          },
+                          "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:121:29"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "🔄 Testing version consistency across rapid refreshes...\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-27T13:40:06.739Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "<anonymous>",
+                        "column": 16,
+                        "line": 293
+                      }
+                    },
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 896,
+                      "error": {
+                        "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+                        "stack": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:121:29",
+                        "location": {
+                          "file": "<anonymous>",
+                          "column": 16,
+                          "line": 293
+                        }
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "<anonymous>",
+                            "column": 16,
+                            "line": 293
+                          },
+                          "message": "Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at UtilityScript.evaluate (<anonymous>:293:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at Function.bustCache (/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/utils/game-helpers.js:74:16)\n    at /Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js:121:29"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "🔄 Testing version consistency across rapid refreshes...\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-09-27T13:40:08.997Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/test-results/integration-cache-busting--ee429-hes-show-consistent-version-Desktop-Chrome-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "<anonymous>",
+                        "column": 16,
+                        "line": 293
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7b73c7d27d3793f2fcab-4c08a53134bb43e1d061",
+              "file": "integration/cache-busting.spec.js",
+              "line": 115,
+              "column": 3
+            },
+            {
+              "title": "Browser cache invalidation works correctly",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop-Chrome",
+                  "projectName": "Desktop-Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4052,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🗑️ Testing browser cache invalidation...\n"
+                        },
+                        {
+                          "text": "🎮 Waiting for game to be ready...\n"
+                        },
+                        {
+                          "text": "✅ Three.js loaded\n"
+                        },
+                        {
+                          "text": "✅ Game ready for testing (742ms)\n"
+                        },
+                        {
+                          "text": "🎮 Waiting for game to be ready...\n"
+                        },
+                        {
+                          "text": "✅ Three.js loaded\n"
+                        },
+                        {
+                          "text": "✅ Game ready for testing (551ms)\n"
+                        },
+                        {
+                          "text": "Load time comparison: { first: \u001b[33m674\u001b[39m, second: \u001b[33m403\u001b[39m, difference: \u001b[33m-271\u001b[39m }\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-27T13:40:11.515Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7b73c7d27d3793f2fcab-fd0984d6e2bc2557cb01",
+              "file": "integration/cache-busting.spec.js",
+              "line": 153,
+              "column": 3
+            },
+            {
+              "title": "CDN cache bypassing works",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Desktop-Chrome",
+                  "projectName": "Desktop-Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5385,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🌐 Testing CDN cache bypassing...\n"
+                        },
+                        {
+                          "text": "Testing strategy: timestamp\n"
+                        },
+                        {
+                          "text": "Testing strategy: version\n"
+                        },
+                        {
+                          "text": "Testing strategy: random\n"
+                        },
+                        {
+                          "text": "Testing strategy: combined\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-27T13:40:16.087Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7b73c7d27d3793f2fcab-5550c792909b1c721fe6",
+              "file": "integration/cache-busting.spec.js",
+              "line": 188,
+              "column": 3
+            },
+            {
+              "title": "iOS Safari cache clearing simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "iOS Safari specific test",
+                      "location": {
+                        "file": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js",
+                        "line": 229,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "Desktop-Chrome",
+                  "projectName": "Desktop-Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 280,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-27T13:40:21.484Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "iOS Safari specific test",
+                          "location": {
+                            "file": "/Users/doriangrey/Desktop/coding/EndlessRunner/SubwayRunner/tests/integration/cache-busting.spec.js",
+                            "line": 229,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7b73c7d27d3793f2fcab-2a3efc387a3ca232f0fc",
+              "file": "integration/cache-busting.spec.js",
+              "line": 227,
+              "column": 3
+            }
+          ]
+        }
+      ]
     }
   ],
+  "errors": [],
   "stats": {
-    "startTime": "2025-09-26T15:12:06.019Z",
-    "duration": 39.70500000000004,
-    "expected": 0,
-    "skipped": 0,
-    "unexpected": 0,
+    "startTime": "2025-09-27T13:39:58.482Z",
+    "duration": 23495.755,
+    "expected": 2,
+    "skipped": 1,
+    "unexpected": 2,
     "flaky": 0
   }
 }
