@@ -27,8 +27,9 @@ This is a collection of endless runner games showcasing different technologies:
 ## SubwayRunner Architecture
 
 ### Dual System
-- **Production**: Single `index.html` (~5000+ lines embedded JavaScript)
-- **Development**: React + TypeScript in `src/` folder (Vite build system)
+- **Production**: Root `index.html` (~5000+ lines embedded JavaScript) - deployed to https://ki-revolution.at/
+- **Development**: SubwayRunner directory with React + TypeScript in `src/` folder (Vite build system)
+- **Note**: GitHub Actions deploys root `index.html`, not SubwayRunner version
 
 ### Core Technical Stack
 - **Three.js 0.158.0**: 3D graphics engine
@@ -70,17 +71,24 @@ cd SubwayRunner
 
 # Testing (MANDATORY before deploy)
 npm run test              # 4-category test suite
-npx playwright test       # Browser automation
-npm run predeploy         # Full validation
+npm run test:playwright   # Full Playwright test suite
+npm run test:smoke        # Quick validation tests
+npm run test:cache        # Cache-busting validation
+npm run test:performance  # FPS and performance monitoring
+npm run test:auto         # Auto-generated tests
+npm run self-test         # Pre-deployment validation
+npm run predeploy         # Full validation pipeline
 
 # Development servers
 python3 -m http.server 8001   # Production testing
 npm run dev                   # React dev (port 5173)
 npm run serve                 # Live-server watch mode
 
-# Building
+# Building & Validation
 npm run build             # TypeScript + Vite production
 npm run lint              # ESLint validation
+npm run generate:tests    # Auto-generate test suites
+npm run validate          # Generate tests + self-test
 ```
 
 ### Other Projects
@@ -103,8 +111,8 @@ npm run watch
 - **BREAKTHROUGH**: BMAD Method Agents successfully implemented and operational
 
 ### Version Update Process (MANDATORY)
-1. Update BOTH `SubwayRunner/index.html` title tag AND `SubwayRunner/package.json` version
-2. Increment version numbers (e.g., V4.2 → V4.3, 4.5.10 → 4.5.11)
+1. Update BOTH root `index.html` title tag AND `SubwayRunner/package.json` version
+2. Increment version numbers (e.g., V6.2 → V6.3, 6.2.1 → 6.2.2)
 3. Use emoji commit format: `🎮 Version X.Y.Z: [description]`
 4. Never deploy same version twice
 
@@ -120,9 +128,10 @@ cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html
 ### GitHub Actions CI/CD
 - **Trigger**: Push to main branch
 - **Workflow**: `.github/workflows/hostinger-deploy.yml`
-- **Process**: Copies `SubwayRunner/index.html` to production
+- **Process**: Copies root `index.html` (not SubwayRunner version) to production
 - **Target**: Hostinger FTP → https://ki-revolution.at/
 - **Time**: ~2-3 minutes
+- **Assets**: Includes sounds/, js/, css/ directories if present
 
 ## Testing System
 
@@ -133,11 +142,17 @@ cp SubwayRunner/index.html.V4.6.11.backup SubwayRunner/index.html
 3. **Performance**: File size, line count monitoring
 4. **Game Logic**: Score system, collision detection
 
-### Playwright Testing
-- **Config**: `playwright.config.js`
-- **Reports**: `tests/playwright-report/`
-- **Devices**: Desktop Chrome + iPhone 12
-- **Features**: Video/screenshot capture, localhost:8001
+### Playwright Testing Framework
+- **Config**: `playwright.config.js` in SubwayRunner directory
+- **Reports**: `tests/reports/html-report/` and `tests/reports/game-dashboard.html`
+- **Test Categories**:
+  - **Core Gameplay**: Basic functionality validation
+  - **Cache Busting**: Deployment verification tests
+  - **Performance**: FPS monitoring and memory tracking
+  - **Auto-Generated**: Tests created from code analysis
+  - **Mobile**: iPhone 12 device testing
+- **Devices**: Desktop Chrome, Mobile iPhone 12
+- **Features**: Video/screenshot capture, comprehensive reporting, localhost:8001
 
 ### Pre-deployment Checklist
 ```bash
