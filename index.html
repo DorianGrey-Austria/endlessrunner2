@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V6.4.0-10LEVEL-VISUAL-ENHANCEMENT</title>
+    <title>Subway Runner 3D - V6.5.0-UNIFIED-EXPERIENCE</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
@@ -41,7 +41,41 @@
             border: 2px solid #333;
             border-radius: 8px;
         }
-        
+
+        /* 🎮 FULLSCREEN MENU STATE MANAGEMENT */
+        body.game-state-menu #gameContainer {
+            display: none !important;
+        }
+
+        body.game-state-menu #ui {
+            display: none !important;
+        }
+
+        body.game-state-menu #menu {
+            display: flex !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body.game-state-playing #menu {
+            display: none !important;
+        }
+
+        body.game-state-playing #gameContainer {
+            display: block !important;
+        }
+
+        body.game-state-playing #ui {
+            display: block !important;
+        }
+
         #ui {
             position: absolute;
             top: 20px;
@@ -812,6 +846,120 @@
         @keyframes fastPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        /* 🎨 THEME SELECTION STYLES */
+        .theme-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .theme-section h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .theme-btn {
+            background: rgba(28, 28, 28, 0.9);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-height: 90px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .theme-btn:hover {
+            border-color: rgba(255, 215, 0, 0.8);
+            background: rgba(44, 36, 22, 0.9);
+            transform: translateY(-2px);
+            box-shadow:
+                0 4px 15px rgba(255, 215, 0, 0.3),
+                0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .theme-btn.selected {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow:
+                0 0 20px rgba(255, 215, 0, 0.4),
+                inset 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+
+        .theme-btn .theme-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        .theme-btn .theme-name {
+            color: #F5F5DC;
+            font-weight: bold;
+            font-size: 11px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .theme-btn .theme-desc {
+            color: #4ecdc4;
+            font-size: 9px;
+            text-align: center;
+            opacity: 0.8;
+            line-height: 1.1;
+        }
+
+        .theme-btn:active {
+            transform: translateY(0px);
+            box-shadow:
+                0 2px 8px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Theme-specific visual effects */
+        .theme-btn[data-theme="retro-arcade"]:hover {
+            background: rgba(85, 255, 85, 0.1);
+            border-color: #55ff55;
+        }
+
+        .theme-btn[data-theme="brutalist"]:hover {
+            background: rgba(64, 64, 64, 0.9);
+            border-color: #888;
+        }
+
+        .theme-btn[data-theme="art-deco"]:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #FFD700;
+        }
+
+        .theme-btn[data-theme="comic-book"]:hover {
+            background: rgba(255, 69, 0, 0.1);
+            border-color: #FF4500;
+        }
+
+        .theme-btn[data-theme="neomorphism"]:hover {
+            background: rgba(200, 200, 200, 0.1);
+            border-color: #C8C8C8;
         }
         
         @keyframes bounce {
@@ -1739,8 +1887,8 @@
 </head>
 <body>
     <!-- Background Audio System -->
-//     <script>
-//         // 🎵 ENHANCED MUSIC SYSTEM - Audio Manager Class (DISABLED to fix duplicate declaration)
+    <script>
+        // 🎵 ENHANCED MUSIC SYSTEM - Audio Manager Class with Preview Functionality
 //         // class AudioManager {
 //             constructor() {
 //                 this.tracks = {
@@ -2168,13 +2316,755 @@
 //         });
 //     </script>
 
+    <!-- 🎵 WORKING AUDIO MANAGER - Restored from V6.3.0 -->
+    <script>
+        class EnhancedAudioManager {
+            constructor() {
+                this.tracks = {
+                    'aggressive': {
+                        name: '🔥 Aggressive',
+                        file: 'aggressive-gaming-music-no-copyright-405311.mp3',
+                        color: '#ff4444',
+                        style: 'Intensiv für Action'
+                    },
+                    'calm': {
+                        name: '😌 Calm Flow',
+                        file: 'calm-gaming-flow-325508.mp3',
+                        color: '#4488ff',
+                        style: 'Entspanntes Gameplay'
+                    },
+                    'minecraft': {
+                        name: '⛏️ Minecraft',
+                        file: 'game-gaming-minecraft-background-music-377647.mp3',
+                        color: '#44ff44',
+                        style: 'Nostalgisch'
+                    },
+                    'roblox': {
+                        name: '🎮 Roblox',
+                        file: 'game-roblox-gaming-background-music-347589.mp3',
+                        color: '#aa44ff',
+                        style: 'Modern & Fun'
+                    },
+                    'retro': {
+                        name: '👾 8-Bit',
+                        file: 'gaming-music-8-bit-console-play-background-intro-theme-342069.mp3',
+                        color: '#ffaa44',
+                        style: 'Retro-Feeling'
+                    },
+                    'neon': {
+                        name: '🌃 Neon',
+                        file: 'neon-gaming-128925.mp3',
+                        color: '#44ffaa',
+                        style: 'Synthwave-Vibes'
+                    },
+                    'drive': {
+                        name: '⚡ Relentless',
+                        file: 'relentless-drive-gaming-music-294242.mp3',
+                        color: '#ff8844',
+                        style: 'High Energy'
+                    },
+                    'epic': {
+                        name: '⚔️ Skyrim',
+                        file: 'skyrim-music-epic-the-elder-scrolls-sound-track-204714.mp3',
+                        color: '#ffdd44',
+                        style: 'Epic Adventures'
+                    },
+                    'metal': {
+                        name: '🎸 Metal',
+                        file: 'thrash-metal-instrumental-for-intense-gaming-265085.mp3',
+                        color: '#666666',
+                        style: 'Maximum Power'
+                    }
+                };
+
+                this.currentTrack = null;
+                this.selectedTrack = null;
+                this.volume = 0.4;
+                this.soundEnabled = true;
+                this.previewAudio = null;
+                this.gameAudio = null;
+                this.isPreviewMode = false;
+
+                this.init();
+            }
+
+            init() {
+                // Create main game audio element
+                this.gameAudio = document.createElement('audio');
+                this.gameAudio.id = 'bg-audio';
+                this.gameAudio.preload = 'auto';
+                this.gameAudio.loop = true;
+                this.gameAudio.volume = this.volume;
+                this.gameAudio.style.display = 'none';
+                this.gameAudio.setAttribute('aria-hidden', 'true');
+                this.gameAudio.setAttribute('playsinline', '');
+                document.body.appendChild(this.gameAudio);
+
+                // Create preview audio element
+                this.previewAudio = document.createElement('audio');
+                this.previewAudio.id = 'preview-audio';
+                this.previewAudio.preload = 'metadata';
+                this.previewAudio.volume = this.volume;
+                this.previewAudio.style.display = 'none';
+                this.previewAudio.setAttribute('aria-hidden', 'true');
+                this.previewAudio.setAttribute('playsinline', '');
+                document.body.appendChild(this.previewAudio);
+
+                this.createVolumeControl();
+            }
+
+            createVolumeControl() {
+                // Enhanced volume control for menu and game
+                const soundContainer = document.createElement('div');
+                soundContainer.id = 'sound-control-container';
+                soundContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 1000;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                    transition: all 0.3s ease;
+                `;
+
+                // Sound Toggle Button
+                const button = document.createElement('button');
+                button.id = 'sound-toggle';
+                button.type = 'button';
+                button.setAttribute('aria-pressed', 'true');
+                button.textContent = '🔊';
+                button.style.cssText = `
+                    background: rgba(0, 0, 0, 0.7);
+                    color: #00ff00;
+                    border: 2px solid rgba(0, 255, 0, 0.3);
+                    padding: 10px 12px;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    backdrop-filter: blur(10px);
+                    font-weight: 600;
+                    font-size: 16px;
+                    transition: all 0.3s ease;
+                    min-width: 50px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                `;
+
+                // Volume Control Slider
+                const volumeControl = document.createElement('div');
+                volumeControl.style.cssText = `
+                    opacity: 0;
+                    transform: translateY(-10px);
+                    pointer-events: none;
+                    transition: all 0.3s ease;
+                    background: rgba(0, 0, 0, 0.8);
+                    padding: 8px;
+                    border-radius: 8px;
+                    backdrop-filter: blur(10px);
+                `;
+
+                const volumeSlider = document.createElement('input');
+                volumeSlider.type = 'range';
+                volumeSlider.min = '0';
+                volumeSlider.max = '1';
+                volumeSlider.step = '0.1';
+                volumeSlider.value = this.volume.toString();
+                volumeSlider.style.cssText = `
+                    width: 80px;
+                    height: 4px;
+                    background: #333;
+                    outline: none;
+                    border-radius: 2px;
+                    cursor: pointer;
+                `;
+
+                volumeSlider.addEventListener('input', (e) => {
+                    this.setVolume(parseFloat(e.target.value));
+                });
+
+                volumeControl.appendChild(volumeSlider);
+
+                // Button click handler
+                button.addEventListener('click', () => {
+                    this.toggle();
+                });
+
+                // Show/hide volume control on hover
+                soundContainer.addEventListener('mouseenter', () => {
+                    volumeControl.style.opacity = '1';
+                    volumeControl.style.transform = 'translateY(0)';
+                    volumeControl.style.pointerEvents = 'auto';
+                });
+
+                soundContainer.addEventListener('mouseleave', () => {
+                    volumeControl.style.opacity = '0';
+                    volumeControl.style.transform = 'translateY(-10px)';
+                    volumeControl.style.pointerEvents = 'none';
+                });
+
+                soundContainer.appendChild(button);
+                soundContainer.appendChild(volumeControl);
+                document.body.appendChild(soundContainer);
+
+                this.volumeButton = button;
+                this.volumeSlider = volumeSlider;
+            }
+
+            // Preview a track for 3 seconds
+            async preview(trackId) {
+                if (this.isPreviewMode) {
+                    this.stopPreview();
+                }
+
+                if (!this.tracks[trackId]) return;
+
+                this.isPreviewMode = true;
+                const track = this.tracks[trackId];
+
+                // Set preview audio source
+                this.previewAudio.src = `sounds/${track.file}`;
+
+                try {
+                    await this.previewAudio.play();
+
+                    // Stop after 3 seconds
+                    setTimeout(() => {
+                        this.stopPreview();
+                    }, 3000);
+
+                } catch (error) {
+                    console.log('Preview playback failed:', error);
+                    this.isPreviewMode = false;
+                }
+            }
+
+            stopPreview() {
+                if (this.previewAudio) {
+                    this.previewAudio.pause();
+                    this.previewAudio.currentTime = 0;
+                }
+                this.isPreviewMode = false;
+            }
+
+            // Select and load a track for gameplay
+            selectTrack(trackId) {
+                this.selectedTrack = trackId;
+
+                if (trackId === 'none') {
+                    this.stop();
+                    return;
+                }
+
+                if (trackId === 'random') {
+                    const trackKeys = Object.keys(this.tracks);
+                    const randomTrack = trackKeys[Math.floor(Math.random() * trackKeys.length)];
+                    this.selectedTrack = randomTrack;
+                    trackId = randomTrack;
+                }
+
+                if (this.tracks[trackId]) {
+                    this.loadTrack(trackId);
+                }
+            }
+
+            loadTrack(trackId) {
+                if (this.currentTrack === trackId) return;
+
+                this.stop();
+                this.currentTrack = trackId;
+
+                const track = this.tracks[trackId];
+                this.gameAudio.src = `sounds/${track.file}`;
+
+                if (this.soundEnabled) {
+                    this.play();
+                }
+            }
+
+            play() {
+                if (this.gameAudio && this.soundEnabled && !this.isPreviewMode) {
+                    this.gameAudio.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+
+            pause() {
+                if (this.gameAudio) {
+                    this.gameAudio.pause();
+                }
+            }
+
+            stop() {
+                if (this.gameAudio) {
+                    this.gameAudio.pause();
+                    this.gameAudio.currentTime = 0;
+                }
+            }
+
+            toggle() {
+                this.soundEnabled = !this.soundEnabled;
+
+                if (this.soundEnabled && this.currentTrack) {
+                    this.play();
+                } else {
+                    this.pause();
+                }
+
+                this.updateButton();
+            }
+
+            setVolume(volume) {
+                this.volume = volume;
+                if (this.gameAudio) this.gameAudio.volume = volume;
+                if (this.previewAudio) this.previewAudio.volume = volume;
+            }
+
+            updateButton() {
+                if (this.volumeButton) {
+                    this.volumeButton.textContent = this.soundEnabled ? '🔊' : '🔇';
+                    this.volumeButton.setAttribute('aria-pressed', this.soundEnabled ? 'true' : 'false');
+                    this.volumeButton.style.color = this.soundEnabled ? '#00ff00' : '#ff0000';
+                    this.volumeButton.style.borderColor = this.soundEnabled ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                }
+            }
+
+            // Handle visibility changes (pause when tab not active)
+            handleVisibilityChange() {
+                if (document.hidden) {
+                    this.pause();
+                } else if (this.soundEnabled && this.currentTrack) {
+                    this.play();
+                }
+            }
+        }
+
+        // Initialize Enhanced Audio Manager
+        let enhancedAudioManager;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            enhancedAudioManager = new EnhancedAudioManager();
+
+            // Handle visibility changes
+            document.addEventListener('visibilitychange', () => {
+                enhancedAudioManager.handleVisibilityChange();
+            });
+
+            // Auto-start audio on first user interaction
+            function handleFirstInteraction() {
+                if (enhancedAudioManager.soundEnabled && enhancedAudioManager.currentTrack) {
+                    enhancedAudioManager.play();
+                }
+                document.removeEventListener('click', handleFirstInteraction);
+                document.removeEventListener('keydown', handleFirstInteraction);
+            }
+
+            document.addEventListener('click', handleFirstInteraction);
+            document.addEventListener('keydown', handleFirstInteraction);
+
+            // 🎵 MUSIC BUTTON FUNCTIONALITY
+            function initMusicButtons() {
+                const musicButtons = document.querySelectorAll('.music-btn-enhanced');
+                let currentlyPreviewing = null;
+
+                // Setup music button event listeners
+                musicButtons.forEach(button => {
+                    button.addEventListener('click', async function() {
+                        const trackId = this.dataset.track;
+
+                        // Stop any current preview
+                        if (currentlyPreviewing) {
+                            currentlyPreviewing.classList.remove('previewing');
+                            enhancedAudioManager.stopPreview();
+                        }
+
+                        // Remove selection from all buttons
+                        musicButtons.forEach(btn => btn.classList.remove('selected'));
+
+                        // Select this button
+                        this.classList.add('selected');
+
+                        if (trackId !== 'none') {
+                            // Start preview with visual feedback
+                            this.classList.add('previewing');
+                            currentlyPreviewing = this;
+
+                            await enhancedAudioManager.preview(trackId);
+
+                            // Remove preview effect after 3 seconds
+                            setTimeout(() => {
+                                if (currentlyPreviewing === this) {
+                                    this.classList.remove('previewing');
+                                    currentlyPreviewing = null;
+                                }
+                            }, 3000);
+                        }
+
+                        // Select track for gameplay
+                        enhancedAudioManager.selectTrack(trackId);
+                    });
+
+                    // Hover effects with track info
+                    button.addEventListener('mouseenter', function() {
+                        const trackId = this.dataset.track;
+                        if (enhancedAudioManager.tracks[trackId]) {
+                            const track = enhancedAudioManager.tracks[trackId];
+                            this.title = `${track.name} - ${track.style}`;
+                        }
+                    });
+                });
+            }
+
+            // Initialize music buttons when DOM is ready
+            initMusicButtons();
+        });
+    </script>
+
+    <!-- 🎮 GAME STATE MANAGER - Fullscreen Menu System -->
+    <script>
+        class GameStateManager {
+            constructor() {
+                this.currentState = 'menu';
+                this.states = {
+                    MENU: 'menu',
+                    PLAYING: 'playing',
+                    PAUSED: 'paused',
+                    GAME_OVER: 'gameOver'
+                };
+
+                this.init();
+            }
+
+            init() {
+                // Set initial state to menu
+                this.setState(this.states.MENU);
+                console.log('🎮 GameStateManager initialized - starting in MENU state');
+            }
+
+            setState(newState) {
+                console.log(`🎮 State change: ${this.currentState} → ${newState}`);
+
+                // Remove all state classes
+                document.body.classList.remove(
+                    'game-state-menu',
+                    'game-state-playing',
+                    'game-state-paused',
+                    'game-state-gameover'
+                );
+
+                // Add new state class
+                document.body.classList.add(`game-state-${newState}`);
+                this.currentState = newState;
+
+                // Handle state-specific logic
+                this.handleStateChange(newState);
+            }
+
+            handleStateChange(state) {
+                switch(state) {
+                    case this.states.MENU:
+                        this.showMenu();
+                        break;
+                    case this.states.PLAYING:
+                        this.startPlaying();
+                        break;
+                    case this.states.PAUSED:
+                        this.pauseGame();
+                        break;
+                    case this.states.GAME_OVER:
+                        this.showGameOver();
+                        break;
+                }
+            }
+
+            showMenu() {
+                // Menu is shown via CSS
+                console.log('📺 Showing fullscreen menu');
+
+                // Pause any game audio
+                if (typeof enhancedAudioManager !== 'undefined' && enhancedAudioManager.pause) {
+                    enhancedAudioManager.pause();
+                }
+            }
+
+            startPlaying() {
+                // Game canvas and UI are shown via CSS
+                console.log('🎮 Starting game - UI visible');
+
+                // Resume game audio if selected
+                if (typeof enhancedAudioManager !== 'undefined' && enhancedAudioManager.play) {
+                    enhancedAudioManager.play();
+                }
+            }
+
+            pauseGame() {
+                console.log('⏸️ Game paused');
+                // Add pause-specific logic here
+            }
+
+            showGameOver() {
+                console.log('💀 Game over');
+                // Add game over logic here
+            }
+
+            // Public methods for external access
+            goToMenu() {
+                this.setState(this.states.MENU);
+            }
+
+            startGame() {
+                this.setState(this.states.PLAYING);
+            }
+
+            pauseGameState() {
+                this.setState(this.states.PAUSED);
+            }
+
+            gameOver() {
+                this.setState(this.states.GAME_OVER);
+            }
+
+            isInState(state) {
+                return this.currentState === state;
+            }
+        }
+
+        // Initialize Game State Manager
+        const gameStateManager = new GameStateManager();
+
+        // 🔄 OVERRIDE EXISTING FUNCTIONS for State Management
+        window.showMenu = function() {
+            gameStateManager.goToMenu();
+        };
+
+        // Override the startGameInternal function to use state manager
+        const originalStartGameInternal = window.startGameInternal;
+        window.startGameInternal = function() {
+            // Switch to playing state first
+            gameStateManager.startGame();
+
+            // Then run the original game start logic
+            if (typeof originalStartGameInternal === 'function') {
+                originalStartGameInternal();
+            }
+        };
+    </script>
+
+    <!-- 🎨 THEME SELECTION SYSTEM -->
+    <script>
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = 'art-deco'; // Default theme
+                this.themes = {
+                    'retro-arcade': {
+                        name: '🕹️ Retro Arcade',
+                        description: '80s CRT Monitor Style',
+                        colors: {
+                            primary: '#55ff55',
+                            secondary: '#ff5555',
+                            accent: '#ffff55',
+                            background: '#001100'
+                        },
+                        effects: {
+                            scanlines: true,
+                            pixelation: true,
+                            crtGlow: true
+                        }
+                    },
+                    'brutalist': {
+                        name: '🏭 Brutalist',
+                        description: 'Industrial Concrete Design',
+                        colors: {
+                            primary: '#888888',
+                            secondary: '#444444',
+                            accent: '#cccccc',
+                            background: '#2a2a2a'
+                        },
+                        effects: {
+                            hardShadows: true,
+                            concrete: true,
+                            industrial: true
+                        }
+                    },
+                    'art-deco': {
+                        name: '🏛️ Art Deco',
+                        description: '1920s Golden Luxury',
+                        colors: {
+                            primary: '#FFD700',
+                            secondary: '#4ecdc4',
+                            accent: '#F5F5DC',
+                            background: '#1c1c1c'
+                        },
+                        effects: {
+                            goldAccents: true,
+                            geometric: true,
+                            luxury: true
+                        }
+                    },
+                    'comic-book': {
+                        name: '💥 Comic Book',
+                        description: 'Pop Art with Bold Outlines',
+                        colors: {
+                            primary: '#FF4500',
+                            secondary: '#1E90FF',
+                            accent: '#FFD700',
+                            background: '#000080'
+                        },
+                        effects: {
+                            outlines: true,
+                            benDay: true,
+                            popArt: true
+                        }
+                    },
+                    'neomorphism': {
+                        name: '🫧 Soft UI',
+                        description: 'Modern Tactile Elements',
+                        colors: {
+                            primary: '#C8C8C8',
+                            secondary: '#E0E0E0',
+                            accent: '#A0A0A0',
+                            background: '#F0F0F0'
+                        },
+                        effects: {
+                            softShadows: true,
+                            subtle: true,
+                            tactile: true
+                        }
+                    }
+                };
+
+                this.init();
+            }
+
+            init() {
+                console.log('🎨 ThemeManager initialized');
+                this.applyTheme(this.currentTheme);
+                this.updateThemeButtons();
+            }
+
+            selectTheme(themeId) {
+                if (!this.themes[themeId]) {
+                    console.warn(`Theme '${themeId}' not found`);
+                    return;
+                }
+
+                console.log(`🎨 Switching to theme: ${themeId}`);
+                this.currentTheme = themeId;
+                this.applyTheme(themeId);
+                this.updateThemeButtons();
+
+                // Store selection in localStorage
+                localStorage.setItem('selectedTheme', themeId);
+
+                // Show feedback
+                this.showThemeSelected(this.themes[themeId].name);
+            }
+
+            applyTheme(themeId) {
+                const theme = this.themes[themeId];
+                if (!theme) return;
+
+                // Apply CSS custom properties for theme colors
+                const root = document.documentElement;
+                root.style.setProperty('--theme-primary', theme.colors.primary);
+                root.style.setProperty('--theme-secondary', theme.colors.secondary);
+                root.style.setProperty('--theme-accent', theme.colors.accent);
+                root.style.setProperty('--theme-background', theme.colors.background);
+
+                // Add theme class to body
+                document.body.classList.remove(
+                    'theme-retro-arcade',
+                    'theme-brutalist',
+                    'theme-art-deco',
+                    'theme-comic-book',
+                    'theme-neomorphism'
+                );
+                document.body.classList.add(`theme-${themeId}`);
+
+                console.log(`🎨 Applied theme: ${theme.name}`);
+            }
+
+            updateThemeButtons() {
+                const themeButtons = document.querySelectorAll('.theme-btn');
+                themeButtons.forEach(button => {
+                    const themeId = button.dataset.theme;
+                    if (themeId === this.currentTheme) {
+                        button.classList.add('selected');
+                    } else {
+                        button.classList.remove('selected');
+                    }
+                });
+            }
+
+            showThemeSelected(themeName) {
+                // Create temporary notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 0, 0, 0.9);
+                    color: #FFD700;
+                    padding: 20px 40px;
+                    border-radius: 15px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    z-index: 9999;
+                    text-align: center;
+                    border: 2px solid #FFD700;
+                    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+                `;
+                notification.textContent = `🎨 Theme Selected: ${themeName}`;
+                document.body.appendChild(notification);
+
+                // Auto-remove after 2 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 2000);
+            }
+
+            getCurrentTheme() {
+                return this.currentTheme;
+            }
+
+            getThemeData(themeId) {
+                return this.themes[themeId] || null;
+            }
+
+            // Future: Apply theme to game environment
+            applyThemeToGame(themeId) {
+                // This will be connected to the EnvironmentManager in the future
+                console.log(`🎮 Future: Apply ${themeId} theme to game environment`);
+
+                // TODO: Integrate with EnvironmentManager
+                // environmentManager.setTheme(themeId);
+            }
+        }
+
+        // Initialize Theme Manager
+        const themeManager = new ThemeManager();
+
+        // Global function for theme selection (called by HTML onclick)
+        window.selectTheme = function(themeId) {
+            themeManager.selectTheme(themeId);
+        };
+
+        // Load saved theme on startup
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('selectedTheme');
+            if (savedTheme && themeManager.themes[savedTheme]) {
+                themeManager.selectTheme(savedTheme);
+            }
+        });
+    </script>
+
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         
         <!-- Version Info Display -->
         <div id="versionInfo">
-            🌟 V6.4.0-10LEVEL-VISUAL-ENHANCEMENT<br>
-            🎨 10 Unique Visual Themes<br>
+            🌟 V6.5.0-UNIFIED-EXPERIENCE<br>
+            🎵 Audio Preview + 🎨 Theme Selection + 🌫️ Optimized Fog<br>
             📅 27.09.2025
         </div>
         
@@ -2384,6 +3274,38 @@
                             <input type="range" id="menuVolumeSlider" min="0" max="1" step="0.1" value="0.4" class="volume-slider-compact">
                         </div>
                     </div>
+
+                    <!-- 🎨 THEME SELECTION SECTION -->
+                    <div class="theme-section">
+                        <h3>🎨 Choose Your Style</h3>
+                        <div class="theme-grid">
+                            <button class="theme-btn" data-theme="retro-arcade" onclick="selectTheme('retro-arcade')">
+                                <span class="theme-icon">🕹️</span>
+                                <span class="theme-name">Retro Arcade</span>
+                                <span class="theme-desc">80s CRT Style</span>
+                            </button>
+                            <button class="theme-btn" data-theme="brutalist" onclick="selectTheme('brutalist')">
+                                <span class="theme-icon">🏭</span>
+                                <span class="theme-name">Brutalist</span>
+                                <span class="theme-desc">Industrial Power</span>
+                            </button>
+                            <button class="theme-btn" data-theme="art-deco" onclick="selectTheme('art-deco')">
+                                <span class="theme-icon">🏛️</span>
+                                <span class="theme-name">Art Deco</span>
+                                <span class="theme-desc">1920s Luxury</span>
+                            </button>
+                            <button class="theme-btn" data-theme="comic-book" onclick="selectTheme('comic-book')">
+                                <span class="theme-icon">💥</span>
+                                <span class="theme-name">Comic Book</span>
+                                <span class="theme-desc">Pop Art Style</span>
+                            </button>
+                            <button class="theme-btn" data-theme="neomorphism" onclick="selectTheme('neomorphism')">
+                                <span class="theme-icon">🫧</span>
+                                <span class="theme-name">Soft UI</span>
+                                <span class="theme-desc">Modern Tactile</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TERTIARY OPTIONS SECTION (15% Visual Weight) -->
@@ -2477,40 +3399,11 @@
     </div>
 
     <script>
-        // Audio System
-        class AudioManager {
-            constructor() {
-                this.audioContext = null;
-                this.sounds = {};
-                this.masterVolume = 0.3;
-                this.backgroundMusic = null;
-                this.musicVolume = 0.15; // Lower volume for background music
-                this.musicGain = null;
-                this.musicLoaded = false;
-                this.musicPlaying = false;
-                this.initAudio();
-            }
+        // 🔄 AUDIO SYSTEM UNIFIED - Using EnhancedAudioManager only
+        // (Old simple AudioManager removed to prevent conflicts)
 
-            async initAudio() {
-                try {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    this.masterGain = this.audioContext.createGain();
-                    this.masterGain.gain.value = this.masterVolume;
-                    this.masterGain.connect(this.audioContext.destination);
-                    
-                    // Create separate gain node for background music
-                    this.musicGain = this.audioContext.createGain();
-                    this.musicGain.gain.value = this.musicVolume;
-                    this.musicGain.connect(this.audioContext.destination);
-                    
-                    this.createAdvancedSounds();
-                    
-                    // Preload background music (but don't play yet)
-                    this.preloadBackgroundMusic();
-                } catch (error) {
-                    console.log('Audio not supported');
-                }
-            }
+        // Create alias for enhanced audio manager for backward compatibility
+        let audioManager;
 
             async preloadBackgroundMusic() {
                 try {
@@ -3279,7 +4172,7 @@
                 description: "Tutorial - Classic subway atmosphere",
                 skyColor: 0x87CEEB,          // Sky blue
                 fogColor: 0x87CEEB,          // Matching fog
-                fogDensity: 0.005,           // Light fog
+                fogDensity: 0.003,           // Light fog (reduced 40%)
                 groundColor: 0x333333,       // Dark asphalt
                 ambientColor: 0x404080,      // Cool ambient
                 ambientIntensity: 0.4,
@@ -3295,7 +4188,7 @@
                 description: "Cyberpunk neon-lit streets",
                 skyColor: 0x0a0a2e,          // Dark blue night
                 fogColor: 0x1a1a3e,          // Purple night fog
-                fogDensity: 0.008,           // Medium fog
+                fogDensity: 0.004,           // Medium fog (reduced 50%)
                 groundColor: 0x1a1a3e,       // Dark purple street
                 ambientColor: 0x4040C0,      // Blue ambient
                 ambientIntensity: 0.3,
@@ -3311,7 +4204,7 @@
                 description: "PEAK DIFFICULTY - Mystical jungle temple",
                 skyColor: 0x2D4A2B,          // Dark jungle green
                 fogColor: 0x556B2F,          // Jungle fog
-                fogDensity: 0.012,           // Dense jungle mist
+                fogDensity: 0.006,           // Dense jungle mist (reduced 50%)
                 groundColor: 0x8B4513,       // Temple stone
                 ambientColor: 0x2F4F2F,      // Dark forest green
                 ambientIntensity: 0.2,
@@ -3327,7 +4220,7 @@
                 description: "Digital matrix environment",
                 skyColor: 0x000020,          // Deep space
                 fogColor: 0x001F3F,          // Digital blue
-                fogDensity: 0.006,           // Reduced fog for relief
+                fogDensity: 0.003,           // Reduced fog for relief (reduced 50%)
                 groundColor: 0x003366,       // Cyber blue
                 ambientColor: 0x0080FF,      // Bright cyber blue
                 ambientIntensity: 0.5,
@@ -3343,7 +4236,7 @@
                 description: "Lush tropical environment",
                 skyColor: 0x228B22,          // Forest green
                 fogColor: 0x90EE90,          // Light green fog
-                fogDensity: 0.009,           // Humid atmosphere
+                fogDensity: 0.005,           // Humid atmosphere (reduced 44%)
                 groundColor: 0x8FBC8F,       // Moss covered stone
                 ambientColor: 0x32CD32,      // Lime green
                 ambientIntensity: 0.4,
@@ -3359,7 +4252,7 @@
                 description: "Futuristic space environment",
                 skyColor: 0x000011,          // Deep space black
                 fogColor: 0x111133,          // Space fog
-                fogDensity: 0.003,           // Minimal fog
+                fogDensity: 0.002,           // Minimal fog (reduced 33%)
                 groundColor: 0x708090,       // Metallic gray
                 ambientColor: 0x4169E1,      // Royal blue
                 ambientIntensity: 0.3,
@@ -3375,7 +4268,7 @@
                 description: "Fiery volcanic landscape",
                 skyColor: 0x2F1B14,          // Ash gray sky
                 fogColor: 0x8B0000,          // Dark red fog
-                fogDensity: 0.015,           // Heavy ash
+                fogDensity: 0.008,           // Heavy ash (reduced 47%)
                 groundColor: 0x800000,       // Dark red lava rock
                 ambientColor: 0xFF4500,      // Orange red
                 ambientIntensity: 0.6,
@@ -3391,7 +4284,7 @@
                 description: "Deep ocean environment",
                 skyColor: 0x006064,          // Deep teal
                 fogColor: 0x4DD0E1,          // Aqua fog
-                fogDensity: 0.020,           // Heavy water effect
+                fogDensity: 0.010,           // Heavy water effect (reduced 50%)
                 groundColor: 0x2E7D32,       // Sea green
                 ambientColor: 0x26C6DA,      // Light cyan
                 ambientIntensity: 0.5,
@@ -3407,7 +4300,7 @@
                 description: "Magical crystal environment",
                 skyColor: 0x2E2E2E,          // Dark cave
                 fogColor: 0x9C27B0,          // Purple magic fog
-                fogDensity: 0.018,           // Magical mist
+                fogDensity: 0.009,           // Magical mist (reduced 50%)
                 groundColor: 0x4A148C,       // Deep purple
                 ambientColor: 0xE91E63,      // Pink magic
                 ambientIntensity: 0.4,
@@ -3423,7 +4316,7 @@
                 description: "FINALE - Spectacular rainbow finale",
                 skyColor: 0x191970,          // Midnight blue
                 fogColor: 0x9370DB,          // Medium orchid
-                fogDensity: 0.010,           // Moderate fog
+                fogDensity: 0.005,           // Moderate fog (reduced 50%)
                 groundColor: 0x4B0082,       // Indigo
                 ambientColor: 0xFF69B4,      // Hot pink
                 ambientIntensity: 0.7,
