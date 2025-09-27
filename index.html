@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V6.3.2-PROFESSIONAL-HIERARCHY</title>
+    <title>Subway Runner 3D - V6.3.3-MULTI-ROW-MUSIC-GRID</title>
     <!-- BUGFIX: CSP headers to allow MediaPipe and other external resources -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://storage.googleapis.com; connect-src 'self' https://umvrurelsxpxmyzcvrcd.supabase.co https://storage.googleapis.com; worker-src 'self' blob:; img-src 'self' data: blob:; media-src 'self' blob:;">
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
@@ -707,13 +707,127 @@
             text-align: center;
         }
 
+        /* MUSIC GRID LAYOUT */
+        .music-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
         .music-row {
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
-            max-width: 600px;
-            margin: 0 auto;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* ENHANCED MUSIC BUTTONS */
+        .music-btn-enhanced {
+            background: linear-gradient(135deg, rgba(26, 32, 44, 0.9) 0%, rgba(45, 55, 72, 0.9) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            min-width: 120px;
+            height: 70px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            position: relative;
+            backdrop-filter: blur(20px);
+            box-shadow:
+                0 4px 16px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+            padding: 8px 12px;
+        }
+
+        .music-btn-enhanced:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 0 20px var(--track-color),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: var(--track-color);
+            background: linear-gradient(135deg, var(--track-color) 0%, rgba(45, 55, 72, 0.9) 100%);
+        }
+
+        .music-btn-enhanced.selected {
+            background: linear-gradient(135deg, var(--track-color) 0%, rgba(26, 32, 44, 0.8) 100%);
+            border-color: var(--track-color);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 0 30px var(--track-color),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .music-btn-enhanced.previewing {
+            animation: enhanced-pulse 1.5s infinite;
+        }
+
+        @keyframes enhanced-pulse {
+            0%, 100% {
+                transform: scale(1.05);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 0 20px var(--track-color);
+            }
+            50% {
+                transform: scale(1.15);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px var(--track-color);
+            }
+        }
+
+        .music-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .music-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .music-genre {
+            font-size: 0.6rem;
+            font-weight: 400;
+            opacity: 0.8;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* NO AUDIO BUTTON PROMINENT STYLING */
+        .music-btn-no-audio {
+            border: 2px solid #ff6b35 !important;
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(26, 32, 44, 0.9) 100%) !important;
+            min-width: 140px !important;
+        }
+
+        .music-btn-no-audio:hover {
+            background: linear-gradient(135deg, #ff6b35 0%, rgba(45, 55, 72, 0.9) 100%) !important;
+            box-shadow:
+                0 8px 32px rgba(255, 107, 53, 0.4),
+                0 0 20px #ff6b35,
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .music-btn-no-audio .music-name {
+            font-weight: 700;
+            color: #ff6b35;
+        }
+
+        .music-btn-no-audio.selected {
+            background: linear-gradient(135deg, #ff6b35 0%, rgba(26, 32, 44, 0.8) 100%) !important;
+            box-shadow:
+                0 8px 32px rgba(255, 107, 53, 0.5),
+                0 0 30px #ff6b35,
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
         }
 
         .music-chip {
@@ -859,9 +973,34 @@
                 font-size: 1.3rem;
             }
 
-            .music-row {
+            .music-grid {
                 max-width: 100%;
-                gap: 6px;
+            }
+
+            .music-row {
+                gap: 8px;
+            }
+
+            .music-btn-enhanced {
+                min-width: 100px;
+                height: 60px;
+                padding: 6px 8px;
+            }
+
+            .music-icon {
+                font-size: 1.3rem;
+            }
+
+            .music-name {
+                font-size: 0.75rem;
+            }
+
+            .music-genre {
+                font-size: 0.55rem;
+            }
+
+            .music-btn-no-audio {
+                min-width: 120px !important;
             }
 
             .music-chip {
@@ -913,6 +1052,33 @@
             .instant-badge, .setup-badge {
                 padding: 4px 12px;
                 font-size: 0.75rem;
+            }
+
+            /* Mobile Music Button Adjustments */
+            .music-btn-enhanced {
+                min-width: 80px !important;
+                height: 55px !important;
+                gap: 2px;
+            }
+
+            .music-icon {
+                font-size: 1.2rem !important;
+            }
+
+            .music-name {
+                font-size: 0.65rem !important;
+            }
+
+            .music-genre {
+                font-size: 0.5rem !important;
+            }
+
+            .music-btn-no-audio {
+                min-width: 100px !important;
+            }
+
+            .music-row {
+                gap: 6px !important;
             }
 
             .music-chip {
@@ -1387,7 +1553,7 @@
 
             // 🎵 MUSIC BUTTON FUNCTIONALITY
             function initMusicButtons() {
-                const musicButtons = document.querySelectorAll('.music-chip');
+                const musicButtons = document.querySelectorAll('.music-btn-enhanced');
                 const menuVolumeSlider = document.getElementById('menuVolumeSlider');
                 let currentlyPreviewing = null;
 
@@ -1464,23 +1630,8 @@
                 }
             };
 
-            // Integration with control selection - wait for DOM to be fully loaded
-            setTimeout(() => {
-                if (typeof window.selectControl === 'function') {
-                    const originalSelectControl = window.selectControl;
-                    window.selectControl = function(controlType) {
-                        // Call original function
-                        originalSelectControl(controlType);
-
-                        // Ensure music continues when starting game
-                        if (audioManager.selectedTrack && audioManager.soundEnabled) {
-                            setTimeout(() => {
-                                audioManager.play();
-                            }, 500);
-                        }
-                    };
-                }
-            }, 100);
+            // Music integration is now handled directly in startGameInternal()
+            // No need to override selectControl function
         });
     </script>
 
@@ -1610,21 +1761,76 @@
 
                 <!-- SECONDARY OPTIONS SECTION (25% Visual Weight) -->
                 <div class="secondary-options">
-                    <!-- Compact Music Selection -->
+                    <!-- Enhanced Multi-Row Music Selection -->
                     <div class="music-section">
-                        <h3>🎵 Soundtrack</h3>
-                        <div class="music-row">
-                            <button class="music-chip" data-track="aggressive" style="--track-color: #ff4444" title="Aggressive - Intensiv für Action">🔥</button>
-                            <button class="music-chip" data-track="calm" style="--track-color: #4488ff" title="Calm Flow - Entspanntes Gameplay">😌</button>
-                            <button class="music-chip" data-track="minecraft" style="--track-color: #44ff44" title="Minecraft - Nostalgisch">⛏️</button>
-                            <button class="music-chip" data-track="roblox" style="--track-color: #aa44ff" title="Roblox - Modern & Fun">🎮</button>
-                            <button class="music-chip" data-track="retro" style="--track-color: #ffaa44" title="8-Bit - Retro-Feeling">👾</button>
-                            <button class="music-chip" data-track="neon" style="--track-color: #44ffaa" title="Neon - Synthwave-Vibes">🌃</button>
-                            <button class="music-chip" data-track="drive" style="--track-color: #ff8844" title="Relentless - High Energy">⚡</button>
-                            <button class="music-chip" data-track="epic" style="--track-color: #ffdd44" title="Skyrim - Epic Adventures">⚔️</button>
-                            <button class="music-chip" data-track="metal" style="--track-color: #666666" title="Metal - Maximum Power">🎸</button>
-                            <button class="music-chip" data-track="none" style="--track-color: #888888" title="Keine Musik">🔇</button>
-                            <button class="music-chip rainbow" data-track="random" title="Zufällig - Überraschung!">🎲</button>
+                        <h3>🎵 Choose Your Soundtrack</h3>
+                        <div class="music-grid">
+                            <!-- Row 1: Action & Energy -->
+                            <div class="music-row">
+                                <button class="music-btn-enhanced" data-track="aggressive" style="--track-color: #ff4444">
+                                    <span class="music-icon">🔥</span>
+                                    <span class="music-name">Aggressive</span>
+                                    <span class="music-genre">Action</span>
+                                </button>
+                                <button class="music-btn-enhanced" data-track="metal" style="--track-color: #666666">
+                                    <span class="music-icon">🎸</span>
+                                    <span class="music-name">Metal</span>
+                                    <span class="music-genre">Rock</span>
+                                </button>
+                                <button class="music-btn-enhanced" data-track="drive" style="--track-color: #ff8844">
+                                    <span class="music-icon">⚡</span>
+                                    <span class="music-name">Relentless</span>
+                                    <span class="music-genre">High Energy</span>
+                                </button>
+                                <button class="music-btn-enhanced" data-track="epic" style="--track-color: #ffdd44">
+                                    <span class="music-icon">⚔️</span>
+                                    <span class="music-name">Epic</span>
+                                    <span class="music-genre">Adventure</span>
+                                </button>
+                            </div>
+
+                            <!-- Row 2: Modern & Fun -->
+                            <div class="music-row">
+                                <button class="music-btn-enhanced" data-track="neon" style="--track-color: #44ffaa">
+                                    <span class="music-icon">🌃</span>
+                                    <span class="music-name">Neon</span>
+                                    <span class="music-genre">Synthwave</span>
+                                </button>
+                                <button class="music-btn-enhanced" data-track="roblox" style="--track-color: #aa44ff">
+                                    <span class="music-icon">🎮</span>
+                                    <span class="music-name">Roblox</span>
+                                    <span class="music-genre">Modern</span>
+                                </button>
+                                <button class="music-btn-enhanced" data-track="retro" style="--track-color: #ffaa44">
+                                    <span class="music-icon">👾</span>
+                                    <span class="music-name">8-Bit</span>
+                                    <span class="music-genre">Retro</span>
+                                </button>
+                                <button class="music-btn-enhanced" data-track="minecraft" style="--track-color: #44ff44">
+                                    <span class="music-icon">⛏️</span>
+                                    <span class="music-name">Minecraft</span>
+                                    <span class="music-genre">Nostalgic</span>
+                                </button>
+                            </div>
+
+                            <!-- Row 3: Calm & Special Options -->
+                            <div class="music-row">
+                                <button class="music-btn-enhanced" data-track="calm" style="--track-color: #4488ff">
+                                    <span class="music-icon">😌</span>
+                                    <span class="music-name">Calm Flow</span>
+                                    <span class="music-genre">Chill</span>
+                                </button>
+                                <button class="music-btn-enhanced music-btn-no-audio" data-track="none" style="--track-color: #888888">
+                                    <span class="music-icon">🔇</span>
+                                    <span class="music-name">NO MUSIC</span>
+                                    <span class="music-genre">Silent</span>
+                                </button>
+                                <button class="music-btn-enhanced rainbow" data-track="random" style="--track-color: #ff00ff">
+                                    <span class="music-icon">🎲</span>
+                                    <span class="music-name">Random</span>
+                                    <span class="music-genre">Surprise</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
