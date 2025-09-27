@@ -1,0 +1,426 @@
+/* 🎨 COMIC BOOK / CEL-SHADING MENU SYSTEM */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Bungee:wght@400&family=Nunito:wght@700,800,900&display=swap');
+
+.menu-container {
+    background:
+        radial-gradient(circle at 20% 80%, rgba(255, 48, 48, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(48, 48, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 255, 48, 0.1) 0%, transparent 50%),
+        repeating-conic-gradient(from 0deg at 50% 50%,
+            transparent 0deg, transparent 2deg,
+            rgba(255,255,255,0.02) 2deg, rgba(255,255,255,0.02) 4deg),
+        linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    font-family: 'Nunito', sans-serif !important;
+}
+
+.menu-container::before {
+    background-image:
+        radial-gradient(circle at 25% 25%, rgba(255,255,255,0.8) 1.5px, transparent 1.5px),
+        radial-gradient(circle at 75% 75%, rgba(255,255,255,0.6) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(78, 205, 196, 0.3) 0.5px, transparent 0.5px) !important;
+    background-size: 60px 60px, 40px 40px, 80px 80px !important;
+    opacity: 0.1 !important;
+    animation: halftone-float 20s ease-in-out infinite !important;
+}
+
+@keyframes halftone-float {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(10px) translateY(-5px); }
+    50% { transform: translateX(-5px) translateY(10px); }
+    75% { transform: translateX(-10px) translateY(-5px); }
+}
+
+.menu-container::after {
+    border: 8px solid #000000 !important;
+    border-radius: 40px !important;
+    box-shadow:
+        0 0 0 4px #ffffff,
+        0 0 0 12px #000000,
+        inset 0 0 50px rgba(255, 48, 48, 0.1),
+        inset 0 0 100px rgba(48, 48, 255, 0.1),
+        30px 30px 0 -10px rgba(255, 255, 48, 0.7),
+        28px 28px 0 0px #000000,
+        50px 50px 100px rgba(0,0,0,0.3) !important;
+}
+
+.menu-screen {
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,249,250,0.98) 100%) !important;
+    border: 6px solid #000000 !important;
+    border-radius: 35px !important;
+    box-shadow:
+        0 0 0 4px #ffffff,
+        0 0 0 10px #000000,
+        25px 25px 0 0px rgba(78, 205, 196, 0.8),
+        23px 23px 0 3px #000000,
+        45px 45px 80px rgba(0,0,0,0.4) !important;
+}
+
+.menu-screen::before {
+    background:
+        radial-gradient(circle at 30% 70%, rgba(255,255,48,0.15) 0%, transparent 25%),
+        radial-gradient(circle at 70% 30%, rgba(48,255,48,0.1) 0%, transparent 30%),
+        radial-gradient(circle at 10% 10%, rgba(255,48,48,0.1) 0%, transparent 20%) !important;
+    animation: comic-background 12s ease-in-out infinite alternate !important;
+}
+
+@keyframes comic-background {
+    0% { transform: rotate(0deg) scale(1); }
+    100% { transform: rotate(3deg) scale(1.1); }
+}
+
+.menu-screen.active {
+    animation: comic-entrance 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+
+@keyframes comic-entrance {
+    0% { transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.1) rotate(2deg); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+}
+
+.menu-screen h1 {
+    font-family: 'Bungee', cursive !important;
+    background: linear-gradient(45deg, #FF3030, #4ecdc4, #3030FF, #FFFF30) !important;
+    background-size: 300% 300% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow:
+        5px 5px 0 #000000,
+        10px 10px 30px rgba(0,0,0,0.6) !important;
+    -webkit-text-stroke: 3px #000000 !important;
+    animation: comic-title 3s ease-in-out infinite !important;
+    position: relative !important;
+}
+
+@keyframes comic-title {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.menu-screen h1::after {
+    content: 'KAPOW!' !important;
+    position: absolute !important;
+    top: -30px !important;
+    right: -60px !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1rem !important;
+    color: #ffffff !important;
+    background: #FF3030 !important;
+    border: 4px solid #000000 !important;
+    border-radius: 50% !important;
+    width: 80px !important;
+    height: 80px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: rotate(15deg) !important;
+    box-shadow: 5px 5px 0 #000000 !important;
+    z-index: 3 !important;
+    animation: kapow-bounce 2s ease-in-out infinite !important;
+}
+
+@keyframes kapow-bounce {
+    0%, 100% { transform: rotate(15deg) scale(1); }
+    50% { transform: rotate(10deg) scale(1.1); }
+}
+
+.menu-screen h2 {
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 900 !important;
+    color: #1a1a2e !important;
+    text-shadow:
+        3px 3px 0 #ffffff,
+        6px 6px 0 #000000,
+        9px 9px 20px rgba(0,0,0,0.3) !important;
+    -webkit-text-stroke: 1.5px #000000 !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #FFFF30 0%, #FFE066 50%, #FFCC33 100%) !important;
+    border: 5px solid #000000 !important;
+    color: #1a1a2e !important;
+    border-radius: 25px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 900 !important;
+    box-shadow:
+        0 0 0 3px #ffffff,
+        0 0 0 8px #000000,
+        12px 12px 0 0px rgba(255, 48, 48, 0.8),
+        10px 10px 0 5px #000000,
+        25px 25px 50px rgba(0,0,0,0.4) !important;
+    text-shadow:
+        2px 2px 0 #ffffff,
+        4px 4px 0 #000000 !important;
+    text-transform: uppercase !important;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.btn-primary::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 25px !important;
+    height: 25px !important;
+    background:
+        radial-gradient(circle, rgba(78, 205, 196, 0.8) 1.5px, transparent 1.5px),
+        radial-gradient(circle, rgba(255, 48, 48, 0.6) 1px, transparent 1px) !important;
+    background-size: 12px 12px, 8px 8px !important;
+    z-index: 1 !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-8px) rotate(-2deg) !important;
+    background: linear-gradient(135deg, #FF3030 0%, #FF6666 50%, #FF9999 100%) !important;
+    color: #ffffff !important;
+    text-shadow:
+        2px 2px 0 #000000,
+        4px 4px 10px rgba(0,0,0,0.5) !important;
+    box-shadow:
+        0 0 0 3px #ffffff,
+        0 0 0 8px #4ecdc4,
+        18px 18px 0 0px rgba(255, 255, 48, 0.8),
+        16px 16px 0 5px #000000,
+        35px 35px 70px rgba(0,0,0,0.5) !important;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%) !important;
+    border: 4px solid #000000 !important;
+    color: #1a1a2e !important;
+    border-radius: 20px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 800 !important;
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 6px #000000,
+        8px 8px 0 0px rgba(78, 205, 196, 0.7),
+        6px 6px 0 4px #000000,
+        20px 20px 40px rgba(0,0,0,0.3) !important;
+    text-shadow:
+        1.5px 1.5px 0 #ffffff,
+        3px 3px 0 #000000 !important;
+    text-transform: uppercase !important;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+    position: relative !important;
+}
+
+.btn-secondary::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 20px !important;
+    height: 20px !important;
+    background:
+        radial-gradient(circle, rgba(48, 48, 255, 0.6) 1px, transparent 1px) !important;
+    background-size: 8px 8px !important;
+    z-index: 1 !important;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #3030FF 0%, #6666FF 50%, #9999FF 100%) !important;
+    color: #ffffff !important;
+    text-shadow:
+        1.5px 1.5px 0 #000000,
+        3px 3px 8px rgba(0,0,0,0.4) !important;
+    transform: translateY(-6px) rotate(1deg) !important;
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 6px #4ecdc4,
+        12px 12px 0 0px rgba(255, 255, 48, 0.7),
+        10px 10px 0 4px #000000,
+        25px 25px 50px rgba(0,0,0,0.4) !important;
+}
+
+.control-option {
+    background:
+        linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border: 5px solid #000000 !important;
+    border-radius: 25px !important;
+    color: #1a1a2e !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 800 !important;
+    box-shadow:
+        0 0 0 3px #ffffff,
+        0 0 0 8px #000000,
+        12px 12px 0 0px rgba(78, 205, 196, 0.8),
+        10px 10px 0 5px #000000,
+        25px 25px 50px rgba(0,0,0,0.3) !important;
+    text-shadow:
+        2px 2px 0 #ffffff,
+        4px 4px 0 #000000 !important;
+    text-transform: uppercase !important;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.control-option::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 15px !important;
+    right: 15px !important;
+    width: 30px !important;
+    height: 30px !important;
+    background:
+        radial-gradient(circle, rgba(78, 205, 196, 0.8) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255, 48, 48, 0.6) 0.5px, transparent 0.5px) !important;
+    background-size: 10px 10px, 6px 6px !important;
+    z-index: 1 !important;
+}
+
+.control-option:hover, .control-option.selected {
+    background:
+        linear-gradient(135deg, #FFFF30 0%, #FFE066 100%) !important;
+    border-color: #4ecdc4 !important;
+    transform: translateY(-8px) rotate(-2deg) !important;
+    box-shadow:
+        0 0 0 3px #ffffff,
+        0 0 0 8px #4ecdc4,
+        18px 18px 0 0px rgba(255, 48, 48, 0.8),
+        16px 16px 0 5px #000000,
+        35px 35px 70px rgba(0,0,0,0.4) !important;
+}
+
+/* SPEZIELLE COMIC ELEMENTE */
+.game-header h1::before {
+    content: 'POW!' !important;
+    position: absolute !important;
+    top: -20px !important;
+    right: -20px !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.2rem !important;
+    color: #FF3030 !important;
+    background: #FFFF30 !important;
+    border: 3px solid #000000 !important;
+    border-radius: 50% !important;
+    width: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: rotate(15deg) !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    z-index: 3 !important;
+    animation: pow-bounce 2s ease-in-out infinite !important;
+}
+
+@keyframes pow-bounce {
+    0%, 100% { transform: rotate(15deg) scale(1); }
+    50% { transform: rotate(10deg) scale(1.1); }
+}
+
+.game-tagline {
+    background:
+        linear-gradient(90deg, transparent 0%, rgba(255,255,48,0.3) 20%, rgba(255,255,48,0.3) 80%, transparent 100%) !important;
+    padding: 5px 15px !important;
+    border-radius: 15px !important;
+    border: 2px solid #000000 !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    text-shadow:
+        2px 2px 0 #ffffff,
+        4px 4px 0 #000000 !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 700 !important;
+    color: #1a1a2e !important;
+}
+
+/* PRIMARY ACTIONS GRID MIT COMIC STIL */
+.primary-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 30px !important;
+    margin: 40px auto !important;
+    max-width: 600px !important;
+}
+
+.control-option.primary {
+    background:
+        linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border: 5px solid #000000 !important;
+    border-radius: 25px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 16px !important;
+    min-height: 140px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.control-option.primary.recommended::after {
+    content: 'RECOMMENDED!' !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: 50% !important;
+    transform: translateX(-50%) rotate(-5deg) !important;
+    background: #FF3030 !important;
+    color: #ffffff !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 0.8rem !important;
+    padding: 5px 15px !important;
+    border: 3px solid #000000 !important;
+    border-radius: 15px !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    z-index: 10 !important;
+}
+
+.control-option.primary .control-icon {
+    font-size: 3rem !important;
+    filter:
+        drop-shadow(4px 4px 0 #000000)
+        drop-shadow(8px 8px 15px rgba(0,0,0,0.4)) !important;
+    z-index: 2 !important;
+}
+
+.control-option.primary .control-content h2 {
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 900 !important;
+    color: #1a1a2e !important;
+    text-shadow:
+        2px 2px 0 #ffffff,
+        4px 4px 0 #000000 !important;
+    -webkit-text-stroke: 1px #000000 !important;
+    z-index: 2 !important;
+    position: relative !important;
+}
+
+.control-option.primary .control-content p {
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 700 !important;
+    color: #2c3e50 !important;
+    text-shadow: 1px 1px 0 #ffffff !important;
+    z-index: 2 !important;
+    position: relative !important;
+}
+
+.instant-badge, .setup-badge {
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 800 !important;
+    border: 3px solid #000000 !important;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.8) !important;
+    box-shadow: 3px 3px 0 #000000 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    z-index: 2 !important;
+    position: relative !important;
+    border-radius: 20px !important;
+    padding: 6px 16px !important;
+}
+
+.instant-badge {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+    color: #ffffff !important;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5) !important;
+}
+
+.setup-badge {
+    background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%) !important;
+    color: #1a1a2e !important;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.8) !important;
+}

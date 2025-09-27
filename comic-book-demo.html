@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Comic Book / Cel-Shading Menu Design Demo</title>
+    <link rel="stylesheet" href="comic-book-css.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* DEMO STYLES */
+        .demo-header {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            z-index: 2000;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+        }
+
+        .demo-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .demo-header p {
+            margin: 5px 0 0 0;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="demo-header">
+        <h3>🎨 Comic Book / Cel-Shading Demo</h3>
+        <p>SubwayRunner Menu Design Proposal</p>
+    </div>
+
+    <div class="menu-container">
+        <div class="menu-screen active">
+            <!-- HEADER SECTION (Compact) -->
+            <div class="game-header">
+                <h1>🏃 SUBWAY RUNNER 3D</h1>
+                <p class="game-tagline">Choose your style. Start instantly.</p>
+            </div>
+
+            <!-- PRIMARY ACTIONS SECTION (60% Visual Weight) -->
+            <div class="primary-actions">
+                <div class="control-option primary recommended">
+                    <div class="control-icon">🎮</div>
+                    <div class="control-content">
+                        <h2>CLASSIC</h2>
+                        <p>Keyboard • Touch • Gamepad</p>
+                        <span class="instant-badge">▶ Start Instantly</span>
+                    </div>
+                </div>
+                <div class="control-option primary">
+                    <div class="control-icon">👋</div>
+                    <div class="control-content">
+                        <h2>GESTURE</h2>
+                        <p>Camera Control • Hands-free</p>
+                        <span class="setup-badge">⚙ Setup Required</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECONDARY ACTIONS SECTION (30% Visual Weight) -->
+            <div class="secondary-actions">
+                <button class="btn-secondary">📊 Highscores</button>
+                <button class="btn-secondary">⚙️ Settings</button>
+                <button class="btn-secondary">ℹ️ About</button>
+            </div>
+
+            <!-- FOOTER SECTION (10% Visual Weight) -->
+            <div class="footer-actions">
+                <p style="color: #666; font-size: 0.9rem; margin-top: 20px;">
+                    SubwayRunner V6.4.2 • Comic Book Edition
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo interactivity
+        document.querySelectorAll('.control-option, .btn-primary, .btn-secondary').forEach(element => {
+            element.addEventListener('click', () => {
+                // Visual feedback
+                element.style.transform = 'translateY(-4px) scale(0.95)';
+                setTimeout(() => {
+                    element.style.transform = '';
+                }, 150);
+
+                console.log('Clicked:', element.textContent.trim());
+            });
+        });
+
+        // Show demo info
+        console.log(`
+🎨 COMIC BOOK / CEL-SHADING DESIGN DEMO
+=====================================
+
+Key Features:
+• Pop-Art Primärfarben (Rot, Blau, Gelb) mit türkis
+• Dicke schwarze Outlines (3-8px)
+• Halbton-Punkte als Texturen
+• Sprechblasen-ähnliche Formen
+• Cel-Shading Schatten (hard edges)
+• Comic-Panel Layout mit Rahmen
+• "KAPOW!", "POW!" dynamische Elemente
+• Google Fonts: Bungee, Fredoka One, Nunito
+
+Animations:
+• Comic Entrance
+• Halftone Float
+• Title Color Cycling
+• Bounce Effects
+
+Ready to implement in main index.html!
+        `);
+    </script>
+</body>
+</html>
