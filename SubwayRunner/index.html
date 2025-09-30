@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Subway Runner 3D - V3.9-MOBILE</title>
+    <title>Subway Runner 3D - V3.12-MULTI-JUMP-GLOW</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
@@ -2295,20 +2295,29 @@
             rightShoe.castShadow = true;
             playerGroup.add(rightShoe);
             
-            // Shoe stripes (simple glow effect)
+            // Shoe stripes (GLOWING effect for multi-jump)
             const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
-            const stripeMaterial = new THREE.MeshBasicMaterial({
-                color: 0x00FF00,
-                emissive: 0x00FF00
+            const stripeMaterial = new THREE.MeshPhongMaterial({
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.8
             });
-            
+
             const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
             leftStripe.position.set(-0.15, -0.32, 0.1);
+            leftStripe.name = 'leftShoeStripe';
             playerGroup.add(leftStripe);
-            
+
             const rightStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
             rightStripe.position.set(0.15, -0.32, 0.1);
+            rightStripe.name = 'rightShoeStripe';
             playerGroup.add(rightStripe);
+
+            // Store references for animation
+            playerGroup.userData.leftShoeStripe = leftStripe;
+            playerGroup.userData.rightShoeStripe = rightStripe;
 
             // Backpack
             const backpackGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.2);
@@ -3492,12 +3501,15 @@
                         gameState.jumpVelocity = 10;
                         gameState.jumpStartTime = performance.now();
                         gameState.jumpCount = 1;
-                        
+
+                        // ANIMATE GLOWING SHOES for first jump!
+                        animateShoeGlow(1);
+
                         // Audio & Visual Feedback
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume();
-                        
+
                         // Jump particles - color based on jump number
                         createParticleEffect(
                             new THREE.Vector3(player.position.x, 0.1, player.position.z),
@@ -3518,16 +3530,19 @@
                         // Different particle colors for each jump level
                         const jumpColors = [0xFFFF00, 0xFF8800, 0xFF0088, 0x8800FF, 0x00FFFF];
                         const particleColor = jumpColors[Math.min(gameState.jumpCount - 1, 4)];
-                        
+
+                        // ANIMATE GLOWING SHOES!
+                        animateShoeGlow(gameState.jumpCount);
+
                         // Audio pitch increases with jump count
                         const speedMultiplier = gameState.speed / gameState.maxSpeed;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
                         audioManager.resume(); // Resume audio context if needed
-                        
-                        // Sprung-Partikel
+
+                        // Sprung-Partikel mit korrekter Farbe
                         createParticleEffect(
                             new THREE.Vector3(player.position.x, 0.1, player.position.z),
-                            0xFFFF00,
+                            particleColor, // Use jump-specific color
                             'jump'
                         );
                     }
@@ -3556,9 +3571,73 @@
             }
         }
 
+        // MULTI-JUMP SHOE GLOW ANIMATION
+        function animateShoeGlow(jumpCount) {
+            if (!player || !player.userData.leftShoeStripe || !player.userData.rightShoeStripe) return;
+
+            // Jump colors matching particle system
+            const jumpColors = [0xFFFF00, 0xFF8800, 0xFF0088, 0x8800FF, 0x00FFFF];
+            const glowColor = jumpColors[Math.min(jumpCount - 1, 4)];
+
+            // Get shoe stripe materials
+            const leftStripe = player.userData.leftShoeStripe;
+            const rightStripe = player.userData.rightShoeStripe;
+
+            // Update shoe glow color and intensity based on jump count
+            leftStripe.material.emissive = new THREE.Color(glowColor);
+            leftStripe.material.emissiveIntensity = 0.3 + (jumpCount * 0.2); // Increases with each jump
+            leftStripe.material.color = new THREE.Color(glowColor);
+
+            rightStripe.material.emissive = new THREE.Color(glowColor);
+            rightStripe.material.emissiveIntensity = 0.3 + (jumpCount * 0.2);
+            rightStripe.material.color = new THREE.Color(glowColor);
+
+            // Pulse animation for extra effect
+            const pulseAnimation = () => {
+                let time = 0;
+                const pulseDuration = 500; // ms
+
+                const pulse = setInterval(() => {
+                    time += 16;
+                    const intensity = Math.sin(time * 0.01) * 0.3 + 0.5 + (jumpCount * 0.15);
+
+                    leftStripe.material.emissiveIntensity = intensity;
+                    rightStripe.material.emissiveIntensity = intensity;
+
+                    if (time > pulseDuration) {
+                        clearInterval(pulse);
+                        // Reset to base glow after pulse
+                        leftStripe.material.emissiveIntensity = 0.3 + (jumpCount * 0.1);
+                        rightStripe.material.emissiveIntensity = 0.3 + (jumpCount * 0.1);
+                    }
+                }, 16);
+            };
+
+            pulseAnimation();
+        }
+
+        // RESET SHOE GLOW AFTER LANDING
+        function resetShoeGlow() {
+            if (!player || !player.userData.leftShoeStripe || !player.userData.rightShoeStripe) return;
+
+            const leftStripe = player.userData.leftShoeStripe;
+            const rightStripe = player.userData.rightShoeStripe;
+
+            // Reset to white/neutral glow
+            const neutralColor = 0xFFFFFF;
+
+            leftStripe.material.emissive = new THREE.Color(neutralColor);
+            leftStripe.material.emissiveIntensity = 0.3;
+            leftStripe.material.color = new THREE.Color(neutralColor);
+
+            rightStripe.material.emissive = new THREE.Color(neutralColor);
+            rightStripe.material.emissiveIntensity = 0.3;
+            rightStripe.material.color = new THREE.Color(neutralColor);
+        }
+
         function createParticleEffect(position, color, type) {
             let particleCount, spreadRange, speed, size;
-            
+
             switch (type) {
                 case 'success':
                     particleCount = 25;
@@ -4563,7 +4642,10 @@
                             gameState.jumpStartTime = 0; // Reset timer
                             gameState.jumpCount = 0; // Reset jump counter
                             gameState.aerialCombo = 0; // Reset aerial combo
-                            
+
+                            // RESET SHOE GLOW on landing
+                            resetShoeGlow();
+
                             // Landing Audio & Visual - only when actually landing
                             audioManager.play('land');
                         
