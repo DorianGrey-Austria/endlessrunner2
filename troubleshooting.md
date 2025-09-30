@@ -1,6 +1,36 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **STABLE** - V4.6.2-STABILIZED
+## **Aktueller Status**: ✅ **STABLE** - v3.6.2-STABLE (Emergency Baseline - 30. Sept 2025)
+
+**CRITICAL ROLLBACK**: Zurück zu v3.6.2-STABLE nach V4.x-V6.9.X Disaster
+
+---
+
+## 🚨 **FINALER ROLLBACK: v3.6.2-STABLE RESTORED** - 30. September 2025
+
+### **Problem**: Alle Versionen V4.x bis V6.9.X - Spiel startet nicht
+
+**Chronologie der gescheiterten Versionen**:
+- V6.9.2-AUDIOFIX → ❌ Spiel startet nicht
+- V6.8.1-PLAY-NOW-FUNCTIONAL → ❌ Spiel startet nicht
+- V6.8.0-MUSIC-TRACKS-RESTORED → ❌ Spiel startet nicht
+- V5.3.4-GAME-START-FIX → ❌ Spiel startet nicht
+
+**Lösung**: Rollback zu v3.6.2-STABLE (Commit 394bd7d)
+
+**Git Tag Message**:
+> "✅ VERIFIED WORKING VERSION - Emergency Baseline"
+> "This is the ONLY confirmed working version after V4.x-V6.x disaster"
+
+**Was bewahrt wurde** (in design-backups/):
+- ✅ futuristic-menu-v2-backup.html - User approved Design (1700+ Zeilen)
+- ✅ audio-system-11-tracks-backup.js - 11-Track Audio System (350+ Zeilen)
+
+**Lessons Learned**:
+1. ❌ NEVER > 3 features gleichzeitig ohne Tests
+2. ✅ ALWAYS Git Tags für stable versions checken
+3. ✅ User-Feedback ernst nehmen ("Bitte auf GitHub nachschauen")
+4. ✅ Emergency Baseline Tags existieren aus gutem Grund
 
 ---
 

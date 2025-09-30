@@ -42,12 +42,18 @@ This is a collection of endless runner game projects built with different techno
 - **MAJOR** (+1.0.0): Complete rewrites, fundamental architecture changes
 
 ### **CURRENT VERSION TRACKING**
-- **Latest**: 4.6.13-SCORE-FIX (🚨 CRITICAL: Fixed 2 billion score bug, removed queue system)
-- **Previous**: 4.6.12-MINIMAL-FIX (✅ Reset to stable + minimal Y positioning fixes only)
-- **Before**: 4.6.11-PERFORMANCE-FIXED (Last stable version before V4.7.x disaster)
-- **Before**: 4.7.x Series (FAILED - Aggressive spawn patterns caused 30-second crashes)
-- **Before**: 4.6.10-COLLECTIBLES-PERFECTED (Failed - collectibles in ground)
-- **Before**: 4.6.9-BROCCOLI-FIXED (Stable version before issues)
+- **🚨 STABLE: v3.6.2-STABLE** (30. Sept 2025 - Emergency Baseline nach V4-V6.9 Disaster)
+  - Git Tag: "✅ VERIFIED WORKING VERSION - Emergency Baseline"
+  - **This is the ONLY confirmed working version**
+  - All V4.x-V6.9.x versions FAILED to start game
+- **Preserved Features** (in design-backups/):
+  - futuristic-menu-v2-backup.html (User approved)
+  - audio-system-11-tracks-backup.js (11 Tracks)
+
+### **FAILED VERSIONS** (DO NOT USE):
+- ❌ V6.9.2-AUDIOFIX, V6.8.1, V6.8.0, V5.3.4 - Game does not start
+- ❌ V4.6.x-V4.7.x Series - Various critical issues
+- ⚠️ **RULE**: Do not build on any V4-V6 code until V3.6.2 is bulletproof
 - **Before**: 4.6.8-REALISTIC-FRUITS (Halbierte Kiwis mit grünem Fruchtfleisch)
 - **Before**: 4.6.7-COLLECTIBLES-ALIGNED (Alle Collectibles auf einheitlicher Höhe)
 - **Before**: 4.6.6-COLLECTIBLES-FIXED (Brokkoli jetzt auf Spielerhöhe)
