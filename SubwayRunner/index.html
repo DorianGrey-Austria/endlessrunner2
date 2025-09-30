@@ -1681,7 +1681,7 @@
             jumpVelocity: 0,
             // JUMP TIMEOUT SYSTEM
             jumpStartTime: 0,
-            maxJumpDuration: 1000, // 1 second max jump time
+            maxJumpDuration: 3000, // 3 seconds for multi-jumps
             // MULTI-LEVEL JUMP SYSTEM (V4.0)
             jumpCount: 0,
             maxJumps: 4,
@@ -2294,30 +2294,27 @@
             rightShoe.position.set(0.15, -0.35, 0.1);
             rightShoe.castShadow = true;
             playerGroup.add(rightShoe);
-            
-            // Shoe stripes (GLOWING effect for multi-jump)
-            const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
+
+            // ADD GLOWING SHOE STRIPES FOR MULTI-JUMP VISUAL FEEDBACK
+            const stripeGeometry = new THREE.BoxGeometry(0.18, 0.02, 0.38);
             const stripeMaterial = new THREE.MeshPhongMaterial({
                 color: 0xFFFFFF,
                 emissive: 0xFFFFFF,
-                emissiveIntensity: 0.3,
-                transparent: true,
-                opacity: 0.8
+                emissiveIntensity: 0,
+                shininess: 100
             });
 
-            const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
-            leftStripe.position.set(-0.15, -0.32, 0.1);
-            leftStripe.name = 'leftShoeStripe';
-            playerGroup.add(leftStripe);
+            const leftShoeStripe = new THREE.Mesh(stripeGeometry, stripeMaterial.clone());
+            leftShoeStripe.position.set(-0.15, -0.30, 0.1);
+            playerGroup.add(leftShoeStripe);
 
-            const rightStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
-            rightStripe.position.set(0.15, -0.32, 0.1);
-            rightStripe.name = 'rightShoeStripe';
-            playerGroup.add(rightStripe);
+            const rightShoeStripe = new THREE.Mesh(stripeGeometry, stripeMaterial.clone());
+            rightShoeStripe.position.set(0.15, -0.30, 0.1);
+            playerGroup.add(rightShoeStripe);
 
-            // Store references for animation
-            playerGroup.userData.leftShoeStripe = leftStripe;
-            playerGroup.userData.rightShoeStripe = rightStripe;
+            // Store references in userData for animation access
+            playerGroup.userData.leftShoeStripe = leftShoeStripe;
+            playerGroup.userData.rightShoeStripe = rightShoeStripe;
 
             // Backpack
             const backpackGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.2);
@@ -3516,9 +3513,9 @@
                             0xFFFF00, // Yellow for first jump
                             'jump'
                         );
-                    } else if (gameState.playerAction === 'jumping' && 
-                               gameState.jumpCount < gameState.maxJumps && 
-                               gameState.playerY > 0.5) {
+                    } else if (gameState.playerAction === 'jumping' &&
+                               gameState.jumpCount < gameState.maxJumps &&
+                               gameState.playerY > 0.1) {
                         // Multi-jump system - up to 4 jumps
                         gameState.jumpCount++;
                         
