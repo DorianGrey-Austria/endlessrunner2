@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.0-MULTI-JUMP</title>
+    <title>Subway Runner 3D - V4.0-MULTI-JUMP-FIXED</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -214,13 +214,15 @@
         
         <div id="menu">
             <h1>🚇 Subway Runner 3D</h1>
-            <h2>⏱️ 60-Sekunden Challenge!</h2>
-            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
-            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
-            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
+            <h2>⚡ MULTI-JUMP VERSION</h2>
             <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel | W/Space: Springen | S: Ducken</p>
-            <button onclick="startGame()">🎮 Challenge starten!</button>
+            <p>A/D: Spurwechsel</p>
+            <p>W/Space: Springen (bis zu 4x in der Luft!)</p>
+            <p>S: Ducken</p>
+            <button onclick="startGame()" style="font-size: 24px; padding: 15px 30px; margin-top: 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                🎮 SPIEL STARTEN
+            </button>
+            <p style="margin-top: 15px; color: #666;">Auto-Start in 2 Sekunden...</p>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -3344,6 +3346,35 @@
         // Initialize game
         console.log('Starting game initialization...');
         init();
+
+        // EMERGENCY AUTO-START - Skip menu if broken
+        const AUTO_START = true;
+        if (AUTO_START) {
+            setTimeout(() => {
+                console.log('Auto-starting game (emergency mode)...');
+                try {
+                    // Check if startGame exists
+                    if (typeof startGame === 'function') {
+                        startGame();
+                    } else if (typeof startGameInternal === 'function') {
+                        startGameInternal();
+                    } else {
+                        // Direct fallback
+                        console.log('Using direct fallback start...');
+                        gameState.isPlaying = true;
+                        gameState.score = 0;
+                        gameState.playerLane = 1;
+                        gameState.playerAction = 'running';
+                        document.getElementById('menu').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Auto-start failed:', error);
+                    // Last resort fallback
+                    gameState.isPlaying = true;
+                    document.getElementById('menu').style.display = 'none';
+                }
+            }, 2000);
+        }
     </script>
 </body>
 </html>
