@@ -3,9 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.0-MULTI-JUMP-FIXED</title>
+    <title>Subway Runner 3D - V4.3-STABLE-MULTIJUMP</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script type="module">
+        // Pre-load Gesture Control Module
+        import('./js/GestureControllerProjector.js')
+            .then(module => {
+                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
+                console.log('✅ Gesture Module pre-loaded successfully');
+            })
+            .catch(error => {
+                console.error('❌ Gesture Module pre-load failed:', error);
+                // Fallback: Try alternative loading method
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.innerHTML = `
+                    import { GestureControllerProjector } from './js/GestureControllerProjector.js';
+                    window.GestureControllerProjector = GestureControllerProjector;
+                `;
+                document.head.appendChild(script);
+            });
+    </script>
     <style>
         * {
             margin: 0;
@@ -18,6 +37,7 @@
             font-family: Arial, sans-serif;
             overflow: hidden;
         }
+
         
         #gameContainer {
             width: 100vw;
@@ -95,6 +115,71 @@
         #timer {
             font-size: 20px;
             margin-top: 5px;
+        }
+        
+        #gestureControl {
+            position: fixed !important;
+            top: 20px !important;
+            right: 20px !important;
+            z-index: 9999 !important;
+            display: block !important;
+        }
+        
+        #gestureControlBtn {
+            background: rgba(0, 255, 136, 0.9);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 255, 136, 0.3);
+            transition: all 0.3s;
+        }
+        
+        #gestureControlBtn:hover {
+            background: #00ff88;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        #gestureControlBtn.active {
+            background: #ff4444;
+        }
+        
+        #gestureCanvas {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 180px;
+            height: 135px;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            display: none;
+            z-index: 150;
+            background: #000;
+        }
+        
+        #gestureCanvas.active {
+            display: block;
+        }
+        
+        #gestureStatus {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff88;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            z-index: 150;
+        }
+        
+        #gestureStatus.active {
+            display: block;
         }
         
         .timer-warning {
@@ -212,17 +297,29 @@
             <div>🔴 Stacheln: Beides möglich!</div>
         </div>
         
+        <div id="gestureControl">
+            <button id="gestureControlBtn">🎮 Gestensteuerung aktivieren</button>
+            <div id="gestureStatus">
+                <div>Status: <span id="gestureStatusText">Bereit</span></div>
+                <div>Geste: <span id="gestureCurrentText">NONE</span></div>
+            </div>
+        </div>
+        
+        <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
+        <canvas id="gestureCanvas"></canvas>
+        
         <div id="menu">
             <h1>🚇 Subway Runner 3D</h1>
-            <h2>⚡ MULTI-JUMP VERSION</h2>
+            <h2>⏱️ 60-Sekunden Challenge!</h2>
+            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
+            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
+            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
             <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel</p>
-            <p>W/Space: Springen (bis zu 4x in der Luft!)</p>
-            <p>S: Ducken</p>
+            <p>A/D: Spurwechsel | W/Space: Springen (bis zu 4x!) | S: Ducken</p>
             <button onclick="startGame()" style="font-size: 24px; padding: 15px 30px; margin-top: 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">
                 🎮 SPIEL STARTEN
             </button>
-            <p style="margin-top: 15px; color: #666;">Auto-Start in 2 Sekunden...</p>
+            <p style="margin-top: 10px; color: #888;">Multi-Jump: Springe bis zu 4x in der Luft!</p>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -705,6 +802,317 @@
             MAX_SCENE_OBJECTS: 500,
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
         };
+
+        // ==================== LEVEL SYSTEM V3.3 ====================
+        let currentLevel = 1;
+        const LEVEL_PROGRESSION_THRESHOLD = 1000; // Points needed per level
+        let nextLevelScore = LEVEL_PROGRESSION_THRESHOLD;
+        
+        // Level Manager
+        const LevelManager = {
+            levels: {},
+            currentLevel: 1,
+            levelObjects: [],
+            
+            registerLevel: function(id, level) {
+                this.levels[id] = level;
+            },
+            
+            loadLevel: function(levelId) {
+                console.log(`🎮 Loading Level ${levelId}`);
+                
+                // Cleanup previous level
+                this.cleanup();
+                
+                // Load new level
+                if (this.levels[levelId]) {
+                    try {
+                        this.currentLevel = levelId;
+                        this.levels[levelId].load(scene, renderer);
+                        
+                        // Show level notification
+                        this.showLevelNotification(levelId);
+                        
+                        // Update game state
+                        currentLevel = levelId;
+                        
+                        // Clear loading flag on success
+                        this.loadingLevel = null;
+                    } catch (error) {
+                        console.error(`Failed to load level ${levelId}:`, error);
+                        // Reset loading flag on error
+                        this.loadingLevel = null;
+                        // Keep playing with current level
+                        console.log('Continuing with current level due to load error');
+                    }
+                } else {
+                    this.loadingLevel = null;
+                }
+            },
+            
+            cleanup: function() {
+                // Remove all level-specific objects
+                this.levelObjects.forEach(obj => {
+                    if (obj.parent) {
+                        obj.parent.remove(obj);
+                    }
+                    // Dispose geometries and materials
+                    if (obj.geometry) obj.geometry.dispose();
+                    if (obj.material) {
+                        if (Array.isArray(obj.material)) {
+                            obj.material.forEach(mat => mat.dispose());
+                        } else {
+                            obj.material.dispose();
+                        }
+                    }
+                });
+                this.levelObjects = [];
+                
+                // Let current level cleanup
+                if (this.levels[this.currentLevel] && this.levels[this.currentLevel].cleanup) {
+                    this.levels[this.currentLevel].cleanup();
+                }
+            },
+            
+            update: function(deltaTime) {
+                // Update current level
+                if (this.levels[this.currentLevel] && this.levels[this.currentLevel].update) {
+                    this.levels[this.currentLevel].update(deltaTime);
+                }
+                
+                // Check for level progression
+                this.checkProgression();
+            },
+            
+            checkProgression: function() {
+                // Prevent progression during game over, victory, or while loading
+                if (gameState.isGameOver || gameState.isVictory || this.loadingLevel) {
+                    return;
+                }
+                
+                // Prevent rapid-fire level changes
+                const now = Date.now();
+                if (this.lastLevelChange && (now - this.lastLevelChange) < 2000) {
+                    return; // Wait at least 2 seconds between level changes
+                }
+                
+                nextLevelScore = currentLevel * 1000; // Update for test compatibility
+                const nextLevelThreshold = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
+                if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
+                    this.lastLevelChange = now;
+                    currentLevel++; // INCREMENT BEFORE LOADING!
+                    this.loadLevel(currentLevel);
+                    nextLevelScore = currentLevel * 1000;
+                }
+            },
+            
+            checkLevelTransition: function() {
+                // Alias for test compatibility
+                this.checkProgression();
+            },
+            
+            showLevelNotification: function(levelId) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    font-size: 48px;
+                    font-weight: bold;
+                    color: #00ff00;
+                    text-shadow: 0 0 20px rgba(0,255,0,0.8);
+                    z-index: 10000;
+                    pointer-events: none;
+                `;
+                
+                const levelName = this.levels[levelId].name || `Level ${levelId}`;
+                notification.textContent = `${levelName}!`;
+                document.body.appendChild(notification);
+                
+                // Animate and remove
+                setTimeout(() => {
+                    notification.style.transition = 'opacity 1s';
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 1000);
+                }, 2000);
+            },
+            
+            addLevelObject: function(obj) {
+                this.levelObjects.push(obj);
+            }
+        };
+
+        // ==================== LEVEL DEFINITIONS ====================
+        
+        // Level 1: Classic Subway
+        const Level1 = {
+            id: 1,
+            name: "Classic Subway",
+            description: "Classic underground subway environment",
+            fogColor: 0x222222,
+            fogDensity: 0.015,
+            
+            load: function(scene, renderer) {
+                console.log('🚇 Loading Level 1: Subway Tunnel');
+                
+                // Set fog and background
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+                
+                // Level 1 uses existing environment (buildings, street lamps, etc.)
+                // No additional setup needed as it's the default
+            },
+            
+            update: function(deltaTime) {
+                // Level 1 has no special updates
+            },
+            
+            cleanup: function() {
+                // Level 1 doesn't need special cleanup
+            }
+        };
+
+        // Level 2: Neon Night Run
+        const Level2 = {
+            id: 2,
+            name: "Neon Night Run",
+            description: "Cyberpunk city with neon lights",
+            fogColor: 0x001133,
+            fogDensity: 0.025,
+            objects: {
+                cyberpunkBuildings: [],
+                neonLights: [],
+                gridFloor: null
+            },
+            
+            load: function(scene, renderer) {
+                console.log('🌃 Loading Level 2: Neon Night Run');
+                
+                // Update environment
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+                
+                // Safe environment handling - these objects don't exist
+                // Skip hiding non-existent objects to prevent crashes
+                console.log('Level 2 loading - skipping environment object hiding');
+                
+                // Create neon environment
+                this.createEnvironment(scene);
+            },
+            
+            createEnvironment: function(scene) {
+                // Create neon grid floor
+                const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
+                gridHelper.position.y = -0.95;
+                gridHelper.userData = { type: 'level2Grid' };
+                scene.add(gridHelper);
+                this.objects.gridFloor = gridHelper;
+                LevelManager.addLevelObject(gridHelper);
+                
+                // Create cyberpunk buildings
+                for (let i = 0; i < 20; i++) {
+                    const buildingGroup = new THREE.Group();
+                    const width = 6 + Math.random() * 4;
+                    const height = 20 + Math.random() * 30;
+                    const depth = 6 + Math.random() * 4;
+                    
+                    // Building body
+                    const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+                    const buildingMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x111122,
+                        emissive: 0x000011
+                    });
+                    const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                    building.position.y = height / 2;
+                    buildingGroup.add(building);
+                    
+                    // Neon edges (wireframe)
+                    const edgeGeometry = new THREE.EdgesGeometry(buildingGeometry);
+                    const edgeMaterial = new THREE.LineBasicMaterial({ 
+                        color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                        linewidth: 2
+                    });
+                    const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+                    edges.position.y = height / 2;
+                    buildingGroup.add(edges);
+                    this.objects.neonLights.push(edges);
+                    
+                    // Position building
+                    const side = i % 2 === 0 ? 1 : -1;
+                    buildingGroup.position.set(
+                        side * (20 + Math.random() * 15),
+                        0,
+                        -i * 8
+                    );
+                    buildingGroup.userData = { type: 'cyberpunkBuilding' };
+                    
+                    scene.add(buildingGroup);
+                    this.objects.cyberpunkBuildings.push(buildingGroup);
+                    LevelManager.addLevelObject(buildingGroup);
+                }
+            },
+            
+            update: function(deltaTime) {
+                // Animate neon lights
+                this.objects.neonLights.forEach((light, index) => {
+                    if (light.material) {
+                        // Pulse effect
+                        const pulse = Math.sin(Date.now() * 0.002 + index) * 0.3 + 0.7;
+                        light.material.opacity = pulse;
+                    }
+                });
+                
+                // Move buildings forward
+                this.objects.cyberpunkBuildings.forEach(building => {
+                    building.position.z += gameState.speed * 0.7;
+                    
+                    // Recycle buildings
+                    if (building.position.z > 10) {
+                        building.position.z -= 200;
+                    }
+                });
+            },
+            
+            cleanup: function() {
+                try {
+                    console.log('Neon level cleanup started');
+                    
+                    // Clear level objects safely with full error handling
+                    if (this.objects) {
+                        // Safe cleanup of arrays
+                        ['cyberpunkBuildings', 'neonLights'].forEach(key => {
+                            if (this.objects[key] && Array.isArray(this.objects[key])) {
+                                this.objects[key].forEach(obj => {
+                                    if (obj && obj.parent) {
+                                        try { scene.remove(obj); } catch(e) {}
+                                    }
+                                });
+                                this.objects[key] = [];
+                            }
+                        });
+                        
+                        // Safe cleanup of single objects
+                        if (this.objects.gridFloor) {
+                            try {
+                                if (this.objects.gridFloor.parent) {
+                                    scene.remove(this.objects.gridFloor);
+                                }
+                            } catch(e) {}
+                            this.objects.gridFloor = null;
+                        }
+                    }
+                    console.log('Neon level cleanup completed');
+                } catch (error) {
+                    console.error('Error during cleanup, but continuing:', error);
+                    // Game continues even if cleanup fails
+                }
+            }
+        };
+
+        // Register levels
+        LevelManager.registerLevel(1, Level1);
+        LevelManager.registerLevel(2, Level2);
         
         // HEIGHT LEVEL SYSTEM (V4.0)
         const HEIGHT_LEVELS = {
@@ -794,26 +1202,37 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
-                // Scene
+                // Enhanced Scene
                 scene = new THREE.Scene();
-                scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
+                scene.fog = new THREE.FogExp2(0x101020, 0.025); // Better fog
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
             camera.position.set(0, 3, 8);
 
-            // Renderer
+            // Enhanced Renderer (SAFE improvements only)
             const canvas = document.getElementById('gameCanvas');
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas, 
+                antialias: true,
+                alpha: false,
+                powerPreference: "high-performance"
+            });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.setClearColor(0x87CEEB);
+            renderer.setClearColor(0x0a0a0f); // Darker background
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            // Removed tone mapping - can cause issues
 
-            // Modern lighting system
+            // Better lighting (SAFE)
             // Ambient light for overall illumination
-            const ambientLight = new THREE.AmbientLight(0x404080, 0.4);
+            const ambientLight = new THREE.AmbientLight(0x4040aa, 0.3);
             scene.add(ambientLight);
+            
+            // Hemisphere light for natural look
+            const hemisphereLight = new THREE.HemisphereLight(0x8888ff, 0x444488, 0.5);
+            hemisphereLight.position.set(0, 50, 0);
+            scene.add(hemisphereLight);
 
             // Main directional light (sun)
             const directionalLight = new THREE.DirectionalLight(0xFFE4B5, 1.2);
@@ -830,9 +1249,9 @@
             directionalLight.shadow.bias = -0.0005;
             scene.add(directionalLight);
 
-            // Atmospheric hemisphere light for sky gradient
-            const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
-            scene.add(hemisphereLight);
+            // Atmospheric sky light for gradient
+            const skyHemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
+            scene.add(skyHemisphereLight);
 
             // Rim lighting for urban atmosphere
             const rimLight = new THREE.DirectionalLight(0x4A90E2, 0.3);
@@ -840,9 +1259,8 @@
             scene.add(rimLight);
 
             // Enhance renderer for better visuals
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            // Removed tone mapping - can cause issues
+            // Removed outputColorSpace - can cause issues
 
             // Create player
             createPlayer();
@@ -867,20 +1285,39 @@
         function createPlayer() {
             const playerGroup = new THREE.Group();
             
-            // Player body (torso)
+            // Player body (torso) - Enhanced but SAFE
             const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
-            const bodyMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x4A90E2
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x4A90E2,
+                emissive: 0x2A5090,
+                emissiveIntensity: 0.2,
+                shininess: 50
             });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             body.position.y = 0.7;
             body.castShadow = true;
+            body.receiveShadow = true;
             playerGroup.add(body);
+            
+            // Simple glow effect
+            const glowGeometry = new THREE.BoxGeometry(0.65, 0.85, 0.35);
+            const glowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x6AB0FF,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.BackSide
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.copy(body.position);
+            playerGroup.add(glow);
 
-            // Player head
-            const headGeometry = new THREE.SphereGeometry(0.25);
-            const headMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xF5B041
+            // Player head - Better looking
+            const headGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+            const headMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xF5B041,
+                emissive: 0xF5B041,
+                emissiveIntensity: 0.1,
+                shininess: 30
             });
             const head = new THREE.Mesh(headGeometry, headMaterial);
             head.position.y = 1.35;
@@ -929,9 +1366,12 @@
             rightLeg.castShadow = true;
             playerGroup.add(rightLeg);
 
-            // Shoes
+            // Cool Sneakers
             const shoeGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.4);
-            const shoeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+            const shoeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x1a1a1a,
+                shininess: 80
+            });
             
             const leftShoe = new THREE.Mesh(shoeGeometry, shoeMaterial);
             leftShoe.position.set(-0.15, -0.35, 0.1);
@@ -942,6 +1382,21 @@
             rightShoe.position.set(0.15, -0.35, 0.1);
             rightShoe.castShadow = true;
             playerGroup.add(rightShoe);
+            
+            // Shoe stripes (simple glow effect)
+            const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
+            const stripeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00FF00,
+                emissive: 0x00FF00
+            });
+            
+            const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+            leftStripe.position.set(-0.15, -0.32, 0.1);
+            playerGroup.add(leftStripe);
+            
+            const rightStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+            rightStripe.position.set(0.15, -0.32, 0.1);
+            playerGroup.add(rightStripe);
 
             // Backpack
             const backpackGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.2);
@@ -1861,6 +2316,10 @@
             gameState.playerLane = 1;
             gameState.playerAction = 'running';
             gameState.playerY = 0;
+            
+            // Load Level 1
+            currentLevel = 1;
+            LevelManager.loadLevel(1);
             gameState.jumpVelocity = 0;
             gameState.jumpStartTime = 0; // Reset jump timer
             gameState.jumpCount = 0; // Reset jump counter
@@ -1890,6 +2349,12 @@
         }
 
         function endGame() {
+            // Prevent multiple game over calls
+            if (gameState.isGameOver) {
+                console.log('Game over already triggered, skipping');
+                return;
+            }
+            
             gameState.isPlaying = false;
             gameState.isGameOver = true;
             
@@ -1909,6 +2374,12 @@
         }
 
         function victoryGame() {
+            // Prevent multiple victory calls
+            if (gameState.isVictory) {
+                console.log('Victory already triggered, skipping');
+                return;
+            }
+            
             gameState.isPlaying = false;
             gameState.isVictory = true;
             
@@ -2431,6 +2902,14 @@
                                 playerBBox.max.y < obstacleBBox.min.y + 0.2) {
                                 canAvoid = true;
                                 avoidanceType = 'duck';
+                            } else if (gameState.playerAction === 'jumping') {
+                                // EXPLICITLY HANDLE: Cannot jump over duck obstacles!
+                                console.warn('Cannot jump over duck obstacles - collision!');
+                                canAvoid = false;
+                                // Mark obstacle as hit for score tracking
+                                obstacle.hitPlayer = true;
+                            } else {
+                                canAvoid = false;
                             }
                             break;
                             
@@ -3089,6 +3568,10 @@
             }
         }
         
+        // Alias for test compatibility
+        const gameLoop = animate;
+        const GameCore = { LevelManager };
+        
         function animate() {
             requestAnimationFrame(animate);
             
@@ -3199,6 +3682,9 @@
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
                 
+                // Update current level
+                LevelManager.update(deltaTime);
+                
                 // Update visual effects based on speed
                 updateVisualEffects();
                 
@@ -3210,7 +3696,10 @@
                     if (obstacle.z > 10) {
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        addScore(10); // SAFE SCORE UPDATE
+                        // Only give score if obstacle was properly avoided (not hit)
+                        if (!obstacle.hitPlayer) {
+                            addScore(10); // SAFE SCORE UPDATE
+                        }
                     }
                 });
                 
@@ -3290,7 +3779,8 @@
                 gameState.timeRemaining = Math.max(0, gameState.gameTime - elapsedTime);
                 
                 // Check for victory (survived 60 seconds!)
-                if (gameState.timeRemaining <= 0 && !gameState.isVictory) {
+                if (gameState.timeRemaining <= 0 && !gameState.isVictory && !gameState.isGameOver) {
+                    console.log('Victory condition met - calling victoryGame()');
                     victoryGame();
                     return;
                 }
@@ -3303,6 +3793,9 @@
                 
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);
+                
+                // Update current level
+                LevelManager.update(deltaTime);
                 
                 // Update visual effects based on speed
                 updateVisualEffects();
@@ -3332,49 +3825,227 @@
         // Event listeners
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
+        
+        // Gesture Control Integration with Dynamic Loading
+        let gestureController = null;
+        let gestureEnabled = false;
+        let gestureModuleLoaded = false;
+        
+        const gestureBtn = document.getElementById('gestureControlBtn');
+        const gestureCanvas = document.getElementById('gestureCanvas');
+        const gestureStatus = document.getElementById('gestureStatus');
+        const gestureStatusText = document.getElementById('gestureStatusText');
+        const gestureCurrentText = document.getElementById('gestureCurrentText');
+        
+        // Check if gesture module is already loaded
+        async function loadGestureModule() {
+            if (gestureModuleLoaded || window.GestureControllerProjector) {
+                gestureModuleLoaded = true;
+                return true;
+            }
+            
+            // Wait a bit for pre-loaded module
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (window.GestureControllerProjector) {
+                gestureModuleLoaded = true;
+                console.log('✅ Gesture Module already loaded');
+                return true;
+            }
+            
+            // Try loading again if not available
+            try {
+                console.log('🎮 Attempting to load Gesture Control Module...');
+                const module = await import('./js/GestureControllerProjector.js');
+                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
+                gestureModuleLoaded = true;
+                console.log('✅ Gesture Module loaded on demand');
+                return true;
+            } catch (error) {
+                console.error('❌ Module loading failed:', error);
+                return false;
+            }
+        }
+        
+        // Initialize gesture control button
+        if (gestureBtn) {
+            console.log('🎮 Gesture Control Button found!');
+            gestureBtn.style.display = 'block'; // Force visibility
+            gestureBtn.style.visibility = 'visible';
+            gestureBtn.addEventListener('click', async () => {
+                if (!gestureEnabled) {
+                    try {
+                        // First ensure module is loaded
+                        const moduleLoaded = await loadGestureModule();
+                        if (!moduleLoaded) {
+                            alert('Gestensteuerung konnte nicht geladen werden. Bitte Seite neu laden und erneut versuchen.');
+                            return;
+                        }
+                        
+                        // Initialize gesture controller
+                        if (!gestureController && window.GestureControllerProjector) {
+                            console.log('🎮 Initializing Gesture Controller...');
+                            gestureController = new window.GestureControllerProjector({
+                                videoElement: document.getElementById('gestureVideo'),
+                                canvasElement: gestureCanvas,
+                                onGestureDetected: handleGestureInput,
+                                onStatsUpdate: updateGestureStats,
+                                onError: handleGestureError,
+                                onCalibrationComplete: () => {
+                                    console.log('✅ Gesture calibration complete');
+                                    gestureStatusText.textContent = 'Kalibriert';
+                                },
+                                debugMode: false,
+                                projectorMode: true
+                            });
+                        }
+                        
+                        await gestureController.start();
+                        gestureEnabled = true;
+                        gestureBtn.textContent = '🛑 Gestensteuerung stoppen';
+                        gestureBtn.classList.add('active');
+                        gestureCanvas.classList.add('active');
+                        gestureStatus.classList.add('active');
+                        gestureStatusText.textContent = 'Aktiv';
+                        console.log('✅ Gesture Control activated successfully');
+                        
+                    } catch (error) {
+                        console.error('❌ Failed to start gesture control:', error);
+                        alert(`Gestensteuerung Fehler: ${error.message}\n\nBitte stelle sicher dass:\n1. Kamera-Zugriff erlaubt ist\n2. HTTPS verwendet wird\n3. Chrome/Edge Browser verwendet wird`);
+                    }
+                } else {
+                    // Stop gesture control
+                    if (gestureController) {
+                        gestureController.stop();
+                    }
+                    gestureEnabled = false;
+                    gestureBtn.textContent = '🎮 Gestensteuerung aktivieren';
+                    gestureBtn.classList.remove('active');
+                    gestureCanvas.classList.remove('active');
+                    gestureStatus.classList.remove('active');
+                    gestureStatusText.textContent = 'Gestoppt';
+                    gestureCurrentText.textContent = 'NONE';
+                }
+            });
+        } else {
+            console.warn('⚠️ Gesture Control Button not found or module not available');
+            console.log('Button element:', gestureBtn);
+            console.log('Module loaded:', window.GestureControllerProjector);
+        }
+        
+        function handleGestureInput(gesture) {
+            if (!gameState.isPlaying) return;
+            
+            gestureCurrentText.textContent = gesture;
+            
+            switch (gesture) {
+                case 'MOVE_LEFT':
+                    if (gameState.playerLane > 0) {
+                        gameState.playerLane--;
+                        updatePlayerPosition();
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'MOVE_RIGHT':
+                    if (gameState.playerLane < 2) {
+                        gameState.playerLane++;
+                        updatePlayerPosition();
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'JUMP':
+                    if (!gameState.isJumping && gameState.jumpCount < 2) {
+                        gameState.isJumping = true;
+                        gameState.jumpCount++;
+                        gameState.jumpVelocity = config.jumpPower;
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'DUCK':
+                    if (!gameState.isDucking && !gameState.isJumping) {
+                        gameState.isDucking = true;
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('duck', speedMultiplier);
+                    }
+                    break;
+                    
+                case 'NONE':
+                    if (gameState.isDucking) {
+                        gameState.isDucking = false;
+                    }
+                    break;
+            }
+        }
+        
+        function updateGestureStats(stats) {
+            // Optional: Update UI with gesture tracking stats
+            if (stats.faceDetected && gestureStatusText) {
+                gestureStatusText.textContent = `Aktiv (${stats.confidence ? (stats.confidence * 100).toFixed(0) : 0}%)`;
+            }
+        }
+        
+        function handleGestureError(error) {
+            console.error('Gesture control error:', error);
+            gestureStatusText.textContent = 'Fehler';
+        }
 
         // Debug function for testing
         window.testFunction = function() {
             console.log('Test function works!');
-            console.log('THREE object:', typeof THREE);
-            console.log('gameState:', gameState);
-            console.log('scene:', scene);
-            console.log('camera:', camera);
-            console.log('renderer:', renderer);
         };
+        
+        // Gesture Control Debug Info
+        window.debugGesture = function() {
+            console.log('🎮 === GESTURE CONTROL DEBUG INFO ===');
+            console.log('Button Element:', document.getElementById('gestureControlBtn'));
+            console.log('Canvas Element:', document.getElementById('gestureCanvas'));
+            console.log('Video Element:', document.getElementById('gestureVideo'));
+            console.log('Status Element:', document.getElementById('gestureStatus'));
+            console.log('Module Loaded:', !!window.GestureControllerProjector);
+            console.log('Controller Instance:', gestureController);
+            console.log('Gesture Enabled:', gestureEnabled);
+            
+            // Check visibility
+            const btn = document.getElementById('gestureControlBtn');
+            if (btn) {
+                const rect = btn.getBoundingClientRect();
+                console.log('Button Position:', { top: rect.top, right: rect.right, width: rect.width, height: rect.height });
+                console.log('Button Display:', window.getComputedStyle(btn).display);
+                console.log('Button Visibility:', window.getComputedStyle(btn).visibility);
+                console.log('Button Z-Index:', window.getComputedStyle(btn).zIndex);
+            }
+            console.log('=====================================');
+        };
+        
+        // Auto-run debug on page load
+        setTimeout(() => {
+            console.log('🎮 SubwayRunner V3.4-GESTURE-DEBUG loaded');
+            window.debugGesture();
+        }, 2000);
 
-        // Initialize game
-        console.log('Starting game initialization...');
-        init();
+        // Initialize game when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM ready, starting game initialization...');
+            init();
 
-        // EMERGENCY AUTO-START - Skip menu if broken
-        const AUTO_START = true;
-        if (AUTO_START) {
+            // AUTO-START after 3 seconds for emergency situations
             setTimeout(() => {
-                console.log('Auto-starting game (emergency mode)...');
-                try {
-                    // Check if startGame exists
-                    if (typeof startGame === 'function') {
+                console.log('Auto-starting game after 3 seconds...');
+                if (!gameState.isPlaying) {
+                    try {
                         startGame();
-                    } else if (typeof startGameInternal === 'function') {
-                        startGameInternal();
-                    } else {
-                        // Direct fallback
-                        console.log('Using direct fallback start...');
-                        gameState.isPlaying = true;
-                        gameState.score = 0;
-                        gameState.playerLane = 1;
-                        gameState.playerAction = 'running';
-                        document.getElementById('menu').style.display = 'none';
+                    } catch (error) {
+                        console.error('Auto-start failed:', error);
                     }
-                } catch (error) {
-                    console.error('Auto-start failed:', error);
-                    // Last resort fallback
-                    gameState.isPlaying = true;
-                    document.getElementById('menu').style.display = 'none';
                 }
-            }, 2000);
-        }
+            }, 3000);
+        });
     </script>
 </body>
 </html>
