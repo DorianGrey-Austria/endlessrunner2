@@ -1,6 +1,89 @@
 # 🔧 SubwayRunner - Troubleshooting Guide
 
-## **Aktueller Status**: ✅ **STABLE** - V3.2-MULTIJUMP (Revolutionary Multi-Jump System)
+## **Aktueller Status**: ⚠️ **CRITICAL BUG** - V4.5.10 hat nur 1 Level + Speed wird zu schnell
+
+---
+
+## 🚨 **CRITICAL: WRONG BUILD DEPLOYED** - 02. November 2025
+
+### **Problem**: `npm run build` produziert falsche Version mit nur 1 spielbarem Level!
+
+**Symptom**:
+- Build hat nur **1 einzelnes Level**
+- Level ist am Ende **viel zu schnell** (unspielbar)
+- Sollte **3+ Levels** haben (wie frühere funktionierende Versionen)
+- Game wird schneller mit jedem Punkt, bis es unmöglich wird
+
+**Was funktioniert**:
+- ✅ Server startet auf 8001
+- ✅ Build prozess erfolgreich (176 KB HTML)
+- ✅ React + Three.js lädt
+- ✅ Ein Level spielbar (aber unbalanciert)
+
+**Was nicht funktioniert**:
+- ❌ Mehrere Levels nicht vorhanden
+- ❌ Speed-Progression zu aggressiv
+- ❌ Keine Charakterauswahl sichtbar
+- ❌ Collectibles-System unklar
+
+**Relevante Dateien**:
+- `SubwayRunner/dist/index.html` - Built output (aktuell falsch)
+- `SubwayRunner/src/` - Source (muss überprüft werden)
+- `SubwayRunner/package.json` - Version 4.5.10
+
+**Verfügbare funktionierende Versionen**:
+- `SubwayRunner/index.html.V4.3-STABLE.backup` (172 KB) - Multi-Jump system, letzte bekannt gute Version
+- `SubwayRunner/index.html.backup-stable-v4.6.2` (328 KB) - Alternative stable build
+- `EndlessRunner-MVP/SubwayRunner/index.html` (4,419 lines) - Feature-rich mit mehreren Levels
+
+**Für schnelle Präsentation**:
+```bash
+# Variante 1: V4.3-STABLE Backup
+cp SubwayRunner/index.html.V4.3-STABLE.backup SubwayRunner/index.html
+python3 -m http.server 8001 -d SubwayRunner/
+
+# Variante 2: MVP (kompletter)
+python3 -m http.server 8000 -d EndlessRunner-MVP/SubwayRunner/
+```
+
+**Root Cause Hypothese**:
+- `npm run build` kompiliert wahrscheinlich falsch
+- React/Vite production build scheint Levels zu droppen
+- Source in `SubwayRunner/src/` hat wahrscheinlich nur 1 Level
+- Oder Level-Daten werden nicht richtig geladen in der React-Version
+
+**WICHTIG**: Für Präsentationen Backup oder MVP nutzen, NICHT V4.5.10 build!
+
+---
+
+## 🚨 **CRITICAL: SPEED ESCALATION PROBLEM** - 02. November 2025
+
+### **Problem**: Spiel wird gegen Ende VIEL zu schnell!
+
+**Symptom**:
+- Am Anfang: Angenehme Geschwindigkeit (0.08 baseSpeed)
+- Nach mehreren Levels: Spiel wird fast unspielbar
+- User-Feedback: "Soll die ganze Zeit SO schnell sein, nicht schneller werden!"
+
+**Aktueller Modus**: Speed wächst kontinuierlich mit Score (Level progression)
+**Gewünschter Modus**: Speed bleibt KONSTANT auf actuellem Level-Speed, egal wie lange man spielt
+
+**Relevante Code-Stellen**:
+- Line 759: `speed: 0.08` (baseSpeed)
+- Line 3791-3792: Speed Update Logic mit `speedMultiplier`
+- Speed skaliert basierend auf aktuellem Level/Score
+
+**Root Cause Hypothesen**:
+1. `speedMultiplier` wächst zu schnell (wahrscheinlich exponentiell statt linear)
+2. Level-Progression berechnet falsch (Score vs. Zeit vs. Entfernung)
+3. `gameState.maxSpeed` ist zu hoch gesetzt
+4. Kein Speed-Cap nach bestimmtem Level
+
+**Lösung erforderlich**:
+- Analyse der Speed-Progression-Logik
+- Speed-Formel flacher machen (linear statt exponentiell)
+- Nach Level 10 Speed konstant halten
+- Test mit verschiedenen Progression-Kurven
 
 ---
 
