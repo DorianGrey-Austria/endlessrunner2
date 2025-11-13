@@ -83,6 +83,11 @@
             avgLoadTime: 0
         };
 
+        const MAX_OBJECTS_PER_LEVEL = 100;
+        const MAX_ENV_LOAD_TIME = 10000;
+        let lastWorkingLevel = 1;
+        let sceneComplexityScores = {};
+
         function logError(message, error) {
             errorCount++;
             const errorLog = document.getElementById('errorLog');
@@ -103,6 +108,57 @@
             }
         }
 
+        function calculateSceneComplexity() {
+            let score = 0;
+            const objects = LevelManager.levelObjects;
+
+            objects.forEach(obj => {
+                if (obj.geometry) {
+                    const verts = obj.geometry.attributes.position?.count || 0;
+                    score += verts / 100;
+                }
+                if (obj.material) {
+                    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                    score += mats.length * 0.5;
+                }
+                if (obj.children && obj.children.length > 0) {
+                    score += obj.children.length * 0.2;
+                }
+            });
+
+            return Math.round(score);
+        }
+
+        function enforceObjectLimit() {
+            if (LevelManager.levelObjects.length > MAX_OBJECTS_PER_LEVEL) {
+                logError(`Object limit exceeded: ${LevelManager.levelObjects.length}/${MAX_OBJECTS_PER_LEVEL}`);
+                const excess = LevelManager.levelObjects.splice(MAX_OBJECTS_PER_LEVEL);
+                excess.forEach(obj => {
+                    if (obj.parent) obj.parent.remove(obj);
+                });
+                console.warn(`⚠️ Removed ${excess.length} objects to enforce limit`);
+                return true;
+            }
+            return false;
+        }
+
+        function loadEnvironmentWithTimeout(envFunction, levelId) {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error(`Environment load timeout (>${MAX_ENV_LOAD_TIME}ms)`));
+                }, MAX_ENV_LOAD_TIME);
+
+                try {
+                    envFunction(scene, renderer);
+                    clearTimeout(timeout);
+                    resolve();
+                } catch (error) {
+                    clearTimeout(timeout);
+                    reject(error);
+                }
+            });
+        }
+
         function updatePerfStats(levelId, loadTime, objectCount) {
             performanceData.loadTimes[levelId] = loadTime;
             performanceData.objectCounts[levelId] = objectCount;
@@ -110,15 +166,23 @@
             const times = Object.values(performanceData.loadTimes);
             performanceData.avgLoadTime = times.reduce((a,b) => a+b, 0) / times.length;
 
+            const complexity = sceneComplexityScores[levelId] || 0;
+
             const perfStats = document.getElementById('perfStats');
-            let html = `⚡ Load time: ${loadTime.toFixed(0)}ms | Objects: ${objectCount}`;
+            let html = `⚡ Load: ${loadTime.toFixed(0)}ms | Objects: ${objectCount}/${MAX_OBJECTS_PER_LEVEL}`;
+
+            if (complexity > 500) {
+                html += `<br><span class="slow">⚠️ High complexity: ${complexity}</span>`;
+            } else {
+                html += `<br>Complexity: ${complexity}`;
+            }
 
             if (loadTime > 100) {
                 html += `<br><span class="slow">⚠️ Slow load detected</span>`;
             }
 
-            if (objectCount > 50) {
-                html += `<br><span class="slow">⚠️ High object count</span>`;
+            if (objectCount > MAX_OBJECTS_PER_LEVEL * 0.8) {
+                html += `<br><span class="slow">⚠️ Near object limit</span>`;
             }
 
             html += `<br>Avg: ${performanceData.avgLoadTime.toFixed(0)}ms`;
@@ -135,8 +199,9 @@
                 console.log(`✅ Registered Level ${id}: ${level.name}`);
             },
 
-            loadLevel: function(levelId) {
+            loadLevel: async function(levelId) {
                 const startTime = performance.now();
+                const previousLevel = this.currentLevel;
                 try {
                     console.log(`🎮 Loading Level ${levelId}`);
 
@@ -146,16 +211,29 @@
                         const beforeCount = this.levelObjects.length;
 
                         this.currentLevel = levelId;
-                        this.levels[levelId].load(scene, renderer);
+
+                        const perfEl = document.getElementById('perfStats');
+                        perfEl.innerHTML = '⏳ Loading environment...';
+
+                        await loadEnvironmentWithTimeout(this.levels[levelId].load, levelId);
+
+                        const limitExceeded = enforceObjectLimit();
+                        if (limitExceeded) {
+                            console.warn(`⚠️ Level ${levelId} exceeded object limit - some objects removed`);
+                        }
 
                         const afterCount = this.levelObjects.length;
+                        const complexity = calculateSceneComplexity();
+                        sceneComplexityScores[levelId] = complexity;
+
                         const loadTime = performance.now() - startTime;
 
                         currentLevelId = levelId;
+                        lastWorkingLevel = levelId;
                         updateUI(this.levels[levelId].name);
                         updatePerfStats(levelId, loadTime, afterCount);
 
-                        console.log(`✅ Level ${levelId} loaded in ${loadTime.toFixed(0)}ms: ${this.levels[levelId].name}`);
+                        console.log(`✅ Level ${levelId} loaded in ${loadTime.toFixed(0)}ms: ${this.levels[levelId].name} (complexity: ${complexity})`);
                     } else {
                         throw new Error(`Level ${levelId} not found in registry`);
                     }
@@ -163,6 +241,23 @@
                     logError(`Failed to load Level ${levelId}`, error);
                     const btn = document.getElementById(`btn-${levelId}`);
                     if (btn) btn.classList.add('error');
+
+                    console.log(`🔄 Attempting recovery to Level ${lastWorkingLevel}`);
+                    try {
+                        this.cleanup();
+                        this.currentLevel = lastWorkingLevel;
+                        this.levels[lastWorkingLevel].load(scene, renderer);
+                        currentLevelId = lastWorkingLevel;
+                        updateUI(this.levels[lastWorkingLevel].name);
+                        console.log(`✅ Recovered to Level ${lastWorkingLevel}`);
+
+                        const perfEl = document.getElementById('perfStats');
+                        perfEl.innerHTML = `<span class="slow">Recovered to Level ${lastWorkingLevel} after load failure</span>`;
+                    } catch (recoveryError) {
+                        logError('Recovery failed', recoveryError);
+                        const perfEl = document.getElementById('perfStats');
+                        perfEl.innerHTML = `<span class="slow">⚠️ Recovery failed - please reload page</span>`;
+                    }
                 }
             },
 

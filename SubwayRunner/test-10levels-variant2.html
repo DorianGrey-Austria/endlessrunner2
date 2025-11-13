@@ -80,6 +80,11 @@
         let errorCount = 0;
         let generatorWarnings = [];
 
+        const materialPool = new Map();
+        const geometryPool = new Map();
+        const MAX_GENERATOR_TIME = 5000;
+        let generatorTimeouts = {};
+
         function logError(message, error) {
             errorCount++;
             const errorLog = document.getElementById('errorLog');
@@ -100,6 +105,27 @@
             }
         }
 
+        function getPooledMaterial(key, createFn) {
+            if (!materialPool.has(key)) {
+                materialPool.set(key, createFn());
+            }
+            return materialPool.get(key);
+        }
+
+        function getPooledGeometry(key, createFn) {
+            if (!geometryPool.has(key)) {
+                geometryPool.set(key, createFn());
+            }
+            return geometryPool.get(key);
+        }
+
+        function clearPools() {
+            materialPool.forEach(mat => mat.dispose());
+            geometryPool.forEach(geo => geo.dispose());
+            materialPool.clear();
+            geometryPool.clear();
+        }
+
         function validateLevelConfig(config) {
             const required = ['id', 'name', 'fog', 'bgColor', 'lights', 'objects'];
             const missing = required.filter(field => !config.hasOwnProperty(field));
@@ -108,15 +134,86 @@
                 throw new Error(`Level config missing required fields: ${missing.join(', ')}`);
             }
 
+            if (typeof config.id !== 'number') {
+                throw new Error(`Level id must be a number, got ${typeof config.id}`);
+            }
+
+            if (typeof config.name !== 'string' || config.name.length === 0) {
+                throw new Error('Level name must be a non-empty string');
+            }
+
+            if (!config.fog || typeof config.fog.color !== 'number' || typeof config.fog.density !== 'number') {
+                throw new Error('Level fog must have color and density numbers');
+            }
+
+            if (typeof config.bgColor !== 'number') {
+                throw new Error('Level bgColor must be a number');
+            }
+
             if (!Array.isArray(config.lights)) {
                 throw new Error('lights must be an array');
             }
+
+            config.lights.forEach((light, i) => {
+                if (!light.type || !['directional', 'point'].includes(light.type)) {
+                    throw new Error(`Light ${i}: invalid type '${light.type}'`);
+                }
+                if (typeof light.intensity !== 'number' || light.intensity < 0) {
+                    throw new Error(`Light ${i}: intensity must be a positive number`);
+                }
+                if (!Array.isArray(light.pos) || light.pos.length !== 3) {
+                    throw new Error(`Light ${i}: pos must be array of 3 numbers`);
+                }
+            });
 
             if (!Array.isArray(config.objects)) {
                 throw new Error('objects must be an array');
             }
 
+            config.objects.forEach((obj, i) => {
+                if (!obj.type || typeof obj.type !== 'string') {
+                    throw new Error(`Object ${i}: type must be a string`);
+                }
+                if (typeof obj.count !== 'number' || obj.count < 0) {
+                    throw new Error(`Object ${i}: count must be a positive number`);
+                }
+            });
+
             return true;
+        }
+
+        function createFallbackObjects(count) {
+            const fallbackGeom = getPooledGeometry('fallback-cube', () => new THREE.BoxGeometry(1, 1, 1));
+            const fallbackMat = getPooledMaterial('fallback-mat', () => new THREE.MeshBasicMaterial({
+                color: 0xff00ff,
+                wireframe: true
+            }));
+
+            for (let i = 0; i < Math.min(count, 3); i++) {
+                const cube = new THREE.Mesh(fallbackGeom, fallbackMat);
+                cube.position.set(-5 + Math.random() * 10, 2, -i * 10);
+                scene.add(cube);
+                levelObjects.push(cube);
+            }
+        }
+
+        function hotReloadConfig(newConfigs) {
+            if (!Array.isArray(newConfigs)) {
+                logError('Hot reload failed: newConfigs must be array');
+                return false;
+            }
+
+            try {
+                newConfigs.forEach((config, i) => validateLevelConfig(config));
+                LEVEL_CONFIGS.length = 0;
+                LEVEL_CONFIGS.push(...newConfigs);
+                updateConfigStatus();
+                console.log('✅ Hot-reloaded', newConfigs.length, 'configs');
+                return true;
+            } catch (error) {
+                logError('Hot reload validation failed', error);
+                return false;
+            }
         }
 
         function updateConfigStatus() {
@@ -129,6 +226,8 @@
             if (generatorWarnings.length > 0) {
                 html += `<br><span class="warning">⚠️ ${generatorWarnings.length} warnings</span>`;
             }
+
+            html += `<br>Pooled: ${materialPool.size} materials, ${geometryPool.size} geometries`;
 
             status.innerHTML = html;
         }
@@ -472,18 +571,43 @@
 
                 let objectsLoaded = 0;
                 config.objects.forEach(objConfig => {
+                    const genKey = `${levelId}-${objConfig.type}`;
                     try {
                         const generator = ObjectGenerators[objConfig.type];
                         if (generator) {
+                            let completed = false;
+                            const timeout = setTimeout(() => {
+                                if (!completed) {
+                                    logError(`Generator timeout: ${objConfig.type} took >${MAX_GENERATOR_TIME}ms`);
+                                }
+                            }, MAX_GENERATOR_TIME);
+
+                            generatorTimeouts[genKey] = timeout;
+
                             generator(objConfig.count);
+                            completed = true;
+                            clearTimeout(timeout);
+                            delete generatorTimeouts[genKey];
                             objectsLoaded++;
                         } else {
                             const warning = `No generator for type: ${objConfig.type}`;
                             console.warn(`⚠️ ${warning}`);
                             generatorWarnings.push(warning);
+
+                            createFallbackObjects(objConfig.count);
+                            objectsLoaded++;
                         }
                     } catch (genError) {
                         logError(`Generator error for ${objConfig.type}`, genError);
+                        clearTimeout(generatorTimeouts[genKey]);
+                        delete generatorTimeouts[genKey];
+
+                        try {
+                            createFallbackObjects(objConfig.count);
+                            console.log(`✅ Used fallback for ${objConfig.type}`);
+                        } catch (fallbackError) {
+                            logError('Fallback also failed', fallbackError);
+                        }
                     }
                 });
 
@@ -499,15 +623,24 @@
 
         function cleanupLevel() {
             try {
+                Object.values(generatorTimeouts).forEach(timeout => clearTimeout(timeout));
+                generatorTimeouts = {};
+
                 levelObjects.forEach(obj => {
                     try {
                         if (obj.parent) obj.parent.remove(obj);
-                        if (obj.geometry) obj.geometry.dispose();
+                        if (obj.geometry && !geometryPool.has(obj.geometry.uuid)) {
+                            obj.geometry.dispose();
+                        }
                         if (obj.material) {
                             if (Array.isArray(obj.material)) {
-                                obj.material.forEach(mat => mat.dispose());
+                                obj.material.forEach(mat => {
+                                    if (!materialPool.has(mat.uuid)) mat.dispose();
+                                });
                             } else {
-                                obj.material.dispose();
+                                if (!materialPool.has(obj.material.uuid)) {
+                                    obj.material.dispose();
+                                }
                             }
                         }
                     } catch (disposeError) {
@@ -620,6 +753,12 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        window.hotReloadConfig = hotReloadConfig;
+        window.clearPoolsNow = clearPools;
+
+        console.log('💡 Hot-reload available: window.hotReloadConfig([...new configs])');
+        console.log('💡 Clear pools: window.clearPoolsNow()');
 
         init();
     </script>
