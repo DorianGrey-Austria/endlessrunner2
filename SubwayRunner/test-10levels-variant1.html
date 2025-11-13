@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 TEST: 10 Levels Variant 1 - Classic Object-Based</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Courier New', monospace; }
+        #info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .level-btn {
+            background: #00ff00;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .level-btn:hover { background: #00cc00; }
+        .current { background: #ff00ff !important; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>🎮 VARIANT 1: Classic Object-Based Levels</h2>
+        <p><strong>Current Level:</strong> <span id="currentLevel">1</span></p>
+        <p><strong>Score:</strong> <span id="score">0</span></p>
+        <p><strong>Approach:</strong> Full Level objects like Level1/Level2 pattern</p>
+        <div id="levelButtons"></div>
+        <p style="margin-top: 15px; font-size: 12px; color: #aaa;">
+            Press 1-9,0 to test each level<br>
+            Space = Auto-cycle through all levels
+        </p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+    <script>
+        let scene, camera, renderer;
+        let currentLevelId = 1;
+        let score = 0;
+        let autoCycle = false;
+        let autoCycleInterval = null;
+
+        const LevelManager = {
+            levels: {},
+            currentLevel: 1,
+            levelObjects: [],
+
+            registerLevel: function(id, level) {
+                this.levels[id] = level;
+                console.log(`✅ Registered Level ${id}: ${level.name}`);
+            },
+
+            loadLevel: function(levelId) {
+                console.log(`🎮 Loading Level ${levelId}`);
+
+                this.cleanup();
+
+                if (this.levels[levelId]) {
+                    this.currentLevel = levelId;
+                    this.levels[levelId].load(scene, renderer);
+                    currentLevelId = levelId;
+                    updateUI();
+                    console.log(`✅ Level ${levelId} loaded: ${this.levels[levelId].name}`);
+                } else {
+                    console.error(`❌ Level ${levelId} not found!`);
+                }
+            },
+
+            cleanup: function() {
+                this.levelObjects.forEach(obj => {
+                    if (obj.parent) obj.parent.remove(obj);
+                    if (obj.geometry) obj.geometry.dispose();
+                    if (obj.material) {
+                        if (Array.isArray(obj.material)) {
+                            obj.material.forEach(mat => mat.dispose());
+                        } else {
+                            obj.material.dispose();
+                        }
+                    }
+                });
+                this.levelObjects = [];
+
+                if (this.levels[this.currentLevel]?.cleanup) {
+                    this.levels[this.currentLevel].cleanup();
+                }
+            },
+
+            addLevelObject: function(obj) {
+                this.levelObjects.push(obj);
+                return obj;
+            }
+        };
+
+        const Level1 = {
+            id: 1,
+            name: "Classic Subway",
+            fogColor: 0x222222,
+            fogDensity: 0.015,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                const light = new THREE.DirectionalLight(0xffffff, 0.8);
+                light.position.set(10, 20, 10);
+                scene.add(light);
+                LevelManager.addLevelObject(light);
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level2 = {
+            id: 2,
+            name: "Neon Night Run",
+            fogColor: 0x001133,
+            fogDensity: 0.025,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                for (let i = 0; i < 10; i++) {
+                    const neonLight = new THREE.PointLight(0x00ffff, 1, 20);
+                    neonLight.position.set(-10 + Math.random() * 20, 5, -i * 10);
+                    scene.add(neonLight);
+                    LevelManager.addLevelObject(neonLight);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level3 = {
+            id: 3,
+            name: "Desert Storm",
+            fogColor: 0xFFE4B5,
+            fogDensity: 0.03,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                const sunLight = new THREE.DirectionalLight(0xFFAA00, 1.2);
+                sunLight.position.set(20, 30, 10);
+                scene.add(sunLight);
+                LevelManager.addLevelObject(sunLight);
+
+                for (let i = 0; i < 8; i++) {
+                    const pyramid = new THREE.Mesh(
+                        new THREE.ConeGeometry(3, 6, 4),
+                        new THREE.MeshLambertMaterial({ color: 0xDEB887 })
+                    );
+                    pyramid.position.set(-15 + Math.random() * 30, 3, -i * 15);
+                    pyramid.rotation.y = Math.PI / 4;
+                    scene.add(pyramid);
+                    LevelManager.addLevelObject(pyramid);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level4 = {
+            id: 4,
+            name: "Arctic Tundra",
+            fogColor: 0xE0FFFF,
+            fogDensity: 0.04,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                for (let i = 0; i < 12; i++) {
+                    const ice = new THREE.Mesh(
+                        new THREE.IcosahedronGeometry(2 + Math.random() * 2),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x88CCFF,
+                            transparent: true,
+                            opacity: 0.7,
+                            shininess: 100
+                        })
+                    );
+                    ice.position.set(-20 + Math.random() * 40, 2, -i * 10);
+                    scene.add(ice);
+                    LevelManager.addLevelObject(ice);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level5 = {
+            id: 5,
+            name: "Volcano Run",
+            fogColor: 0xFF4500,
+            fogDensity: 0.035,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                for (let i = 0; i < 10; i++) {
+                    const lava = new THREE.PointLight(0xFF0000, 2, 15);
+                    lava.position.set(-10 + Math.random() * 20, 1, -i * 12);
+                    scene.add(lava);
+                    LevelManager.addLevelObject(lava);
+
+                    const rock = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(1.5),
+                        new THREE.MeshLambertMaterial({
+                            color: 0x8B4513,
+                            emissive: 0xFF0000,
+                            emissiveIntensity: 0.3
+                        })
+                    );
+                    rock.position.set(-15 + Math.random() * 30, 2, -i * 12);
+                    scene.add(rock);
+                    LevelManager.addLevelObject(rock);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level6 = {
+            id: 6,
+            name: "Underwater Depths",
+            fogColor: 0x000080,
+            fogDensity: 0.05,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                const waterLight = new THREE.DirectionalLight(0x0088FF, 0.6);
+                waterLight.position.set(0, 20, 0);
+                scene.add(waterLight);
+                LevelManager.addLevelObject(waterLight);
+
+                for (let i = 0; i < 15; i++) {
+                    const bubble = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.5 + Math.random() * 0.5),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x88DDFF,
+                            transparent: true,
+                            opacity: 0.3
+                        })
+                    );
+                    bubble.position.set(-20 + Math.random() * 40, -5 + Math.random() * 15, -i * 8);
+                    scene.add(bubble);
+                    LevelManager.addLevelObject(bubble);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level7 = {
+            id: 7,
+            name: "Jungle Temple",
+            fogColor: 0x2F4F2F,
+            fogDensity: 0.04,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(this.fogColor);
+
+                for (let i = 0; i < 10; i++) {
+                    const tree = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.5, 0.7, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+                    );
+                    tree.position.set(-15 + Math.random() * 30, 4, -i * 12);
+                    scene.add(tree);
+                    LevelManager.addLevelObject(tree);
+
+                    const canopy = new THREE.Mesh(
+                        new THREE.SphereGeometry(3),
+                        new THREE.MeshLambertMaterial({ color: 0x228B22 })
+                    );
+                    canopy.position.set(tree.position.x, 8, tree.position.z);
+                    scene.add(canopy);
+                    LevelManager.addLevelObject(canopy);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level8 = {
+            id: 8,
+            name: "Space Station",
+            fogColor: 0x000033,
+            fogDensity: 0.02,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(0x000000);
+
+                const starGeom = new THREE.BufferGeometry();
+                const starCount = 500;
+                const positions = new Float32Array(starCount * 3);
+
+                for (let i = 0; i < starCount * 3; i += 3) {
+                    positions[i] = (Math.random() - 0.5) * 200;
+                    positions[i + 1] = (Math.random() - 0.5) * 200;
+                    positions[i + 2] = -50 - Math.random() * 150;
+                }
+
+                starGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                const stars = new THREE.Points(starGeom, new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.5 }));
+                scene.add(stars);
+                LevelManager.addLevelObject(stars);
+
+                for (let i = 0; i < 8; i++) {
+                    const station = new THREE.Mesh(
+                        new THREE.CylinderGeometry(2, 2, 8, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x444466, emissive: 0x222244, emissiveIntensity: 0.2 })
+                    );
+                    station.rotation.z = Math.PI / 2;
+                    station.position.set(-30 + Math.random() * 60, 5, -i * 20);
+                    scene.add(station);
+                    LevelManager.addLevelObject(station);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level9 = {
+            id: 9,
+            name: "Crystal Mines",
+            fogColor: 0x9400D3,
+            fogDensity: 0.04,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(0x4B0082);
+
+                const crystalLight = new THREE.PointLight(0xFF00FF, 1, 30);
+                crystalLight.position.set(-10, 5, 0);
+                scene.add(crystalLight);
+                LevelManager.addLevelObject(crystalLight);
+
+                for (let i = 0; i < 15; i++) {
+                    const crystal = new THREE.Mesh(
+                        new THREE.OctahedronGeometry(1 + Math.random() * 1.5),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xFF00FF,
+                            emissive: 0xFF00FF,
+                            emissiveIntensity: 0.4,
+                            transparent: true,
+                            opacity: 0.8,
+                            shininess: 100
+                        })
+                    );
+                    crystal.position.set(-20 + Math.random() * 40, 2, -i * 8);
+                    crystal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                    scene.add(crystal);
+                    LevelManager.addLevelObject(crystal);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        const Level10 = {
+            id: 10,
+            name: "Final Dimension",
+            fogColor: 0xFF1493,
+            fogDensity: 0.07,
+
+            load: function(scene, renderer) {
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                renderer.setClearColor(0x8B008B);
+
+                for (let i = 0; i < 10; i++) {
+                    const portal = new THREE.Mesh(
+                        new THREE.TorusGeometry(2, 0.3, 8, 16),
+                        new THREE.MeshBasicMaterial({
+                            color: 0x00FFFF,
+                            emissive: 0x00FFFF,
+                            emissiveIntensity: 1.0
+                        })
+                    );
+                    portal.position.set(-20 + Math.random() * 40, 3, -i * 15);
+                    scene.add(portal);
+                    LevelManager.addLevelObject(portal);
+
+                    const rift = new THREE.Mesh(
+                        new THREE.SphereGeometry(1.5, 16, 8),
+                        new THREE.MeshBasicMaterial({
+                            color: 0xFF00FF,
+                            wireframe: true,
+                            transparent: true,
+                            opacity: 0.4
+                        })
+                    );
+                    rift.position.set(-15 + Math.random() * 30, 4, -i * 18);
+                    scene.add(rift);
+                    LevelManager.addLevelObject(rift);
+                }
+            },
+
+            cleanup: function() {}
+        };
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 2, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            LevelManager.registerLevel(1, Level1);
+            LevelManager.registerLevel(2, Level2);
+            LevelManager.registerLevel(3, Level3);
+            LevelManager.registerLevel(4, Level4);
+            LevelManager.registerLevel(5, Level5);
+            LevelManager.registerLevel(6, Level6);
+            LevelManager.registerLevel(7, Level7);
+            LevelManager.registerLevel(8, Level8);
+            LevelManager.registerLevel(9, Level9);
+            LevelManager.registerLevel(10, Level10);
+
+            console.log(`✅ All ${Object.keys(LevelManager.levels).length} levels registered!`);
+
+            createLevelButtons();
+            LevelManager.loadLevel(1);
+
+            animate();
+        }
+
+        function createLevelButtons() {
+            const container = document.getElementById('levelButtons');
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'level-btn';
+                btn.textContent = `L${i}`;
+                btn.id = `btn-${i}`;
+                btn.onclick = () => LevelManager.loadLevel(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('currentLevel').textContent = currentLevelId;
+            document.getElementById('score').textContent = score;
+
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('current');
+            });
+            const currentBtn = document.getElementById(`btn-${currentLevelId}`);
+            if (currentBtn) currentBtn.classList.add('current');
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                autoCycle = !autoCycle;
+                if (autoCycle) {
+                    console.log('🔄 Auto-cycle enabled');
+                    autoCycleInterval = setInterval(() => {
+                        const nextLevel = (currentLevelId % 10) + 1;
+                        LevelManager.loadLevel(nextLevel);
+                        score += 100;
+                        updateUI();
+                    }, 3000);
+                } else {
+                    console.log('⏸️ Auto-cycle disabled');
+                    clearInterval(autoCycleInterval);
+                }
+            }
+
+            const digit = parseInt(e.key);
+            if (digit >= 1 && digit <= 9) {
+                LevelManager.loadLevel(digit);
+                score += 100;
+            } else if (e.key === '0') {
+                LevelManager.loadLevel(10);
+                score += 100;
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+    </script>
+</body>
+</html>
