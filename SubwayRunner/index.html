@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.6-LEVEL-PROGRESSION</title>
+    <title>Subway Runner 3D - V4.7-STABLE-TRANSITIONS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -285,7 +285,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.6-LEVEL-PROGRESSION</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.7-STABLE-TRANSITIONS</div>
         </div>
         
         <div id="instructions">
@@ -823,71 +823,178 @@
             loadLevel: function(levelId) {
                 console.log(`🎮 Loading Level ${levelId}`);
 
-                // Cleanup previous level
-                this.cleanup();
+                // Pause game during transition (Best Practice)
+                const wasPlaying = gameState.isPlaying;
+                gameState.isPlaying = false;
+                this.transitionInProgress = true;
 
-                // Load new level
-                if (this.levels[levelId]) {
-                    try {
-                        this.currentLevel = levelId;
-                        this.levels[levelId].load(scene, renderer);
+                // Create fade overlay for smooth transition
+                const fadeOverlay = document.createElement('div');
+                fadeOverlay.id = 'levelFadeOverlay';
+                fadeOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: black;
+                    opacity: 0;
+                    z-index: 9999;
+                    pointer-events: none;
+                    transition: opacity 0.5s ease-in-out;
+                `;
+                document.body.appendChild(fadeOverlay);
 
-                        // Update UI Level Indicator
-                        const levelDisplay = document.getElementById('currentLevel');
-                        if (levelDisplay) {
-                            levelDisplay.textContent = levelId;
+                // Fade to black
+                setTimeout(() => {
+                    fadeOverlay.style.opacity = '1';
+                }, 10);
+
+                // Cleanup and load after fade
+                setTimeout(() => {
+                    // Cleanup previous level
+                    this.cleanup();
+
+                    // Small pause for garbage collection (Best Practice)
+                    setTimeout(() => {
+                        // Load new level
+                        if (this.levels[levelId]) {
+                            try {
+                                this.currentLevel = levelId;
+                                this.levels[levelId].load(scene, renderer);
+
+                                // Update UI Level Indicator
+                                const levelDisplay = document.getElementById('currentLevel');
+                                if (levelDisplay) {
+                                    levelDisplay.textContent = levelId;
+                                }
+
+                                // Update Next Level Indicator
+                                const nextLevelDisplay = document.getElementById('nextLevel');
+                                if (nextLevelDisplay && levelId < 10) {
+                                    nextLevelDisplay.textContent = (levelId * LEVEL_PROGRESSION_THRESHOLD);
+                                } else if (nextLevelDisplay && levelId === 10) {
+                                    nextLevelDisplay.textContent = 'MAX';
+                                }
+
+                                // Show level notification
+                                this.showLevelNotification(levelId);
+
+                                // Update game state
+                                currentLevel = levelId;
+
+                                // Fade back in
+                                setTimeout(() => {
+                                    fadeOverlay.style.opacity = '0';
+                                    setTimeout(() => {
+                                        fadeOverlay.remove();
+                                        // Resume game after transition (Best Practice)
+                                        if (wasPlaying) {
+                                            gameState.isPlaying = true;
+                                        }
+                                        this.transitionInProgress = false;
+                                    }, 500);
+                                }, 100);
+
+                                // Clear loading flag on success
+                                this.loadingLevel = null;
+                            } catch (error) {
+                                console.error(`Failed to load level ${levelId}:`, error);
+                                // Reset loading flag on error
+                                this.loadingLevel = null;
+                                this.transitionInProgress = false;
+                                // Keep playing with current level
+                                console.log('Continuing with current level due to load error');
+                                // Restore game state
+                                if (wasPlaying) {
+                                    gameState.isPlaying = true;
+                                }
+                                // Remove fade overlay
+                                fadeOverlay.style.opacity = '0';
+                                setTimeout(() => fadeOverlay.remove(), 500);
+                            }
+                        } else {
+                            this.loadingLevel = null;
+                            this.transitionInProgress = false;
+                            if (wasPlaying) {
+                                gameState.isPlaying = true;
+                            }
+                            fadeOverlay.style.opacity = '0';
+                            setTimeout(() => fadeOverlay.remove(), 500);
                         }
-
-                        // Update Next Level Indicator
-                        const nextLevelDisplay = document.getElementById('nextLevel');
-                        if (nextLevelDisplay && levelId < 10) {
-                            nextLevelDisplay.textContent = (levelId * LEVEL_PROGRESSION_THRESHOLD);
-                        } else if (nextLevelDisplay && levelId === 10) {
-                            nextLevelDisplay.textContent = 'MAX';
-                        }
-
-                        // Show level notification
-                        this.showLevelNotification(levelId);
-
-                        // Update game state
-                        currentLevel = levelId;
-
-                        // Clear loading flag on success
-                        this.loadingLevel = null;
-                    } catch (error) {
-                        console.error(`Failed to load level ${levelId}:`, error);
-                        // Reset loading flag on error
-                        this.loadingLevel = null;
-                        // Keep playing with current level
-                        console.log('Continuing with current level due to load error');
-                    }
-                } else {
-                    this.loadingLevel = null;
-                }
+                    }, 100); // 100ms pause for GC
+                }, 500); // Wait for fade to complete
             },
             
             cleanup: function() {
-                // Remove all level-specific objects
-                this.levelObjects.forEach(obj => {
-                    if (obj.parent) {
-                        obj.parent.remove(obj);
+                console.log('🧹 Starting level cleanup...');
+
+                // Recursive disposal function (Best Practice)
+                const disposeObject = (obj) => {
+                    if (!obj) return;
+
+                    // Dispose geometry
+                    if (obj.geometry) {
+                        obj.geometry.dispose();
                     }
-                    // Dispose geometries and materials
-                    if (obj.geometry) obj.geometry.dispose();
+
+                    // Dispose materials (including textures)
                     if (obj.material) {
                         if (Array.isArray(obj.material)) {
-                            obj.material.forEach(mat => mat.dispose());
+                            obj.material.forEach(mat => {
+                                if (mat.map) mat.map.dispose();
+                                if (mat.lightMap) mat.lightMap.dispose();
+                                if (mat.bumpMap) mat.bumpMap.dispose();
+                                if (mat.normalMap) mat.normalMap.dispose();
+                                if (mat.specularMap) mat.specularMap.dispose();
+                                if (mat.envMap) mat.envMap.dispose();
+                                mat.dispose();
+                            });
                         } else {
+                            if (obj.material.map) obj.material.map.dispose();
+                            if (obj.material.lightMap) obj.material.lightMap.dispose();
+                            if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+                            if (obj.material.normalMap) obj.material.normalMap.dispose();
+                            if (obj.material.specularMap) obj.material.specularMap.dispose();
+                            if (obj.material.envMap) obj.material.envMap.dispose();
                             obj.material.dispose();
                         }
                     }
+
+                    // Recursively dispose children
+                    if (obj.children) {
+                        for (let i = obj.children.length - 1; i >= 0; i--) {
+                            disposeObject(obj.children[i]);
+                        }
+                    }
+
+                    // Remove from parent
+                    if (obj.parent) {
+                        obj.parent.remove(obj);
+                    }
+                };
+
+                // Dispose all level-specific objects
+                this.levelObjects.forEach(obj => {
+                    disposeObject(obj);
                 });
                 this.levelObjects = [];
-                
+
                 // Let current level cleanup
                 if (this.levels[this.currentLevel] && this.levels[this.currentLevel].cleanup) {
                     this.levels[this.currentLevel].cleanup();
                 }
+
+                // Log memory stats (Best Practice - debugging)
+                if (renderer && renderer.info) {
+                    console.log('📊 Memory after cleanup:', {
+                        geometries: renderer.info.memory.geometries,
+                        textures: renderer.info.memory.textures,
+                        programs: renderer.info.programs.length
+                    });
+                }
+
+                console.log('✅ Cleanup completed');
             },
             
             update: function(deltaTime) {
@@ -901,8 +1008,8 @@
             },
             
             checkProgression: function() {
-                // Prevent progression during game over, victory, or while loading
-                if (gameState.isGameOver || gameState.isVictory || this.loadingLevel) {
+                // Prevent progression during game over, victory, loading, or transition
+                if (gameState.isGameOver || gameState.isVictory || this.loadingLevel || this.transitionInProgress) {
                     return;
                 }
                 
@@ -5011,7 +5118,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V4.6-LEVEL-PROGRESSION loaded - Alle 10 Levels spielbar!');
+            console.log('🎮 SubwayRunner V4.7-STABLE-TRANSITIONS loaded - Super stabile Level-Wechsel!');
             window.debugGesture();
         }, 2000);
 
