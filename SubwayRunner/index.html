@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.5-SPECIAL-EFFECTS</title>
+    <title>Subway Runner 3D - V4.6-LEVEL-PROGRESSION</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -278,12 +278,14 @@
         
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
+            <div>🎮 Level: <span id="currentLevel">1</span>/10</div>
+            <div style="font-size: 11px; opacity: 0.8;">⬆️ Nächstes bei: <span id="nextLevel">500</span></div>
             <div>Speed: <span id="speed">100</span></div>
             <div>❤️ Leben: <span id="lives">3</span></div>
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.5-SPECIAL-EFFECTS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.6-LEVEL-PROGRESSION</div>
         </div>
         
         <div id="instructions">
@@ -805,7 +807,7 @@
 
         // ==================== LEVEL SYSTEM V3.3 ====================
         let currentLevel = 1;
-        const LEVEL_PROGRESSION_THRESHOLD = 1000; // Points needed per level
+        const LEVEL_PROGRESSION_THRESHOLD = 500; // Points needed per level (500 = Level 10 bei 4500 Punkten)
         let nextLevelScore = LEVEL_PROGRESSION_THRESHOLD;
         
         // Level Manager
@@ -820,22 +822,36 @@
             
             loadLevel: function(levelId) {
                 console.log(`🎮 Loading Level ${levelId}`);
-                
+
                 // Cleanup previous level
                 this.cleanup();
-                
+
                 // Load new level
                 if (this.levels[levelId]) {
                     try {
                         this.currentLevel = levelId;
                         this.levels[levelId].load(scene, renderer);
-                        
+
+                        // Update UI Level Indicator
+                        const levelDisplay = document.getElementById('currentLevel');
+                        if (levelDisplay) {
+                            levelDisplay.textContent = levelId;
+                        }
+
+                        // Update Next Level Indicator
+                        const nextLevelDisplay = document.getElementById('nextLevel');
+                        if (nextLevelDisplay && levelId < 10) {
+                            nextLevelDisplay.textContent = (levelId * LEVEL_PROGRESSION_THRESHOLD);
+                        } else if (nextLevelDisplay && levelId === 10) {
+                            nextLevelDisplay.textContent = 'MAX';
+                        }
+
                         // Show level notification
                         this.showLevelNotification(levelId);
-                        
+
                         // Update game state
                         currentLevel = levelId;
-                        
+
                         // Clear loading flag on success
                         this.loadingLevel = null;
                     } catch (error) {
@@ -896,13 +912,13 @@
                     return; // Wait at least 2 seconds between level changes
                 }
                 
-                nextLevelScore = currentLevel * 1000; // Update for test compatibility
+                nextLevelScore = currentLevel * LEVEL_PROGRESSION_THRESHOLD; // Next level threshold
                 const nextLevelThreshold = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
                 if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
                     this.lastLevelChange = now;
                     currentLevel++; // INCREMENT BEFORE LOADING!
                     this.loadLevel(currentLevel);
-                    nextLevelScore = currentLevel * 1000;
+                    nextLevelScore = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
                 }
             },
             
@@ -918,24 +934,31 @@
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    font-size: 48px;
+                    font-size: 64px;
                     font-weight: bold;
-                    color: #00ff00;
-                    text-shadow: 0 0 20px rgba(0,255,0,0.8);
+                    color: #FFD700;
+                    text-shadow: 0 0 30px rgba(255,215,0,0.9), 0 0 60px rgba(255,215,0,0.6);
                     z-index: 10000;
                     pointer-events: none;
+                    background: rgba(0,0,0,0.7);
+                    padding: 30px 60px;
+                    border-radius: 20px;
+                    border: 3px solid #FFD700;
                 `;
-                
+
                 const levelName = this.levels[levelId].name || `Level ${levelId}`;
-                notification.textContent = `${levelName}!`;
+                notification.innerHTML = `
+                    <div style="font-size: 32px; margin-bottom: 10px;">🎮 LEVEL ${levelId} 🎮</div>
+                    <div>${levelName}</div>
+                `;
                 document.body.appendChild(notification);
-                
+
                 // Animate and remove
                 setTimeout(() => {
                     notification.style.transition = 'opacity 1s';
                     notification.style.opacity = '0';
                     setTimeout(() => notification.remove(), 1000);
-                }, 2000);
+                }, 3000); // Longer visible (3 seconds)
             },
             
             addLevelObject: function(obj) {
@@ -4988,7 +5011,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V4.5-SPECIAL-EFFECTS loaded - 10 Levels mit Special Effects');
+            console.log('🎮 SubwayRunner V4.6-LEVEL-PROGRESSION loaded - Alle 10 Levels spielbar!');
             window.debugGesture();
         }, 2000);
 
