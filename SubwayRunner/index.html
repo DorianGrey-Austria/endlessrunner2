@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.4-ENHANCED-LEVELS</title>
+    <title>Subway Runner 3D - V4.5-SPECIAL-EFFECTS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -283,7 +283,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.4-ENHANCED-LEVELS</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.5-SPECIAL-EFFECTS</div>
         </div>
         
         <div id="instructions">
@@ -952,7 +952,7 @@
             description: "Classic underground subway environment",
             fogColor: 0x444444,
             fogDensity: 0.012,
-            objects: { tiles: [], lights: [], tracks: [] },
+            objects: { tiles: [], lights: [], tracks: [], steam: [], sparks: [] },
 
             load: function(scene, renderer) {
                 console.log('🚇 Loading Level 1: Subway Tunnel');
@@ -1005,6 +1005,50 @@
                     this.objects.tracks.push(track);
                     LevelManager.addLevelObject(track);
                 }
+
+                // SPECIAL EFFECTS: Steam vents
+                for (let i = 0; i < 8; i++) {
+                    const steamGroup = new THREE.Group();
+                    for (let j = 0; j < 10; j++) {
+                        const steam = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.1, 4, 4),
+                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.3 })
+                        );
+                        steam.position.set(
+                            (Math.random() - 0.5) * 0.3,
+                            j * 0.4,
+                            (Math.random() - 0.5) * 0.3
+                        );
+                        steam.userData.velocity = 0.02 + Math.random() * 0.01;
+                        steamGroup.add(steam);
+                    }
+                    steamGroup.position.set(-5 + Math.random() * 10, 0.2, -i * 15);
+                    scene.add(steamGroup);
+                    this.objects.steam.push(steamGroup);
+                    LevelManager.addLevelObject(steamGroup);
+                }
+
+                // SPECIAL EFFECTS: Track sparks
+                for (let i = 0; i < 6; i++) {
+                    const sparkGroup = new THREE.Group();
+                    for (let j = 0; j < 8; j++) {
+                        const spark = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.03, 3, 3),
+                            new THREE.MeshBasicMaterial({ color: 0xFFAA00, emissive: 0xFFAA00 })
+                        );
+                        spark.userData.velocity = new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.05,
+                            Math.random() * 0.05,
+                            (Math.random() - 0.5) * 0.05
+                        );
+                        spark.userData.life = Math.random();
+                        sparkGroup.add(spark);
+                    }
+                    sparkGroup.position.set(-3 + Math.random() * 6, 0.1, -i * 20);
+                    scene.add(sparkGroup);
+                    this.objects.sparks.push(sparkGroup);
+                    LevelManager.addLevelObject(sparkGroup);
+                }
             },
 
             update: function(deltaTime) {
@@ -1014,10 +1058,39 @@
                         light.material.emissiveIntensity = 0.5 + Math.random() * 0.5;
                     }
                 });
+
+                // Animate steam
+                this.objects.steam.forEach(steamGroup => {
+                    steamGroup.children.forEach(steam => {
+                        steam.position.y += steam.userData.velocity;
+                        steam.material.opacity -= 0.003;
+                        if (steam.position.y > 4 || steam.material.opacity <= 0) {
+                            steam.position.y = 0;
+                            steam.material.opacity = 0.3;
+                        }
+                    });
+                });
+
+                // Animate sparks
+                this.objects.sparks.forEach(sparkGroup => {
+                    sparkGroup.children.forEach(spark => {
+                        spark.position.add(spark.userData.velocity);
+                        spark.userData.life -= 0.02;
+                        if (spark.userData.life <= 0) {
+                            spark.position.set(0, 0, 0);
+                            spark.userData.life = 1;
+                            spark.userData.velocity.set(
+                                (Math.random() - 0.5) * 0.05,
+                                Math.random() * 0.05,
+                                (Math.random() - 0.5) * 0.05
+                            );
+                        }
+                    });
+                });
             },
 
             cleanup: function() {
-                ['tiles', 'lights', 'tracks'].forEach(key => {
+                ['tiles', 'lights', 'tracks', 'steam', 'sparks'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1033,7 +1106,9 @@
             objects: {
                 cyberpunkBuildings: [],
                 neonLights: [],
-                gridFloor: null
+                gridFloor: null,
+                digitalRain: [],
+                neonParticles: []
             },
             
             load: function(scene, renderer) {
@@ -1101,8 +1176,48 @@
                     this.objects.cyberpunkBuildings.push(buildingGroup);
                     LevelManager.addLevelObject(buildingGroup);
                 }
+
+                // SPECIAL EFFECTS: Digital rain
+                for (let i = 0; i < 15; i++) {
+                    const rainGroup = new THREE.Group();
+                    for (let j = 0; j < 12; j++) {
+                        const rain = new THREE.Mesh(
+                            new THREE.BoxGeometry(0.05, 0.3, 0.05),
+                            new THREE.MeshBasicMaterial({ color: 0x00FF00, emissive: 0x00FF00, transparent: true, opacity: 0.7 })
+                        );
+                        rain.position.y = j * 0.8;
+                        rain.userData.speed = 0.15 + Math.random() * 0.1;
+                        rainGroup.add(rain);
+                    }
+                    rainGroup.position.set(-15 + Math.random() * 30, 10, -i * 10);
+                    scene.add(rainGroup);
+                    this.objects.digitalRain.push(rainGroup);
+                    LevelManager.addLevelObject(rainGroup);
+                }
+
+                // SPECIAL EFFECTS: Neon particles
+                for (let i = 0; i < 20; i++) {
+                    const particle = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.08, 4, 4),
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 0.6
+                        })
+                    );
+                    particle.position.set(-10 + Math.random() * 20, 2 + Math.random() * 6, -i * 8);
+                    particle.userData.velocity = new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        (Math.random() - 0.5) * 0.02,
+                        0
+                    );
+                    scene.add(particle);
+                    this.objects.neonParticles.push(particle);
+                    LevelManager.addLevelObject(particle);
+                }
             },
-            
+
             update: function(deltaTime) {
                 // Animate neon lights
                 this.objects.neonLights.forEach((light, index) => {
@@ -1112,15 +1227,34 @@
                         light.material.opacity = pulse;
                     }
                 });
-                
+
                 // Move buildings forward
                 this.objects.cyberpunkBuildings.forEach(building => {
                     building.position.z += gameState.speed * 0.7;
-                    
+
                     // Recycle buildings
                     if (building.position.z > 10) {
                         building.position.z -= 200;
                     }
+                });
+
+                // Animate digital rain
+                this.objects.digitalRain.forEach(rainGroup => {
+                    rainGroup.children.forEach(rain => {
+                        rain.position.y -= rain.userData.speed;
+                        if (rain.position.y < -2) {
+                            rain.position.y = 10;
+                        }
+                    });
+                });
+
+                // Animate neon particles
+                this.objects.neonParticles.forEach(particle => {
+                    particle.position.add(particle.userData.velocity);
+                    particle.rotation.y += 0.02;
+                    // Bounce particles
+                    if (Math.abs(particle.position.x) > 15) particle.userData.velocity.x *= -1;
+                    if (particle.position.y > 8 || particle.position.y < 1) particle.userData.velocity.y *= -1;
                 });
             },
             
@@ -1131,7 +1265,7 @@
                     // Clear level objects safely with full error handling
                     if (this.objects) {
                         // Safe cleanup of arrays
-                        ['cyberpunkBuildings', 'neonLights'].forEach(key => {
+                        ['cyberpunkBuildings', 'neonLights', 'digitalRain', 'neonParticles'].forEach(key => {
                             if (this.objects[key] && Array.isArray(this.objects[key])) {
                                 this.objects[key].forEach(obj => {
                                     if (obj && obj.parent) {
@@ -1167,7 +1301,7 @@
             description: "Flying through the clouds",
             fogColor: 0x87CEEB,
             fogDensity: 0.008,
-            objects: { clouds: [], birds: [], islands: [] },
+            objects: { clouds: [], birds: [], windParticles: [] },
 
             load: function(scene, renderer) {
                 console.log('☁️ Loading Level 3: Sky High');
@@ -1203,6 +1337,41 @@
                 sunLight.position.set(30, 25, -80);
                 scene.add(sunLight);
                 LevelManager.addLevelObject(sunLight);
+
+                // SPECIAL EFFECTS: Flying birds
+                for (let i = 0; i < 12; i++) {
+                    const bird = new THREE.Group();
+                    const wing1 = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.5, 0.05, 0.2),
+                        new THREE.MeshLambertMaterial({ color: 0x333333 })
+                    );
+                    wing1.position.x = -0.25;
+                    const wing2 = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.5, 0.05, 0.2),
+                        new THREE.MeshLambertMaterial({ color: 0x333333 })
+                    );
+                    wing2.position.x = 0.25;
+                    bird.add(wing1, wing2);
+                    bird.position.set(-20 + Math.random() * 40, 8 + Math.random() * 10, -i * 15 - 20);
+                    bird.userData.speed = 0.1 + Math.random() * 0.1;
+                    bird.userData.wingPhase = Math.random() * Math.PI * 2;
+                    scene.add(bird);
+                    this.objects.birds.push(bird);
+                    LevelManager.addLevelObject(bird);
+                }
+
+                // SPECIAL EFFECTS: Wind particles
+                for (let i = 0; i < 30; i++) {
+                    const particle = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.3, 0.03, 0.03),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.4 })
+                    );
+                    particle.position.set(-25 + Math.random() * 50, 2 + Math.random() * 10, -i * 6);
+                    particle.userData.velocity = 0.2 + Math.random() * 0.2;
+                    scene.add(particle);
+                    this.objects.windParticles.push(particle);
+                    LevelManager.addLevelObject(particle);
+                }
             },
 
             update: function(deltaTime) {
@@ -1211,10 +1380,25 @@
                     cloud.position.x += Math.sin(Date.now() * 0.0003) * 0.01;
                     cloud.position.y += Math.cos(Date.now() * 0.0005) * 0.005;
                 });
+
+                // Animate birds
+                this.objects.birds.forEach(bird => {
+                    bird.position.x += Math.sin(bird.userData.wingPhase) * 0.05;
+                    bird.userData.wingPhase += 0.1;
+                    bird.children.forEach((wing, i) => {
+                        wing.rotation.z = Math.sin(Date.now() * 0.01 + i * Math.PI) * 0.3;
+                    });
+                });
+
+                // Animate wind particles
+                this.objects.windParticles.forEach(particle => {
+                    particle.position.x += particle.userData.velocity;
+                    if (particle.position.x > 30) particle.position.x = -30;
+                });
             },
 
             cleanup: function() {
-                ['clouds', 'birds', 'islands'].forEach(key => {
+                ['clouds', 'birds', 'windParticles'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1227,7 +1411,7 @@
             description: "Deep beneath the ocean",
             fogColor: 0x003366,
             fogDensity: 0.045,
-            objects: { seaweed: [], fish: [], corals: [] },
+            objects: { seaweed: [], fish: [], corals: [], bubbles: [] },
 
             load: function(scene, renderer) {
                 console.log('🌊 Loading Level 4: Underwater Depths');
@@ -1263,6 +1447,25 @@
                 waterLight.position.set(0, 10, 0);
                 scene.add(waterLight);
                 LevelManager.addLevelObject(waterLight);
+
+                // SPECIAL EFFECTS: Bubble streams
+                for (let i = 0; i < 20; i++) {
+                    const bubbleGroup = new THREE.Group();
+                    for (let j = 0; j < 10; j++) {
+                        const bubble = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 6, 6),
+                            new THREE.MeshBasicMaterial({ color: 0xAADDFF, transparent: true, opacity: 0.4 })
+                        );
+                        bubble.position.y = j * 0.6;
+                        bubble.userData.speed = 0.03 + Math.random() * 0.02;
+                        bubble.userData.wobble = Math.random() * Math.PI * 2;
+                        bubbleGroup.add(bubble);
+                    }
+                    bubbleGroup.position.set(-8 + Math.random() * 16, 0, -i * 8);
+                    scene.add(bubbleGroup);
+                    this.objects.bubbles.push(bubbleGroup);
+                    LevelManager.addLevelObject(bubbleGroup);
+                }
             },
 
             update: function(deltaTime) {
@@ -1270,10 +1473,20 @@
                 this.objects.seaweed.forEach((weed, i) => {
                     weed.rotation.z = Math.sin(Date.now() * 0.001 + i) * 0.15;
                 });
+
+                // Animate bubbles
+                this.objects.bubbles.forEach(bubbleGroup => {
+                    bubbleGroup.children.forEach((bubble, i) => {
+                        bubble.position.y += bubble.userData.speed;
+                        bubble.userData.wobble += 0.05;
+                        bubble.position.x = Math.sin(bubble.userData.wobble) * 0.2;
+                        if (bubble.position.y > 12) bubble.position.y = 0;
+                    });
+                });
             },
 
             cleanup: function() {
-                ['seaweed', 'fish', 'corals'].forEach(key => {
+                ['seaweed', 'fish', 'corals', 'bubbles'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1324,6 +1537,19 @@
                 lavaLight.position.set(0, 2, -20);
                 scene.add(lavaLight);
                 LevelManager.addLevelObject(lavaLight);
+
+                // Ember particles
+                for (let i = 0; i < 25; i++) {
+                    const ember = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFF4400 : 0xFF6600, emissive: 0xFF4400, emissiveIntensity: 1 })
+                    );
+                    ember.position.set(-10 + Math.random() * 20, Math.random() * 8, -Math.random() * 120);
+                    ember.userData = { velocity: 0.02 + Math.random() * 0.03, wobble: Math.random() * Math.PI * 2 };
+                    scene.add(ember);
+                    this.objects.embers.push(ember);
+                    LevelManager.addLevelObject(ember);
+                }
             },
 
             update: function(deltaTime) {
@@ -1332,6 +1558,12 @@
                     if (pool.material) {
                         pool.material.emissiveIntensity = 0.7 + Math.sin(Date.now() * 0.003 + i) * 0.3;
                     }
+                });
+                // Rising embers
+                this.objects.embers.forEach(ember => {
+                    ember.position.y += ember.userData.velocity;
+                    ember.position.x += Math.sin(Date.now() * 0.001 + ember.userData.wobble) * 0.02;
+                    if (ember.position.y > 10) ember.position.y = 0;
                 });
             },
 
@@ -1349,7 +1581,7 @@
             description: "Ice caves with northern lights",
             fogColor: 0xB0E0E6,
             fogDensity: 0.018,
-            objects: { ice: [], crystals: [], icicles: [] },
+            objects: { ice: [], crystals: [], icicles: [], snowflakes: [] },
 
             load: function(scene, renderer) {
                 console.log('❄️ Loading Level 6: Arctic Aurora');
@@ -1398,6 +1630,19 @@
                 auroraLight2.position.set(10, 10, -40);
                 scene.add(auroraLight2);
                 LevelManager.addLevelObject(auroraLight2);
+
+                // Snowflake particles
+                for (let i = 0; i < 40; i++) {
+                    const snowflake = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.7 ? 0xCCEEFF : 0xFFFFFF, transparent: true, opacity: 0.8 })
+                    );
+                    snowflake.position.set(-12 + Math.random() * 24, Math.random() * 12, -Math.random() * 120);
+                    snowflake.userData = { velocity: 0.01 + Math.random() * 0.02, drift: Math.random() * Math.PI * 2 };
+                    scene.add(snowflake);
+                    this.objects.snowflakes.push(snowflake);
+                    LevelManager.addLevelObject(snowflake);
+                }
             },
 
             update: function(deltaTime) {
@@ -1405,10 +1650,16 @@
                 this.objects.crystals.forEach(crystal => {
                     crystal.rotation.y += 0.01;
                 });
+                // Falling snowflakes
+                this.objects.snowflakes.forEach(snowflake => {
+                    snowflake.position.y -= snowflake.userData.velocity;
+                    snowflake.position.x += Math.sin(Date.now() * 0.001 + snowflake.userData.drift) * 0.015;
+                    if (snowflake.position.y < 0) snowflake.position.y = 12;
+                });
             },
 
             cleanup: function() {
-                ['ice', 'crystals', 'icicles'].forEach(key => {
+                ['ice', 'crystals', 'icicles', 'snowflakes'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1421,7 +1672,7 @@
             description: "Ancient ruins in dense jungle",
             fogColor: 0x3CB371,
             fogDensity: 0.028,
-            objects: { trees: [], ruins: [], vines: [] },
+            objects: { trees: [], ruins: [], vines: [], fireflies: [] },
 
             load: function(scene, renderer) {
                 console.log('🌴 Loading Level 7: Jungle Temple');
@@ -1469,6 +1720,19 @@
                 sunLight.position.set(5, 10, 5);
                 scene.add(sunLight);
                 LevelManager.addLevelObject(sunLight);
+
+                // Firefly particles
+                for (let i = 0; i < 20; i++) {
+                    const firefly = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.08, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFF00, emissive: 0xFFFF00, emissiveIntensity: 1 })
+                    );
+                    firefly.position.set(-10 + Math.random() * 20, 1 + Math.random() * 4, -Math.random() * 120);
+                    firefly.userData = { phase: Math.random() * Math.PI * 2, speed: 0.5 + Math.random() * 0.5 };
+                    scene.add(firefly);
+                    this.objects.fireflies.push(firefly);
+                    LevelManager.addLevelObject(firefly);
+                }
             },
 
             update: function(deltaTime) {
@@ -1476,10 +1740,17 @@
                 this.objects.trees.forEach((tree, i) => {
                     tree.rotation.z = Math.sin(Date.now() * 0.0008 + i) * 0.05;
                 });
+                // Firefly movement and glow
+                this.objects.fireflies.forEach(firefly => {
+                    const time = Date.now() * 0.001;
+                    firefly.position.x += Math.sin(time * firefly.userData.speed + firefly.userData.phase) * 0.01;
+                    firefly.position.y += Math.cos(time * firefly.userData.speed * 0.7 + firefly.userData.phase) * 0.008;
+                    firefly.material.emissiveIntensity = 0.5 + Math.sin(time * 3 + firefly.userData.phase) * 0.5;
+                });
             },
 
             cleanup: function() {
-                ['trees', 'ruins', 'vines'].forEach(key => {
+                ['trees', 'ruins', 'vines', 'fireflies'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1492,7 +1763,7 @@
             description: "Floating through deep space",
             fogColor: 0x000000,
             fogDensity: 0.005,
-            objects: { stars: [], asteroids: [], modules: [] },
+            objects: { stars: [], asteroids: [], modules: [], debris: [] },
 
             load: function(scene, renderer) {
                 console.log('🚀 Loading Level 8: Space Station');
@@ -1551,6 +1822,20 @@
                     this.objects.asteroids.push(asteroid);
                     LevelManager.addLevelObject(asteroid);
                 }
+
+                // Space debris
+                for (let i = 0; i < 15; i++) {
+                    const debrisGeom = Math.random() > 0.5 ? new THREE.BoxGeometry(0.3, 0.3, 0.3) : new THREE.DodecahedronGeometry(0.2, 0);
+                    const debrisPiece = new THREE.Mesh(
+                        debrisGeom,
+                        new THREE.MeshLambertMaterial({ color: 0x666666, emissive: 0x222222 })
+                    );
+                    debrisPiece.position.set(-15 + Math.random() * 30, Math.random() * 8, -Math.random() * 100);
+                    debrisPiece.userData = { rotX: Math.random() * 0.02, rotY: Math.random() * 0.02, rotZ: Math.random() * 0.02 };
+                    scene.add(debrisPiece);
+                    this.objects.debris.push(debrisPiece);
+                    LevelManager.addLevelObject(debrisPiece);
+                }
             },
 
             update: function(deltaTime) {
@@ -1559,10 +1844,16 @@
                     asteroid.rotation.x += 0.005;
                     asteroid.rotation.y += 0.003;
                 });
+                // Drifting debris
+                this.objects.debris.forEach(piece => {
+                    piece.rotation.x += piece.userData.rotX;
+                    piece.rotation.y += piece.userData.rotY;
+                    piece.rotation.z += piece.userData.rotZ;
+                });
             },
 
             cleanup: function() {
-                ['stars', 'asteroids', 'modules'].forEach(key => {
+                ['stars', 'asteroids', 'modules', 'debris'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1575,7 +1866,7 @@
             description: "Glowing crystal caverns",
             fogColor: 0x4B0082,
             fogDensity: 0.025,
-            objects: { crystals: [], gems: [], beams: [] },
+            objects: { crystals: [], gems: [], beams: [], sparkles: [] },
 
             load: function(scene, renderer) {
                 console.log('💎 Loading Level 9: Crystal Mines');
@@ -1624,6 +1915,19 @@
                 mainLight.position.set(0, 10, 5);
                 scene.add(mainLight);
                 LevelManager.addLevelObject(mainLight);
+
+                // Sparkle particles
+                for (let i = 0; i < 30; i++) {
+                    const sparkle = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.05, 4, 4),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFF00FF : 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 1 })
+                    );
+                    sparkle.position.set(-10 + Math.random() * 20, 1 + Math.random() * 4, -Math.random() * 120);
+                    sparkle.userData = { phase: Math.random() * Math.PI * 2, floatSpeed: 0.3 + Math.random() * 0.4 };
+                    scene.add(sparkle);
+                    this.objects.sparkles.push(sparkle);
+                    LevelManager.addLevelObject(sparkle);
+                }
             },
 
             update: function(deltaTime) {
@@ -1636,10 +1940,17 @@
                     gem.position.y += Math.sin(Date.now() * 0.002 + i) * 0.01;
                     gem.rotation.y += 0.02;
                 });
+                // Twinkling sparkles
+                this.objects.sparkles.forEach(sparkle => {
+                    const time = Date.now() * 0.001;
+                    sparkle.position.y += Math.sin(time * sparkle.userData.floatSpeed + sparkle.userData.phase) * 0.01;
+                    sparkle.material.emissiveIntensity = 0.3 + Math.sin(time * 4 + sparkle.userData.phase) * 0.7;
+                    sparkle.scale.setScalar(0.5 + Math.sin(time * 5 + sparkle.userData.phase) * 0.5);
+                });
             },
 
             cleanup: function() {
-                ['crystals', 'gems', 'beams'].forEach(key => {
+                ['crystals', 'gems', 'beams', 'sparkles'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -1652,7 +1963,7 @@
             description: "Reality bends and warps",
             fogColor: 0x000000,
             fogDensity: 0.04,
-            objects: { portals: [], platforms: [], particles: [] },
+            objects: { portals: [], platforms: [], particles: [], energyWaves: [] },
 
             load: function(scene, renderer) {
                 console.log('🌀 Loading Level 10: Final Dimension');
@@ -1704,6 +2015,27 @@
                 dimensionLight2.position.set(0, 5, -60);
                 scene.add(dimensionLight2);
                 LevelManager.addLevelObject(dimensionLight2);
+
+                // Energy wave rings
+                for (let i = 0; i < 10; i++) {
+                    const wave = new THREE.Mesh(
+                        new THREE.RingGeometry(0.5, 0.7, 32),
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 1,
+                            side: THREE.DoubleSide,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissiveIntensity: 1
+                        })
+                    );
+                    wave.position.set(0, 2, -i * 15);
+                    wave.rotation.x = Math.PI / 2;
+                    wave.userData = { startTime: Date.now() + i * 1000, maxScale: 8 };
+                    scene.add(wave);
+                    this.objects.energyWaves.push(wave);
+                    LevelManager.addLevelObject(wave);
+                }
             },
 
             update: function(deltaTime) {
@@ -1717,10 +2049,17 @@
                     platform.position.y += Math.sin(Date.now() * 0.001 + i) * 0.01;
                     platform.rotation.y += 0.005;
                 });
+                // Expanding energy waves
+                this.objects.energyWaves.forEach(wave => {
+                    const elapsed = (Date.now() - wave.userData.startTime) % 3000;
+                    const progress = elapsed / 3000;
+                    wave.scale.setScalar(1 + progress * wave.userData.maxScale);
+                    wave.material.opacity = 1 - progress;
+                });
             },
 
             cleanup: function() {
-                ['portals', 'platforms', 'particles'].forEach(key => {
+                ['portals', 'platforms', 'particles', 'energyWaves'].forEach(key => {
                     if (this.objects[key]) this.objects[key] = [];
                 });
             }
@@ -4649,7 +4988,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V4.4-ENHANCED-LEVELS loaded - 10 grafisch verfeinerte Levels');
+            console.log('🎮 SubwayRunner V4.5-SPECIAL-EFFECTS loaded - 10 Levels mit Special Effects');
             window.debugGesture();
         }, 2000);
 
