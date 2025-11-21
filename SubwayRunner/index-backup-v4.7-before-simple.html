@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.8-ULTRA-STABLE</title>
+    <title>Subway Runner 3D - V4.7-STABLE-TRANSITIONS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script type="module">
@@ -285,7 +285,7 @@
             <div id="timer">⏱️ Zeit: <span id="timeRemaining">60</span>s</div>
             <div>🍎 Äpfel: <span id="apples">0</span></div>
             <div>🥦 Brokkoli: <span id="broccolis">0</span></div>
-            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.8-ULTRA-STABLE</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 10px;">V4.7-STABLE-TRANSITIONS</div>
         </div>
         
         <div id="instructions">
@@ -1073,508 +1073,1125 @@
             }
         };
 
-        // ==================== ULTRA-STABLE MINIMAL LEVEL DEFINITIONS ====================
-        // Simplified for 100% stability - NO particles, NO complex animations
-
-        // Level 1: Classic Subway (ULTRA-SIMPLE)
+        // ==================== LEVEL DEFINITIONS ====================
+        
+        // Level 1: Classic Subway
         const Level1 = {
             id: 1,
             name: "Classic Subway",
-            description: "Gray subway tunnel",
+            description: "Classic underground subway environment",
             fogColor: 0x444444,
-            fogDensity: 0.015,
-            objects: { decorations: [] },
+            fogDensity: 0.012,
+            objects: { tiles: [], lights: [], tracks: [], steam: [], sparks: [] },
 
             load: function(scene, renderer) {
-                console.log('🚇 Loading Level 1: Classic Subway');
+                console.log('🚇 Loading Level 1: Subway Tunnel');
+
+                // Set fog and background
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                // Just 3 simple static objects - NO animations
-                const wall1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(1, 8, 100),
-                    new THREE.MeshLambertMaterial({ color: 0x666666 })
-                );
-                wall1.position.set(-8, 4, -50);
-                scene.add(wall1);
-                this.objects.decorations.push(wall1);
-                LevelManager.addLevelObject(wall1);
+                // Subway tiles on walls
+                for (let i = 0; i < 15; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        const tile = new THREE.Mesh(
+                            new THREE.PlaneGeometry(1.2, 1.2),
+                            new THREE.MeshLambertMaterial({ color: 0xDDDDDD, emissive: 0x222222 })
+                        );
+                        const side = j % 2 === 0 ? -1 : 1;
+                        tile.position.set(side * 7, 1 + j * 1.2, -i * 8);
+                        tile.rotation.y = side > 0 ? -Math.PI/2 : Math.PI/2;
+                        scene.add(tile);
+                        this.objects.tiles.push(tile);
+                        LevelManager.addLevelObject(tile);
+                    }
+                }
 
-                const wall2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(1, 8, 100),
-                    new THREE.MeshLambertMaterial({ color: 0x666666 })
-                );
-                wall2.position.set(8, 4, -50);
-                scene.add(wall2);
-                this.objects.decorations.push(wall2);
-                LevelManager.addLevelObject(wall2);
+                // Subway platform lights
+                for (let i = 0; i < 12; i++) {
+                    const light = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.25, 8, 8),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFFAA, emissive: 0xFFFFAA })
+                    );
+                    light.position.set(Math.random() > 0.5 ? -7 : 7, 7, -i * 10);
+                    scene.add(light);
+                    this.objects.lights.push(light);
+                    LevelManager.addLevelObject(light);
 
-                const ceiling = new THREE.Mesh(
-                    new THREE.BoxGeometry(16, 0.5, 100),
-                    new THREE.MeshLambertMaterial({ color: 0x555555 })
-                );
-                ceiling.position.set(0, 8, -50);
-                scene.add(ceiling);
-                this.objects.decorations.push(ceiling);
-                LevelManager.addLevelObject(ceiling);
+                    const pointLight = new THREE.PointLight(0xFFFFAA, 0.4, 8);
+                    pointLight.position.copy(light.position);
+                    scene.add(pointLight);
+                    LevelManager.addLevelObject(pointLight);
+                }
+
+                // Subway tracks
+                for (let i = 0; i < 40; i++) {
+                    const track = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.15, 0.08, 2),
+                        new THREE.MeshLambertMaterial({ color: 0x555555 })
+                    );
+                    track.position.set(-2.5 + Math.random() * 5, 0.04, -i * 3);
+                    scene.add(track);
+                    this.objects.tracks.push(track);
+                    LevelManager.addLevelObject(track);
+                }
+
+                // SPECIAL EFFECTS: Steam vents
+                for (let i = 0; i < 8; i++) {
+                    const steamGroup = new THREE.Group();
+                    for (let j = 0; j < 10; j++) {
+                        const steam = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.1, 4, 4),
+                            new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.3 })
+                        );
+                        steam.position.set(
+                            (Math.random() - 0.5) * 0.3,
+                            j * 0.4,
+                            (Math.random() - 0.5) * 0.3
+                        );
+                        steam.userData.velocity = 0.02 + Math.random() * 0.01;
+                        steamGroup.add(steam);
+                    }
+                    steamGroup.position.set(-5 + Math.random() * 10, 0.2, -i * 15);
+                    scene.add(steamGroup);
+                    this.objects.steam.push(steamGroup);
+                    LevelManager.addLevelObject(steamGroup);
+                }
+
+                // SPECIAL EFFECTS: Track sparks
+                for (let i = 0; i < 6; i++) {
+                    const sparkGroup = new THREE.Group();
+                    for (let j = 0; j < 8; j++) {
+                        const spark = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.03, 3, 3),
+                            new THREE.MeshBasicMaterial({ color: 0xFFAA00, emissive: 0xFFAA00 })
+                        );
+                        spark.userData.velocity = new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.05,
+                            Math.random() * 0.05,
+                            (Math.random() - 0.5) * 0.05
+                        );
+                        spark.userData.life = Math.random();
+                        sparkGroup.add(spark);
+                    }
+                    sparkGroup.position.set(-3 + Math.random() * 6, 0.1, -i * 20);
+                    scene.add(sparkGroup);
+                    this.objects.sparks.push(sparkGroup);
+                    LevelManager.addLevelObject(sparkGroup);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Flickering lights effect
+                this.objects.lights.forEach((light, i) => {
+                    if (light.material && Math.random() < 0.01) {
+                        light.material.emissiveIntensity = 0.5 + Math.random() * 0.5;
+                    }
+                });
+
+                // Animate steam
+                this.objects.steam.forEach(steamGroup => {
+                    steamGroup.children.forEach(steam => {
+                        steam.position.y += steam.userData.velocity;
+                        steam.material.opacity -= 0.003;
+                        if (steam.position.y > 4 || steam.material.opacity <= 0) {
+                            steam.position.y = 0;
+                            steam.material.opacity = 0.3;
+                        }
+                    });
+                });
+
+                // Animate sparks
+                this.objects.sparks.forEach(sparkGroup => {
+                    sparkGroup.children.forEach(spark => {
+                        spark.position.add(spark.userData.velocity);
+                        spark.userData.life -= 0.02;
+                        if (spark.userData.life <= 0) {
+                            spark.position.set(0, 0, 0);
+                            spark.userData.life = 1;
+                            spark.userData.velocity.set(
+                                (Math.random() - 0.5) * 0.05,
+                                Math.random() * 0.05,
+                                (Math.random() - 0.5) * 0.05
+                            );
+                        }
+                    });
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['tiles', 'lights', 'tracks', 'steam', 'sparks'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 2: Neon Night Run
         const Level2 = {
             id: 2,
             name: "Neon Night Run",
-            description: "Dark cyberpunk city",
+            description: "Cyberpunk city with neon lights",
             fogColor: 0x001133,
             fogDensity: 0.025,
-            objects: { decorations: [] },
-
+            objects: {
+                cyberpunkBuildings: [],
+                neonLights: [],
+                gridFloor: null,
+                digitalRain: [],
+                neonParticles: []
+            },
+            
             load: function(scene, renderer) {
-                console.log('Loading Level 2');
+                console.log('🌃 Loading Level 2: Neon Night Run');
+                
+                // Update environment
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
+                
+                // Safe environment handling - these objects don't exist
+                // Skip hiding non-existent objects to prevent crashes
+                console.log('Level 2 loading - skipping environment object hiding');
+                
+                // Create neon environment
+                this.createEnvironment(scene);
+            },
+            
+            createEnvironment: function(scene) {
+                // Create neon grid floor
+                const gridHelper = new THREE.GridHelper(100, 50, 0x00FFFF, 0x004444);
+                gridHelper.position.y = -0.95;
+                gridHelper.userData = { type: 'level2Grid' };
+                scene.add(gridHelper);
+                this.objects.gridFloor = gridHelper;
+                LevelManager.addLevelObject(gridHelper);
+                
+                // Create cyberpunk buildings
+                for (let i = 0; i < 20; i++) {
+                    const buildingGroup = new THREE.Group();
+                    const width = 6 + Math.random() * 4;
+                    const height = 20 + Math.random() * 30;
+                    const depth = 6 + Math.random() * 4;
+                    
+                    // Building body
+                    const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+                    const buildingMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0x111122,
+                        emissive: 0x000011
+                    });
+                    const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                    building.position.y = height / 2;
+                    buildingGroup.add(building);
+                    
+                    // Neon edges (wireframe)
+                    const edgeGeometry = new THREE.EdgesGeometry(buildingGeometry);
+                    const edgeMaterial = new THREE.LineBasicMaterial({ 
+                        color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                        linewidth: 2
+                    });
+                    const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+                    edges.position.y = height / 2;
+                    buildingGroup.add(edges);
+                    this.objects.neonLights.push(edges);
+                    
+                    // Position building
+                    const side = i % 2 === 0 ? 1 : -1;
+                    buildingGroup.position.set(
+                        side * (20 + Math.random() * 15),
+                        0,
+                        -i * 8
+                    );
+                    buildingGroup.userData = { type: 'cyberpunkBuilding' };
+                    
+                    scene.add(buildingGroup);
+                    this.objects.cyberpunkBuildings.push(buildingGroup);
+                    LevelManager.addLevelObject(buildingGroup);
+                }
 
-                const box1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 6, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x003366 })
-                );
-                box1.position.set(-12, 3, -50);
-                scene.add(box1);
-                this.objects.decorations.push(box1);
-                LevelManager.addLevelObject(box1);
+                // SPECIAL EFFECTS: Digital rain
+                for (let i = 0; i < 15; i++) {
+                    const rainGroup = new THREE.Group();
+                    for (let j = 0; j < 12; j++) {
+                        const rain = new THREE.Mesh(
+                            new THREE.BoxGeometry(0.05, 0.3, 0.05),
+                            new THREE.MeshBasicMaterial({ color: 0x00FF00, emissive: 0x00FF00, transparent: true, opacity: 0.7 })
+                        );
+                        rain.position.y = j * 0.8;
+                        rain.userData.speed = 0.15 + Math.random() * 0.1;
+                        rainGroup.add(rain);
+                    }
+                    rainGroup.position.set(-15 + Math.random() * 30, 10, -i * 10);
+                    scene.add(rainGroup);
+                    this.objects.digitalRain.push(rainGroup);
+                    LevelManager.addLevelObject(rainGroup);
+                }
 
-                const box2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 6, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x003366 })
-                );
-                box2.position.set(12, 3, -50);
-                scene.add(box2);
-                this.objects.decorations.push(box2);
-                LevelManager.addLevelObject(box2);
-
-                const sphere = new THREE.Mesh(
-                    new THREE.SphereGeometry(4, 16, 16),
-                    new THREE.MeshLambertMaterial({ color: 0x00FFFF })
-                );
-                sphere.position.set(0, 8, -80);
-                scene.add(sphere);
-                this.objects.decorations.push(sphere);
-                LevelManager.addLevelObject(sphere);
+                // SPECIAL EFFECTS: Neon particles
+                for (let i = 0; i < 20; i++) {
+                    const particle = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.08, 4, 4),
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 0.6
+                        })
+                    );
+                    particle.position.set(-10 + Math.random() * 20, 2 + Math.random() * 6, -i * 8);
+                    particle.userData.velocity = new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        (Math.random() - 0.5) * 0.02,
+                        0
+                    );
+                    scene.add(particle);
+                    this.objects.neonParticles.push(particle);
+                    LevelManager.addLevelObject(particle);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
-            },
+                // Animate neon lights
+                this.objects.neonLights.forEach((light, index) => {
+                    if (light.material) {
+                        // Pulse effect
+                        const pulse = Math.sin(Date.now() * 0.002 + index) * 0.3 + 0.7;
+                        light.material.opacity = pulse;
+                    }
+                });
 
+                // Move buildings forward
+                this.objects.cyberpunkBuildings.forEach(building => {
+                    building.position.z += gameState.speed * 0.7;
+
+                    // Recycle buildings
+                    if (building.position.z > 10) {
+                        building.position.z -= 200;
+                    }
+                });
+
+                // Animate digital rain
+                this.objects.digitalRain.forEach(rainGroup => {
+                    rainGroup.children.forEach(rain => {
+                        rain.position.y -= rain.userData.speed;
+                        if (rain.position.y < -2) {
+                            rain.position.y = 10;
+                        }
+                    });
+                });
+
+                // Animate neon particles
+                this.objects.neonParticles.forEach(particle => {
+                    particle.position.add(particle.userData.velocity);
+                    particle.rotation.y += 0.02;
+                    // Bounce particles
+                    if (Math.abs(particle.position.x) > 15) particle.userData.velocity.x *= -1;
+                    if (particle.position.y > 8 || particle.position.y < 1) particle.userData.velocity.y *= -1;
+                });
+            },
+            
             cleanup: function() {
-                this.objects.decorations = [];
+                try {
+                    console.log('Neon level cleanup started');
+                    
+                    // Clear level objects safely with full error handling
+                    if (this.objects) {
+                        // Safe cleanup of arrays
+                        ['cyberpunkBuildings', 'neonLights', 'digitalRain', 'neonParticles'].forEach(key => {
+                            if (this.objects[key] && Array.isArray(this.objects[key])) {
+                                this.objects[key].forEach(obj => {
+                                    if (obj && obj.parent) {
+                                        try { scene.remove(obj); } catch(e) {}
+                                    }
+                                });
+                                this.objects[key] = [];
+                            }
+                        });
+                        
+                        // Safe cleanup of single objects
+                        if (this.objects.gridFloor) {
+                            try {
+                                if (this.objects.gridFloor.parent) {
+                                    scene.remove(this.objects.gridFloor);
+                                }
+                            } catch(e) {}
+                            this.objects.gridFloor = null;
+                        }
+                    }
+                    console.log('Neon level cleanup completed');
+                } catch (error) {
+                    console.error('Error during cleanup, but continuing:', error);
+                    // Game continues even if cleanup fails
+                }
             }
         };
 
+        // Level 3: Sky High
         const Level3 = {
             id: 3,
             name: "Sky High",
             description: "Flying through the clouds",
             fogColor: 0x87CEEB,
             fogDensity: 0.008,
-            objects: { decorations: [] },
+            objects: { clouds: [], birds: [], windParticles: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 3');
+                console.log('☁️ Loading Level 3: Sky High');
                 scene.fog = new THREE.Fog(this.fogColor, 10, 180);
                 renderer.setClearColor(this.fogColor);
 
-                const cloud1 = new THREE.Mesh(
-                    new THREE.SphereGeometry(6, 16, 16),
-                    new THREE.MeshLambertMaterial({ color: 0xFFFFFF })
-                );
-                cloud1.position.set(-8, 5, -60);
-                scene.add(cloud1);
-                this.objects.decorations.push(cloud1);
-                LevelManager.addLevelObject(cloud1);
+                // Floating clouds
+                for (let i = 0; i < 25; i++) {
+                    const cloud = new THREE.Group();
+                    for (let j = 0; j < 5; j++) {
+                        const sphere = new THREE.Mesh(
+                            new THREE.SphereGeometry(1 + Math.random() * 2, 8, 8),
+                            new THREE.MeshLambertMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 })
+                        );
+                        sphere.position.set((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 4);
+                        cloud.add(sphere);
+                    }
+                    cloud.position.set(-30 + Math.random() * 60, 3 + Math.random() * 15, -40 - Math.random() * 100);
+                    scene.add(cloud);
+                    this.objects.clouds.push(cloud);
+                    LevelManager.addLevelObject(cloud);
+                }
 
-                const cloud2 = new THREE.Mesh(
-                    new THREE.SphereGeometry(5, 16, 16),
-                    new THREE.MeshLambertMaterial({ color: 0xFFFFFF })
-                );
-                cloud2.position.set(10, 7, -80);
-                scene.add(cloud2);
-                this.objects.decorations.push(cloud2);
-                LevelManager.addLevelObject(cloud2);
-
+                // Sun
                 const sun = new THREE.Mesh(
                     new THREE.SphereGeometry(8, 16, 16),
                     new THREE.MeshBasicMaterial({ color: 0xFFDD44, emissive: 0xFFDD44 })
                 );
                 sun.position.set(30, 25, -80);
                 scene.add(sun);
-                this.objects.decorations.push(sun);
                 LevelManager.addLevelObject(sun);
+                const sunLight = new THREE.DirectionalLight(0xFFFFDD, 0.6);
+                sunLight.position.set(30, 25, -80);
+                scene.add(sunLight);
+                LevelManager.addLevelObject(sunLight);
+
+                // SPECIAL EFFECTS: Flying birds
+                for (let i = 0; i < 12; i++) {
+                    const bird = new THREE.Group();
+                    const wing1 = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.5, 0.05, 0.2),
+                        new THREE.MeshLambertMaterial({ color: 0x333333 })
+                    );
+                    wing1.position.x = -0.25;
+                    const wing2 = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.5, 0.05, 0.2),
+                        new THREE.MeshLambertMaterial({ color: 0x333333 })
+                    );
+                    wing2.position.x = 0.25;
+                    bird.add(wing1, wing2);
+                    bird.position.set(-20 + Math.random() * 40, 8 + Math.random() * 10, -i * 15 - 20);
+                    bird.userData.speed = 0.1 + Math.random() * 0.1;
+                    bird.userData.wingPhase = Math.random() * Math.PI * 2;
+                    scene.add(bird);
+                    this.objects.birds.push(bird);
+                    LevelManager.addLevelObject(bird);
+                }
+
+                // SPECIAL EFFECTS: Wind particles
+                for (let i = 0; i < 30; i++) {
+                    const particle = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.3, 0.03, 0.03),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.4 })
+                    );
+                    particle.position.set(-25 + Math.random() * 50, 2 + Math.random() * 10, -i * 6);
+                    particle.userData.velocity = 0.2 + Math.random() * 0.2;
+                    scene.add(particle);
+                    this.objects.windParticles.push(particle);
+                    LevelManager.addLevelObject(particle);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Clouds drift slowly
+                this.objects.clouds.forEach(cloud => {
+                    cloud.position.x += Math.sin(Date.now() * 0.0003) * 0.01;
+                    cloud.position.y += Math.cos(Date.now() * 0.0005) * 0.005;
+                });
+
+                // Animate birds
+                this.objects.birds.forEach(bird => {
+                    bird.position.x += Math.sin(bird.userData.wingPhase) * 0.05;
+                    bird.userData.wingPhase += 0.1;
+                    bird.children.forEach((wing, i) => {
+                        wing.rotation.z = Math.sin(Date.now() * 0.01 + i * Math.PI) * 0.3;
+                    });
+                });
+
+                // Animate wind particles
+                this.objects.windParticles.forEach(particle => {
+                    particle.position.x += particle.userData.velocity;
+                    if (particle.position.x > 30) particle.position.x = -30;
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['clouds', 'birds', 'windParticles'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 4: Underwater Depths
         const Level4 = {
             id: 4,
             name: "Underwater Depths",
-            description: "Deep ocean floor",
+            description: "Deep beneath the ocean",
             fogColor: 0x003366,
             fogDensity: 0.045,
-            objects: { decorations: [] },
+            objects: { seaweed: [], fish: [], corals: [], bubbles: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 4');
+                console.log('🌊 Loading Level 4: Underwater Depths');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                const coral1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(6, 4, 40),
-                    new THREE.MeshLambertMaterial({ color: 0xFF6644 })
-                );
-                coral1.position.set(-10, 2, -50);
-                scene.add(coral1);
-                this.objects.decorations.push(coral1);
-                LevelManager.addLevelObject(coral1);
+                // Seaweed forests
+                for (let i = 0; i < 30; i++) {
+                    const seaweed = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.1, 0.15, 3 + Math.random() * 2, 6),
+                        new THREE.MeshLambertMaterial({ color: 0x226622, emissive: 0x003300 })
+                    );
+                    seaweed.position.set(-10 + Math.random() * 20, 1.5, -i * 5 - Math.random() * 10);
+                    scene.add(seaweed);
+                    this.objects.seaweed.push(seaweed);
+                    LevelManager.addLevelObject(seaweed);
+                }
 
-                const coral2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(6, 4, 40),
-                    new THREE.MeshLambertMaterial({ color: 0xFF6644 })
-                );
-                coral2.position.set(10, 2, -50);
-                scene.add(coral2);
-                this.objects.decorations.push(coral2);
-                LevelManager.addLevelObject(coral2);
+                // Coral reefs
+                for (let i = 0; i < 15; i++) {
+                    const coral = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.5, 0),
+                        new THREE.MeshLambertMaterial({ color: Math.random() > 0.5 ? 0xFF6644 : 0xFFAA66 })
+                    );
+                    coral.position.set(-8 + Math.random() * 16, 0.3, -i * 8);
+                    scene.add(coral);
+                    this.objects.corals.push(coral);
+                    LevelManager.addLevelObject(coral);
+                }
 
-                const water = new THREE.Mesh(
-                    new THREE.SphereGeometry(8, 16, 16),
-                    new THREE.MeshLambertMaterial({ color: 0x0099CC })
-                );
-                water.position.set(0, 8, -80);
-                scene.add(water);
-                this.objects.decorations.push(water);
-                LevelManager.addLevelObject(water);
+                // Caustic lighting
+                const waterLight = new THREE.DirectionalLight(0x00CCFF, 0.3);
+                waterLight.position.set(0, 10, 0);
+                scene.add(waterLight);
+                LevelManager.addLevelObject(waterLight);
+
+                // SPECIAL EFFECTS: Bubble streams
+                for (let i = 0; i < 20; i++) {
+                    const bubbleGroup = new THREE.Group();
+                    for (let j = 0; j < 10; j++) {
+                        const bubble = new THREE.Mesh(
+                            new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 6, 6),
+                            new THREE.MeshBasicMaterial({ color: 0xAADDFF, transparent: true, opacity: 0.4 })
+                        );
+                        bubble.position.y = j * 0.6;
+                        bubble.userData.speed = 0.03 + Math.random() * 0.02;
+                        bubble.userData.wobble = Math.random() * Math.PI * 2;
+                        bubbleGroup.add(bubble);
+                    }
+                    bubbleGroup.position.set(-8 + Math.random() * 16, 0, -i * 8);
+                    scene.add(bubbleGroup);
+                    this.objects.bubbles.push(bubbleGroup);
+                    LevelManager.addLevelObject(bubbleGroup);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Swaying seaweed
+                this.objects.seaweed.forEach((weed, i) => {
+                    weed.rotation.z = Math.sin(Date.now() * 0.001 + i) * 0.15;
+                });
+
+                // Animate bubbles
+                this.objects.bubbles.forEach(bubbleGroup => {
+                    bubbleGroup.children.forEach((bubble, i) => {
+                        bubble.position.y += bubble.userData.speed;
+                        bubble.userData.wobble += 0.05;
+                        bubble.position.x = Math.sin(bubble.userData.wobble) * 0.2;
+                        if (bubble.position.y > 12) bubble.position.y = 0;
+                    });
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['seaweed', 'fish', 'corals', 'bubbles'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 5: Volcanic Eruption
         const Level5 = {
             id: 5,
             name: "Volcanic Eruption",
-            description: "Lava fields",
+            description: "Running through lava fields",
             fogColor: 0x8B0000,
             fogDensity: 0.035,
-            objects: { decorations: [] },
+            objects: { rocks: [], lava: [], embers: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 5');
+                console.log('🌋 Loading Level 5: Volcanic Eruption');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                const rock1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 5, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x333333 })
-                );
-                rock1.position.set(-10, 2.5, -50);
-                scene.add(rock1);
-                this.objects.decorations.push(rock1);
-                LevelManager.addLevelObject(rock1);
+                // Volcanic rocks
+                for (let i = 0; i < 25; i++) {
+                    const rock = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(1 + Math.random() * 2, 0),
+                        new THREE.MeshLambertMaterial({ color: 0x333333, emissive: 0xFF3300, emissiveIntensity: 0.2 })
+                    );
+                    rock.position.set(-12 + Math.random() * 24, 0.5, -i * 6);
+                    rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                    scene.add(rock);
+                    this.objects.rocks.push(rock);
+                    LevelManager.addLevelObject(rock);
+                }
 
-                const rock2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 5, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x333333 })
-                );
-                rock2.position.set(10, 2.5, -50);
-                scene.add(rock2);
-                this.objects.decorations.push(rock2);
-                LevelManager.addLevelObject(rock2);
+                // Lava pools (glowing ground areas)
+                for (let i = 0; i < 12; i++) {
+                    const lavaPool = new THREE.Mesh(
+                        new THREE.CircleGeometry(2 + Math.random(), 8),
+                        new THREE.MeshBasicMaterial({ color: 0xFF4400, emissive: 0xFF4400, emissiveIntensity: 1 })
+                    );
+                    lavaPool.rotation.x = -Math.PI / 2;
+                    lavaPool.position.set(-10 + Math.random() * 20, 0.02, -i * 10);
+                    scene.add(lavaPool);
+                    this.objects.lava.push(lavaPool);
+                    LevelManager.addLevelObject(lavaPool);
+                }
 
-                const lava = new THREE.Mesh(
-                    new THREE.SphereGeometry(6, 16, 16),
-                    new THREE.MeshBasicMaterial({ color: 0xFF4400, emissive: 0xFF4400 })
-                );
-                lava.position.set(0, 6, -80);
-                scene.add(lava);
-                this.objects.decorations.push(lava);
-                LevelManager.addLevelObject(lava);
+                // Lava glow
+                const lavaLight = new THREE.PointLight(0xFF6600, 1.5, 40);
+                lavaLight.position.set(0, 2, -20);
+                scene.add(lavaLight);
+                LevelManager.addLevelObject(lavaLight);
+
+                // Ember particles
+                for (let i = 0; i < 25; i++) {
+                    const ember = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFF4400 : 0xFF6600, emissive: 0xFF4400, emissiveIntensity: 1 })
+                    );
+                    ember.position.set(-10 + Math.random() * 20, Math.random() * 8, -Math.random() * 120);
+                    ember.userData = { velocity: 0.02 + Math.random() * 0.03, wobble: Math.random() * Math.PI * 2 };
+                    scene.add(ember);
+                    this.objects.embers.push(ember);
+                    LevelManager.addLevelObject(ember);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Pulsing lava
+                this.objects.lava.forEach((pool, i) => {
+                    if (pool.material) {
+                        pool.material.emissiveIntensity = 0.7 + Math.sin(Date.now() * 0.003 + i) * 0.3;
+                    }
+                });
+                // Rising embers
+                this.objects.embers.forEach(ember => {
+                    ember.position.y += ember.userData.velocity;
+                    ember.position.x += Math.sin(Date.now() * 0.001 + ember.userData.wobble) * 0.02;
+                    if (ember.position.y > 10) ember.position.y = 0;
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['rocks', 'lava', 'embers'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 6: Arctic Aurora
         const Level6 = {
             id: 6,
             name: "Arctic Aurora",
-            description: "Ice caves",
+            description: "Ice caves with northern lights",
             fogColor: 0xB0E0E6,
             fogDensity: 0.018,
-            objects: { decorations: [] },
+            objects: { ice: [], crystals: [], icicles: [], snowflakes: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 6');
+                console.log('❄️ Loading Level 6: Arctic Aurora');
                 scene.fog = new THREE.Fog(this.fogColor, 10, 140);
                 renderer.setClearColor(this.fogColor);
 
-                const ice1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 6, 50),
-                    new THREE.MeshLambertMaterial({ color: 0xAADDFF })
-                );
-                ice1.position.set(-10, 3, -50);
-                scene.add(ice1);
-                this.objects.decorations.push(ice1);
-                LevelManager.addLevelObject(ice1);
+                // Ice crystals
+                for (let i = 0; i < 30; i++) {
+                    const crystal = new THREE.Mesh(
+                        new THREE.OctahedronGeometry(0.5 + Math.random() * 0.8, 0),
+                        new THREE.MeshLambertMaterial({
+                            color: 0xAADDFF,
+                            transparent: true,
+                            opacity: 0.7,
+                            emissive: 0x5588FF,
+                            emissiveIntensity: 0.3
+                        })
+                    );
+                    crystal.position.set(-10 + Math.random() * 20, 0.5 + Math.random() * 2, -i * 5);
+                    crystal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                    scene.add(crystal);
+                    this.objects.crystals.push(crystal);
+                    LevelManager.addLevelObject(crystal);
+                }
 
-                const ice2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 6, 50),
-                    new THREE.MeshLambertMaterial({ color: 0xAADDFF })
-                );
-                ice2.position.set(10, 3, -50);
-                scene.add(ice2);
-                this.objects.decorations.push(ice2);
-                LevelManager.addLevelObject(ice2);
+                // Icicles from ceiling
+                for (let i = 0; i < 20; i++) {
+                    const icicle = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.2, 2 + Math.random(), 6),
+                        new THREE.MeshLambertMaterial({ color: 0xCCEEFF, transparent: true, opacity: 0.8 })
+                    );
+                    icicle.position.set(-8 + Math.random() * 16, 8, -i * 8);
+                    icicle.rotation.x = Math.PI;
+                    scene.add(icicle);
+                    this.objects.icicles.push(icicle);
+                    LevelManager.addLevelObject(icicle);
+                }
 
-                const aurora = new THREE.Mesh(
-                    new THREE.SphereGeometry(6, 16, 16),
-                    new THREE.MeshBasicMaterial({ color: 0x00FFAA })
-                );
-                aurora.position.set(0, 8, -80);
-                scene.add(aurora);
-                this.objects.decorations.push(aurora);
-                LevelManager.addLevelObject(aurora);
+                // Aurora lights
+                const auroraLight1 = new THREE.DirectionalLight(0x00FFAA, 0.4);
+                auroraLight1.position.set(-10, 10, -20);
+                scene.add(auroraLight1);
+                LevelManager.addLevelObject(auroraLight1);
+
+                const auroraLight2 = new THREE.DirectionalLight(0xFF00AA, 0.3);
+                auroraLight2.position.set(10, 10, -40);
+                scene.add(auroraLight2);
+                LevelManager.addLevelObject(auroraLight2);
+
+                // Snowflake particles
+                for (let i = 0; i < 40; i++) {
+                    const snowflake = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.7 ? 0xCCEEFF : 0xFFFFFF, transparent: true, opacity: 0.8 })
+                    );
+                    snowflake.position.set(-12 + Math.random() * 24, Math.random() * 12, -Math.random() * 120);
+                    snowflake.userData = { velocity: 0.01 + Math.random() * 0.02, drift: Math.random() * Math.PI * 2 };
+                    scene.add(snowflake);
+                    this.objects.snowflakes.push(snowflake);
+                    LevelManager.addLevelObject(snowflake);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Rotating crystals
+                this.objects.crystals.forEach(crystal => {
+                    crystal.rotation.y += 0.01;
+                });
+                // Falling snowflakes
+                this.objects.snowflakes.forEach(snowflake => {
+                    snowflake.position.y -= snowflake.userData.velocity;
+                    snowflake.position.x += Math.sin(Date.now() * 0.001 + snowflake.userData.drift) * 0.015;
+                    if (snowflake.position.y < 0) snowflake.position.y = 12;
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['ice', 'crystals', 'icicles', 'snowflakes'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 7: Jungle Temple
         const Level7 = {
             id: 7,
             name: "Jungle Temple",
-            description: "Dense jungle",
+            description: "Ancient ruins in dense jungle",
             fogColor: 0x3CB371,
             fogDensity: 0.028,
-            objects: { decorations: [] },
+            objects: { trees: [], ruins: [], vines: [], fireflies: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 7');
+                console.log('🌴 Loading Level 7: Jungle Temple');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                const tree1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(6, 8, 40),
-                    new THREE.MeshLambertMaterial({ color: 0x228B22 })
-                );
-                tree1.position.set(-10, 4, -50);
-                scene.add(tree1);
-                this.objects.decorations.push(tree1);
-                LevelManager.addLevelObject(tree1);
+                // Jungle trees
+                for (let i = 0; i < 20; i++) {
+                    const tree = new THREE.Group();
+                    const trunk = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.3, 0.4, 5, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+                    );
+                    trunk.position.y = 2.5;
+                    tree.add(trunk);
 
-                const tree2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(6, 8, 40),
-                    new THREE.MeshLambertMaterial({ color: 0x228B22 })
-                );
-                tree2.position.set(10, 4, -50);
-                scene.add(tree2);
-                this.objects.decorations.push(tree2);
-                LevelManager.addLevelObject(tree2);
+                    const leaves = new THREE.Mesh(
+                        new THREE.SphereGeometry(2, 8, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x228B22, emissive: 0x001100 })
+                    );
+                    leaves.position.y = 5.5;
+                    tree.add(leaves);
 
-                const temple = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 6, 8),
-                    new THREE.MeshLambertMaterial({ color: 0x888866 })
-                );
-                temple.position.set(0, 3, -80);
-                scene.add(temple);
-                this.objects.decorations.push(temple);
-                LevelManager.addLevelObject(temple);
+                    tree.position.set(-12 + Math.random() * 24, 0, -i * 8);
+                    scene.add(tree);
+                    this.objects.trees.push(tree);
+                    LevelManager.addLevelObject(tree);
+                }
+
+                // Temple ruins
+                for (let i = 0; i < 8; i++) {
+                    const ruin = new THREE.Mesh(
+                        new THREE.BoxGeometry(2, 3 + Math.random() * 2, 2),
+                        new THREE.MeshLambertMaterial({ color: 0x888866, emissive: 0x222200 })
+                    );
+                    ruin.position.set(-15 + Math.random() * 30, 1.5, -i * 15);
+                    ruin.rotation.y = Math.random() * 0.3;
+                    scene.add(ruin);
+                    this.objects.ruins.push(ruin);
+                    LevelManager.addLevelObject(ruin);
+                }
+
+                // Jungle lighting
+                const sunLight = new THREE.DirectionalLight(0xFFDD88, 0.5);
+                sunLight.position.set(5, 10, 5);
+                scene.add(sunLight);
+                LevelManager.addLevelObject(sunLight);
+
+                // Firefly particles
+                for (let i = 0; i < 20; i++) {
+                    const firefly = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.08, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFF00, emissive: 0xFFFF00, emissiveIntensity: 1 })
+                    );
+                    firefly.position.set(-10 + Math.random() * 20, 1 + Math.random() * 4, -Math.random() * 120);
+                    firefly.userData = { phase: Math.random() * Math.PI * 2, speed: 0.5 + Math.random() * 0.5 };
+                    scene.add(firefly);
+                    this.objects.fireflies.push(firefly);
+                    LevelManager.addLevelObject(firefly);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Subtle tree sway
+                this.objects.trees.forEach((tree, i) => {
+                    tree.rotation.z = Math.sin(Date.now() * 0.0008 + i) * 0.05;
+                });
+                // Firefly movement and glow
+                this.objects.fireflies.forEach(firefly => {
+                    const time = Date.now() * 0.001;
+                    firefly.position.x += Math.sin(time * firefly.userData.speed + firefly.userData.phase) * 0.01;
+                    firefly.position.y += Math.cos(time * firefly.userData.speed * 0.7 + firefly.userData.phase) * 0.008;
+                    firefly.material.emissiveIntensity = 0.5 + Math.sin(time * 3 + firefly.userData.phase) * 0.5;
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['trees', 'ruins', 'vines', 'fireflies'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 8: Space Station
         const Level8 = {
             id: 8,
             name: "Space Station",
-            description: "Deep space",
+            description: "Floating through deep space",
             fogColor: 0x000000,
             fogDensity: 0.005,
-            objects: { decorations: [] },
+            objects: { stars: [], asteroids: [], modules: [], debris: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 8');
+                console.log('🚀 Loading Level 8: Space Station');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                const module1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 5, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x666677 })
-                );
-                module1.position.set(-12, 2.5, -50);
-                scene.add(module1);
-                this.objects.decorations.push(module1);
-                LevelManager.addLevelObject(module1);
+                // Starfield
+                const starsGeometry = new THREE.BufferGeometry();
+                const starPositions = [];
+                for (let i = 0; i < 500; i++) {
+                    starPositions.push(
+                        (Math.random() - 0.5) * 200,
+                        (Math.random() - 0.5) * 200,
+                        (Math.random() - 0.5) * 200
+                    );
+                }
+                starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+                const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.3 });
+                const stars = new THREE.Points(starsGeometry, starsMaterial);
+                scene.add(stars);
+                this.objects.stars.push(stars);
+                LevelManager.addLevelObject(stars);
 
-                const module2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 5, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x666677 })
-                );
-                module2.position.set(12, 2.5, -50);
-                scene.add(module2);
-                this.objects.decorations.push(module2);
-                LevelManager.addLevelObject(module2);
+                // Space station modules
+                for (let i = 0; i < 10; i++) {
+                    const module = new THREE.Mesh(
+                        new THREE.BoxGeometry(4, 3, 5),
+                        new THREE.MeshLambertMaterial({
+                            color: 0x666677,
+                            emissive: 0x000033,
+                            emissiveIntensity: 0.2
+                        })
+                    );
+                    module.position.set(-25 + Math.random() * 50, 2 + Math.random() * 5, -i * 20 - 10);
+                    module.rotation.set(Math.random() * 0.3, Math.random() * 0.3, Math.random() * 0.3);
+                    scene.add(module);
+                    this.objects.modules.push(module);
+                    LevelManager.addLevelObject(module);
 
-                const asteroid = new THREE.Mesh(
-                    new THREE.SphereGeometry(7, 16, 16),
-                    new THREE.MeshLambertMaterial({ color: 0x554433 })
-                );
-                asteroid.position.set(0, 7, -80);
-                scene.add(asteroid);
-                this.objects.decorations.push(asteroid);
-                LevelManager.addLevelObject(asteroid);
+                    // Module lights
+                    const moduleLight = new THREE.PointLight(0x4444FF, 0.5, 10);
+                    moduleLight.position.copy(module.position);
+                    scene.add(moduleLight);
+                    LevelManager.addLevelObject(moduleLight);
+                }
+
+                // Asteroids
+                for (let i = 0; i < 15; i++) {
+                    const asteroid = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(0.8 + Math.random() * 1.2, 0),
+                        new THREE.MeshLambertMaterial({ color: 0x554433 })
+                    );
+                    asteroid.position.set(-20 + Math.random() * 40, Math.random() * 10, -i * 12);
+                    asteroid.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                    scene.add(asteroid);
+                    this.objects.asteroids.push(asteroid);
+                    LevelManager.addLevelObject(asteroid);
+                }
+
+                // Space debris
+                for (let i = 0; i < 15; i++) {
+                    const debrisGeom = Math.random() > 0.5 ? new THREE.BoxGeometry(0.3, 0.3, 0.3) : new THREE.DodecahedronGeometry(0.2, 0);
+                    const debrisPiece = new THREE.Mesh(
+                        debrisGeom,
+                        new THREE.MeshLambertMaterial({ color: 0x666666, emissive: 0x222222 })
+                    );
+                    debrisPiece.position.set(-15 + Math.random() * 30, Math.random() * 8, -Math.random() * 100);
+                    debrisPiece.userData = { rotX: Math.random() * 0.02, rotY: Math.random() * 0.02, rotZ: Math.random() * 0.02 };
+                    scene.add(debrisPiece);
+                    this.objects.debris.push(debrisPiece);
+                    LevelManager.addLevelObject(debrisPiece);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Rotating asteroids
+                this.objects.asteroids.forEach(asteroid => {
+                    asteroid.rotation.x += 0.005;
+                    asteroid.rotation.y += 0.003;
+                });
+                // Drifting debris
+                this.objects.debris.forEach(piece => {
+                    piece.rotation.x += piece.userData.rotX;
+                    piece.rotation.y += piece.userData.rotY;
+                    piece.rotation.z += piece.userData.rotZ;
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['stars', 'asteroids', 'modules', 'debris'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 9: Crystal Mines
         const Level9 = {
             id: 9,
             name: "Crystal Mines",
-            description: "Crystal caverns",
+            description: "Glowing crystal caverns",
             fogColor: 0x4B0082,
             fogDensity: 0.025,
-            objects: { decorations: [] },
+            objects: { crystals: [], gems: [], beams: [], sparkles: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 9');
+                console.log('💎 Loading Level 9: Crystal Mines');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                const crystal1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(7, 6, 45),
-                    new THREE.MeshLambertMaterial({ color: 0xFF00FF })
-                );
-                crystal1.position.set(-10, 3, -50);
-                scene.add(crystal1);
-                this.objects.decorations.push(crystal1);
-                LevelManager.addLevelObject(crystal1);
+                // Large crystal formations
+                for (let i = 0; i < 25; i++) {
+                    const crystal = new THREE.Mesh(
+                        new THREE.OctahedronGeometry(1 + Math.random() * 1.5, 0),
+                        new THREE.MeshLambertMaterial({
+                            color: Math.random() > 0.5 ? 0xFF00FF : 0x9400D3,
+                            transparent: true,
+                            opacity: 0.8,
+                            emissive: 0xFF00FF,
+                            emissiveIntensity: 0.5
+                        })
+                    );
+                    crystal.position.set(-10 + Math.random() * 20, 1 + Math.random() * 3, -i * 6);
+                    crystal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                    scene.add(crystal);
+                    this.objects.crystals.push(crystal);
+                    LevelManager.addLevelObject(crystal);
 
-                const crystal2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(7, 6, 45),
-                    new THREE.MeshLambertMaterial({ color: 0xFF00FF })
-                );
-                crystal2.position.set(10, 3, -50);
-                scene.add(crystal2);
-                this.objects.decorations.push(crystal2);
-                LevelManager.addLevelObject(crystal2);
+                    // Crystal glow
+                    const crystalLight = new THREE.PointLight(0xFF00FF, 0.6, 8);
+                    crystalLight.position.copy(crystal.position);
+                    scene.add(crystalLight);
+                    LevelManager.addLevelObject(crystalLight);
+                }
 
-                const gem = new THREE.Mesh(
-                    new THREE.SphereGeometry(6, 16, 16),
-                    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF })
-                );
-                gem.position.set(0, 6, -80);
-                scene.add(gem);
-                this.objects.decorations.push(gem);
-                LevelManager.addLevelObject(gem);
+                // Small floating gems
+                for (let i = 0; i < 20; i++) {
+                    const gem = new THREE.Mesh(
+                        new THREE.TetrahedronGeometry(0.3, 0),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF })
+                    );
+                    gem.position.set(-8 + Math.random() * 16, 2 + Math.random() * 4, -i * 8);
+                    scene.add(gem);
+                    this.objects.gems.push(gem);
+                    LevelManager.addLevelObject(gem);
+                }
+
+                // Crystal cave lighting
+                const mainLight = new THREE.DirectionalLight(0xFF00FF, 0.7);
+                mainLight.position.set(0, 10, 5);
+                scene.add(mainLight);
+                LevelManager.addLevelObject(mainLight);
+
+                // Sparkle particles
+                for (let i = 0; i < 30; i++) {
+                    const sparkle = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.05, 4, 4),
+                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFF00FF : 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 1 })
+                    );
+                    sparkle.position.set(-10 + Math.random() * 20, 1 + Math.random() * 4, -Math.random() * 120);
+                    sparkle.userData = { phase: Math.random() * Math.PI * 2, floatSpeed: 0.3 + Math.random() * 0.4 };
+                    scene.add(sparkle);
+                    this.objects.sparkles.push(sparkle);
+                    LevelManager.addLevelObject(sparkle);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Rotating crystals
+                this.objects.crystals.forEach(crystal => {
+                    crystal.rotation.y += 0.008;
+                });
+                // Floating gems
+                this.objects.gems.forEach((gem, i) => {
+                    gem.position.y += Math.sin(Date.now() * 0.002 + i) * 0.01;
+                    gem.rotation.y += 0.02;
+                });
+                // Twinkling sparkles
+                this.objects.sparkles.forEach(sparkle => {
+                    const time = Date.now() * 0.001;
+                    sparkle.position.y += Math.sin(time * sparkle.userData.floatSpeed + sparkle.userData.phase) * 0.01;
+                    sparkle.material.emissiveIntensity = 0.3 + Math.sin(time * 4 + sparkle.userData.phase) * 0.7;
+                    sparkle.scale.setScalar(0.5 + Math.sin(time * 5 + sparkle.userData.phase) * 0.5);
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['crystals', 'gems', 'beams', 'sparkles'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
+        // Level 10: Final Dimension
         const Level10 = {
             id: 10,
             name: "Final Dimension",
-            description: "Warp dimension",
-            fogColor: 0x1a001a,
+            description: "Reality bends and warps",
+            fogColor: 0x000000,
             fogDensity: 0.04,
-            objects: { decorations: [] },
+            objects: { portals: [], platforms: [], particles: [], energyWaves: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 10');
+                console.log('🌀 Loading Level 10: Final Dimension');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
-                const portal1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 8, 50),
-                    new THREE.MeshLambertMaterial({ color: 0x00FFFF })
-                );
-                portal1.position.set(-12, 4, -50);
-                scene.add(portal1);
-                this.objects.decorations.push(portal1);
-                LevelManager.addLevelObject(portal1);
+                // Portal rings
+                for (let i = 0; i < 8; i++) {
+                    const portal = new THREE.Mesh(
+                        new THREE.TorusGeometry(3, 0.4, 16, 32),
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 0.7,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissiveIntensity: 1
+                        })
+                    );
+                    portal.position.set(-15 + Math.random() * 30, 3, -i * 20 - 10);
+                    portal.rotation.y = Math.PI / 2;
+                    scene.add(portal);
+                    this.objects.portals.push(portal);
+                    LevelManager.addLevelObject(portal);
+                }
 
-                const portal2 = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 8, 50),
-                    new THREE.MeshLambertMaterial({ color: 0xFF00FF })
-                );
-                portal2.position.set(12, 4, -50);
-                scene.add(portal2);
-                this.objects.decorations.push(portal2);
-                LevelManager.addLevelObject(portal2);
+                // Floating platforms
+                for (let i = 0; i < 12; i++) {
+                    const platform = new THREE.Mesh(
+                        new THREE.BoxGeometry(3, 0.3, 3),
+                        new THREE.MeshLambertMaterial({
+                            color: 0x222222,
+                            emissive: 0xFF00AA,
+                            emissiveIntensity: 0.3
+                        })
+                    );
+                    platform.position.set(-10 + Math.random() * 20, -1 + Math.random() * 8, -i * 10);
+                    scene.add(platform);
+                    this.objects.platforms.push(platform);
+                    LevelManager.addLevelObject(platform);
+                }
 
-                const energy = new THREE.Mesh(
-                    new THREE.SphereGeometry(6, 16, 16),
-                    new THREE.MeshBasicMaterial({ color: 0x00FFFF, emissive: 0x00FFFF })
-                );
-                energy.position.set(0, 6, -80);
-                scene.add(energy);
-                this.objects.decorations.push(energy);
-                LevelManager.addLevelObject(energy);
+                // Dimensional lighting
+                const dimensionLight1 = new THREE.PointLight(0x00FFFF, 1, 30);
+                dimensionLight1.position.set(0, 5, -20);
+                scene.add(dimensionLight1);
+                LevelManager.addLevelObject(dimensionLight1);
+
+                const dimensionLight2 = new THREE.PointLight(0xFF00FF, 1, 30);
+                dimensionLight2.position.set(0, 5, -60);
+                scene.add(dimensionLight2);
+                LevelManager.addLevelObject(dimensionLight2);
+
+                // Energy wave rings
+                for (let i = 0; i < 10; i++) {
+                    const wave = new THREE.Mesh(
+                        new THREE.RingGeometry(0.5, 0.7, 32),
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 1,
+                            side: THREE.DoubleSide,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissiveIntensity: 1
+                        })
+                    );
+                    wave.position.set(0, 2, -i * 15);
+                    wave.rotation.x = Math.PI / 2;
+                    wave.userData = { startTime: Date.now() + i * 1000, maxScale: 8 };
+                    scene.add(wave);
+                    this.objects.energyWaves.push(wave);
+                    LevelManager.addLevelObject(wave);
+                }
             },
 
             update: function(deltaTime) {
-                // NO animations - maximum stability
+                // Spinning portals
+                this.objects.portals.forEach((portal, i) => {
+                    portal.rotation.z += 0.02;
+                    portal.scale.setScalar(1 + Math.sin(Date.now() * 0.001 + i) * 0.1);
+                });
+                // Floating platforms
+                this.objects.platforms.forEach((platform, i) => {
+                    platform.position.y += Math.sin(Date.now() * 0.001 + i) * 0.01;
+                    platform.rotation.y += 0.005;
+                });
+                // Expanding energy waves
+                this.objects.energyWaves.forEach(wave => {
+                    const elapsed = (Date.now() - wave.userData.startTime) % 3000;
+                    const progress = elapsed / 3000;
+                    wave.scale.setScalar(1 + progress * wave.userData.maxScale);
+                    wave.material.opacity = 1 - progress;
+                });
             },
 
             cleanup: function() {
-                this.objects.decorations = [];
+                ['portals', 'platforms', 'particles', 'energyWaves'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -4501,7 +5118,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V4.8-ULTRA-STABLE loaded - Minimalistische Levels, maximale Stabilität!');
+            console.log('🎮 SubwayRunner V4.7-STABLE-TRANSITIONS loaded - Super stabile Level-Wechsel!');
             window.debugGesture();
         }, 2000);
 

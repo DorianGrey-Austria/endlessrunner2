@@ -1,0 +1,37 @@
+ULTRA-STABLE MINIMAL LEVEL DEFINITIONS
+======================================
+
+Strategie für 100% stabile Levels:
+
+1. NUR Fog + ClearColor Änderungen
+2. Maximal 3-5 STATISCHE Objekte pro Level
+3. KEINE Partikel-Systeme
+4. KEINE Animationen in update()
+5. KEINE komplexen verschachtelten Gruppen
+6. Nur einfache Geometrien: Box, Sphere, Cylinder
+7. Nur Materials mit Farben (keine Textures)
+8. Minimal cleanup nötig
+
+Jedes Level:
+- objects: { decorations: [] }  // nur ein simples Array
+- load(): Fog setzen + 3-5 statische Meshes
+- update(): LEER (keine Animationen)
+- cleanup(): decorations = []
+
+Level Themes (nur durch Farben unterscheidbar):
+1. Subway - Grau (0x444444)
+2. Neon - Dunkelblau (0x001133)
+3. Sky - Hellblau (0x87CEEB)
+4. Underwater - Blau (0x003366)
+5. Volcano - Rot (0x8B0000)
+6. Arctic - Hellblau (0xB0E0E6)
+7. Jungle - Grün (0x3CB371)
+8. Space - Schwarz (0x000000)
+9. Crystal - Lila (0x4B0082)
+10. Dimension - Schwarz (0x000000)
+
+Das garantiert:
+- Kein Memory-Leak
+- Keine Animation-Fehler
+- Keine komplexen Disposal-Probleme
+- 100% Durchspielbarkeit
