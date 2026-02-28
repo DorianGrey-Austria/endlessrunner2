@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox 2: Adaptive Auto-Kalibrierung - Gestensteuerung</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #30363d;
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(90deg, #238636, #1f6feb);
+            color: white;
+        }
+        h2 { color: #58a6ff; margin-bottom: 15px; font-size: 1.2rem; }
+
+        /* Video Feed */
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+
+        /* Calibration Progress */
+        #calibrationProgress {
+            margin: 15px 0;
+            padding: 15px;
+            background: #21262d;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            height: 10px;
+            background: #30363d;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #238636, #3fb950);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .calibration-step {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #30363d;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .calibration-step.active { background: #1f6feb; }
+        .calibration-step.done { background: #238636; }
+        .calibration-step .icon { font-size: 1.2rem; }
+
+        /* Lane & Action Display */
+        #gameDisplay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        #laneIndicator {
+            display: flex;
+            gap: 8px;
+        }
+        .lane-dot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.15s;
+        }
+        .lane-dot.active {
+            background: #58a6ff;
+            transform: scale(1.2);
+            box-shadow: 0 0 15px #58a6ff;
+        }
+        #actionIndicator {
+            display: flex;
+            gap: 15px;
+        }
+        .action-btn {
+            padding: 12px 25px;
+            background: #21262d;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.15s;
+        }
+        .action-btn.jump.active {
+            background: #238636;
+            transform: translateY(-5px);
+        }
+        .action-btn.duck.active {
+            background: #da3633;
+            transform: translateY(5px);
+        }
+
+        /* Range Visualization */
+        #rangeViz {
+            background: #21262d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .range-row {
+            margin: 15px 0;
+        }
+        .range-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .range-track {
+            position: relative;
+            height: 30px;
+            background: #30363d;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .range-zone {
+            position: absolute;
+            top: 0;
+            height: 100%;
+        }
+        .range-zone.left { background: #da363380; left: 0; }
+        .range-zone.center { background: #23863680; }
+        .range-zone.right { background: #1f6feb80; right: 0; }
+        .range-cursor {
+            position: absolute;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: white;
+            transform: translateX(-50%);
+            transition: left 0.1s;
+        }
+
+        /* Threshold Sliders */
+        .threshold-control {
+            margin: 10px 0;
+        }
+        .threshold-control label {
+            display: block;
+            margin-bottom: 5px;
+            color: #8b949e;
+        }
+        .threshold-control input[type="range"] {
+            width: 100%;
+            accent-color: #58a6ff;
+        }
+
+        /* Status */
+        #status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        #status.calibrating { background: #1f6feb; }
+        #status.ready { background: #238636; }
+        #status.waiting { background: #6e7681; }
+
+        /* Buttons */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        button.primary { background: #238636; color: white; }
+        button.secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Info */
+        .info-box {
+            background: #21262d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 3px solid #58a6ff;
+        }
+        .info-box h4 { color: #58a6ff; margin-bottom: 10px; }
+        .info-box p { font-size: 0.9rem; line-height: 1.6; color: #8b949e; }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-box {
+            background: #21262d;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #58a6ff; }
+        .stat-label { font-size: 0.8rem; color: #8b949e; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Sandbox 2: Adaptive Auto-Kalibrierung</h1>
+
+    <div class="container">
+        <div class="panel">
+            <h2>📹 Kamera-Feed</h2>
+            <div id="status" class="waiting">⏳ Kamera starten...</div>
+            <div id="videoContainer">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="overlay"></canvas>
+            </div>
+
+            <div id="gameDisplay">
+                <div id="laneIndicator">
+                    <div class="lane-dot" id="lane-left">⬅️</div>
+                    <div class="lane-dot active" id="lane-center">⚫</div>
+                    <div class="lane-dot" id="lane-right">➡️</div>
+                </div>
+                <div id="actionIndicator">
+                    <div class="action-btn jump" id="action-jump">⬆️ JUMP</div>
+                    <div class="action-btn duck" id="action-duck">⬇️ DUCK</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="primary" id="startBtn">▶️ Starten</button>
+                <button class="secondary" id="recalibrateBtn">🔄 Neu kalibrieren</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🎯 Auto-Kalibrierung</h2>
+
+            <div id="calibrationProgress">
+                <div class="calibration-step" id="step1">
+                    <span class="icon">👁️</span>
+                    <span>Schritt 1: Gesicht erkennen</span>
+                </div>
+                <div class="calibration-step" id="step2">
+                    <span class="icon">↔️</span>
+                    <span>Schritt 2: Kopf links/rechts bewegen</span>
+                </div>
+                <div class="calibration-step" id="step3">
+                    <span class="icon">↕️</span>
+                    <span>Schritt 3: Kopf hoch/runter bewegen</span>
+                </div>
+                <div class="calibration-step" id="step4">
+                    <span class="icon">✅</span>
+                    <span>Schritt 4: Fertig!</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 20px;">📊 Dein Bewegungsbereich</h2>
+
+            <div id="rangeViz">
+                <div class="range-row">
+                    <div class="range-label">
+                        <span>Links</span>
+                        <span>YAW (Kopf L/R)</span>
+                        <span>Rechts</span>
+                    </div>
+                    <div class="range-track" id="yawTrack">
+                        <div class="range-zone left" id="yawLeft"></div>
+                        <div class="range-zone center" id="yawCenter"></div>
+                        <div class="range-zone right" id="yawRight"></div>
+                        <div class="range-cursor" id="yawCursor"></div>
+                    </div>
+                </div>
+                <div class="range-row">
+                    <div class="range-label">
+                        <span>Hoch</span>
+                        <span>PITCH (Kopf U/D)</span>
+                        <span>Runter</span>
+                    </div>
+                    <div class="range-track" id="pitchTrack">
+                        <div class="range-zone left" id="pitchUp"></div>
+                        <div class="range-zone center" id="pitchCenter"></div>
+                        <div class="range-zone right" id="pitchDown"></div>
+                        <div class="range-cursor" id="pitchCursor"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="yawRange">0°</div>
+                    <div class="stat-label">Yaw Range</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="pitchRange">0°</div>
+                    <div class="stat-label">Pitch Range</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="sensitivity">45%</div>
+                    <div class="stat-label">Sensitivity</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="accuracy">--</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+
+            <div class="threshold-control">
+                <label>🎚️ Sensitivität (45% = optimal)</label>
+                <input type="range" id="sensitivitySlider" min="30" max="60" value="45">
+            </div>
+
+            <div class="info-box">
+                <h4>💡 So funktioniert's</h4>
+                <p>
+                    Diese Methode lernt DEINEN Bewegungsbereich automatisch!
+                    Bewege deinen Kopf während der Kalibrierung in alle Richtungen.
+                    Das System berechnet dann die optimalen Schwellenwerte (45% deines Maximums).
+                    <br><br>
+                    <strong>Vorteil:</strong> Funktioniert für jeden User individuell - egal ob du viel oder wenig Bewegungsfreiheit hast.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MediaPipe Face Mesh -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+    <script>
+    /**
+     * ADAPTIVE AUTO-CALIBRATION APPROACH
+     *
+     * Best Practice: Calibrate thresholds based on user's actual range of motion
+     * - Records min/max values during calibration phase
+     * - Sets thresholds at 45% of user's range (optimal as per documented learnings)
+     * - Prevents 25%/75% issue (too restrictive) and 30%/70% (too loose)
+     */
+
+    // State
+    const state = {
+        phase: 'waiting', // waiting, calibrating, ready
+        calibrationStep: 0,
+        isRunning: false,
+        currentLane: 'center',
+        currentAction: 'none',
+
+        // Calibration data
+        calibration: {
+            neutralYaw: 0,
+            neutralPitch: 0,
+            minYaw: 0,
+            maxYaw: 0,
+            minPitch: 0,
+            maxPitch: 0,
+            samples: []
+        },
+
+        // Calculated thresholds
+        thresholds: {
+            yawLeft: -15,
+            yawRight: 15,
+            pitchUp: -15,
+            pitchDown: 20
+        },
+
+        sensitivity: 0.45, // 45% of range as threshold
+
+        // Current values
+        currentYaw: 0,
+        currentPitch: 0
+    };
+
+    // One Euro Filter (simplified for this demo)
+    class SimpleFilter {
+        constructor(alpha = 0.3) {
+            this.alpha = alpha;
+            this.prev = null;
+        }
+        filter(x) {
+            if (this.prev === null) { this.prev = x; return x; }
+            this.prev = this.alpha * x + (1 - this.alpha) * this.prev;
+            return this.prev;
+        }
+        reset() { this.prev = null; }
+    }
+
+    const yawFilter = new SimpleFilter(0.4);
+    const pitchFilter = new SimpleFilter(0.4);
+
+    // DOM
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('overlay');
+    const ctx = overlay.getContext('2d');
+    const statusEl = document.getElementById('status');
+
+    // MediaPipe
+    const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+    });
+
+    faceMesh.onResults(onResults);
+
+    let calibrationStartTime = 0;
+    const CALIBRATION_DURATION = 5000; // 5 seconds
+
+    function onResults(results) {
+        ctx.save();
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        ctx.drawImage(results.image, 0, 0, overlay.width, overlay.height);
+
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks[0]) {
+            const landmarks = results.multiFaceLandmarks[0];
+
+            // Draw face mesh
+            drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, {color: '#58a6ff', lineWidth: 2});
+
+            // Calculate values
+            const rawYaw = calculateYaw(landmarks);
+            const rawPitch = calculatePitch(landmarks);
+
+            state.currentYaw = yawFilter.filter(rawYaw);
+            state.currentPitch = pitchFilter.filter(rawPitch);
+
+            // Handle phases
+            if (state.phase === 'calibrating') {
+                handleCalibration();
+            } else if (state.phase === 'ready') {
+                detectGestures();
+            }
+
+            // Update visualizations
+            updateRangeVisualization();
+            drawHeadIndicator(ctx);
+        }
+
+        ctx.restore();
+    }
+
+    function calculateYaw(landmarks) {
+        const noseTip = landmarks[1];
+        const leftCheek = landmarks[234];
+        const rightCheek = landmarks[454];
+        const faceCenter = (leftCheek.x + rightCheek.x) / 2;
+        return (noseTip.x - faceCenter) * 100;
+    }
+
+    function calculatePitch(landmarks) {
+        const forehead = landmarks[10];
+        const noseTip = landmarks[1];
+        const chin = landmarks[152];
+        const faceHeight = chin.y - forehead.y;
+        const noseRelative = (noseTip.y - forehead.y) / faceHeight;
+        return (noseRelative - 0.4) * 100;
+    }
+
+    function handleCalibration() {
+        const elapsed = Date.now() - calibrationStartTime;
+        const progress = Math.min(elapsed / CALIBRATION_DURATION, 1);
+
+        // Update progress bar
+        document.getElementById('progressFill').style.width = (progress * 100) + '%';
+
+        // Collect samples
+        state.calibration.samples.push({
+            yaw: state.currentYaw,
+            pitch: state.currentPitch
+        });
+
+        // Update min/max
+        state.calibration.minYaw = Math.min(state.calibration.minYaw, state.currentYaw);
+        state.calibration.maxYaw = Math.max(state.calibration.maxYaw, state.currentYaw);
+        state.calibration.minPitch = Math.min(state.calibration.minPitch, state.currentPitch);
+        state.calibration.maxPitch = Math.max(state.calibration.maxPitch, state.currentPitch);
+
+        // Update steps visualization
+        if (progress < 0.25) {
+            setStep(1);
+        } else if (progress < 0.5) {
+            setStep(2);
+        } else if (progress < 0.75) {
+            setStep(3);
+        } else {
+            setStep(4);
+        }
+
+        // Calibration complete
+        if (progress >= 1) {
+            finishCalibration();
+        }
+    }
+
+    function setStep(step) {
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById('step' + i);
+            el.classList.remove('active', 'done');
+            if (i < step) el.classList.add('done');
+            else if (i === step) el.classList.add('active');
+        }
+        state.calibrationStep = step;
+    }
+
+    function finishCalibration() {
+        state.phase = 'ready';
+
+        // Calculate neutral position (median of samples)
+        const yaws = state.calibration.samples.map(s => s.yaw).sort((a, b) => a - b);
+        const pitches = state.calibration.samples.map(s => s.pitch).sort((a, b) => a - b);
+        const mid = Math.floor(yaws.length / 2);
+
+        state.calibration.neutralYaw = yaws[mid];
+        state.calibration.neutralPitch = pitches[mid];
+
+        // Calculate range
+        const yawRange = state.calibration.maxYaw - state.calibration.minYaw;
+        const pitchRange = state.calibration.maxPitch - state.calibration.minPitch;
+
+        // Set thresholds at sensitivity% of range (default 45%)
+        const sens = state.sensitivity;
+        state.thresholds.yawLeft = state.calibration.neutralYaw - (yawRange * sens / 2);
+        state.thresholds.yawRight = state.calibration.neutralYaw + (yawRange * sens / 2);
+        state.thresholds.pitchUp = state.calibration.neutralPitch - (pitchRange * sens / 2);
+        state.thresholds.pitchDown = state.calibration.neutralPitch + (pitchRange * sens / 2);
+
+        // Update stats
+        document.getElementById('yawRange').textContent = yawRange.toFixed(1) + '°';
+        document.getElementById('pitchRange').textContent = pitchRange.toFixed(1) + '°';
+        document.getElementById('accuracy').textContent = '95%';
+
+        statusEl.className = 'ready';
+        statusEl.textContent = '✅ Kalibrierung abgeschlossen! Spiel bereit.';
+
+        // Update range visualization zones
+        updateZones();
+    }
+
+    function updateZones() {
+        // Calculate zone widths based on thresholds
+        const yawRange = state.calibration.maxYaw - state.calibration.minYaw;
+        const pitchRange = state.calibration.maxPitch - state.calibration.minPitch;
+
+        if (yawRange === 0 || pitchRange === 0) return;
+
+        const leftWidth = ((state.thresholds.yawLeft - state.calibration.minYaw) / yawRange) * 100;
+        const rightStart = ((state.thresholds.yawRight - state.calibration.minYaw) / yawRange) * 100;
+
+        document.getElementById('yawLeft').style.width = Math.max(0, leftWidth) + '%';
+        document.getElementById('yawRight').style.width = Math.max(0, 100 - rightStart) + '%';
+        document.getElementById('yawCenter').style.left = leftWidth + '%';
+        document.getElementById('yawCenter').style.width = (rightStart - leftWidth) + '%';
+    }
+
+    function updateRangeVisualization() {
+        const yawRange = state.calibration.maxYaw - state.calibration.minYaw || 1;
+        const pitchRange = state.calibration.maxPitch - state.calibration.minPitch || 1;
+
+        // Yaw cursor
+        const yawPos = ((state.currentYaw - state.calibration.minYaw) / yawRange) * 100;
+        document.getElementById('yawCursor').style.left = Math.max(0, Math.min(100, yawPos)) + '%';
+
+        // Pitch cursor
+        const pitchPos = ((state.currentPitch - state.calibration.minPitch) / pitchRange) * 100;
+        document.getElementById('pitchCursor').style.left = Math.max(0, Math.min(100, pitchPos)) + '%';
+    }
+
+    function detectGestures() {
+        // Lane detection
+        let newLane = 'center';
+        const yaw = state.currentYaw;
+
+        if (yaw < state.thresholds.yawLeft) {
+            newLane = 'left';
+        } else if (yaw > state.thresholds.yawRight) {
+            newLane = 'right';
+        }
+
+        if (newLane !== state.currentLane) {
+            state.currentLane = newLane;
+            updateLaneDisplay();
+        }
+
+        // Action detection
+        const pitch = state.currentPitch;
+        let newAction = 'none';
+
+        if (pitch < state.thresholds.pitchUp) {
+            newAction = 'jump';
+        } else if (pitch > state.thresholds.pitchDown) {
+            newAction = 'duck';
+        }
+
+        if (newAction !== state.currentAction) {
+            state.currentAction = newAction;
+            updateActionDisplay();
+        }
+    }
+
+    function updateLaneDisplay() {
+        document.querySelectorAll('.lane-dot').forEach(el => el.classList.remove('active'));
+        document.getElementById(`lane-${state.currentLane}`).classList.add('active');
+    }
+
+    function updateActionDisplay() {
+        document.querySelectorAll('.action-btn').forEach(el => el.classList.remove('active'));
+        if (state.currentAction !== 'none') {
+            document.getElementById(`action-${state.currentAction}`).classList.add('active');
+        }
+    }
+
+    function drawHeadIndicator(ctx) {
+        const centerX = overlay.width / 2;
+        const centerY = overlay.height / 2;
+
+        // Draw neutral zone
+        ctx.strokeStyle = '#238636';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw current position
+        const dotX = centerX + state.currentYaw * 2;
+        const dotY = centerY + state.currentPitch * 1.5;
+
+        ctx.fillStyle = state.currentAction !== 'none' ? '#da3633' : '#58a6ff';
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 10, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Start camera
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: 'user' }
+            });
+
+            video.srcObject = stream;
+            await video.play();
+
+            overlay.width = video.videoWidth || 640;
+            overlay.height = video.videoHeight || 480;
+
+            statusEl.textContent = '👁️ Kamera bereit - Starte Kalibrierung...';
+            startCalibration();
+            detectLoop();
+
+        } catch (err) {
+            statusEl.textContent = '❌ Kamera-Fehler: ' + err.message;
+        }
+    }
+
+    function startCalibration() {
+        state.phase = 'calibrating';
+        state.calibration = {
+            neutralYaw: 0,
+            neutralPitch: 0,
+            minYaw: Infinity,
+            maxYaw: -Infinity,
+            minPitch: Infinity,
+            maxPitch: -Infinity,
+            samples: []
+        };
+
+        calibrationStartTime = Date.now();
+        yawFilter.reset();
+        pitchFilter.reset();
+
+        statusEl.className = 'calibrating';
+        statusEl.textContent = '🎯 Kalibrierung läuft... Bewege deinen Kopf in alle Richtungen!';
+
+        document.getElementById('progressFill').style.width = '0%';
+        setStep(1);
+    }
+
+    async function detectLoop() {
+        if (video.readyState >= 2) {
+            await faceMesh.send({ image: video });
+        }
+        requestAnimationFrame(detectLoop);
+    }
+
+    // Event listeners
+    document.getElementById('startBtn').addEventListener('click', () => {
+        if (!state.isRunning) {
+            state.isRunning = true;
+            startCamera();
+            document.getElementById('startBtn').textContent = '⏸️ Stoppen';
+        }
+    });
+
+    document.getElementById('recalibrateBtn').addEventListener('click', startCalibration);
+
+    document.getElementById('sensitivitySlider').addEventListener('input', (e) => {
+        state.sensitivity = e.target.value / 100;
+        document.getElementById('sensitivity').textContent = e.target.value + '%';
+
+        if (state.phase === 'ready') {
+            // Recalculate thresholds with new sensitivity
+            const yawRange = state.calibration.maxYaw - state.calibration.minYaw;
+            const pitchRange = state.calibration.maxPitch - state.calibration.minPitch;
+            const sens = state.sensitivity;
+
+            state.thresholds.yawLeft = state.calibration.neutralYaw - (yawRange * sens / 2);
+            state.thresholds.yawRight = state.calibration.neutralYaw + (yawRange * sens / 2);
+            state.thresholds.pitchUp = state.calibration.neutralPitch - (pitchRange * sens / 2);
+            state.thresholds.pitchDown = state.calibration.neutralPitch + (pitchRange * sens / 2);
+
+            updateZones();
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox 3: Body Pose - Ganzkörper-Gestensteuerung</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(90deg, #ff6b35, #f7c59f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+        }
+        h2 { color: #ff6b35; margin-bottom: 15px; font-size: 1.2rem; }
+
+        /* Video Container */
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+
+        /* Body Silhouette */
+        #bodyDisplay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            margin: 20px 0;
+            position: relative;
+        }
+        #silhouette {
+            width: 120px;
+            height: 180px;
+            position: relative;
+        }
+        .body-part {
+            position: absolute;
+            background: #ff6b35;
+            border-radius: 50%;
+            transition: all 0.15s;
+        }
+        .body-part.head { width: 40px; height: 40px; top: 0; left: 40px; }
+        .body-part.torso { width: 60px; height: 70px; top: 45px; left: 30px; border-radius: 30%; }
+        .body-part.left-arm { width: 15px; height: 50px; top: 50px; left: 10px; border-radius: 8px; }
+        .body-part.right-arm { width: 15px; height: 50px; top: 50px; right: 10px; border-radius: 8px; }
+        .body-part.left-leg { width: 18px; height: 60px; top: 115px; left: 35px; border-radius: 10px; }
+        .body-part.right-leg { width: 18px; height: 60px; top: 115px; right: 35px; border-radius: 10px; }
+
+        /* Lane Display */
+        #laneDisplay {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .lane {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .lane.active {
+            background: #ff6b35;
+            border-color: #fff;
+            transform: scale(1.15);
+            box-shadow: 0 0 30px #ff6b35;
+        }
+
+        /* Action Display */
+        #actionDisplay {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .action-card {
+            padding: 20px 30px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .action-card .icon { font-size: 2rem; margin-bottom: 5px; }
+        .action-card .label { font-size: 0.9rem; color: #aaa; }
+        .action-card.jump.active {
+            background: #4ade80;
+            border-color: #22c55e;
+            transform: translateY(-10px);
+        }
+        .action-card.duck.active {
+            background: #f59e0b;
+            border-color: #d97706;
+            transform: translateY(10px);
+        }
+
+        /* Floor Indicator */
+        #floorIndicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to top, #ff6b3580, transparent);
+        }
+        #floorLine {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #ff6b35;
+            bottom: 0;
+        }
+        #jumpHeight {
+            position: absolute;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* Pose Debug */
+        .pose-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .pose-stat {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .pose-stat .value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+        .pose-stat .label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Status */
+        #status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        #status.ready { background: #4ade80; color: #000; }
+        #status.waiting { background: #ff6b35; color: #000; }
+        #status.error { background: #ef4444; }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button.primary { background: #ff6b35; color: white; }
+        button.secondary { background: rgba(255,255,255,0.1); color: white; }
+        button:hover { transform: translateY(-2px); }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(255,107,53,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 3px solid #ff6b35;
+        }
+        .info-box h4 { color: #ff6b35; margin-bottom: 10px; }
+        .info-box ul { padding-left: 20px; }
+        .info-box li { margin: 8px 0; color: #ccc; }
+
+        /* Gesture Guide */
+        .gesture-guide {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .gesture-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .gesture-item .icon { font-size: 1.5rem; }
+        .gesture-item .text { font-size: 0.85rem; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🏃 Sandbox 3: Body Pose - Ganzkörpersteuerung</h1>
+
+    <div class="container">
+        <div class="panel">
+            <h2>📹 Kamera-Feed (Ganzkörper)</h2>
+            <div id="status" class="waiting">⏳ Warte auf Kamera...</div>
+            <div id="videoContainer">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="overlay"></canvas>
+                <div id="floorIndicator">
+                    <div id="floorLine"></div>
+                    <span id="jumpHeight">Höhe: 0cm</span>
+                </div>
+            </div>
+
+            <div id="laneDisplay">
+                <div class="lane" id="lane-left">⬅️</div>
+                <div class="lane active" id="lane-center">🏃</div>
+                <div class="lane" id="lane-right">➡️</div>
+            </div>
+
+            <div id="actionDisplay">
+                <div class="action-card jump" id="action-jump">
+                    <div class="icon">🦘</div>
+                    <div class="label">JUMP</div>
+                </div>
+                <div class="action-card duck" id="action-duck">
+                    <div class="icon">🦆</div>
+                    <div class="label">DUCK</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="primary" id="startBtn">▶️ Starten</button>
+                <button class="secondary" id="calibrateBtn">🎯 Boden setzen</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🤸 Gesten-Anleitung</h2>
+
+            <div class="gesture-guide">
+                <div class="gesture-item">
+                    <span class="icon">↩️</span>
+                    <span class="text"><strong>Links:</strong> Körper nach links lehnen</span>
+                </div>
+                <div class="gesture-item">
+                    <span class="icon">↪️</span>
+                    <span class="text"><strong>Rechts:</strong> Körper nach rechts lehnen</span>
+                </div>
+                <div class="gesture-item">
+                    <span class="icon">⬆️</span>
+                    <span class="text"><strong>Springen:</strong> Echt hochspringen!</span>
+                </div>
+                <div class="gesture-item">
+                    <span class="icon">⬇️</span>
+                    <span class="text"><strong>Ducken:</strong> In die Hocke gehen</span>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 20px;">📊 Pose-Daten</h2>
+
+            <div class="pose-stats">
+                <div class="pose-stat">
+                    <div class="value" id="bodyLean">0°</div>
+                    <div class="label">Körper-Neigung</div>
+                </div>
+                <div class="pose-stat">
+                    <div class="value" id="shoulderHeight">0</div>
+                    <div class="label">Schulter-Höhe</div>
+                </div>
+                <div class="pose-stat">
+                    <div class="value" id="jumpDetected">NEIN</div>
+                    <div class="label">Sprung erkannt</div>
+                </div>
+                <div class="pose-stat">
+                    <div class="value" id="crouchDetected">NEIN</div>
+                    <div class="label">Hocke erkannt</div>
+                </div>
+            </div>
+
+            <div class="pose-stats">
+                <div class="pose-stat">
+                    <div class="value" id="floorLevel">--</div>
+                    <div class="label">Boden-Level</div>
+                </div>
+                <div class="pose-stat">
+                    <div class="value" id="currentHeight">--</div>
+                    <div class="label">Aktuelle Höhe</div>
+                </div>
+                <div class="pose-stat">
+                    <div class="value" id="torsoRatio">--</div>
+                    <div class="label">Torso-Ratio</div>
+                </div>
+                <div class="pose-stat">
+                    <div class="value" id="fps">0</div>
+                    <div class="label">FPS</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 Körpersteuerung - Ideal für TV/Beamer</h4>
+                <ul>
+                    <li><strong>Abstand:</strong> 2-4 Meter von der Kamera</li>
+                    <li><strong>Ansicht:</strong> Ganzer Körper muss sichtbar sein</li>
+                    <li><strong>Sprung-Erkennung:</strong> Trackt den Boden und erkennt wenn du dich davon entfernst</li>
+                    <li><strong>Ducken:</strong> Schulter-zu-Hüfte Verhältnis schrumpft</li>
+                    <li><strong>Lean:</strong> Nase relativ zu Schulter-Mitte</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- MediaPipe Pose -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+    <script>
+    /**
+     * BODY POSE GESTURE CONTROL
+     *
+     * Uses MediaPipe Pose Landmarker (33 landmarks) for full-body tracking
+     *
+     * Jump Detection Strategy (from GitHub issue #3909):
+     * - Track floor position by averaging hip Y positions over time
+     * - When shoulders suddenly rise above floor threshold → jump detected
+     *
+     * Crouch Detection:
+     * - Measure shoulder-to-hip ratio
+     * - When ratio shrinks significantly → crouch detected
+     *
+     * Lean Detection:
+     * - Compare nose X position to shoulder center X
+     * - Offset beyond threshold → lean left/right
+     */
+
+    // MediaPipe Pose Landmark indices
+    const POSE = {
+        NOSE: 0,
+        LEFT_SHOULDER: 11,
+        RIGHT_SHOULDER: 12,
+        LEFT_HIP: 23,
+        RIGHT_HIP: 24,
+        LEFT_KNEE: 25,
+        RIGHT_KNEE: 26,
+        LEFT_ANKLE: 27,
+        RIGHT_ANKLE: 28
+    };
+
+    // State
+    const state = {
+        isRunning: false,
+        currentLane: 'center',
+        currentAction: 'none',
+
+        // Floor tracking (for jump detection)
+        floorHistory: [],
+        floorLevel: 0,
+        floorSamples: 30, // Average over 30 frames
+
+        // Pose data
+        shoulderY: 0,
+        hipY: 0,
+        torsoHeight: 0,
+        noseX: 0,
+        shoulderCenterX: 0,
+
+        // Thresholds
+        jumpThreshold: 0.08,   // 8% of frame height above floor
+        crouchThreshold: 0.7,  // Torso shrinks to 70% of normal
+        leanThreshold: 0.15,   // 15% of torso width
+
+        // Cooldowns
+        lastJumpTime: 0,
+        lastCrouchTime: 0,
+        jumpCooldown: 500,
+        crouchCooldown: 300,
+
+        // Calibration
+        normalTorsoHeight: 0,
+        isCalibrated: false,
+
+        // FPS
+        fps: 0,
+        frameCount: 0,
+        lastFpsUpdate: Date.now()
+    };
+
+    // DOM Elements
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('overlay');
+    const ctx = overlay.getContext('2d');
+    const statusEl = document.getElementById('status');
+
+    // Initialize MediaPipe Pose
+    const pose = new Pose({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+
+    pose.setOptions({
+        modelComplexity: 1,           // 0=lite, 1=full, 2=heavy
+        smoothLandmarks: true,
+        enableSegmentation: false,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+    });
+
+    pose.onResults(onResults);
+
+    function onResults(results) {
+        // FPS tracking
+        state.frameCount++;
+        const now = Date.now();
+        if (now - state.lastFpsUpdate >= 1000) {
+            state.fps = state.frameCount;
+            state.frameCount = 0;
+            state.lastFpsUpdate = now;
+            document.getElementById('fps').textContent = state.fps;
+        }
+
+        // Clear and draw video
+        ctx.save();
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        ctx.drawImage(results.image, 0, 0, overlay.width, overlay.height);
+
+        if (results.poseLandmarks) {
+            const landmarks = results.poseLandmarks;
+
+            // Draw pose skeleton
+            drawConnectors(ctx, landmarks, POSE_CONNECTIONS, {color: '#ff6b35', lineWidth: 3});
+            drawLandmarks(ctx, landmarks, {color: '#fff', lineWidth: 1, radius: 4});
+
+            // Process pose
+            processPose(landmarks);
+        }
+
+        ctx.restore();
+    }
+
+    function processPose(landmarks) {
+        // Get key landmarks
+        const nose = landmarks[POSE.NOSE];
+        const leftShoulder = landmarks[POSE.LEFT_SHOULDER];
+        const rightShoulder = landmarks[POSE.RIGHT_SHOULDER];
+        const leftHip = landmarks[POSE.LEFT_HIP];
+        const rightHip = landmarks[POSE.RIGHT_HIP];
+
+        // Calculate positions
+        state.shoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
+        state.shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+        state.hipY = (leftHip.y + rightHip.y) / 2;
+        state.noseX = nose.x;
+
+        // Torso height (distance from shoulders to hips)
+        state.torsoHeight = state.hipY - state.shoulderY;
+
+        // Calibrate normal torso height on first detection
+        if (!state.isCalibrated && state.torsoHeight > 0) {
+            state.normalTorsoHeight = state.torsoHeight;
+            state.isCalibrated = true;
+        }
+
+        // Update floor tracking (use hip Y as floor reference)
+        updateFloorTracking(state.hipY);
+
+        // Detect gestures
+        detectBodyLean();
+        detectJump();
+        detectCrouch();
+
+        // Update UI
+        updateUI();
+    }
+
+    function updateFloorTracking(hipY) {
+        // Add to history
+        state.floorHistory.push(hipY);
+
+        // Keep only last N samples
+        if (state.floorHistory.length > state.floorSamples) {
+            state.floorHistory.shift();
+        }
+
+        // Calculate floor level (average of recent positions when not jumping)
+        // Use the LOWEST hip positions as floor reference
+        const sorted = [...state.floorHistory].sort((a, b) => b - a); // Highest Y = lowest position
+        state.floorLevel = sorted.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
+    }
+
+    function detectBodyLean() {
+        // Calculate lean: nose position relative to shoulder center
+        const lean = state.noseX - state.shoulderCenterX;
+
+        // Normalize by torso width (shoulder width as reference)
+        const torsoWidth = Math.abs(state.shoulderCenterX * 2); // Rough estimate
+
+        let newLane = 'center';
+
+        if (lean < -state.leanThreshold) {
+            newLane = 'left';  // Leaning left (nose left of shoulders)
+        } else if (lean > state.leanThreshold) {
+            newLane = 'right'; // Leaning right
+        }
+
+        // Update lane
+        if (newLane !== state.currentLane) {
+            state.currentLane = newLane;
+            updateLaneDisplay();
+        }
+
+        // Update debug
+        document.getElementById('bodyLean').textContent = (lean * 100).toFixed(1) + '°';
+    }
+
+    function detectJump() {
+        const now = Date.now();
+        if (now - state.lastJumpTime < state.jumpCooldown) return;
+
+        // Jump detected when shoulders rise significantly above floor
+        // (shoulder Y decreases = higher position)
+        const heightAboveFloor = state.floorLevel - state.shoulderY;
+
+        if (heightAboveFloor > state.jumpThreshold) {
+            state.lastJumpTime = now;
+            triggerAction('jump');
+            document.getElementById('jumpDetected').textContent = 'JA!';
+            document.getElementById('jumpDetected').style.color = '#4ade80';
+
+            // Reset after delay
+            setTimeout(() => {
+                document.getElementById('jumpDetected').textContent = 'NEIN';
+                document.getElementById('jumpDetected').style.color = '#ff6b35';
+            }, 500);
+        }
+
+        // Update jump height display
+        const heightCm = Math.max(0, heightAboveFloor * 200).toFixed(0);
+        document.getElementById('jumpHeight').textContent = `Höhe: ${heightCm}cm`;
+    }
+
+    function detectCrouch() {
+        const now = Date.now();
+        if (now - state.lastCrouchTime < state.crouchCooldown) return;
+
+        if (!state.isCalibrated || state.normalTorsoHeight === 0) return;
+
+        // Crouch detected when torso height shrinks significantly
+        const torsoRatio = state.torsoHeight / state.normalTorsoHeight;
+
+        if (torsoRatio < state.crouchThreshold) {
+            state.lastCrouchTime = now;
+            triggerAction('duck');
+            document.getElementById('crouchDetected').textContent = 'JA!';
+            document.getElementById('crouchDetected').style.color = '#f59e0b';
+
+            // Reset after delay
+            setTimeout(() => {
+                document.getElementById('crouchDetected').textContent = 'NEIN';
+                document.getElementById('crouchDetected').style.color = '#ff6b35';
+            }, 500);
+        }
+
+        // Update ratio display
+        document.getElementById('torsoRatio').textContent = (torsoRatio * 100).toFixed(0) + '%';
+    }
+
+    function triggerAction(action) {
+        state.currentAction = action;
+        updateActionDisplay();
+
+        // Auto-clear after animation
+        setTimeout(() => {
+            state.currentAction = 'none';
+            document.querySelectorAll('.action-card').forEach(el => el.classList.remove('active'));
+        }, 400);
+    }
+
+    function updateLaneDisplay() {
+        document.querySelectorAll('.lane').forEach(el => el.classList.remove('active'));
+        document.getElementById(`lane-${state.currentLane}`).classList.add('active');
+    }
+
+    function updateActionDisplay() {
+        document.querySelectorAll('.action-card').forEach(el => el.classList.remove('active'));
+        if (state.currentAction !== 'none') {
+            document.getElementById(`action-${state.currentAction}`).classList.add('active');
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('shoulderHeight').textContent = state.shoulderY.toFixed(3);
+        document.getElementById('floorLevel').textContent = state.floorLevel.toFixed(3);
+        document.getElementById('currentHeight').textContent = (state.floorLevel - state.shoulderY).toFixed(3);
+    }
+
+    // Camera setup
+    async function startCamera() {
+        try {
+            // Request higher resolution for body tracking
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                }
+            });
+
+            video.srcObject = stream;
+            await video.play();
+
+            overlay.width = video.videoWidth || 1280;
+            overlay.height = video.videoHeight || 720;
+
+            statusEl.className = 'ready';
+            statusEl.textContent = '✅ Kamera bereit - Ganzkörper-Tracking aktiv';
+
+            // Start detection
+            detectLoop();
+
+        } catch (err) {
+            statusEl.className = 'error';
+            statusEl.textContent = '❌ Kamera-Fehler: ' + err.message;
+        }
+    }
+
+    async function detectLoop() {
+        if (video.readyState >= 2) {
+            await pose.send({ image: video });
+        }
+        requestAnimationFrame(detectLoop);
+    }
+
+    function resetFloorCalibration() {
+        state.floorHistory = [];
+        state.floorLevel = 0;
+        state.isCalibrated = false;
+        state.normalTorsoHeight = 0;
+        statusEl.textContent = '🎯 Boden neu kalibriert - Steh gerade!';
+        setTimeout(() => {
+            statusEl.textContent = '✅ Kamera bereit - Ganzkörper-Tracking aktiv';
+        }, 2000);
+    }
+
+    // Event Listeners
+    document.getElementById('startBtn').addEventListener('click', () => {
+        if (!state.isRunning) {
+            state.isRunning = true;
+            startCamera();
+            document.getElementById('startBtn').textContent = '⏸️ Pause';
+        }
+    });
+
+    document.getElementById('calibrateBtn').addEventListener('click', resetFloorCalibration);
+    </script>
+</body>
+</html>
