@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Runner 3D - V4.3-STABLE-MULTIJUMP</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- MediaPipe for Gesture Control -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <!-- Supabase SDK ENTFERNT (TROUBLESHOOTING #12):
+         SDK erstellte globale 'supabase' Variable, Konflikt mit 'let supabase = null;' in Zeile ~633
+         Verursachte "Identifier already declared" Error → startGame() wurde nie definiert
+         Supabase-Features nutzen localStorage-Fallback, SDK nicht benötigt -->
     <script type="module">
         // Pre-load Gesture Control Module
         import('./js/GestureControllerProjector.js')
@@ -181,6 +189,71 @@
         #gestureStatus.active {
             display: block;
         }
+
+        /* Gesture Mode Selector */
+        #gestureModeSelector {
+            display: none;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            gap: 8px;
+        }
+
+        #gestureModeSelector.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #gestureModeSelect {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #00ff88;
+            background: #1a1a2e;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        #gestureModeSelect:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        #recalibrateBtn {
+            padding: 8px 12px;
+            background: #58a6ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #recalibrateBtn:hover {
+            background: #4a90e2;
+        }
+
+        #calibrationProgress {
+            display: none;
+            margin-top: 8px;
+            background: #30363d;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        #calibrationProgress.active {
+            display: block;
+        }
+
+        #calibrationProgressFill {
+            height: 100%;
+            background: linear-gradient(90deg, #238636, #3fb950);
+            width: 0%;
+            transition: width 0.3s;
+        }
         
         .timer-warning {
             color: #FF4444 !important;
@@ -302,6 +375,18 @@
             <div id="gestureStatus">
                 <div>Status: <span id="gestureStatusText">Bereit</span></div>
                 <div>Geste: <span id="gestureCurrentText">NONE</span></div>
+                <div>Modus: <span id="gestureModeText">--</span></div>
+            </div>
+            <div id="gestureModeSelector">
+                <select id="gestureModeSelect">
+                    <option value="adaptive">Auto-Kalibrierung (Empfohlen)</option>
+                    <option value="oneEuro">One Euro Filter (Schnell)</option>
+                    <option value="bodyPose">Ganzkörper-Tracking</option>
+                </select>
+                <button id="recalibrateBtn">🎯 Neu kalibrieren</button>
+                <div id="calibrationProgress">
+                    <div id="calibrationProgressFill"></div>
+                </div>
             </div>
         </div>
         
@@ -3826,111 +3911,196 @@
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
         
-        // Gesture Control Integration with Dynamic Loading
-        let gestureController = null;
+        // Gesture Control Integration with GestureManager (Multi-Mode Support)
+        let gestureManager = null;
         let gestureEnabled = false;
-        let gestureModuleLoaded = false;
-        
+        let currentGestureMode = 'adaptive'; // Default mode
+
         const gestureBtn = document.getElementById('gestureControlBtn');
         const gestureCanvas = document.getElementById('gestureCanvas');
         const gestureStatus = document.getElementById('gestureStatus');
         const gestureStatusText = document.getElementById('gestureStatusText');
         const gestureCurrentText = document.getElementById('gestureCurrentText');
-        
-        // Check if gesture module is already loaded
-        async function loadGestureModule() {
-            if (gestureModuleLoaded || window.GestureControllerProjector) {
-                gestureModuleLoaded = true;
-                return true;
-            }
-            
-            // Wait a bit for pre-loaded module
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            if (window.GestureControllerProjector) {
-                gestureModuleLoaded = true;
-                console.log('✅ Gesture Module already loaded');
-                return true;
-            }
-            
-            // Try loading again if not available
+        const gestureModeText = document.getElementById('gestureModeText');
+        const gestureModeSelector = document.getElementById('gestureModeSelector');
+        const gestureModeSelect = document.getElementById('gestureModeSelect');
+        const recalibrateBtn = document.getElementById('recalibrateBtn');
+        const calibrationProgress = document.getElementById('calibrationProgress');
+        const calibrationProgressFill = document.getElementById('calibrationProgressFill');
+
+        // Load GestureManager dynamically
+        async function loadGestureManager() {
             try {
-                console.log('🎮 Attempting to load Gesture Control Module...');
-                const module = await import('./js/GestureControllerProjector.js');
-                window.GestureControllerProjector = module.GestureControllerProjector || module.default;
-                gestureModuleLoaded = true;
-                console.log('✅ Gesture Module loaded on demand');
+                console.log('🎮 Loading GestureManager...');
+                const module = await import('./js/GestureManager.js');
+                window.GestureManager = module.GestureManager;
+                console.log('✅ GestureManager loaded successfully');
                 return true;
             } catch (error) {
-                console.error('❌ Module loading failed:', error);
-                return false;
+                console.error('❌ GestureManager loading failed:', error);
+                // Fallback to old GestureControllerProjector
+                try {
+                    const oldModule = await import('./js/GestureControllerProjector.js');
+                    window.GestureControllerProjector = oldModule.GestureControllerProjector || oldModule.default;
+                    console.log('⚠️ Using fallback GestureControllerProjector');
+                    return 'fallback';
+                } catch (fallbackError) {
+                    console.error('❌ All gesture modules failed:', fallbackError);
+                    return false;
+                }
             }
         }
-        
+
         // Initialize gesture control button
         if (gestureBtn) {
             console.log('🎮 Gesture Control Button found!');
-            gestureBtn.style.display = 'block'; // Force visibility
+            gestureBtn.style.display = 'block';
             gestureBtn.style.visibility = 'visible';
+
             gestureBtn.addEventListener('click', async () => {
                 if (!gestureEnabled) {
                     try {
-                        // First ensure module is loaded
-                        const moduleLoaded = await loadGestureModule();
-                        if (!moduleLoaded) {
-                            alert('Gestensteuerung konnte nicht geladen werden. Bitte Seite neu laden und erneut versuchen.');
+                        const loadResult = await loadGestureManager();
+                        if (!loadResult) {
+                            alert('Gestensteuerung konnte nicht geladen werden. Bitte Seite neu laden.');
                             return;
                         }
-                        
-                        // Initialize gesture controller
-                        if (!gestureController && window.GestureControllerProjector) {
-                            console.log('🎮 Initializing Gesture Controller...');
-                            gestureController = new window.GestureControllerProjector({
-                                videoElement: document.getElementById('gestureVideo'),
-                                canvasElement: gestureCanvas,
-                                onGestureDetected: handleGestureInput,
-                                onStatsUpdate: updateGestureStats,
-                                onError: handleGestureError,
-                                onCalibrationComplete: () => {
-                                    console.log('✅ Gesture calibration complete');
-                                    gestureStatusText.textContent = 'Kalibriert';
-                                },
-                                debugMode: false,
-                                projectorMode: true
-                            });
+
+                        if (loadResult === 'fallback' && window.GestureControllerProjector) {
+                            // Use old system
+                            if (!gestureManager) {
+                                gestureManager = new window.GestureControllerProjector({
+                                    videoElement: document.getElementById('gestureVideo'),
+                                    canvasElement: gestureCanvas,
+                                    onGestureDetected: handleGestureInput,
+                                    onStatsUpdate: updateGestureStats,
+                                    onError: handleGestureError,
+                                    onCalibrationComplete: () => {
+                                        gestureStatusText.textContent = 'Kalibriert';
+                                    },
+                                    debugMode: false,
+                                    projectorMode: true
+                                });
+                            }
+                        } else if (window.GestureManager) {
+                            // Use new GestureManager
+                            if (!gestureManager) {
+                                gestureManager = new window.GestureManager({
+                                    defaultMode: currentGestureMode,
+                                    video: document.getElementById('gestureVideo'),
+                                    canvas: gestureCanvas,
+                                    onGestureDetected: handleGestureEvent,
+                                    onModeChange: (modeKey, modeName) => {
+                                        gestureModeText.textContent = modeName;
+                                        gestureModeSelect.value = modeKey;
+                                        console.log(`🎮 Mode changed: ${modeName}`);
+                                    },
+                                    onStatusChange: (status, message) => {
+                                        gestureStatusText.textContent = message;
+                                        console.log(`🎮 Status: ${status} - ${message}`);
+                                    },
+                                    onCalibrationProgress: (progress, step) => {
+                                        calibrationProgress.classList.add('active');
+                                        calibrationProgressFill.style.width = (progress * 100) + '%';
+                                        if (progress >= 1) {
+                                            setTimeout(() => {
+                                                calibrationProgress.classList.remove('active');
+                                            }, 1000);
+                                        }
+                                    },
+                                    onError: handleGestureError
+                                });
+                            }
                         }
-                        
-                        await gestureController.start();
+
+                        await gestureManager.start();
                         gestureEnabled = true;
                         gestureBtn.textContent = '🛑 Gestensteuerung stoppen';
                         gestureBtn.classList.add('active');
                         gestureCanvas.classList.add('active');
                         gestureStatus.classList.add('active');
+                        gestureModeSelector.classList.add('active');
                         gestureStatusText.textContent = 'Aktiv';
-                        console.log('✅ Gesture Control activated successfully');
-                        
+                        console.log('✅ Gesture Control activated');
+
                     } catch (error) {
                         console.error('❌ Failed to start gesture control:', error);
                         alert(`Gestensteuerung Fehler: ${error.message}\n\nBitte stelle sicher dass:\n1. Kamera-Zugriff erlaubt ist\n2. HTTPS verwendet wird\n3. Chrome/Edge Browser verwendet wird`);
                     }
                 } else {
                     // Stop gesture control
-                    if (gestureController) {
-                        gestureController.stop();
+                    if (gestureManager) {
+                        gestureManager.stop();
                     }
                     gestureEnabled = false;
                     gestureBtn.textContent = '🎮 Gestensteuerung aktivieren';
                     gestureBtn.classList.remove('active');
                     gestureCanvas.classList.remove('active');
                     gestureStatus.classList.remove('active');
+                    gestureModeSelector.classList.remove('active');
                     gestureStatusText.textContent = 'Gestoppt';
                     gestureCurrentText.textContent = 'NONE';
                 }
             });
+
+            // Mode selector event
+            if (gestureModeSelect) {
+                gestureModeSelect.addEventListener('change', async (e) => {
+                    const newMode = e.target.value;
+                    if (gestureManager && gestureManager.switchMode) {
+                        try {
+                            await gestureManager.switchMode(newMode);
+                            currentGestureMode = newMode;
+                            console.log(`🎮 Switched to mode: ${newMode}`);
+                        } catch (error) {
+                            console.error('❌ Mode switch failed:', error);
+                            gestureModeSelect.value = currentGestureMode;
+                        }
+                    }
+                });
+            }
+
+            // Recalibrate button event
+            if (recalibrateBtn) {
+                recalibrateBtn.addEventListener('click', () => {
+                    if (gestureManager && gestureManager.startCalibration) {
+                        gestureManager.startCalibration();
+                    }
+                });
+            }
         } else {
-            console.warn('⚠️ Gesture Control Button not found or module not available');
-            console.log('Button element:', gestureBtn);
-            console.log('Module loaded:', window.GestureControllerProjector);
+            console.warn('⚠️ Gesture Control Button not found');
+        }
+
+        // Handle gesture events from new GestureManager
+        function handleGestureEvent(gesture) {
+            if (!gameState.isPlaying) return;
+
+            if (gesture.type === 'lane') {
+                switch (gesture.lane) {
+                    case 'left':
+                        handleGestureInput('MOVE_LEFT');
+                        break;
+                    case 'right':
+                        handleGestureInput('MOVE_RIGHT');
+                        break;
+                    case 'center':
+                        gestureCurrentText.textContent = 'CENTER';
+                        break;
+                }
+            } else if (gesture.type === 'action') {
+                switch (gesture.action) {
+                    case 'jump':
+                        handleGestureInput('JUMP');
+                        break;
+                    case 'duck':
+                        handleGestureInput('DUCK');
+                        break;
+                    case 'none':
+                        handleGestureInput('NONE');
+                        break;
+                }
+            }
         }
         
         function handleGestureInput(gesture) {
