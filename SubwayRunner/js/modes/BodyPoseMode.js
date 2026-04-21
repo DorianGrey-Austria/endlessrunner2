@@ -46,7 +46,7 @@ export class BodyPoseMode extends BaseGestureMode {
         // Floor tracking (for jump detection)
         this.floorHistory = [];
         this.floorLevel = 0;
-        this.floorSamples = 30; // Average over 30 frames
+        this.floorSamples = 15; // 15 frames (~0.5s) — faster reaction than 30
 
         // Pose data
         this.shoulderY = 0;
@@ -55,22 +55,28 @@ export class BodyPoseMode extends BaseGestureMode {
         this.noseX = 0;
         this.shoulderCenterX = 0;
 
-        // Thresholds
+        // Thresholds (tuned for 2-4m distance from screen)
         this.thresholds = {
-            jumpThreshold: 0.08,   // 8% of frame height above floor
-            crouchThreshold: 0.7,  // Torso shrinks to 70% of normal
-            leanThreshold: 0.15    // 15% of torso width
+            jumpThreshold: 0.06,   // 6% of frame height above floor (more sensitive)
+            crouchThreshold: 0.75, // Torso shrinks to 75% of normal (easier to trigger)
+            leanThreshold: 0.10,   // 10% lean for lane change via leaning
+            walkThreshold: 0.08    // 8% lateral shift for lane change via walking
         };
 
         // Cooldowns
         this.lastJumpTime = 0;
         this.lastCrouchTime = 0;
-        this.jumpCooldown = 500;
+        this.jumpCooldown = 400;   // 400ms — faster re-jump for gameplay
         this.crouchCooldown = 300;
 
         // Calibration
         this.normalTorsoHeight = 0;
+        this.neutralX = 0.5;       // Center position (normalized 0-1)
         this.isFloorCalibrated = false;
+
+        // Hysteresis for lane detection
+        this.lastLane = 'center';
+        this.hysteresis = 0.3;
 
         // Body not visible tracking
         this.noBodyFrames = 0;
@@ -257,9 +263,10 @@ export class BodyPoseMode extends BaseGestureMode {
         // Torso height (distance from shoulders to hips)
         this.torsoHeight = this.hipY - this.shoulderY;
 
-        // Calibrate normal torso height on first detection
+        // Calibrate normal torso height and center position on first detection
         if (!this.isFloorCalibrated && this.torsoHeight > 0) {
             this.normalTorsoHeight = this.torsoHeight;
+            this.neutralX = this.shoulderCenterX;
             this.isFloorCalibrated = true;
         }
 
@@ -283,21 +290,47 @@ export class BodyPoseMode extends BaseGestureMode {
 
         // Calculate floor level (average of LOWEST positions = highest Y values)
         const sorted = [...this.floorHistory].sort((a, b) => b - a);
-        this.floorLevel = sorted.slice(0, 10).reduce((a, b) => a + b, 0) / Math.min(10, sorted.length);
+        const topN = Math.min(5, sorted.length);
+        this.floorLevel = sorted.slice(0, topN).reduce((a, b) => a + b, 0) / topN;
     }
 
     detectBodyLean() {
-        // Calculate lean: nose position relative to shoulder center
+        // Two lane detection methods (best of both):
+        // 1. Lean: nose offset from shoulder center (works when standing still)
+        // 2. Walk: shoulder center offset from calibrated neutral (works when moving)
         const lean = this.noseX - this.shoulderCenterX;
+        const walk = this.shoulderCenterX - this.neutralX;
 
-        let newLane = 'center';
+        let leanLane = 'center';
+        let walkLane = 'center';
 
-        if (lean < -this.thresholds.leanThreshold) {
-            newLane = 'left';  // Leaning left (nose left of shoulders)
-        } else if (lean > this.thresholds.leanThreshold) {
-            newLane = 'right'; // Leaning right
+        // Lean detection
+        if (lean < -this.thresholds.leanThreshold) leanLane = 'left';
+        else if (lean > this.thresholds.leanThreshold) leanLane = 'right';
+
+        // Walk detection (lateral movement in the frame)
+        if (walk < -this.thresholds.walkThreshold) walkLane = 'left';
+        else if (walk > this.thresholds.walkThreshold) walkLane = 'right';
+
+        // Use whichever detects a lane change (lean OR walk)
+        let newLane = leanLane !== 'center' ? leanLane : walkLane;
+
+        // Hysteresis — once in a lane, require partial return to leave
+        const combinedThreshold = Math.max(this.thresholds.leanThreshold, this.thresholds.walkThreshold);
+        const hyst = combinedThreshold * this.hysteresis;
+
+        if (this.lastLane === 'left' && newLane === 'center') {
+            // Stay left until lean AND walk are both clearly past hysteresis
+            if (lean < -(this.thresholds.leanThreshold - hyst) || walk < -(this.thresholds.walkThreshold - hyst)) {
+                newLane = 'left';
+            }
+        } else if (this.lastLane === 'right' && newLane === 'center') {
+            if (lean > (this.thresholds.leanThreshold - hyst) || walk > (this.thresholds.walkThreshold - hyst)) {
+                newLane = 'right';
+            }
         }
 
+        this.lastLane = newLane;
         this.emitGesture('lane', newLane);
     }
 
@@ -347,6 +380,8 @@ export class BodyPoseMode extends BaseGestureMode {
         this.floorLevel = 0;
         this.isFloorCalibrated = false;
         this.normalTorsoHeight = 0;
+        this.neutralX = 0.5;
+        this.lastLane = 'center';
 
         this.onStatusChange('calibrating', 'Boden wird kalibriert - Steh gerade!');
 
@@ -361,6 +396,7 @@ export class BodyPoseMode extends BaseGestureMode {
         return {
             floorLevel: this.floorLevel,
             normalTorsoHeight: this.normalTorsoHeight,
+            neutralX: this.neutralX,
             thresholds: { ...this.thresholds }
         };
     }
@@ -372,6 +408,9 @@ export class BodyPoseMode extends BaseGestureMode {
         if (data.normalTorsoHeight !== undefined) {
             this.normalTorsoHeight = data.normalTorsoHeight;
             this.isFloorCalibrated = true;
+        }
+        if (data.neutralX !== undefined) {
+            this.neutralX = data.neutralX;
         }
         if (data.thresholds) {
             this.thresholds = { ...this.thresholds, ...data.thresholds };
