@@ -691,177 +691,161 @@
                 source.start();
             }
 
+            // ADSR envelope helper for natural sounds
+            playNote(freq, duration, type, envelope = {}) {
+                if (!this.audioContext) return;
+                const t = this.audioContext.currentTime;
+                const { attack = 0.01, decay = 0.05, sustain = 0.6, release = duration * 0.3, volume = 0.25 } = envelope;
+
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, t);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+
+                gain.gain.setValueAtTime(0.001, t);
+                gain.gain.linearRampToValueAtTime(volume, t + attack);
+                gain.gain.linearRampToValueAtTime(volume * sustain, t + attack + decay);
+                gain.gain.linearRampToValueAtTime(0.001, t + duration);
+
+                osc.start(t);
+                osc.stop(t + duration + 0.05);
+            }
+
+            // Pitch sweep (up or down) for whooshes and transitions
+            playSweep(startFreq, endFreq, duration, type = 'sine', volume = 0.15) {
+                if (!this.audioContext) return;
+                const t = this.audioContext.currentTime;
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(startFreq, t);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, t + duration);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                gain.gain.setValueAtTime(volume, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+                osc.start(t);
+                osc.stop(t + duration + 0.02);
+            }
+
             createAdvancedSounds() {
-                // Enhanced realistic sounds using multiple layers
                 this.sounds = {
                     jump: () => {
-                        // Multi-layered jump sound: impact + whoosh + landing prep
-                        this.createTone(180, 0.08, 'sine'); // Base thump
-                        setTimeout(() => this.createTone(320, 0.12, 'triangle'), 20); // Whoosh up
-                        setTimeout(() => this.createNoise(0.06, 4000), 40); // Air resistance
-                        this.createReverbEffect(240, 0.15, 0.3); // Echo for depth
+                        this.playSweep(150, 600, 0.18, 'sine', 0.2);
+                        this.createNoise(0.08, 3000);
+                        setTimeout(() => this.playNote(440, 0.06, 'triangle', { volume: 0.08 }), 30);
                     },
-                    
+
                     land: () => {
-                        // Heavy landing with ground impact and dust
-                        this.createTone(80, 0.15, 'square'); // Deep thud
-                        this.createNoise(0.12, 800); // Ground crunch
-                        setTimeout(() => this.createNoise(0.08, 1500), 50); // Dust settle
-                        this.createReverbEffect(120, 0.2, 0.4); // Ground echo
+                        this.playNote(65, 0.2, 'sine', { attack: 0.005, sustain: 0.3, volume: 0.3 });
+                        this.createNoise(0.15, 600);
+                        setTimeout(() => this.createNoise(0.1, 1200), 60);
                     },
-                    
+
                     duck: () => {
-                        // Quick duck sound with fabric/wind
-                        this.createTone(140, 0.15, 'sawtooth');
-                        this.createNoise(0.1, 3500); // Wind resistance
-                        setTimeout(() => this.createTone(110, 0.1, 'sine'), 80); // Body movement
+                        this.playSweep(300, 120, 0.12, 'triangle', 0.12);
+                        this.createNoise(0.08, 2500);
                     },
-                    
+
                     success: () => {
-                        // Triumphant success with harmonic progression
-                        const notes = [400, 500, 630, 800, 1000];
-                        notes.forEach((freq, i) => {
-                            setTimeout(() => {
-                                this.createTone(freq, 0.2, 'sine');
-                                this.createReverbEffect(freq, 0.15, 0.6); // Rich reverb
-                            }, i * 80);
+                        // Major chord arpeggio: C5-E5-G5-C6
+                        [523, 659, 784, 1047].forEach((f, i) => {
+                            setTimeout(() => this.playNote(f, 0.35, 'sine', { attack: 0.02, sustain: 0.7, volume: 0.18 }), i * 90);
                         });
-                        // Add sparkle effect
                         setTimeout(() => {
-                            for (let j = 0; j < 8; j++) {
-                                setTimeout(() => this.createTone(1200 + j * 100, 0.05, 'sine'), j * 25);
+                            for (let j = 0; j < 6; j++) {
+                                setTimeout(() => this.playNote(1400 + j * 150, 0.04, 'sine', { volume: 0.06 }), j * 20);
                             }
-                        }, 400);
+                        }, 360);
                     },
-                    
+
                     collision: () => {
-                        // Dramatic collision with multiple impact layers
-                        this.createNoise(0.4, 1200); // Main crash
-                        this.createTone(60, 0.6, 'sawtooth', false); // Low rumble
-                        setTimeout(() => this.createNoise(0.25, 2500), 100); // Glass/debris
-                        setTimeout(() => this.createTone(200, 0.3, 'square'), 150); // Metal impact
-                        this.createReverbEffect(150, 0.8, 0.7); // Long echo
-                        
-                        // Add screen shake intensity based on collision
+                        this.createNoise(0.5, 900);
+                        this.playNote(45, 0.6, 'sawtooth', { attack: 0.005, sustain: 0.2, volume: 0.35 });
+                        setTimeout(() => this.createNoise(0.3, 2000), 80);
+                        setTimeout(() => this.playSweep(400, 60, 0.4, 'square', 0.15), 100);
                         if (window.gameState) {
                             gameState.cameraShakeIntensity = Math.max(gameState.cameraShakeIntensity, 0.3);
                         }
                     },
-                    
+
                     coin: () => {
-                        // Magical coin collection with sparkle
-                        this.createTone(800, 0.12, 'sine');
-                        setTimeout(() => this.createTone(1200, 0.1, 'sine'), 40);
-                        setTimeout(() => this.createTone(1600, 0.08, 'triangle'), 80);
-                        this.createReverbEffect(1000, 0.2, 0.5); // Magical echo
-                        // Add subtle high-frequency shimmer
+                        // Bright pentatonic collect sound
+                        this.playNote(880, 0.1, 'sine', { attack: 0.005, volume: 0.2 });
+                        setTimeout(() => this.playNote(1175, 0.1, 'sine', { attack: 0.005, volume: 0.18 }), 50);
+                        setTimeout(() => this.playNote(1568, 0.15, 'sine', { attack: 0.005, sustain: 0.8, volume: 0.15 }), 100);
                         setTimeout(() => {
-                            for (let k = 0; k < 4; k++) {
-                                setTimeout(() => this.createTone(2000 + k * 200, 0.03, 'sine'), k * 15);
+                            for (let k = 0; k < 3; k++) {
+                                setTimeout(() => this.playNote(2200 + k * 300, 0.03, 'sine', { volume: 0.04 }), k * 15);
                             }
-                        }, 120);
+                        }, 150);
                     },
-                    
+
                     whoosh: () => {
-                        // Enhanced lane change with speed-dependent pitch
-                        const speedMultiplier = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.5;
-                        const baseFreq = 2000 + speedMultiplier * 2000;
-                        this.createNoise(0.15 + speedMultiplier * 0.1, baseFreq);
-                        this.createTone(250 + speedMultiplier * 100, 0.1, 'triangle');
+                        const spd = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.5;
+                        this.createNoise(0.12 + spd * 0.08, 1500 + spd * 3000);
+                        this.playSweep(200 + spd * 200, 100, 0.1, 'triangle', 0.08);
                     },
-                    
+
                     powerup: () => {
-                        // Epic power-up activation sequence
-                        const powerChord = [400, 500, 600, 750, 900];
-                        powerChord.forEach((freq, i) => {
+                        // Rising power chord
+                        [330, 415, 523, 659, 880].forEach((f, i) => {
                             setTimeout(() => {
-                                this.createTone(freq, 0.25, 'sine');
-                                this.createReverbEffect(freq, 0.2, 0.8);
-                            }, i * 60);
+                                this.playNote(f, 0.3, 'sine', { sustain: 0.8, volume: 0.15 });
+                                this.playNote(f * 1.005, 0.3, 'sine', { sustain: 0.8, volume: 0.1 }); // Detune for richness
+                            }, i * 55);
                         });
-                        
-                        // Add ascending energy effect
-                        setTimeout(() => {
-                            for (let m = 0; m < 12; m++) {
-                                setTimeout(() => {
-                                    this.createTone(1000 + m * 50, 0.04, 'triangle');
-                                }, m * 30);
-                            }
-                        }, 300);
+                        setTimeout(() => this.playSweep(800, 2400, 0.3, 'sine', 0.08), 275);
                     },
-                    
-                    // NEW: Ambient city sounds
+
                     ambient: () => {
                         if (!this.ambientPlaying) {
                             this.ambientPlaying = true;
                             this.playAmbientLoop();
                         }
                     },
-                    
-                    // NEW: Speed-based engine sound
+
                     engine: () => {
-                        const speedMultiplier = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.3;
-                        const engineFreq = 40 + speedMultiplier * 60;
-                        this.createTone(engineFreq, 0.2, 'sawtooth', false);
+                        const spd = window.gameState ? (gameState.speed / gameState.maxSpeed) : 0.3;
+                        this.playNote(35 + spd * 50, 0.25, 'sawtooth', { volume: 0.06, sustain: 0.4 });
                     },
-                    
-                    // NEW: Near miss bonus sound
+
                     nearmiss: () => {
-                        this.createTone(600, 0.08, 'sine');
-                        setTimeout(() => this.createTone(800, 0.06, 'triangle'), 30);
-                        this.createNoise(0.05, 5000); // Subtle whoosh
+                        this.playSweep(500, 900, 0.1, 'sine', 0.1);
+                        this.createNoise(0.04, 4000);
+                    },
+
+                    // Level transition fanfare
+                    levelup: () => {
+                        [440, 554, 659, 880].forEach((f, i) => {
+                            setTimeout(() => this.playNote(f, 0.4, 'sine', { sustain: 0.9, volume: 0.2 }), i * 100);
+                        });
+                        setTimeout(() => this.createNoise(0.06, 6000), 400);
                     }
                 };
             }
 
-            // Enhanced reverb effect for depth
-            createReverbEffect(frequency, duration, intensity) {
-                if (!this.audioContext) return;
-                
-                const delay = this.audioContext.createDelay(0.3);
-                const feedback = this.audioContext.createGain();
-                const wetGain = this.audioContext.createGain();
-                
-                delay.delayTime.value = 0.1;
-                feedback.gain.value = intensity * 0.4;
-                wetGain.gain.value = intensity * 0.3;
-                
-                const oscillator = this.audioContext.createOscillator();
-                const gainNode = this.audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(delay);
-                delay.connect(feedback);
-                feedback.connect(delay);
-                delay.connect(wetGain);
-                wetGain.connect(this.masterGain);
-                
-                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
-                
-                oscillator.start(this.audioContext.currentTime);
-                oscillator.stop(this.audioContext.currentTime + duration);
-            }
-            
-            // Ambient city soundscape
+            // Ambient city soundscape — richer with level awareness
             playAmbientLoop() {
                 if (!this.audioContext || !this.ambientPlaying) return;
-                
-                // Distant traffic rumble
-                const trafficFreq = 60 + Math.random() * 20;
-                this.createTone(trafficFreq, 2.0, 'sawtooth', false);
-                
-                // Occasional distant sounds
-                if (Math.random() > 0.7) {
-                    setTimeout(() => {
-                        this.createNoise(0.05, 800 + Math.random() * 1000);
-                    }, Math.random() * 1000);
+
+                // Low rumble (subway/city feel)
+                this.playNote(50 + Math.random() * 15, 2.5, 'sawtooth', { attack: 0.5, sustain: 0.3, volume: 0.04 });
+
+                // Occasional atmospheric detail
+                if (Math.random() > 0.6) {
+                    const t = Math.random() * 1000;
+                    setTimeout(() => this.createNoise(0.04 + Math.random() * 0.03, 500 + Math.random() * 1500), t);
                 }
-                
-                // Continue ambient loop
-                setTimeout(() => this.playAmbientLoop(), 2000);
+
+                // Wind layer
+                if (Math.random() > 0.8) {
+                    this.createNoise(0.3, 200 + Math.random() * 300);
+                }
+
+                setTimeout(() => this.playAmbientLoop(), 2500);
             }
             
             stopAmbient() {
@@ -1049,7 +1033,8 @@
         };
 
         window.startGame = function() {
-            console.log('startGame called');
+            console.log('startGame called via user click');
+            userClickedStart = true;
             try {
                 startGameInternal();
             } catch (error) {
@@ -1265,6 +1250,7 @@
                 if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
                     this.lastLevelChange = now;
                     currentLevel++; // INCREMENT BEFORE LOADING!
+                    audioManager.play('levelup');
                     this.loadLevel(currentLevel);
                     nextLevelScore = currentLevel * 1000;
                 }
@@ -3475,7 +3461,15 @@
             }
         }
 
+        let userClickedStart = false;
+
         function startGameInternal() {
+            // Guard: only start if user explicitly clicked
+            if (!userClickedStart) {
+                console.warn('startGameInternal blocked — no user click detected');
+                return;
+            }
+
             // Resume audio context
             audioManager.resume();
             
@@ -5060,6 +5054,7 @@
         // Start-screen gesture mode selection (called from menu buttons)
         window.selectGestureAndStart = async function(controlType) {
             console.log('selectGestureAndStart:', controlType);
+            userClickedStart = true;
             try {
                 // Determine mode
                 let mode;
