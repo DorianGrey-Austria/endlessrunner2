@@ -59,6 +59,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         this.lastActionTime = 0;
         this.actionCooldownMs = 350;
 
+        // Dead zone — ignore micro-movements near neutral (best practice 2026)
+        // Prevents false positives from natural head sway
+        this.deadZone = options.deadZone || 2.0; // degrees — movements smaller than this are ignored
+
         // Hysteresis factor — once in a lane, require 30% return toward center to leave
         // Prevents flickering at threshold boundaries
         this.hysteresis = 0.3;
@@ -66,6 +70,11 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
         // Animation frame
         this.animationId = null;
+
+        // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
+        // Process every Nth frame when GPU is busy; 2 = every other frame ≈ 30fps detection
+        this.frameSkip = options.frameSkip || 2;
+        this.frameCounter = 0;
     }
 
     get name() {
@@ -161,7 +170,9 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
     detectLoop() {
         if (!this.isRunning) return;
 
-        if (this.video.readyState >= 2) {
+        this.frameCounter++;
+        // Skip frames to reduce GPU contention with Three.js renderer
+        if (this.frameCounter % this.frameSkip === 0 && this.video.readyState >= 2) {
             const results = this.faceLandmarker.detectForVideo(this.video, performance.now());
             this.onResults(results);
         }
@@ -296,20 +307,22 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         const pitch = this.currentPitch;
         const now = Date.now();
 
+        // Dead zone — ignore micro-movements near neutral position
+        const effectiveYaw = Math.abs(yaw) < this.deadZone ? 0 : yaw;
+        const effectivePitch = Math.abs(pitch) < this.deadZone ? 0 : pitch;
+
         // Lane detection with hysteresis (prevents flickering at threshold)
         let newLane = 'center';
         const yawRange = this.thresholds.yawRight - this.thresholds.yawLeft;
         const hyst = yawRange * this.hysteresis;
 
         if (this.lastLane === 'left') {
-            // Must cross yawLeft + hysteresis band to return to center
-            newLane = yaw < (this.thresholds.yawLeft + hyst) ? 'left' : 'center';
+            newLane = effectiveYaw < (this.thresholds.yawLeft + hyst) ? 'left' : 'center';
         } else if (this.lastLane === 'right') {
-            newLane = yaw > (this.thresholds.yawRight - hyst) ? 'right' : 'center';
+            newLane = effectiveYaw > (this.thresholds.yawRight - hyst) ? 'right' : 'center';
         } else {
-            // From center, must cross full threshold to enter lane
-            if (yaw < this.thresholds.yawLeft) newLane = 'left';
-            else if (yaw > this.thresholds.yawRight) newLane = 'right';
+            if (effectiveYaw < this.thresholds.yawLeft) newLane = 'left';
+            else if (effectiveYaw > this.thresholds.yawRight) newLane = 'right';
         }
 
         this.lastLane = newLane;
@@ -319,10 +332,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         if (now - this.lastActionTime > this.actionCooldownMs) {
             let newAction = 'none';
 
-            if (pitch < this.thresholds.pitchUp) {
+            if (effectivePitch < this.thresholds.pitchUp) {
                 newAction = 'jump';
                 this.lastActionTime = now;
-            } else if (pitch > this.thresholds.pitchDown) {
+            } else if (effectivePitch > this.thresholds.pitchDown) {
                 newAction = 'duck';
                 this.lastActionTime = now;
             }

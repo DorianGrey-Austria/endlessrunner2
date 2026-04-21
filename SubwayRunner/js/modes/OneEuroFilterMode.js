@@ -52,6 +52,9 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Action cooldown
         this.lastActionTime = 0;
 
+        // Dead zone — ignore micro-movements near neutral (best practice 2026)
+        this.deadZone = options.deadZone || 2.0; // degrees
+
         // Hysteresis — prevents lane flickering at threshold boundaries
         this.hysteresis = 0.3; // 30% of threshold range
         this.lastLane = 'center';
@@ -63,6 +66,10 @@ export class OneEuroFilterMode extends BaseGestureMode {
 
         // Animation frame
         this.animationId = null;
+
+        // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
+        this.frameSkip = options.frameSkip || 2;
+        this.frameCounter = 0;
     }
 
     get name() {
@@ -154,7 +161,8 @@ export class OneEuroFilterMode extends BaseGestureMode {
     detectLoop() {
         if (!this.isRunning) return;
 
-        if (this.video.readyState >= 2) {
+        this.frameCounter++;
+        if (this.frameCounter % this.frameSkip === 0 && this.video.readyState >= 2) {
             const results = this.faceLandmarker.detectForVideo(this.video, performance.now());
             this.onResults(results);
         }
@@ -221,17 +229,21 @@ export class OneEuroFilterMode extends BaseGestureMode {
     detectGestures() {
         const now = Date.now();
 
+        // Dead zone — ignore micro-movements near neutral
+        const yaw = Math.abs(this.currentYaw) < this.deadZone ? 0 : this.currentYaw;
+        const pitch = Math.abs(this.currentPitch) < this.deadZone ? 0 : this.currentPitch;
+
         // Lane detection with hysteresis (prevents flickering)
         let newLane = 'center';
         const hyst = Math.abs(this.thresholds.yawRight - this.thresholds.yawLeft) * this.hysteresis;
 
         if (this.lastLane === 'left') {
-            newLane = this.currentYaw < (this.thresholds.yawLeft + hyst) ? 'left' : 'center';
+            newLane = yaw < (this.thresholds.yawLeft + hyst) ? 'left' : 'center';
         } else if (this.lastLane === 'right') {
-            newLane = this.currentYaw > (this.thresholds.yawRight - hyst) ? 'right' : 'center';
+            newLane = yaw > (this.thresholds.yawRight - hyst) ? 'right' : 'center';
         } else {
-            if (this.currentYaw < this.thresholds.yawLeft) newLane = 'left';
-            else if (this.currentYaw > this.thresholds.yawRight) newLane = 'right';
+            if (yaw < this.thresholds.yawLeft) newLane = 'left';
+            else if (yaw > this.thresholds.yawRight) newLane = 'right';
         }
 
         this.lastLane = newLane;
@@ -240,10 +252,10 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Action detection (with cooldown)
         if (now - this.lastActionTime > this.thresholds.cooldownMs) {
             let newAction = 'none';
-            if (this.currentPitch < this.thresholds.pitchUp) {
+            if (pitch < this.thresholds.pitchUp) {
                 newAction = 'jump';
                 this.lastActionTime = now;
-            } else if (this.currentPitch > this.thresholds.pitchDown) {
+            } else if (pitch > this.thresholds.pitchDown) {
                 newAction = 'duck';
                 this.lastActionTime = now;
             }
