@@ -50,6 +50,9 @@ git add . && git commit -m "VX.Y.Z: description" && git push
 # Live in ~2-3 minutes at ki-revolution.at
 ```
 
+### Versioning
+Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for features, MAJOR for breaking changes. Update version in both `index.html` and `package.json`.
+
 ---
 
 ## Architecture
@@ -57,7 +60,7 @@ git add . && git commit -m "VX.Y.Z: description" && git push
 ### Dual Architecture (CRITICAL)
 
 **Production (deployed)**: `SubwayRunner/index.html`
-- Monolithic vanilla JS (~4200 lines) with embedded Three.js
+- Monolithic vanilla JS (~5300 lines) with embedded Three.js
 - Three.js v0.158.0 via CDN, MediaPipe via CDN (gesture control)
 - Global `gameState` object on `window` (score, lives, level, isPlaying)
 - Supabase SDK intentionally removed to prevent identifier conflicts
@@ -84,6 +87,10 @@ GestureControllerProjector.js  (MediaPipe detection — primary)
     └─ OneEuroFilterMode.js    (smoothed input)
       → OneEuroFilter.js       (low-latency signal filtering)
 ```
+
+**Utilities**: `utils/MediaPipeLoader.js` (on-demand MediaPipe Tasks Vision API loader), `utils/OneEuroFilter.js`.
+
+**Styles**: `css/gesture-overlay.css` (video canvas overlay, gesture status, debug mode).
 
 Other modules: `GestureController.js` (legacy fallback), `GestureManager.js` (state management), `ui/LevelSelector.js`.
 
@@ -113,6 +120,8 @@ Other modules: `GestureController.js` (legacy fallback), `GestureManager.js` (st
 3. Copies `SubwayRunner/css/` → `deploy/css/`
 4. Generates `.htaccess` (HTTPS, compression, caching, CSP headers)
 5. FTP uploads to Hostinger root
+
+**CI Pipeline** (`.github/workflows/test-before-deploy.yml`): Runs on every push/PR to main — `npm run test` (static) + Playwright E2E → deploy only if all tests pass. Test artifacts and failure screenshots uploaded automatically.
 
 **Required Secrets**: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
 
@@ -208,4 +217,4 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 - **Safari**: Lower FPS compared to Chrome
 - **Headless Testing**: WebGL context errors are expected in CI (filter in tests)
 - **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see TROUBLESHOOTING.md #11)
-- **Browser Cache**: Different browsers can show different game versions due to cache conflicts — always hard-refresh when testing
+- **Browser Cache**: Different browsers can show different game versions due to cache conflicts — always hard-refresh (Cmd+Shift+R) when testing. Use Chrome, not Safari
