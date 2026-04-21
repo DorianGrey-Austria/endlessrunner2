@@ -61,6 +61,12 @@ export class GestureManager {
         // Current gesture state (for external access)
         this.currentLane = 'center';
         this.currentAction = 'none';
+
+        // localStorage key for calibration persistence
+        this.storageKey = 'subwayRunner_gestureCalibration';
+
+        // Restore calibration from localStorage
+        this._loadFromLocalStorage();
     }
 
     /**
@@ -166,6 +172,9 @@ export class GestureManager {
 
         this.onModeChange(modeKey, this.activeMode.name);
         this.onStatusChange('mode_changed', `Modus: ${this.activeMode.name}`);
+
+        // Persist calibration to localStorage
+        this._saveToLocalStorage();
     }
 
     /**
@@ -205,6 +214,9 @@ export class GestureManager {
         if (this.activeMode && this.activeModeKey) {
             this.calibrationStorage.set(this.activeModeKey, this.activeMode.getCalibrationData());
         }
+
+        // Persist calibration before destroying
+        this._saveToLocalStorage();
 
         if (this.activeMode) {
             this.activeMode.destroy();
@@ -317,6 +329,39 @@ export class GestureManager {
         // Apply to current mode if it matches
         if (this.activeMode && this.activeModeKey && data[this.activeModeKey]) {
             this.activeMode.setCalibrationData(data[this.activeModeKey]);
+        }
+    }
+
+    /**
+     * Save calibration data to localStorage
+     * @private
+     */
+    _saveToLocalStorage() {
+        try {
+            const data = this.exportCalibration();
+            if (Object.keys(data).length > 0) {
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+            }
+        } catch (e) {
+            // localStorage not available or quota exceeded — silent fail
+        }
+    }
+
+    /**
+     * Load calibration data from localStorage
+     * @private
+     */
+    _loadFromLocalStorage() {
+        try {
+            const stored = localStorage.getItem(this.storageKey);
+            if (stored) {
+                const data = JSON.parse(stored);
+                Object.entries(data).forEach(([key, value]) => {
+                    this.calibrationStorage.set(key, value);
+                });
+            }
+        } catch (e) {
+            // localStorage not available or corrupted data — silent fail
         }
     }
 }

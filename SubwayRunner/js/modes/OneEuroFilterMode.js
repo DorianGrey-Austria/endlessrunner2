@@ -11,13 +11,17 @@
 
 import { BaseGestureMode } from './BaseGestureMode.js';
 import { OneEuroFilter } from '../utils/OneEuroFilter.js';
+import { createFaceLandmarker, getDrawingUtils, getConstants } from '../utils/MediaPipeLoader.js';
 
 export class OneEuroFilterMode extends BaseGestureMode {
     constructor(options = {}) {
         super(options);
 
-        // FaceMesh instance
-        this.faceMesh = null;
+        // FaceLandmarker instance (Tasks Vision API)
+        this.faceLandmarker = null;
+        this.drawingUtils = null;
+        this.faceOvalConnections = null;
+        this.faceTessConnections = null;
 
         // One Euro Filters with tuned parameters for gaming
         this.yawFilter = new OneEuroFilter(1.0, 0.007, 1.0);
@@ -67,23 +71,23 @@ export class OneEuroFilterMode extends BaseGestureMode {
     async initialize(video, canvas) {
         await super.initialize(video, canvas);
 
-        // Load MediaPipe FaceMesh
-        if (typeof FaceMesh === 'undefined') {
-            throw new Error('MediaPipe FaceMesh not loaded. Include the CDN scripts.');
-        }
-
-        this.faceMesh = new FaceMesh({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-        });
-
-        this.faceMesh.setOptions({
-            maxNumFaces: 1,
-            refineLandmarks: true,
+        // Load FaceLandmarker via Tasks Vision API (shared WASM singleton)
+        this.onStatusChange('loading', 'Lade Face-Tracking Modell...');
+        this.faceLandmarker = await createFaceLandmarker({
             minDetectionConfidence: 0.7,
             minTrackingConfidence: 0.7
         });
 
-        this.faceMesh.onResults(this.onResults.bind(this));
+        // Load drawing utilities
+        try {
+            const DrawingUtils = await getDrawingUtils();
+            this.drawingUtils = new DrawingUtils(this.ctx);
+            const constants = await getConstants();
+            this.faceOvalConnections = constants.FaceLandmarker.FACE_LANDMARKS_FACE_OVAL;
+            this.faceTessConnections = constants.FaceLandmarker.FACE_LANDMARKS_TESSELATION;
+        } catch (e) {
+            // Drawing is cosmetic, not critical
+        }
 
         this.onStatusChange('initialized', 'One Euro Filter bereit');
     }
@@ -134,19 +138,20 @@ export class OneEuroFilterMode extends BaseGestureMode {
         }
 
         // Cleanup MediaPipe
-        if (this.faceMesh) {
-            this.faceMesh.close();
-            this.faceMesh = null;
+        if (this.faceLandmarker) {
+            this.faceLandmarker.close();
+            this.faceLandmarker = null;
         }
 
         super.destroy();
     }
 
-    async detectLoop() {
+    detectLoop() {
         if (!this.isRunning) return;
 
         if (this.video.readyState >= 2) {
-            await this.faceMesh.send({ image: this.video });
+            const results = this.faceLandmarker.detectForVideo(this.video, performance.now());
+            this.onResults(results);
         }
 
         this.animationId = requestAnimationFrame(() => this.detectLoop());
@@ -169,21 +174,27 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Mirror the image
         this.ctx.translate(this.canvas.width, 0);
         this.ctx.scale(-1, 1);
-        this.ctx.drawImage(results.image, 0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
         this.ctx.restore();
 
-        if (results.multiFaceLandmarks && results.multiFaceLandmarks[0]) {
-            const landmarks = results.multiFaceLandmarks[0];
+        if (results.faceLandmarks && results.faceLandmarks[0]) {
+            const landmarks = results.faceLandmarks[0];
 
-            // Draw face mesh
-            this.ctx.save();
-            this.ctx.translate(this.canvas.width, 0);
-            this.ctx.scale(-1, 1);
-            if (typeof drawConnectors !== 'undefined') {
-                drawConnectors(this.ctx, landmarks, FACEMESH_TESSELATION, { color: '#00ff0030', lineWidth: 0.5 });
-                drawConnectors(this.ctx, landmarks, FACEMESH_FACE_OVAL, { color: '#e94560', lineWidth: 2 });
+            // Draw face mesh overlay
+            if (this.drawingUtils) {
+                this.ctx.save();
+                this.ctx.translate(this.canvas.width, 0);
+                this.ctx.scale(-1, 1);
+                try {
+                    if (this.faceTessConnections) {
+                        this.drawingUtils.drawConnectors(landmarks, this.faceTessConnections, { color: '#00ff0030', lineWidth: 0.5 });
+                    }
+                    if (this.faceOvalConnections) {
+                        this.drawingUtils.drawConnectors(landmarks, this.faceOvalConnections, { color: '#e94560', lineWidth: 2 });
+                    }
+                } catch (e) { /* drawing is cosmetic */ }
+                this.ctx.restore();
             }
-            this.ctx.restore();
 
             // Calculate raw yaw and pitch
             this.rawYaw = this.calculateYaw(landmarks);
