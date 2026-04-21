@@ -1137,12 +1137,13 @@
                 label: 'High Quality',
                 pixelRatio: window.devicePixelRatio || 2.0,
                 antialias: true,
-                shadowMapSize: 2048,
+                shadowMapSize: 4096,
                 shadowMapType: 'PCFSoftShadowMap',
-                objectMultiplier: 1.0,
-                maxPointLights: 10,
-                fogDensity: 1.0,
-                maxSceneObjects: 800
+                objectMultiplier: 1.5,
+                maxPointLights: 12,
+                fogDensity: 0.7,
+                maxSceneObjects: 1200,
+                toneMapping: true
             }
         };
 
@@ -2398,7 +2399,10 @@
             renderer.setClearColor(0x0a0a0f);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE[q.shadowMapType];
-            // Removed tone mapping - can cause issues
+            if (q.toneMapping) {
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.1;
+            }
 
             // Better lighting (SAFE)
             // Ambient light for overall illumination

@@ -28,10 +28,11 @@ lsof -ti:8001 | xargs kill -9 2>/dev/null || true
 npm install                    # Dependencies
 npm run serve                  # Live-server for vanilla version (port 8001)
 npm run dev                    # Vite dev server (port 5173) - React version only
-npm run test                   # Run test-runner.js (validates index.html)
+npm run test                   # Run test-runner.js (validates index.html) — has pretest hook
 npm run test:watch             # Watch mode with nodemon
 npm run build                  # Production build - React version only
 npm run lint                   # ESLint (0 warnings allowed)
+# npm run predeploy            # Runs tests + confirms readiness (used by CI)
 ```
 
 ### Playwright E2E Tests
@@ -44,11 +45,20 @@ npx playwright show-report                             # View HTML report
 ```
 
 ### Deployment
-Auto-deploys on git push to main via GitHub Actions → FTP → Hostinger.
+
+**FTP (ki-revolution.at)**: Auto-deploys on git push to main via GitHub Actions → FTP → Hostinger.
 ```bash
 git add . && git commit -m "VX.Y.Z: description" && git push
 # Live in ~2-3 minutes at ki-revolution.at
 ```
+
+**VPS (endlessrunner.vibecoding.company)**: Manual deploy via rsync + Nginx.
+```bash
+./deploy.sh
+# Deploys SubwayRunner/{index.html,js/,css/} to VPS
+# Live at: https://endlessrunner.vibecoding.company
+```
+Credentials in `.env` (gitignored). VPS-Doku: `~/Desktop/coding/_INFO/deployment/VPS_tips.md`
 
 ### Versioning
 Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for features, MAJOR for breaking changes. Update version in both `index.html` and `package.json`.
@@ -61,7 +71,7 @@ Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for featu
 
 **Production (deployed)**: `SubwayRunner/index.html`
 - Monolithic vanilla JS (~5300 lines) with embedded Three.js
-- Three.js v0.158.0 via CDN, MediaPipe via CDN (gesture control)
+- Three.js v0.158.0 via CDN, MediaPipe Tasks Vision API @0.10.34 (loaded on demand via `js/utils/MediaPipeLoader.js`)
 - Global `gameState` object on `window` (score, lives, level, isPlaying)
 - Supabase SDK intentionally removed to prevent identifier conflicts
 
@@ -78,21 +88,27 @@ External JS modules deployed alongside `index.html`. Loaded as ES6 modules.
 
 **LevelManager** (`js/levels/LevelManager.js`): 10-level progression system. Level 1 is built into base game; Level 2+ registered dynamically via `registerLevel()`. Each level has `load()`, `update()`, `cleanup()` lifecycle.
 
-**Gesture Control Stack**:
+**Gesture Control System** (3 root modules + Strategy Pattern modes):
+
+| Module | Role |
+|--------|------|
+| `GestureManager.js` | Orchestrator — runtime mode switching, Strategy Pattern |
+| `GestureControllerProjector.js` | Primary MediaPipe Tasks Vision API detector (28KB) |
+| `GestureController.js` | Legacy fallback controller |
+
+Mode hierarchy in `js/modes/`:
 ```
-GestureControllerProjector.js  (MediaPipe detection — primary)
-  → BaseGestureMode.js         (abstract base)
-    ├─ BodyPoseMode.js         (pose-based control)
-    ├─ AdaptiveCalibrationMode.js
-    └─ OneEuroFilterMode.js    (smoothed input)
-      → OneEuroFilter.js       (low-latency signal filtering)
+BaseGestureMode.js           (abstract base — all modes extend this)
+  ├─ BodyPoseMode.js         (pose-based body tracking)
+  ├─ AdaptiveCalibrationMode.js (auto-calibrating input)
+  └─ OneEuroFilterMode.js    (smoothed input via OneEuroFilter)
 ```
 
-**Utilities**: `utils/MediaPipeLoader.js` (on-demand MediaPipe Tasks Vision API loader), `utils/OneEuroFilter.js`.
+**Utilities**: `utils/MediaPipeLoader.js` (on-demand MediaPipe Tasks Vision API @0.10.34 loader), `utils/OneEuroFilter.js` (low-latency signal filtering).
 
 **Styles**: `css/gesture-overlay.css` (video canvas overlay, gesture status, debug mode).
 
-Other modules: `GestureController.js` (legacy fallback), `GestureManager.js` (state management), `ui/LevelSelector.js`.
+**UI**: `ui/LevelSelector.js` (level selection interface).
 
 ### Player Controls
 
@@ -106,7 +122,7 @@ Other modules: `GestureController.js` (legacy fallback), `GestureManager.js` (st
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Current production version (V4.3-STABLE-MULTIJUMP) |
+| `index.html` | Current production version (package.json v4.5.10) |
 | `index.html.V4.3-BALANCED.html` | Stable balanced version (rollback target) |
 | `index-v3.6.2-working.html` | Verified working baseline |
 
@@ -212,9 +228,25 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 
 ---
 
+## Workflow Conventions (from CLAUDE_CODE_RULES.md)
+
+- **Auto-deploy after every feature/fix**: `git add . && git commit -m "VX.Y.Z: description" && git push`
+- **Chrome only**: Never use Safari for testing — use Chrome with hard-refresh (Cmd+Shift+R)
+- **60+ FPS**: Performance target for gameplay
+- **Version bumps**: Update in both `index.html` and `package.json`
+
+---
+
 ## Known Issues
 
 - **Safari**: Lower FPS compared to Chrome
 - **Headless Testing**: WebGL context errors are expected in CI (filter in tests)
 - **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see TROUBLESHOOTING.md #11)
 - **Browser Cache**: Different browsers can show different game versions due to cache conflicts — always hard-refresh (Cmd+Shift+R) when testing. Use Chrome, not Safari
+
+---
+
+## Project Context
+
+- **`roadmap.md`** (root): Comprehensive project history (Phases 1-8), current tasks, optimization notes, and branch analysis. Consult for project direction and pending work.
+- **`CLAUDE_CODE_RULES.md`** (root): Deployment and workflow conventions (auto-deploy, Chrome-only testing, versioning). Key rules are summarized in "Workflow Conventions" above.
