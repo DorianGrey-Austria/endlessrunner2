@@ -99,7 +99,7 @@ export class BodyPoseMode extends BaseGestureMode {
         }
 
         this.pose = new Pose({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
         });
 
         this.pose.setOptions({

@@ -73,7 +73,7 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         }
 
         this.faceMesh = new FaceMesh({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`
         });
 
         this.faceMesh.setOptions({
@@ -102,8 +102,12 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
             this.canvas.width = this.video.videoWidth || 640;
             this.canvas.height = this.video.videoHeight || 480;
 
-            // Start calibration immediately
-            this.startCalibration();
+            // Start calibration only if no saved calibration data exists
+            if (this.calibration.samples.length === 0 && this.thresholds.yawLeft === -15) {
+                this.startCalibration();
+            } else {
+                this.onStatusChange('ready', 'Kalibrierung aus Speicher geladen');
+            }
 
             // Start detection loop
             this.detectLoop();
