@@ -177,8 +177,40 @@ initialize(video, canvas) → start() → detectLoop() → stop() → destroy()
 
 ---
 
+## 11. Confidence Filtering
+
+Frames mit unzuverlaessigen Landmarks verwerfen statt rauschen.
+
+### Face-Modi (geometrische Plausibilitaet)
+FaceLandmarker liefert keine zuverlaessige per-Landmark Visibility. Stattdessen: geometrische Checks.
+
+```js
+isFaceConfident(landmarks) {
+    const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+    if (faceWidth < 0.03) return false;        // Gesicht zu klein
+    const faceHeight = chin.y - forehead.y;
+    if (faceHeight < 0.03) return false;        // Gesicht zu flach
+    // Nase muss innerhalb des Gesichts liegen
+    if (noseTip.x outside cheek bounds) return false;
+    return true;
+}
+```
+
+Implementiert in `BaseGestureMode.isFaceConfident()` — beide Face-Modi rufen das vor Yaw/Pitch-Berechnung auf.
+
+### Body-Modus (Landmark Visibility)
+PoseLandmarker liefert `.visibility` (0-1) pro Landmark. Key-Landmarks (Schultern + Hueften) muessen >= 0.6 sein.
+
+```js
+const minVisibility = 0.6;
+const allVisible = [leftShoulder, rightShoulder, leftHip, rightHip]
+    .every(lm => (lm.visibility ?? 1) >= minVisibility);
+if (!allVisible) return; // Frame verwerfen
+```
+
+---
+
 ## Offene Optimierungen (Nice-to-Have)
 
-- **Confidence-basierte Gewichtung:** MediaPipe liefert Landmark-Confidence (0-1). Niedrige Confidence → Ergebnis verwerfen statt rauschen
 - **Adaptive Frame Skipping:** Frame Skip dynamisch anpassen basierend auf GPU-Last (z.B. via `performance.now()` Delta)
 - **WebWorker fuer MediaPipe:** Detection in separatem Thread → kein Main-Thread-Blocking. Komplex wegen Canvas-Zugriff
