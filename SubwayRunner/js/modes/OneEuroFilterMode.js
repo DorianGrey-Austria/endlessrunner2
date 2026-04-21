@@ -23,9 +23,10 @@ export class OneEuroFilterMode extends BaseGestureMode {
         this.faceOvalConnections = null;
         this.faceTessConnections = null;
 
-        // One Euro Filters with tuned parameters for gaming
-        this.yawFilter = new OneEuroFilter(1.0, 0.007, 1.0);
-        this.pitchFilter = new OneEuroFilter(1.0, 0.007, 1.0);
+        // One Euro Filters tuned for fast mobile gaming response
+        // Higher beta = faster response, higher minCutoff = less smoothing at rest
+        this.yawFilter = new OneEuroFilter(1.5, 0.01, 1.0);
+        this.pitchFilter = new OneEuroFilter(1.5, 0.01, 1.0);
 
         // Calibration (simple neutral position)
         this.calibration = {
@@ -50,6 +51,10 @@ export class OneEuroFilterMode extends BaseGestureMode {
 
         // Action cooldown
         this.lastActionTime = 0;
+
+        // Hysteresis — prevents lane flickering at threshold boundaries
+        this.hysteresis = 0.3; // 30% of threshold range
+        this.lastLane = 'center';
 
         // FPS tracking
         this.fps = 0;
@@ -216,14 +221,20 @@ export class OneEuroFilterMode extends BaseGestureMode {
     detectGestures() {
         const now = Date.now();
 
-        // Lane detection (no cooldown - continuous)
+        // Lane detection with hysteresis (prevents flickering)
         let newLane = 'center';
-        if (this.currentYaw < this.thresholds.yawLeft) {
-            newLane = 'left';
-        } else if (this.currentYaw > this.thresholds.yawRight) {
-            newLane = 'right';
+        const hyst = Math.abs(this.thresholds.yawRight - this.thresholds.yawLeft) * this.hysteresis;
+
+        if (this.lastLane === 'left') {
+            newLane = this.currentYaw < (this.thresholds.yawLeft + hyst) ? 'left' : 'center';
+        } else if (this.lastLane === 'right') {
+            newLane = this.currentYaw > (this.thresholds.yawRight - hyst) ? 'right' : 'center';
+        } else {
+            if (this.currentYaw < this.thresholds.yawLeft) newLane = 'left';
+            else if (this.currentYaw > this.thresholds.yawRight) newLane = 'right';
         }
 
+        this.lastLane = newLane;
         this.emitGesture('lane', newLane);
 
         // Action detection (with cooldown)

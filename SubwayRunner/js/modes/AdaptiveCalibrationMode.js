@@ -10,7 +10,7 @@
  */
 
 import { BaseGestureMode } from './BaseGestureMode.js';
-import { SimpleFilter } from '../utils/OneEuroFilter.js';
+import { OneEuroFilter } from '../utils/OneEuroFilter.js';
 import { createFaceLandmarker, getDrawingUtils, getConstants } from '../utils/MediaPipeLoader.js';
 
 export class AdaptiveCalibrationMode extends BaseGestureMode {
@@ -22,9 +22,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         this.drawingUtils = null;
         this.faceConnections = null;
 
-        // Filters
-        this.yawFilter = new SimpleFilter(0.4);
-        this.pitchFilter = new SimpleFilter(0.4);
+        // One Euro Filters (adaptive smoothing — best practice 2026)
+        // minCutoff=1.5 for less lag, beta=0.01 for fast response
+        this.yawFilter = new OneEuroFilter(1.5, 0.01, 1.0);
+        this.pitchFilter = new OneEuroFilter(1.5, 0.01, 1.0);
 
         // Calibration state
         this.calibrationStartTime = 0;
@@ -53,6 +54,15 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         // Current values
         this.currentYaw = 0;
         this.currentPitch = 0;
+
+        // Action cooldowns (prevents jump/duck spam)
+        this.lastActionTime = 0;
+        this.actionCooldownMs = 350;
+
+        // Hysteresis factor — once in a lane, require 30% return toward center to leave
+        // Prevents flickering at threshold boundaries
+        this.hysteresis = 0.3;
+        this.lastLane = 'center';
 
         // Animation frame
         this.animationId = null;
@@ -183,12 +193,13 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
                 this.ctx.restore();
             }
 
-            // Calculate values
+            // Calculate values with One Euro adaptive smoothing
             const rawYaw = this.calculateYaw(landmarks);
             const rawPitch = this.calculatePitch(landmarks);
+            const timestamp = performance.now();
 
-            this.currentYaw = this.yawFilter.filter(rawYaw);
-            this.currentPitch = this.pitchFilter.filter(rawPitch);
+            this.currentYaw = this.yawFilter.filter(rawYaw, timestamp);
+            this.currentPitch = this.pitchFilter.filter(rawPitch, timestamp);
 
             // Handle phases
             if (this.isCalibrating) {
@@ -281,29 +292,46 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
     }
 
     detectGestures() {
-        // Lane detection
-        let newLane = 'center';
         const yaw = this.currentYaw;
+        const pitch = this.currentPitch;
+        const now = Date.now();
 
-        if (yaw < this.thresholds.yawLeft) {
-            newLane = 'left';
-        } else if (yaw > this.thresholds.yawRight) {
-            newLane = 'right';
+        // Lane detection with hysteresis (prevents flickering at threshold)
+        let newLane = 'center';
+        const yawRange = this.thresholds.yawRight - this.thresholds.yawLeft;
+        const hyst = yawRange * this.hysteresis;
+
+        if (this.lastLane === 'left') {
+            // Must cross yawLeft + hysteresis band to return to center
+            newLane = yaw < (this.thresholds.yawLeft + hyst) ? 'left' : 'center';
+        } else if (this.lastLane === 'right') {
+            newLane = yaw > (this.thresholds.yawRight - hyst) ? 'right' : 'center';
+        } else {
+            // From center, must cross full threshold to enter lane
+            if (yaw < this.thresholds.yawLeft) newLane = 'left';
+            else if (yaw > this.thresholds.yawRight) newLane = 'right';
         }
 
+        this.lastLane = newLane;
         this.emitGesture('lane', newLane);
 
-        // Action detection
-        const pitch = this.currentPitch;
-        let newAction = 'none';
+        // Action detection with cooldown (prevents jump/duck spam)
+        if (now - this.lastActionTime > this.actionCooldownMs) {
+            let newAction = 'none';
 
-        if (pitch < this.thresholds.pitchUp) {
-            newAction = 'jump';
-        } else if (pitch > this.thresholds.pitchDown) {
-            newAction = 'duck';
+            if (pitch < this.thresholds.pitchUp) {
+                newAction = 'jump';
+                this.lastActionTime = now;
+            } else if (pitch > this.thresholds.pitchDown) {
+                newAction = 'duck';
+                this.lastActionTime = now;
+            }
+
+            if (newAction !== 'none') {
+                this.emitGesture('action', newAction);
+                setTimeout(() => this.emitGesture('action', 'none'), this.actionCooldownMs);
+            }
         }
-
-        this.emitGesture('action', newAction);
     }
 
     drawHeadIndicator() {
