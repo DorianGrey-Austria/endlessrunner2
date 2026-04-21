@@ -74,6 +74,12 @@ export class BodyPoseMode extends BaseGestureMode {
         this.neutralX = 0.5;       // Center position (normalized 0-1)
         this.isFloorCalibrated = false;
 
+        // Velocity-based jump detection (hybrid — best practice 2026)
+        // Detects upward MOVEMENT, not just absolute position → faster reaction
+        this.prevShoulderY = 0;
+        this.shoulderVelocity = 0;
+        this.velocityJumpThreshold = 0.015; // upward velocity threshold (negative Y = upward)
+
         // Hysteresis for lane detection
         this.lastLane = 'center';
         this.hysteresis = 0.3;
@@ -89,6 +95,10 @@ export class BodyPoseMode extends BaseGestureMode {
 
         // Animation frame
         this.animationId = null;
+
+        // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
+        this.frameSkip = options.frameSkip || 2;
+        this.frameCounter = 0;
     }
 
     get name() {
@@ -126,20 +136,17 @@ export class BodyPoseMode extends BaseGestureMode {
         await super.start();
 
         try {
-            // Request higher resolution for body tracking
+            // 640x480 is sufficient — MediaPipe internally downscales to 256x256
+            // Higher resolutions waste GPU bandwidth without improving detection
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: 'user'
-                }
+                video: { width: 640, height: 480, facingMode: 'user' }
             });
 
             this.video.srcObject = stream;
             await this.video.play();
 
-            this.canvas.width = this.video.videoWidth || 1280;
-            this.canvas.height = this.video.videoHeight || 720;
+            this.canvas.width = this.video.videoWidth || 640;
+            this.canvas.height = this.video.videoHeight || 480;
 
             // Start detection
             this.detectLoop();
@@ -184,7 +191,8 @@ export class BodyPoseMode extends BaseGestureMode {
     detectLoop() {
         if (!this.isRunning) return;
 
-        if (this.video.readyState >= 2) {
+        this.frameCounter++;
+        if (this.frameCounter % this.frameSkip === 0 && this.video.readyState >= 2) {
             const results = this.poseLandmarker.detectForVideo(this.video, performance.now());
             this.onResults(results);
         }
@@ -263,6 +271,10 @@ export class BodyPoseMode extends BaseGestureMode {
         // Torso height (distance from shoulders to hips)
         this.torsoHeight = this.hipY - this.shoulderY;
 
+        // Velocity tracking (negative = upward movement = jumping)
+        this.shoulderVelocity = this.prevShoulderY - this.shoulderY;
+        this.prevShoulderY = this.shoulderY;
+
         // Calibrate normal torso height and center position on first detection
         if (!this.isFloorCalibrated && this.torsoHeight > 0) {
             this.normalTorsoHeight = this.torsoHeight;
@@ -338,11 +350,13 @@ export class BodyPoseMode extends BaseGestureMode {
         const now = Date.now();
         if (now - this.lastJumpTime < this.jumpCooldown) return;
 
-        // Jump detected when shoulders rise significantly above floor
-        // (shoulder Y decreases = higher position)
+        // Hybrid jump detection (best practice 2026):
+        // 1. Position-based: shoulders above floor threshold (reliable but slower)
+        // 2. Velocity-based: rapid upward movement (faster reaction)
         const heightAboveFloor = this.floorLevel - this.shoulderY;
+        const velocityJump = this.shoulderVelocity > this.velocityJumpThreshold;
 
-        if (heightAboveFloor > this.thresholds.jumpThreshold) {
+        if (heightAboveFloor > this.thresholds.jumpThreshold || velocityJump) {
             this.lastJumpTime = now;
             this.emitGesture('action', 'jump');
 
@@ -382,6 +396,8 @@ export class BodyPoseMode extends BaseGestureMode {
         this.normalTorsoHeight = 0;
         this.neutralX = 0.5;
         this.lastLane = 'center';
+        this.prevShoulderY = 0;
+        this.shoulderVelocity = 0;
 
         this.onStatusChange('calibrating', 'Boden wird kalibriert - Steh gerade!');
 
