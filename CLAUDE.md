@@ -10,7 +10,7 @@ Multi-project endless runner game collection. **SubwayRunner** is the actively d
 |---------|-----------|--------|
 | **SubwayRunner** | Vanilla JS + Three.js (monolithic) | PRODUCTION - deployed to ki-revolution.at |
 | SubwayRunner/src/ | React + R3F + Zustand + TypeScript | EXPERIMENTAL - not deployed |
-| EndlessRunner-MVP | Vanilla JS (~11K lines) | Reference implementation |
+| EndlessRunner-MVP | (empty directory) | Historical reference only |
 
 **Live**: https://ki-revolution.at/
 
@@ -46,7 +46,7 @@ npx playwright show-report                             # View HTML report
 ### Deployment
 Auto-deploys on git push to main via GitHub Actions → FTP → Hostinger.
 ```bash
-git add . && git commit -m "🎮 VX.Y.Z: description" && git push
+git add . && git commit -m "VX.Y.Z: description" && git push
 # Live in ~2-3 minutes at ki-revolution.at
 ```
 
@@ -57,31 +57,50 @@ git add . && git commit -m "🎮 VX.Y.Z: description" && git push
 ### Dual Architecture (CRITICAL)
 
 **Production (deployed)**: `SubwayRunner/index.html`
-- Monolithic vanilla JS with embedded Three.js (~12K+ lines)
-- Classes: `GameCore`, `LevelManager`
-- Three.js v0.158.0 via CDN
-- Gesture control via `js/GestureControllerProjector.js` (MediaPipe)
+- Monolithic vanilla JS (~4200 lines) with embedded Three.js
+- Three.js v0.158.0 via CDN, MediaPipe via CDN (gesture control)
+- Global `gameState` object on `window` (score, lives, level, isPlaying)
+- Supabase SDK intentionally removed to prevent identifier conflicts
 
 **Experimental (NOT deployed)**: `SubwayRunner/src/`
-- React + R3F + Zustand + TypeScript
+- React 18 + R3F + Zustand 4.4 + TypeScript
 - Never merged to production pipeline
 - `npm run dev` starts on port 5173
 
-### Production Game Systems (index.html)
+### Module System (`SubwayRunner/js/`)
 
-| System | Description |
-|--------|-------------|
-| `GameCore` | Main game loop, rendering, collision detection |
-| `LevelManager` | Progressive difficulty across 10 levels |
-| `gameState` | Global state object (score, lives, level, isPlaying) |
-| `addScore()` | Centralized score system (fixed throttling) |
+External JS modules deployed alongside `index.html`. Loaded as ES6 modules.
+
+**GameCore** (`js/core/GameCore.js`): Registry pattern — modules register themselves and get initialized in order: `utils → levels → characters → ui → effects`. Late-registered modules auto-initialize.
+
+**LevelManager** (`js/levels/LevelManager.js`): 10-level progression system. Level 1 is built into base game; Level 2+ registered dynamically via `registerLevel()`. Each level has `load()`, `update()`, `cleanup()` lifecycle.
+
+**Gesture Control Stack**:
+```
+GestureControllerProjector.js  (MediaPipe detection — primary)
+  → BaseGestureMode.js         (abstract base)
+    ├─ BodyPoseMode.js         (pose-based control)
+    ├─ AdaptiveCalibrationMode.js
+    └─ OneEuroFilterMode.js    (smoothed input)
+      → OneEuroFilter.js       (low-latency signal filtering)
+```
+
+Other modules: `GestureController.js` (legacy fallback), `GestureManager.js` (state management), `ui/LevelSelector.js`.
+
+### Player Controls
+
+| Action | Keys |
+|--------|------|
+| Lane switch | A/D or Arrow Left/Right |
+| Jump | W or Space |
+| Duck | S or Arrow Down |
 
 ### Version Files
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Current production version |
-| `index.html.V4.3-BALANCED.html` | Stable balanced version |
+| `index.html` | Current production version (V4.3-STABLE-MULTIJUMP) |
+| `index.html.V4.3-BALANCED.html` | Stable balanced version (rollback target) |
 | `index-v3.6.2-working.html` | Verified working baseline |
 
 ---
@@ -91,8 +110,9 @@ git add . && git commit -m "🎮 VX.Y.Z: description" && git push
 **GitHub Actions** (`.github/workflows/hostinger-deploy.yml`):
 1. Copies `SubwayRunner/index.html` → `deploy/index.html`
 2. Copies `SubwayRunner/js/` → `deploy/js/`
-3. Generates `.htaccess` (HTTPS, compression, caching, CSP headers)
-4. FTP uploads to Hostinger root
+3. Copies `SubwayRunner/css/` → `deploy/css/`
+4. Generates `.htaccess` (HTTPS, compression, caching, CSP headers)
+5. FTP uploads to Hostinger root
 
 **Required Secrets**: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
 
@@ -105,21 +125,28 @@ git add . && git commit -m "🎮 VX.Y.Z: description" && git push
 | Test | Checks |
 |------|--------|
 | Syntax | Balanced braces, closed tags, Three.js CDN, GameCore presence |
-| Structure | Level definitions, `checkLevelTransition`, essential functions |
+| Structure | Level definitions, `checkLevelTransition`, essential functions (`startGame`, `gameLoop`, `updateUI`, `checkCollisions`) |
 | Performance | File size <1MB, line count <20K |
 | Game Logic | `gameState.score`, `addScore`, collision detection |
+
+Outputs `pre-deployment-report.json`.
 
 ### Playwright E2E Tests (`tests/e2e/`)
 
 | Test File | Purpose |
 |-----------|---------|
 | `game-start-health.spec.js` | Canvas/WebGL verification, startup errors, 404 detection |
+| `game-startup-critical.spec.js` | Critical startup validation |
+| `game-stability.spec.js` | FPS and memory stability |
 | `sound-system.spec.js` | Audio system validation |
-| `intelligent-gameplay.spec.js` | Reaktives Gameplay mit Hindernis-Detection |
+| `intelligent-gameplay.spec.js` | Reactive gameplay with obstacle detection |
 | `full-game-cycle.spec.js` | Start → Play → Game Over → Highscore → Restart |
-| `multi-round-stability.spec.js` | Memory Leak Detection, 3 Spiele hintereinander |
+| `multi-round-stability.spec.js` | Memory leak detection, 3 consecutive games |
+| `quick-supabase-check.spec.js` | Database integration check |
 
-**Test Strategy**: Siehe `_INFO/TESTSTRATEGY.md` für zentrale Game Testing Best Practices.
+**Test utilities** in `tests/utils/`: `game-test-utils.js` (WebGL error filtering, shared helpers), `gameplay-simulator.js`, `obstacle-detector.js`
+
+**Playwright config** (`playwright.config.cjs`): Auto-starts `live-server` on port 8001, 60s timeout, single worker (sequential), headless Chromium at 1280x720, 100ms slowMo. Reports to `tests/playwright-report/`.
 
 **Critical**: E2E tests use 5-second settle time for 3D rendering stabilization.
 
@@ -143,7 +170,7 @@ ls SubwayRunner/*.backup SubwayRunner/*.V4.3-*.html
 
 # Restore and deploy
 cp SubwayRunner/index.html.V4.3-BALANCED.html SubwayRunner/index.html
-git add . && git commit -m "🚨 ROLLBACK to V4.3" && git push
+git add . && git commit -m "ROLLBACK to V4.3" && git push
 ```
 
 ---
@@ -181,3 +208,4 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 - **Safari**: Lower FPS compared to Chrome
 - **Headless Testing**: WebGL context errors are expected in CI (filter in tests)
 - **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see TROUBLESHOOTING.md #11)
+- **Browser Cache**: Different browsers can show different game versions due to cache conflicts — always hard-refresh when testing
