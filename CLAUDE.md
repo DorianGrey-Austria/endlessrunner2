@@ -92,19 +92,25 @@ External JS modules deployed alongside `index.html`. Loaded as ES6 modules.
 
 | Module | Role |
 |--------|------|
-| `GestureManager.js` | Orchestrator — runtime mode switching, Strategy Pattern |
-| `GestureControllerProjector.js` | Primary MediaPipe Tasks Vision API detector (28KB) |
+| `GestureManager.js` | Orchestrator — runtime mode switching, calibration persistence via localStorage |
+| `GestureControllerProjector.js` | Legacy projector controller with Kalman filter (28KB, separate system) |
 | `GestureController.js` | Legacy fallback controller |
 
-Mode hierarchy in `js/modes/`:
+Mode hierarchy in `js/modes/` (all optimized to April 2026 best practices):
 ```
-BaseGestureMode.js           (abstract base — all modes extend this)
-  ├─ BodyPoseMode.js         (pose-based body tracking)
-  ├─ AdaptiveCalibrationMode.js (auto-calibrating input)
-  └─ OneEuroFilterMode.js    (smoothed input via OneEuroFilter)
+BaseGestureMode.js               (abstract base + isFaceConfident() + calculateYaw/Pitch)
+  ├─ AdaptiveCalibrationMode.js  (DEFAULT — 5s range learning, 45% sensitivity)
+  ├─ OneEuroFilterMode.js        (fast mobile — 1.5s neutral snapshot)
+  └─ BodyPoseMode.js             (TV/Beamer — real jumping/ducking at 2-4m)
 ```
 
-**Utilities**: `utils/MediaPipeLoader.js` (on-demand MediaPipe Tasks Vision API @0.10.34 loader), `utils/OneEuroFilter.js` (low-latency signal filtering).
+All modes share: One Euro / Kalman filtering, dead zone (2°), hysteresis (30%), frame skipping (every 2nd frame), action cooldowns (300-400ms), confidence filtering, face/body-lost tracking.
+
+**BodyPoseMode specifics**: Lean + Walk dual-lane detection, hybrid velocity+position jump detection (EMA-smoothed), floor calibration (15 frames, top-5 average), neutralX tracking.
+
+**Reference**: `bestPractice_gestensteuerung.md` — complete documentation of all gesture best practices.
+
+**Utilities**: `utils/MediaPipeLoader.js` (shared WASM singleton for MediaPipe Tasks Vision @0.10.34), `utils/OneEuroFilter.js` (adaptive signal filtering).
 
 **Styles**: `css/gesture-overlay.css` (video canvas overlay, gesture status, debug mode).
 
@@ -248,5 +254,7 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 
 ## Project Context
 
-- **`roadmap.md`** (root): Comprehensive project history (Phases 1-8), current tasks, optimization notes, and branch analysis. Consult for project direction and pending work.
-- **`CLAUDE_CODE_RULES.md`** (root): Deployment and workflow conventions (auto-deploy, Chrome-only testing, versioning). Key rules are summarized in "Workflow Conventions" above.
+- **`roadmap.md`** (root): Project history (Phases 1-9), current tasks, branch analysis. Phase 9 = gesture optimization session (April 2026).
+- **`bestPractice_gestensteuerung.md`** (root): Complete gesture control best practices — 11 chapters covering MediaPipe setup, filtering, dead zones, hysteresis, calibration, frame skipping, confidence filtering.
+- **`troubleshooting.md`** (root): Known issues and solutions (INF-001 through INF-015). INF-013/14/15 = gesture-specific bugs found and fixed.
+- **`CLAUDE_CODE_RULES.md`** (root): Deployment and workflow conventions. Key rules summarized in "Workflow Conventions" above.
