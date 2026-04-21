@@ -4743,6 +4743,82 @@
             }
         }
 
+        // Device detection for auto-selecting gesture mode
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+        }
+
+        // Start-screen gesture mode selection (called from menu buttons)
+        window.selectGestureAndStart = async function(controlType) {
+            console.log('selectGestureAndStart:', controlType);
+            try {
+                // Determine mode
+                let mode;
+                if (controlType === 'head') {
+                    mode = isMobileDevice() ? 'oneEuro' : 'adaptive';
+                } else if (controlType === 'body') {
+                    mode = 'bodyPose';
+                }
+
+                // Load GestureManager
+                const loadResult = await loadGestureManager();
+                if (!loadResult || loadResult === 'fallback') {
+                    alert('Gestensteuerung konnte nicht geladen werden. Starte mit Tastatur...');
+                    startGameInternal();
+                    return;
+                }
+
+                // Initialize GestureManager with chosen mode
+                if (!gestureManager && window.GestureManager) {
+                    gestureManager = new window.GestureManager({
+                        defaultMode: mode,
+                        video: document.getElementById('gestureVideo'),
+                        canvas: gestureCanvas,
+                        onGestureDetected: handleGestureEvent,
+                        onModeChange: (modeKey, modeName) => {
+                            if (gestureModeText) gestureModeText.textContent = modeName;
+                            if (gestureModeSelect) gestureModeSelect.value = modeKey;
+                        },
+                        onStatusChange: (status, message) => {
+                            if (gestureStatusText) gestureStatusText.textContent = message;
+                        },
+                        onCalibrationProgress: (progress, step) => {
+                            if (calibrationProgress) {
+                                calibrationProgress.classList.add('active');
+                                calibrationProgressFill.style.width = (progress * 100) + '%';
+                                if (progress >= 1) {
+                                    setTimeout(() => calibrationProgress.classList.remove('active'), 1000);
+                                }
+                            }
+                        },
+                        onError: handleGestureError
+                    });
+                }
+
+                await gestureManager.start();
+                gestureEnabled = true;
+                currentGestureMode = mode;
+
+                // Update UI
+                if (gestureBtn) {
+                    gestureBtn.textContent = 'Gestensteuerung stoppen';
+                    gestureBtn.classList.add('active');
+                }
+                if (gestureCanvas) gestureCanvas.classList.add('active');
+                if (gestureStatus) gestureStatus.classList.add('active');
+                if (gestureModeSelector) gestureModeSelector.classList.add('active');
+                if (gestureStatusText) gestureStatusText.textContent = 'Aktiv';
+
+                // Start the game
+                startGameInternal();
+            } catch (error) {
+                console.error('Gesture start failed:', error);
+                alert('Kamera-Zugriff fehlgeschlagen: ' + error.message + '\n\nStarte mit Tastatur...');
+                startGameInternal();
+            }
+        };
+
         // Initialize gesture control button
         if (gestureBtn) {
             console.log('🎮 Gesture Control Button found!');
