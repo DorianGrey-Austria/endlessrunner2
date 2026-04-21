@@ -69,8 +69,9 @@
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             z-index: 100;
+            display: none;
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -80,6 +81,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
             text-align: right;
             z-index: 100;
+            display: none;
         }
         
         #menu {
@@ -87,33 +89,158 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(10, 10, 20, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             color: white;
-            padding: 40px;
-            border-radius: 16px;
+            padding: 36px 32px 28px;
+            border-radius: 20px;
             text-align: center;
             z-index: 200;
-            min-width: 300px;
+            min-width: 340px;
+            max-width: 420px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
         }
-        
+
         #menu h1 {
-            margin-bottom: 20px;
-            font-size: 32px;
+            margin: 0 0 4px;
+            font-size: 28px;
+            letter-spacing: -0.5px;
         }
-        
-        #menu button {
-            background: #4CAF50;
+
+        #menu .menu-subtitle {
+            color: #f0c040;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 16px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #menu .menu-info {
+            font-size: 13px;
+            color: #aab;
+            margin: 0 0 6px;
+            line-height: 1.5;
+        }
+
+        #menu .menu-section {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        #menu .menu-section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #667;
+            margin: 0 0 10px;
+        }
+
+        #menu .start-btn {
+            display: block;
+            width: 100%;
+            font-size: 20px;
+            padding: 14px 0;
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 18px;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-top: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
         }
-        
-        #menu button:hover {
-            background: #45a049;
+
+        #menu .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(76, 175, 80, 0.45);
+        }
+
+        #menu .start-btn:active {
+            transform: translateY(0);
+        }
+
+        #menu .gesture-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #menu .gesture-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s, border-color 0.15s, transform 0.15s;
+        }
+
+        #menu .gesture-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+        #menu .gesture-btn .gesture-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #menu .gesture-btn .gesture-label {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        #menu .gesture-btn .gesture-desc {
+            font-size: 10px;
+            color: #889;
+            margin-top: 2px;
+        }
+
+        #menu .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        #menu .toggle-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: #aab;
+            padding: 6px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #menu .toggle-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        #menu .toggle-btn.active {
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        #menu .controls-hint {
+            font-size: 11px;
+            color: #556;
+            margin: 12px 0 0;
         }
         
         #timer {
@@ -126,7 +253,7 @@
             top: 20px !important;
             right: 20px !important;
             z-index: 9999 !important;
-            display: block !important;
+            display: none;
         }
         
         #gestureControlBtn {
@@ -390,17 +517,36 @@
         <canvas id="gestureCanvas"></canvas>
         
         <div id="menu">
-            <h1>🚇 Subway Runner 3D</h1>
-            <h2>⏱️ 60-Sekunden Challenge!</h2>
-            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
-            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
-            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel | W/Space: Springen (bis zu 4x!) | S: Ducken</p>
-            <button onclick="startGame()" style="font-size: 24px; padding: 15px 30px; margin-top: 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                🎮 SPIEL STARTEN
-            </button>
-            <p style="margin-top: 10px; color: #888;">Multi-Jump: Springe bis zu 4x in der Luft!</p>
+            <h1>Subway Runner 3D</h1>
+            <p class="menu-subtitle">60-Sekunden Challenge</p>
+
+            <p class="menu-info">Ueberlebe 60 Sekunden — die Geschwindigkeit steigt immer weiter!</p>
+
+            <button class="start-btn" onclick="startGame()">SPIEL STARTEN</button>
+
+            <div class="settings-row">
+                <button class="toggle-btn active" id="soundToggleBtn" onclick="toggleSound()">
+                    <span id="soundIcon">&#x1f50a;</span> Sound
+                </button>
+            </div>
+
+            <div class="menu-section">
+                <p class="menu-section-label">Gestensteuerung</p>
+                <div class="gesture-btns">
+                    <button class="gesture-btn" onclick="selectGestureAndStart('head')">
+                        <span class="gesture-icon">&#x1f9e0;</span>
+                        <span class="gesture-label">Kopf</span>
+                        <div class="gesture-desc">Kopf neigen</div>
+                    </button>
+                    <button class="gesture-btn" onclick="selectGestureAndStart('body')">
+                        <span class="gesture-icon">&#x1f3c3;</span>
+                        <span class="gesture-label">Koerper</span>
+                        <div class="gesture-desc">Springen + Ducken</div>
+                    </button>
+                </div>
+            </div>
+
+            <p class="controls-hint">Tastatur: A/D Spur &middot; W/Space Springen (4x!) &middot; S Ducken</p>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -698,11 +844,26 @@
                     this.audioContext.resume();
                 }
             }
+
+            mute() {
+                if (this.masterGain) {
+                    this.masterGain.gain.value = 0;
+                }
+                this.isMuted = true;
+            }
+
+            unmute() {
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.masterVolume;
+                }
+                this.isMuted = false;
+            }
         }
 
         const audioManager = new AudioManager();
         audioManager.ambientPlaying = false;
-        
+        audioManager.isMuted = false;
+
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
 
@@ -812,6 +973,20 @@
         const highscoreManager = new HighscoreManager();
 
         // Make functions globally available for onclick handlers
+        window.toggleSound = function() {
+            const btn = document.getElementById('soundToggleBtn');
+            const icon = document.getElementById('soundIcon');
+            if (audioManager.isMuted) {
+                audioManager.unmute();
+                btn.classList.add('active');
+                icon.textContent = '\u{1F50A}';
+            } else {
+                audioManager.mute();
+                btn.classList.remove('active');
+                icon.textContent = '\u{1F507}';
+            }
+        };
+
         window.startGame = function() {
             console.log('startGame called');
             try {
@@ -1024,33 +1199,97 @@
             }
         };
 
-        // ==================== LEVEL DEFINITIONS ====================
-        
-        // Level 1: Classic Subway
+        // ==================== LEVEL DEFINITIONS (V2 — Optimized) ====================
+        // Shared dispose helper for all levels — prevents memory leaks
+        function disposeLevelObjects(objects) {
+            Object.keys(objects).forEach(key => {
+                const arr = objects[key];
+                if (Array.isArray(arr)) {
+                    arr.forEach(obj => {
+                        if (!obj) return;
+                        if (obj.parent) obj.parent.remove(obj);
+                        if (obj.traverse) obj.traverse(child => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                                else child.material.dispose();
+                            }
+                        });
+                        if (obj.geometry) obj.geometry.dispose();
+                        if (obj.material) {
+                            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+                            else obj.material.dispose();
+                        }
+                    });
+                    objects[key] = [];
+                } else if (arr) {
+                    if (arr.parent) arr.parent.remove(arr);
+                    if (arr.geometry) arr.geometry.dispose();
+                    if (arr.material) arr.material.dispose();
+                    objects[key] = null;
+                }
+            });
+        }
+
+        // Level 1: Classic Subway — Enhanced with tunnel lights and pipes
         const Level1 = {
             id: 1,
             name: "Classic Subway",
             description: "Classic underground subway environment",
             fogColor: 0x222222,
             fogDensity: 0.015,
-            
+            objects: { lights: [], pipes: [] },
+
             load: function(scene, renderer) {
-                console.log('🚇 Loading Level 1: Subway Tunnel');
-                
-                // Set fog and background
+                console.log('Loading Level 1: Subway Tunnel');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
-                
-                // Level 1 uses existing environment (buildings, street lamps, etc.)
-                // No additional setup needed as it's the default
+
+                // Tunnel ceiling pipes (shared geometry)
+                const pipeGeo = new THREE.CylinderGeometry(0.08, 0.08, 40, 6);
+                const pipeMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+                for (let i = 0; i < 6; i++) {
+                    const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                    pipe.rotation.x = Math.PI / 2;
+                    pipe.position.set(-4 + i * 1.6, 6.5, -20);
+                    scene.add(pipe);
+                    this.objects.pipes.push(pipe);
+                    LevelManager.addLevelObject(pipe);
+                }
+
+                // Flickering tunnel strip lights (shared geometry, no PointLights)
+                const lightGeo = new THREE.BoxGeometry(0.8, 0.1, 0.15);
+                const lightMat = new THREE.MeshBasicMaterial({ color: 0xFFEECC });
+                for (let i = 0; i < 15; i++) {
+                    const light = new THREE.Mesh(lightGeo, lightMat);
+                    light.position.set(0, 6.2, -i * 12);
+                    light.userData.flicker = Math.random() * Math.PI * 2;
+                    scene.add(light);
+                    this.objects.lights.push(light);
+                    LevelManager.addLevelObject(light);
+                }
+
+                // Single warm ambient light for tunnel feel
+                const tunnelLight = new THREE.DirectionalLight(0xFFDDAA, 0.3);
+                tunnelLight.position.set(0, 8, -10);
+                scene.add(tunnelLight);
+                LevelManager.addLevelObject(tunnelLight);
             },
-            
+
             update: function(deltaTime) {
-                // Level 1 has no special updates
+                // Flicker tunnel lights
+                this.objects.lights.forEach(light => {
+                    light.material.opacity = 0.7 + Math.sin(Date.now() * 0.005 + light.userData.flicker) * 0.3;
+                });
+                // Move pipes forward for parallax
+                this.objects.pipes.forEach(pipe => {
+                    pipe.position.z += gameState.speed * 0.3;
+                    if (pipe.position.z > 10) pipe.position.z -= 40;
+                });
             },
-            
+
             cleanup: function() {
-                // Level 1 doesn't need special cleanup
+                try { disposeLevelObjects(this.objects); } catch(e) { console.error('L1 cleanup:', e); }
             }
         };
 
@@ -1156,42 +1395,10 @@
             },
             
             cleanup: function() {
-                try {
-                    console.log('Neon level cleanup started');
-                    
-                    // Clear level objects safely with full error handling
-                    if (this.objects) {
-                        // Safe cleanup of arrays
-                        ['cyberpunkBuildings', 'neonLights'].forEach(key => {
-                            if (this.objects[key] && Array.isArray(this.objects[key])) {
-                                this.objects[key].forEach(obj => {
-                                    if (obj && obj.parent) {
-                                        try { scene.remove(obj); } catch(e) {}
-                                    }
-                                });
-                                this.objects[key] = [];
-                            }
-                        });
-                        
-                        // Safe cleanup of single objects
-                        if (this.objects.gridFloor) {
-                            try {
-                                if (this.objects.gridFloor.parent) {
-                                    scene.remove(this.objects.gridFloor);
-                                }
-                            } catch(e) {}
-                            this.objects.gridFloor = null;
-                        }
-                    }
-                    console.log('Neon level cleanup completed');
-                } catch (error) {
-                    console.error('Error during cleanup, but continuing:', error);
-                    // Game continues even if cleanup fails
-                }
+                try { disposeLevelObjects(this.objects); } catch(e) { console.error('L2 cleanup:', e); }
             }
         };
 
-        // Level 3: Sky High
         const Level3 = {
             id: 3,
             name: "Sky High",
@@ -1201,10 +1408,11 @@
             objects: { clouds: [], birds: [], windParticles: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 3: Sky High');
+                console.log('☁️ Loading Level 3: Sky High');
                 scene.fog = new THREE.Fog(this.fogColor, 10, 180);
                 renderer.setClearColor(this.fogColor);
 
+                // Floating clouds
                 for (let i = 0; i < 25; i++) {
                     const cloud = new THREE.Group();
                     for (let j = 0; j < 5; j++) {
@@ -1221,6 +1429,7 @@
                     LevelManager.addLevelObject(cloud);
                 }
 
+                // Sun
                 const sun = new THREE.Mesh(
                     new THREE.SphereGeometry(8, 16, 16),
                     new THREE.MeshBasicMaterial({ color: 0xFFDD44, emissive: 0xFFDD44 })
@@ -1233,11 +1442,18 @@
                 scene.add(sunLight);
                 LevelManager.addLevelObject(sunLight);
 
+                // SPECIAL EFFECTS: Flying birds
                 for (let i = 0; i < 12; i++) {
                     const bird = new THREE.Group();
-                    const wing1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.2), new THREE.MeshLambertMaterial({ color: 0x333333 }));
+                    const wing1 = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.5, 0.05, 0.2),
+                        new THREE.MeshLambertMaterial({ color: 0x333333 })
+                    );
                     wing1.position.x = -0.25;
-                    const wing2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.2), new THREE.MeshLambertMaterial({ color: 0x333333 }));
+                    const wing2 = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.5, 0.05, 0.2),
+                        new THREE.MeshLambertMaterial({ color: 0x333333 })
+                    );
                     wing2.position.x = 0.25;
                     bird.add(wing1, wing2);
                     bird.position.set(-20 + Math.random() * 40, 8 + Math.random() * 10, -i * 15 - 20);
@@ -1248,6 +1464,7 @@
                     LevelManager.addLevelObject(bird);
                 }
 
+                // SPECIAL EFFECTS: Wind particles
                 for (let i = 0; i < 30; i++) {
                     const particle = new THREE.Mesh(
                         new THREE.BoxGeometry(0.3, 0.03, 0.03),
@@ -1262,15 +1479,22 @@
             },
 
             update: function(deltaTime) {
+                // Clouds drift slowly
                 this.objects.clouds.forEach(cloud => {
                     cloud.position.x += Math.sin(Date.now() * 0.0003) * 0.01;
                     cloud.position.y += Math.cos(Date.now() * 0.0005) * 0.005;
                 });
+
+                // Animate birds
                 this.objects.birds.forEach(bird => {
                     bird.position.x += Math.sin(bird.userData.wingPhase) * 0.05;
                     bird.userData.wingPhase += 0.1;
-                    bird.children.forEach((wing, i) => { wing.rotation.z = Math.sin(Date.now() * 0.01 + i * Math.PI) * 0.3; });
+                    bird.children.forEach((wing, i) => {
+                        wing.rotation.z = Math.sin(Date.now() * 0.01 + i * Math.PI) * 0.3;
+                    });
                 });
+
+                // Animate wind particles
                 this.objects.windParticles.forEach(particle => {
                     particle.position.x += particle.userData.velocity;
                     if (particle.position.x > 30) particle.position.x = -30;
@@ -1278,8 +1502,9 @@
             },
 
             cleanup: function() {
-                try { ['clouds', 'birds', 'windParticles'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 3 cleanup error:', error); }
+                ['clouds', 'birds', 'windParticles'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1293,10 +1518,11 @@
             objects: { seaweed: [], fish: [], corals: [], bubbles: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 4: Underwater Depths');
+                console.log('🌊 Loading Level 4: Underwater Depths');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
+                // Seaweed forests
                 for (let i = 0; i < 30; i++) {
                     const seaweed = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.1, 0.15, 3 + Math.random() * 2, 6),
@@ -1308,6 +1534,7 @@
                     LevelManager.addLevelObject(seaweed);
                 }
 
+                // Coral reefs
                 for (let i = 0; i < 15; i++) {
                     const coral = new THREE.Mesh(
                         new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.5, 0),
@@ -1319,11 +1546,13 @@
                     LevelManager.addLevelObject(coral);
                 }
 
+                // Caustic lighting
                 const waterLight = new THREE.DirectionalLight(0x00CCFF, 0.3);
                 waterLight.position.set(0, 10, 0);
                 scene.add(waterLight);
                 LevelManager.addLevelObject(waterLight);
 
+                // SPECIAL EFFECTS: Bubble streams
                 for (let i = 0; i < 20; i++) {
                     const bubbleGroup = new THREE.Group();
                     for (let j = 0; j < 10; j++) {
@@ -1344,9 +1573,14 @@
             },
 
             update: function(deltaTime) {
-                this.objects.seaweed.forEach((weed, i) => { weed.rotation.z = Math.sin(Date.now() * 0.001 + i) * 0.15; });
+                // Swaying seaweed
+                this.objects.seaweed.forEach((weed, i) => {
+                    weed.rotation.z = Math.sin(Date.now() * 0.001 + i) * 0.15;
+                });
+
+                // Animate bubbles
                 this.objects.bubbles.forEach(bubbleGroup => {
-                    bubbleGroup.children.forEach(bubble => {
+                    bubbleGroup.children.forEach((bubble, i) => {
                         bubble.position.y += bubble.userData.speed;
                         bubble.userData.wobble += 0.05;
                         bubble.position.x = Math.sin(bubble.userData.wobble) * 0.2;
@@ -1356,8 +1590,9 @@
             },
 
             cleanup: function() {
-                try { ['seaweed', 'fish', 'corals', 'bubbles'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 4 cleanup error:', error); }
+                ['seaweed', 'fish', 'corals', 'bubbles'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1371,10 +1606,11 @@
             objects: { rocks: [], lava: [], embers: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 5: Volcanic Eruption');
+                console.log('🌋 Loading Level 5: Volcanic Eruption');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
+                // Volcanic rocks
                 for (let i = 0; i < 25; i++) {
                     const rock = new THREE.Mesh(
                         new THREE.DodecahedronGeometry(1 + Math.random() * 2, 0),
@@ -1387,6 +1623,7 @@
                     LevelManager.addLevelObject(rock);
                 }
 
+                // Lava pools (glowing ground areas)
                 for (let i = 0; i < 12; i++) {
                     const lavaPool = new THREE.Mesh(
                         new THREE.CircleGeometry(2 + Math.random(), 8),
@@ -1399,11 +1636,13 @@
                     LevelManager.addLevelObject(lavaPool);
                 }
 
+                // Lava glow
                 const lavaLight = new THREE.PointLight(0xFF6600, 1.5, 40);
                 lavaLight.position.set(0, 2, -20);
                 scene.add(lavaLight);
                 LevelManager.addLevelObject(lavaLight);
 
+                // Ember particles
                 for (let i = 0; i < 25; i++) {
                     const ember = new THREE.Mesh(
                         new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 6, 6),
@@ -1418,9 +1657,13 @@
             },
 
             update: function(deltaTime) {
+                // Pulsing lava
                 this.objects.lava.forEach((pool, i) => {
-                    if (pool.material) pool.material.emissiveIntensity = 0.7 + Math.sin(Date.now() * 0.003 + i) * 0.3;
+                    if (pool.material) {
+                        pool.material.emissiveIntensity = 0.7 + Math.sin(Date.now() * 0.003 + i) * 0.3;
+                    }
                 });
+                // Rising embers
                 this.objects.embers.forEach(ember => {
                     ember.position.y += ember.userData.velocity;
                     ember.position.x += Math.sin(Date.now() * 0.001 + ember.userData.wobble) * 0.02;
@@ -1429,8 +1672,9 @@
             },
 
             cleanup: function() {
-                try { ['rocks', 'lava', 'embers'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 5 cleanup error:', error); }
+                ['rocks', 'lava', 'embers'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1444,14 +1688,21 @@
             objects: { ice: [], crystals: [], icicles: [], snowflakes: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 6: Arctic Aurora');
+                console.log('❄️ Loading Level 6: Arctic Aurora');
                 scene.fog = new THREE.Fog(this.fogColor, 10, 140);
                 renderer.setClearColor(this.fogColor);
 
+                // Ice crystals
                 for (let i = 0; i < 30; i++) {
                     const crystal = new THREE.Mesh(
                         new THREE.OctahedronGeometry(0.5 + Math.random() * 0.8, 0),
-                        new THREE.MeshLambertMaterial({ color: 0xAADDFF, transparent: true, opacity: 0.7, emissive: 0x5588FF, emissiveIntensity: 0.3 })
+                        new THREE.MeshLambertMaterial({
+                            color: 0xAADDFF,
+                            transparent: true,
+                            opacity: 0.7,
+                            emissive: 0x5588FF,
+                            emissiveIntensity: 0.3
+                        })
                     );
                     crystal.position.set(-10 + Math.random() * 20, 0.5 + Math.random() * 2, -i * 5);
                     crystal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
@@ -1460,6 +1711,7 @@
                     LevelManager.addLevelObject(crystal);
                 }
 
+                // Icicles from ceiling
                 for (let i = 0; i < 20; i++) {
                     const icicle = new THREE.Mesh(
                         new THREE.ConeGeometry(0.2, 2 + Math.random(), 6),
@@ -1472,15 +1724,18 @@
                     LevelManager.addLevelObject(icicle);
                 }
 
+                // Aurora lights
                 const auroraLight1 = new THREE.DirectionalLight(0x00FFAA, 0.4);
                 auroraLight1.position.set(-10, 10, -20);
                 scene.add(auroraLight1);
                 LevelManager.addLevelObject(auroraLight1);
+
                 const auroraLight2 = new THREE.DirectionalLight(0xFF00AA, 0.3);
                 auroraLight2.position.set(10, 10, -40);
                 scene.add(auroraLight2);
                 LevelManager.addLevelObject(auroraLight2);
 
+                // Snowflake particles
                 for (let i = 0; i < 40; i++) {
                     const snowflake = new THREE.Mesh(
                         new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 6, 6),
@@ -1495,7 +1750,11 @@
             },
 
             update: function(deltaTime) {
-                this.objects.crystals.forEach(crystal => { crystal.rotation.y += 0.01; });
+                // Rotating crystals
+                this.objects.crystals.forEach(crystal => {
+                    crystal.rotation.y += 0.01;
+                });
+                // Falling snowflakes
                 this.objects.snowflakes.forEach(snowflake => {
                     snowflake.position.y -= snowflake.userData.velocity;
                     snowflake.position.x += Math.sin(Date.now() * 0.001 + snowflake.userData.drift) * 0.015;
@@ -1504,8 +1763,9 @@
             },
 
             cleanup: function() {
-                try { ['ice', 'crystals', 'icicles', 'snowflakes'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 6 cleanup error:', error); }
+                ['ice', 'crystals', 'icicles', 'snowflakes'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1519,24 +1779,34 @@
             objects: { trees: [], ruins: [], vines: [], fireflies: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 7: Jungle Temple');
+                console.log('🌴 Loading Level 7: Jungle Temple');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
+                // Jungle trees
                 for (let i = 0; i < 20; i++) {
                     const tree = new THREE.Group();
-                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 5, 8), new THREE.MeshLambertMaterial({ color: 0x8B4513 }));
+                    const trunk = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.3, 0.4, 5, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+                    );
                     trunk.position.y = 2.5;
                     tree.add(trunk);
-                    const leaves = new THREE.Mesh(new THREE.SphereGeometry(2, 8, 8), new THREE.MeshLambertMaterial({ color: 0x228B22, emissive: 0x001100 }));
+
+                    const leaves = new THREE.Mesh(
+                        new THREE.SphereGeometry(2, 8, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x228B22, emissive: 0x001100 })
+                    );
                     leaves.position.y = 5.5;
                     tree.add(leaves);
+
                     tree.position.set(-12 + Math.random() * 24, 0, -i * 8);
                     scene.add(tree);
                     this.objects.trees.push(tree);
                     LevelManager.addLevelObject(tree);
                 }
 
+                // Temple ruins
                 for (let i = 0; i < 8; i++) {
                     const ruin = new THREE.Mesh(
                         new THREE.BoxGeometry(2, 3 + Math.random() * 2, 2),
@@ -1549,11 +1819,13 @@
                     LevelManager.addLevelObject(ruin);
                 }
 
+                // Jungle lighting
                 const sunLight = new THREE.DirectionalLight(0xFFDD88, 0.5);
                 sunLight.position.set(5, 10, 5);
                 scene.add(sunLight);
                 LevelManager.addLevelObject(sunLight);
 
+                // Firefly particles
                 for (let i = 0; i < 20; i++) {
                     const firefly = new THREE.Mesh(
                         new THREE.SphereGeometry(0.08, 6, 6),
@@ -1568,7 +1840,11 @@
             },
 
             update: function(deltaTime) {
-                this.objects.trees.forEach((tree, i) => { tree.rotation.z = Math.sin(Date.now() * 0.0008 + i) * 0.05; });
+                // Subtle tree sway
+                this.objects.trees.forEach((tree, i) => {
+                    tree.rotation.z = Math.sin(Date.now() * 0.0008 + i) * 0.05;
+                });
+                // Firefly movement and glow
                 this.objects.fireflies.forEach(firefly => {
                     const time = Date.now() * 0.001;
                     firefly.position.x += Math.sin(time * firefly.userData.speed + firefly.userData.phase) * 0.01;
@@ -1578,8 +1854,9 @@
             },
 
             cleanup: function() {
-                try { ['trees', 'ruins', 'vines', 'fireflies'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 7 cleanup error:', error); }
+                ['trees', 'ruins', 'vines', 'fireflies'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1593,14 +1870,19 @@
             objects: { stars: [], asteroids: [], modules: [], debris: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 8: Space Station');
+                console.log('🚀 Loading Level 8: Space Station');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
+                // Starfield
                 const starsGeometry = new THREE.BufferGeometry();
                 const starPositions = [];
                 for (let i = 0; i < 500; i++) {
-                    starPositions.push((Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200);
+                    starPositions.push(
+                        (Math.random() - 0.5) * 200,
+                        (Math.random() - 0.5) * 200,
+                        (Math.random() - 0.5) * 200
+                    );
                 }
                 starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
                 const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.3 });
@@ -1609,22 +1891,30 @@
                 this.objects.stars.push(stars);
                 LevelManager.addLevelObject(stars);
 
+                // Space station modules
                 for (let i = 0; i < 10; i++) {
-                    const mod = new THREE.Mesh(
+                    const module = new THREE.Mesh(
                         new THREE.BoxGeometry(4, 3, 5),
-                        new THREE.MeshLambertMaterial({ color: 0x666677, emissive: 0x000033, emissiveIntensity: 0.2 })
+                        new THREE.MeshLambertMaterial({
+                            color: 0x666677,
+                            emissive: 0x000033,
+                            emissiveIntensity: 0.2
+                        })
                     );
-                    mod.position.set(-25 + Math.random() * 50, 2 + Math.random() * 5, -i * 20 - 10);
-                    mod.rotation.set(Math.random() * 0.3, Math.random() * 0.3, Math.random() * 0.3);
-                    scene.add(mod);
-                    this.objects.modules.push(mod);
-                    LevelManager.addLevelObject(mod);
+                    module.position.set(-25 + Math.random() * 50, 2 + Math.random() * 5, -i * 20 - 10);
+                    module.rotation.set(Math.random() * 0.3, Math.random() * 0.3, Math.random() * 0.3);
+                    scene.add(module);
+                    this.objects.modules.push(module);
+                    LevelManager.addLevelObject(module);
+
+                    // Module lights
                     const moduleLight = new THREE.PointLight(0x4444FF, 0.5, 10);
-                    moduleLight.position.copy(mod.position);
+                    moduleLight.position.copy(module.position);
                     scene.add(moduleLight);
                     LevelManager.addLevelObject(moduleLight);
                 }
 
+                // Asteroids
                 for (let i = 0; i < 15; i++) {
                     const asteroid = new THREE.Mesh(
                         new THREE.DodecahedronGeometry(0.8 + Math.random() * 1.2, 0),
@@ -1637,9 +1927,13 @@
                     LevelManager.addLevelObject(asteroid);
                 }
 
+                // Space debris
                 for (let i = 0; i < 15; i++) {
                     const debrisGeom = Math.random() > 0.5 ? new THREE.BoxGeometry(0.3, 0.3, 0.3) : new THREE.DodecahedronGeometry(0.2, 0);
-                    const debrisPiece = new THREE.Mesh(debrisGeom, new THREE.MeshLambertMaterial({ color: 0x666666, emissive: 0x222222 }));
+                    const debrisPiece = new THREE.Mesh(
+                        debrisGeom,
+                        new THREE.MeshLambertMaterial({ color: 0x666666, emissive: 0x222222 })
+                    );
                     debrisPiece.position.set(-15 + Math.random() * 30, Math.random() * 8, -Math.random() * 100);
                     debrisPiece.userData = { rotX: Math.random() * 0.02, rotY: Math.random() * 0.02, rotZ: Math.random() * 0.02 };
                     scene.add(debrisPiece);
@@ -1649,7 +1943,12 @@
             },
 
             update: function(deltaTime) {
-                this.objects.asteroids.forEach(asteroid => { asteroid.rotation.x += 0.005; asteroid.rotation.y += 0.003; });
+                // Rotating asteroids
+                this.objects.asteroids.forEach(asteroid => {
+                    asteroid.rotation.x += 0.005;
+                    asteroid.rotation.y += 0.003;
+                });
+                // Drifting debris
                 this.objects.debris.forEach(piece => {
                     piece.rotation.x += piece.userData.rotX;
                     piece.rotation.y += piece.userData.rotY;
@@ -1658,8 +1957,9 @@
             },
 
             cleanup: function() {
-                try { ['stars', 'asteroids', 'modules', 'debris'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 8 cleanup error:', error); }
+                ['stars', 'asteroids', 'modules', 'debris'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1673,39 +1973,54 @@
             objects: { crystals: [], gems: [], beams: [], sparkles: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 9: Crystal Mines');
+                console.log('💎 Loading Level 9: Crystal Mines');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
+                // Large crystal formations
                 for (let i = 0; i < 25; i++) {
                     const crystal = new THREE.Mesh(
                         new THREE.OctahedronGeometry(1 + Math.random() * 1.5, 0),
-                        new THREE.MeshLambertMaterial({ color: Math.random() > 0.5 ? 0xFF00FF : 0x9400D3, transparent: true, opacity: 0.8, emissive: 0xFF00FF, emissiveIntensity: 0.5 })
+                        new THREE.MeshLambertMaterial({
+                            color: Math.random() > 0.5 ? 0xFF00FF : 0x9400D3,
+                            transparent: true,
+                            opacity: 0.8,
+                            emissive: 0xFF00FF,
+                            emissiveIntensity: 0.5
+                        })
                     );
                     crystal.position.set(-10 + Math.random() * 20, 1 + Math.random() * 3, -i * 6);
                     crystal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
                     scene.add(crystal);
                     this.objects.crystals.push(crystal);
                     LevelManager.addLevelObject(crystal);
+
+                    // Crystal glow
                     const crystalLight = new THREE.PointLight(0xFF00FF, 0.6, 8);
                     crystalLight.position.copy(crystal.position);
                     scene.add(crystalLight);
                     LevelManager.addLevelObject(crystalLight);
                 }
 
+                // Small floating gems
                 for (let i = 0; i < 20; i++) {
-                    const gem = new THREE.Mesh(new THREE.TetrahedronGeometry(0.3, 0), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF }));
+                    const gem = new THREE.Mesh(
+                        new THREE.TetrahedronGeometry(0.3, 0),
+                        new THREE.MeshBasicMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF })
+                    );
                     gem.position.set(-8 + Math.random() * 16, 2 + Math.random() * 4, -i * 8);
                     scene.add(gem);
                     this.objects.gems.push(gem);
                     LevelManager.addLevelObject(gem);
                 }
 
+                // Crystal cave lighting
                 const mainLight = new THREE.DirectionalLight(0xFF00FF, 0.7);
                 mainLight.position.set(0, 10, 5);
                 scene.add(mainLight);
                 LevelManager.addLevelObject(mainLight);
 
+                // Sparkle particles
                 for (let i = 0; i < 30; i++) {
                     const sparkle = new THREE.Mesh(
                         new THREE.SphereGeometry(0.05, 4, 4),
@@ -1720,8 +2035,16 @@
             },
 
             update: function(deltaTime) {
-                this.objects.crystals.forEach(crystal => { crystal.rotation.y += 0.008; });
-                this.objects.gems.forEach((gem, i) => { gem.position.y += Math.sin(Date.now() * 0.002 + i) * 0.01; gem.rotation.y += 0.02; });
+                // Rotating crystals
+                this.objects.crystals.forEach(crystal => {
+                    crystal.rotation.y += 0.008;
+                });
+                // Floating gems
+                this.objects.gems.forEach((gem, i) => {
+                    gem.position.y += Math.sin(Date.now() * 0.002 + i) * 0.01;
+                    gem.rotation.y += 0.02;
+                });
+                // Twinkling sparkles
                 this.objects.sparkles.forEach(sparkle => {
                     const time = Date.now() * 0.001;
                     sparkle.position.y += Math.sin(time * sparkle.userData.floatSpeed + sparkle.userData.phase) * 0.01;
@@ -1731,8 +2054,9 @@
             },
 
             cleanup: function() {
-                try { ['crystals', 'gems', 'beams', 'sparkles'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 9 cleanup error:', error); }
+                ['crystals', 'gems', 'beams', 'sparkles'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1746,14 +2070,21 @@
             objects: { portals: [], platforms: [], particles: [], energyWaves: [] },
 
             load: function(scene, renderer) {
-                console.log('Loading Level 10: Final Dimension');
+                console.log('🌀 Loading Level 10: Final Dimension');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
 
+                // Portal rings
                 for (let i = 0; i < 8; i++) {
                     const portal = new THREE.Mesh(
                         new THREE.TorusGeometry(3, 0.4, 16, 32),
-                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF, transparent: true, opacity: 0.7 })
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 0.7,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissiveIntensity: 1
+                        })
                     );
                     portal.position.set(-15 + Math.random() * 30, 3, -i * 20 - 10);
                     portal.rotation.y = Math.PI / 2;
@@ -1762,10 +2093,15 @@
                     LevelManager.addLevelObject(portal);
                 }
 
+                // Floating platforms
                 for (let i = 0; i < 12; i++) {
                     const platform = new THREE.Mesh(
                         new THREE.BoxGeometry(3, 0.3, 3),
-                        new THREE.MeshLambertMaterial({ color: 0x222222, emissive: 0xFF00AA, emissiveIntensity: 0.3 })
+                        new THREE.MeshLambertMaterial({
+                            color: 0x222222,
+                            emissive: 0xFF00AA,
+                            emissiveIntensity: 0.3
+                        })
                     );
                     platform.position.set(-10 + Math.random() * 20, -1 + Math.random() * 8, -i * 10);
                     scene.add(platform);
@@ -1773,19 +2109,29 @@
                     LevelManager.addLevelObject(platform);
                 }
 
+                // Dimensional lighting
                 const dimensionLight1 = new THREE.PointLight(0x00FFFF, 1, 30);
                 dimensionLight1.position.set(0, 5, -20);
                 scene.add(dimensionLight1);
                 LevelManager.addLevelObject(dimensionLight1);
+
                 const dimensionLight2 = new THREE.PointLight(0xFF00FF, 1, 30);
                 dimensionLight2.position.set(0, 5, -60);
                 scene.add(dimensionLight2);
                 LevelManager.addLevelObject(dimensionLight2);
 
+                // Energy wave rings
                 for (let i = 0; i < 10; i++) {
                     const wave = new THREE.Mesh(
                         new THREE.RingGeometry(0.5, 0.7, 32),
-                        new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF, transparent: true, opacity: 1, side: THREE.DoubleSide })
+                        new THREE.MeshBasicMaterial({
+                            color: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            transparent: true,
+                            opacity: 1,
+                            side: THREE.DoubleSide,
+                            emissive: Math.random() > 0.5 ? 0x00FFFF : 0xFF00FF,
+                            emissiveIntensity: 1
+                        })
                     );
                     wave.position.set(0, 2, -i * 15);
                     wave.rotation.x = Math.PI / 2;
@@ -1797,14 +2143,17 @@
             },
 
             update: function(deltaTime) {
+                // Spinning portals
                 this.objects.portals.forEach((portal, i) => {
                     portal.rotation.z += 0.02;
                     portal.scale.setScalar(1 + Math.sin(Date.now() * 0.001 + i) * 0.1);
                 });
+                // Floating platforms
                 this.objects.platforms.forEach((platform, i) => {
                     platform.position.y += Math.sin(Date.now() * 0.001 + i) * 0.01;
                     platform.rotation.y += 0.005;
                 });
+                // Expanding energy waves
                 this.objects.energyWaves.forEach(wave => {
                     const elapsed = (Date.now() - wave.userData.startTime) % 3000;
                     const progress = elapsed / 3000;
@@ -1814,8 +2163,9 @@
             },
 
             cleanup: function() {
-                try { ['portals', 'platforms', 'particles', 'energyWaves'].forEach(key => { if (this.objects[key]) this.objects[key] = []; }); }
-                catch (error) { console.error('Level 10 cleanup error:', error); }
+                ['portals', 'platforms', 'particles', 'energyWaves'].forEach(key => {
+                    if (this.objects[key]) this.objects[key] = [];
+                });
             }
         };
 
@@ -1830,7 +2180,7 @@
         LevelManager.registerLevel(8, Level8);
         LevelManager.registerLevel(9, Level9);
         LevelManager.registerLevel(10, Level10);
-
+        
         // HEIGHT LEVEL SYSTEM (V4.0)
         const HEIGHT_LEVELS = {
             GROUND: 0,
@@ -3062,6 +3412,9 @@
             audioManager.play('powerup');
             
             document.getElementById('menu').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('gestureControl').style.display = 'block';
             updateUI();
         }
 
@@ -3191,6 +3544,8 @@
             }
             
             menu.style.display = 'block';
+            document.getElementById('ui').style.display = 'none';
+            document.getElementById('instructions').style.display = 'none';
         }
 
         async function submitHighscoreInternal() {
@@ -4582,6 +4937,82 @@
                 }
             }
         }
+
+        // Device detection for auto-selecting gesture mode
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+        }
+
+        // Start-screen gesture mode selection (called from menu buttons)
+        window.selectGestureAndStart = async function(controlType) {
+            console.log('selectGestureAndStart:', controlType);
+            try {
+                // Determine mode
+                let mode;
+                if (controlType === 'head') {
+                    mode = isMobileDevice() ? 'oneEuro' : 'adaptive';
+                } else if (controlType === 'body') {
+                    mode = 'bodyPose';
+                }
+
+                // Load GestureManager
+                const loadResult = await loadGestureManager();
+                if (!loadResult || loadResult === 'fallback') {
+                    alert('Gestensteuerung konnte nicht geladen werden. Starte mit Tastatur...');
+                    startGameInternal();
+                    return;
+                }
+
+                // Initialize GestureManager with chosen mode
+                if (!gestureManager && window.GestureManager) {
+                    gestureManager = new window.GestureManager({
+                        defaultMode: mode,
+                        video: document.getElementById('gestureVideo'),
+                        canvas: gestureCanvas,
+                        onGestureDetected: handleGestureEvent,
+                        onModeChange: (modeKey, modeName) => {
+                            if (gestureModeText) gestureModeText.textContent = modeName;
+                            if (gestureModeSelect) gestureModeSelect.value = modeKey;
+                        },
+                        onStatusChange: (status, message) => {
+                            if (gestureStatusText) gestureStatusText.textContent = message;
+                        },
+                        onCalibrationProgress: (progress, step) => {
+                            if (calibrationProgress) {
+                                calibrationProgress.classList.add('active');
+                                calibrationProgressFill.style.width = (progress * 100) + '%';
+                                if (progress >= 1) {
+                                    setTimeout(() => calibrationProgress.classList.remove('active'), 1000);
+                                }
+                            }
+                        },
+                        onError: handleGestureError
+                    });
+                }
+
+                await gestureManager.start();
+                gestureEnabled = true;
+                currentGestureMode = mode;
+
+                // Update UI
+                if (gestureBtn) {
+                    gestureBtn.textContent = 'Gestensteuerung stoppen';
+                    gestureBtn.classList.add('active');
+                }
+                if (gestureCanvas) gestureCanvas.classList.add('active');
+                if (gestureStatus) gestureStatus.classList.add('active');
+                if (gestureModeSelector) gestureModeSelector.classList.add('active');
+                if (gestureStatusText) gestureStatusText.textContent = 'Aktiv';
+
+                // Start the game
+                startGameInternal();
+            } catch (error) {
+                console.error('Gesture start failed:', error);
+                alert('Kamera-Zugriff fehlgeschlagen: ' + error.message + '\n\nStarte mit Tastatur...');
+                startGameInternal();
+            }
+        };
 
         // Initialize gesture control button
         if (gestureBtn) {
