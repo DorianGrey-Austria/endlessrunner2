@@ -33,7 +33,7 @@ module.exports = {
   ],
 
   webServer: {
-    command: 'npx live-server --port=8001 --no-browser --quiet',
+    command: 'npx http-server -p 8001 -s --cors',
     port: 8001,
     timeout: 30 * 1000,
     reuseExistingServer: true,
