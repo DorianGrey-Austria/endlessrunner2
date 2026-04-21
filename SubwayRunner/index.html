@@ -242,7 +242,49 @@
             color: #556;
             margin: 12px 0 0;
         }
-        
+
+        #menu .quality-toggle {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        #menu .quality-btn {
+            flex: 1;
+            padding: 8px 6px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            color: #889;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        #menu .quality-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.25);
+        }
+
+        #menu .quality-btn.active {
+            border-color: #7c4dff;
+            background: rgba(124, 77, 255, 0.15);
+            color: #c9b3ff;
+        }
+
+        #menu .quality-btn .quality-icon {
+            font-size: 18px;
+        }
+
+        #menu .quality-btn .quality-label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
         #timer {
             font-size: 20px;
             margin-top: 5px;
@@ -527,6 +569,17 @@
             <div class="settings-row">
                 <button class="toggle-btn active" id="soundToggleBtn" onclick="toggleSound()">
                     <span id="soundIcon">&#x1f50a;</span> Sound
+                </button>
+            </div>
+
+            <div class="quality-toggle">
+                <button class="quality-btn" id="qualityPerfBtn" onclick="setQualityMode('performance')">
+                    <span class="quality-icon">&#x26A1;</span>
+                    <span class="quality-label">Performance</span>
+                </button>
+                <button class="quality-btn active" id="qualityHighBtn" onclick="setQualityMode('high')">
+                    <span class="quality-icon">&#x2728;</span>
+                    <span class="quality-label">High Quality</span>
                 </button>
             </div>
 
@@ -987,6 +1040,14 @@
             }
         };
 
+        // setQualityMode is defined after QUALITY_PRESETS (deferred via window binding)
+        window.setQualityMode = function(mode) {
+            qualityMode = mode;
+            localStorage.setItem('qualityMode', mode);
+            document.getElementById('qualityPerfBtn').classList.toggle('active', mode === 'performance');
+            document.getElementById('qualityHighBtn').classList.toggle('active', mode === 'high');
+        };
+
         window.startGame = function() {
             console.log('startGame called');
             try {
@@ -1055,9 +1116,55 @@
         const LIMITS = {
             MAX_SCORE_PER_FRAME: 50,
             MAX_OBSTACLES: 20,
-            MAX_SCENE_OBJECTS: 500,
+            MAX_SCENE_OBJECTS: 800,
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
         };
+
+        // ==================== QUALITY MODE SYSTEM ====================
+        const QUALITY_PRESETS = {
+            performance: {
+                label: 'Performance',
+                pixelRatio: 1.0,
+                antialias: false,
+                shadowMapSize: 512,
+                shadowMapType: 'PCFShadowMap',
+                objectMultiplier: 0.5,
+                maxPointLights: 2,
+                fogDensity: 1.4,
+                maxSceneObjects: 300
+            },
+            high: {
+                label: 'High Quality',
+                pixelRatio: window.devicePixelRatio || 2.0,
+                antialias: true,
+                shadowMapSize: 2048,
+                shadowMapType: 'PCFSoftShadowMap',
+                objectMultiplier: 1.0,
+                maxPointLights: 10,
+                fogDensity: 1.0,
+                maxSceneObjects: 800
+            }
+        };
+
+        let qualityMode = localStorage.getItem('qualityMode') || 'high';
+
+        function getQuality() {
+            return QUALITY_PRESETS[qualityMode] || QUALITY_PRESETS.high;
+        }
+
+        function scaledCount(baseCount) {
+            return Math.max(2, Math.round(baseCount * getQuality().objectMultiplier));
+        }
+
+        // Restore saved quality button state on load
+        (function() {
+            const perfBtn = document.getElementById('qualityPerfBtn');
+            const highBtn = document.getElementById('qualityHighBtn');
+            if (perfBtn && highBtn) {
+                perfBtn.classList.toggle('active', qualityMode === 'performance');
+                highBtn.classList.toggle('active', qualityMode === 'high');
+            }
+        })();
 
         // ==================== LEVEL SYSTEM V3.3 ====================
         let currentLevel = 1;
@@ -1242,13 +1349,13 @@
 
             load: function(scene, renderer) {
                 console.log('Loading Level 1: Subway Tunnel');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Tunnel ceiling pipes (shared geometry)
                 const pipeGeo = new THREE.CylinderGeometry(0.08, 0.08, 40, 6);
                 const pipeMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
-                for (let i = 0; i < 6; i++) {
+                for (let i = 0; i < scaledCount(6); i++) {
                     const pipe = new THREE.Mesh(pipeGeo, pipeMat);
                     pipe.rotation.x = Math.PI / 2;
                     pipe.position.set(-4 + i * 1.6, 6.5, -20);
@@ -1260,7 +1367,7 @@
                 // Flickering tunnel strip lights (shared geometry, no PointLights)
                 const lightGeo = new THREE.BoxGeometry(0.8, 0.1, 0.15);
                 const lightMat = new THREE.MeshBasicMaterial({ color: 0xFFEECC });
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < scaledCount(15); i++) {
                     const light = new THREE.Mesh(lightGeo, lightMat);
                     light.position.set(0, 6.2, -i * 12);
                     light.userData.flicker = Math.random() * Math.PI * 2;
@@ -1310,7 +1417,7 @@
                 console.log('🌃 Loading Level 2: Neon Night Run');
                 
                 // Update environment
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
                 
                 // Safe environment handling - these objects don't exist
@@ -1331,7 +1438,7 @@
                 LevelManager.addLevelObject(gridHelper);
                 
                 // Create cyberpunk buildings
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < scaledCount(20); i++) {
                     const buildingGroup = new THREE.Group();
                     const width = 6 + Math.random() * 4;
                     const height = 20 + Math.random() * 30;
@@ -1413,7 +1520,7 @@
                 renderer.setClearColor(this.fogColor);
 
                 // Floating clouds
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < scaledCount(25); i++) {
                     const cloud = new THREE.Group();
                     for (let j = 0; j < 5; j++) {
                         const sphere = new THREE.Mesh(
@@ -1443,7 +1550,7 @@
                 LevelManager.addLevelObject(sunLight);
 
                 // SPECIAL EFFECTS: Flying birds
-                for (let i = 0; i < 12; i++) {
+                for (let i = 0; i < scaledCount(12); i++) {
                     const bird = new THREE.Group();
                     const wing1 = new THREE.Mesh(
                         new THREE.BoxGeometry(0.5, 0.05, 0.2),
@@ -1465,7 +1572,7 @@
                 }
 
                 // SPECIAL EFFECTS: Wind particles
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < scaledCount(30); i++) {
                     const particle = new THREE.Mesh(
                         new THREE.BoxGeometry(0.3, 0.03, 0.03),
                         new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.4 })
@@ -1519,11 +1626,11 @@
 
             load: function(scene, renderer) {
                 console.log('🌊 Loading Level 4: Underwater Depths');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Seaweed forests
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < scaledCount(30); i++) {
                     const seaweed = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.1, 0.15, 3 + Math.random() * 2, 6),
                         new THREE.MeshLambertMaterial({ color: 0x226622, emissive: 0x003300 })
@@ -1535,7 +1642,7 @@
                 }
 
                 // Coral reefs
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < scaledCount(15); i++) {
                     const coral = new THREE.Mesh(
                         new THREE.DodecahedronGeometry(0.5 + Math.random() * 0.5, 0),
                         new THREE.MeshLambertMaterial({ color: Math.random() > 0.5 ? 0xFF6644 : 0xFFAA66 })
@@ -1553,7 +1660,7 @@
                 LevelManager.addLevelObject(waterLight);
 
                 // SPECIAL EFFECTS: Bubble streams
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < scaledCount(20); i++) {
                     const bubbleGroup = new THREE.Group();
                     for (let j = 0; j < 10; j++) {
                         const bubble = new THREE.Mesh(
@@ -1607,11 +1714,11 @@
 
             load: function(scene, renderer) {
                 console.log('🌋 Loading Level 5: Volcanic Eruption');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Volcanic rocks
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < scaledCount(25); i++) {
                     const rock = new THREE.Mesh(
                         new THREE.DodecahedronGeometry(1 + Math.random() * 2, 0),
                         new THREE.MeshLambertMaterial({ color: 0x333333, emissive: 0xFF3300, emissiveIntensity: 0.2 })
@@ -1624,7 +1731,7 @@
                 }
 
                 // Lava pools (glowing ground areas)
-                for (let i = 0; i < 12; i++) {
+                for (let i = 0; i < scaledCount(12); i++) {
                     const lavaPool = new THREE.Mesh(
                         new THREE.CircleGeometry(2 + Math.random(), 8),
                         new THREE.MeshBasicMaterial({ color: 0xFF4400, emissive: 0xFF4400, emissiveIntensity: 1 })
@@ -1643,7 +1750,7 @@
                 LevelManager.addLevelObject(lavaLight);
 
                 // Ember particles
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < scaledCount(25); i++) {
                     const ember = new THREE.Mesh(
                         new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 6, 6),
                         new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFF4400 : 0xFF6600, emissive: 0xFF4400, emissiveIntensity: 1 })
@@ -1693,7 +1800,7 @@
                 renderer.setClearColor(this.fogColor);
 
                 // Ice crystals
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < scaledCount(30); i++) {
                     const crystal = new THREE.Mesh(
                         new THREE.OctahedronGeometry(0.5 + Math.random() * 0.8, 0),
                         new THREE.MeshLambertMaterial({
@@ -1712,7 +1819,7 @@
                 }
 
                 // Icicles from ceiling
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < scaledCount(20); i++) {
                     const icicle = new THREE.Mesh(
                         new THREE.ConeGeometry(0.2, 2 + Math.random(), 6),
                         new THREE.MeshLambertMaterial({ color: 0xCCEEFF, transparent: true, opacity: 0.8 })
@@ -1736,7 +1843,7 @@
                 LevelManager.addLevelObject(auroraLight2);
 
                 // Snowflake particles
-                for (let i = 0; i < 40; i++) {
+                for (let i = 0; i < scaledCount(40); i++) {
                     const snowflake = new THREE.Mesh(
                         new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 6, 6),
                         new THREE.MeshBasicMaterial({ color: Math.random() > 0.7 ? 0xCCEEFF : 0xFFFFFF, transparent: true, opacity: 0.8 })
@@ -1780,11 +1887,11 @@
 
             load: function(scene, renderer) {
                 console.log('🌴 Loading Level 7: Jungle Temple');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Jungle trees
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < scaledCount(20); i++) {
                     const tree = new THREE.Group();
                     const trunk = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.3, 0.4, 5, 8),
@@ -1807,7 +1914,7 @@
                 }
 
                 // Temple ruins
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < scaledCount(8); i++) {
                     const ruin = new THREE.Mesh(
                         new THREE.BoxGeometry(2, 3 + Math.random() * 2, 2),
                         new THREE.MeshLambertMaterial({ color: 0x888866, emissive: 0x222200 })
@@ -1826,7 +1933,7 @@
                 LevelManager.addLevelObject(sunLight);
 
                 // Firefly particles
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < scaledCount(20); i++) {
                     const firefly = new THREE.Mesh(
                         new THREE.SphereGeometry(0.08, 6, 6),
                         new THREE.MeshBasicMaterial({ color: 0xFFFF00, emissive: 0xFFFF00, emissiveIntensity: 1 })
@@ -1871,13 +1978,13 @@
 
             load: function(scene, renderer) {
                 console.log('🚀 Loading Level 8: Space Station');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Starfield
                 const starsGeometry = new THREE.BufferGeometry();
                 const starPositions = [];
-                for (let i = 0; i < 500; i++) {
+                for (let i = 0; i < scaledCount(500); i++) {
                     starPositions.push(
                         (Math.random() - 0.5) * 200,
                         (Math.random() - 0.5) * 200,
@@ -1892,7 +1999,7 @@
                 LevelManager.addLevelObject(stars);
 
                 // Space station modules
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < scaledCount(10); i++) {
                     const module = new THREE.Mesh(
                         new THREE.BoxGeometry(4, 3, 5),
                         new THREE.MeshLambertMaterial({
@@ -1915,7 +2022,7 @@
                 }
 
                 // Asteroids
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < scaledCount(15); i++) {
                     const asteroid = new THREE.Mesh(
                         new THREE.DodecahedronGeometry(0.8 + Math.random() * 1.2, 0),
                         new THREE.MeshLambertMaterial({ color: 0x554433 })
@@ -1928,7 +2035,7 @@
                 }
 
                 // Space debris
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < scaledCount(15); i++) {
                     const debrisGeom = Math.random() > 0.5 ? new THREE.BoxGeometry(0.3, 0.3, 0.3) : new THREE.DodecahedronGeometry(0.2, 0);
                     const debrisPiece = new THREE.Mesh(
                         debrisGeom,
@@ -1974,11 +2081,11 @@
 
             load: function(scene, renderer) {
                 console.log('💎 Loading Level 9: Crystal Mines');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Large crystal formations
-                for (let i = 0; i < 25; i++) {
+                for (let i = 0; i < scaledCount(25); i++) {
                     const crystal = new THREE.Mesh(
                         new THREE.OctahedronGeometry(1 + Math.random() * 1.5, 0),
                         new THREE.MeshLambertMaterial({
@@ -2003,7 +2110,7 @@
                 }
 
                 // Small floating gems
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < scaledCount(20); i++) {
                     const gem = new THREE.Mesh(
                         new THREE.TetrahedronGeometry(0.3, 0),
                         new THREE.MeshBasicMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF })
@@ -2021,7 +2128,7 @@
                 LevelManager.addLevelObject(mainLight);
 
                 // Sparkle particles
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < scaledCount(30); i++) {
                     const sparkle = new THREE.Mesh(
                         new THREE.SphereGeometry(0.05, 4, 4),
                         new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFF00FF : 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 1 })
@@ -2071,11 +2178,11 @@
 
             load: function(scene, renderer) {
                 console.log('🌀 Loading Level 10: Final Dimension');
-                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
+                scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity * getQuality().fogDensity);
                 renderer.setClearColor(this.fogColor);
 
                 // Portal rings
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < scaledCount(8); i++) {
                     const portal = new THREE.Mesh(
                         new THREE.TorusGeometry(3, 0.4, 16, 32),
                         new THREE.MeshBasicMaterial({
@@ -2094,7 +2201,7 @@
                 }
 
                 // Floating platforms
-                for (let i = 0; i < 12; i++) {
+                for (let i = 0; i < scaledCount(12); i++) {
                     const platform = new THREE.Mesh(
                         new THREE.BoxGeometry(3, 0.3, 3),
                         new THREE.MeshLambertMaterial({
@@ -2121,7 +2228,7 @@
                 LevelManager.addLevelObject(dimensionLight2);
 
                 // Energy wave rings
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < scaledCount(10); i++) {
                     const wave = new THREE.Mesh(
                         new THREE.RingGeometry(0.5, 0.7, 32),
                         new THREE.MeshBasicMaterial({
@@ -2271,24 +2378,26 @@
             try {
                 // Enhanced Scene
                 scene = new THREE.Scene();
-                scene.fog = new THREE.FogExp2(0x101020, 0.025); // Better fog
+                scene.fog = new THREE.FogExp2(0x101020, 0.025 * getQuality().fogDensity);
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
             camera.position.set(0, 3, 8);
 
-            // Enhanced Renderer (SAFE improvements only)
+            // Renderer — configured by Quality Mode
+            const q = getQuality();
             const canvas = document.getElementById('gameCanvas');
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: canvas, 
-                antialias: true,
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: q.antialias,
                 alpha: false,
                 powerPreference: "high-performance"
             });
+            renderer.setPixelRatio(q.pixelRatio);
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.setClearColor(0x0a0a0f); // Darker background
+            renderer.setClearColor(0x0a0a0f);
             renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.shadowMap.type = THREE[q.shadowMapType];
             // Removed tone mapping - can cause issues
 
             // Better lighting (SAFE)
@@ -2305,8 +2414,8 @@
             const directionalLight = new THREE.DirectionalLight(0xFFE4B5, 1.2);
             directionalLight.position.set(10, 15, 5);
             directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.mapSize.width = q.shadowMapSize;
+            directionalLight.shadow.mapSize.height = q.shadowMapSize;
             directionalLight.shadow.camera.near = 0.5;
             directionalLight.shadow.camera.far = 50;
             directionalLight.shadow.camera.left = -20;
@@ -2576,7 +2685,7 @@
             environmentObjects.sidewalks.push(rightSidewalk);
 
             // Street lines
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < scaledCount(20); i++) {
                 const lineGeometry = new THREE.PlaneGeometry(0.3, 2);
                 const lineMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
                 const streetLine = new THREE.Mesh(lineGeometry, lineMaterial);
@@ -2592,19 +2701,19 @@
             }
 
             // Realistic city buildings
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < scaledCount(15); i++) {
                 createRealisticBuilding(-15 - Math.random() * 8, -i * 8 - Math.random() * 4, 'left');
                 createRealisticBuilding(15 + Math.random() * 8, -i * 8 - Math.random() * 4, 'right');
             }
 
             // Street lamps
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < scaledCount(12); i++) {
                 createStreetLamp(-6, -i * 10);
                 createStreetLamp(6, -i * 10);
             }
 
             // Traffic signs and urban details
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < scaledCount(8); i++) {
                 if (Math.random() > 0.5) {
                     createTrafficSign(-7, -i * 12 - 5);
                     createTrafficSign(7, -i * 12 - 5);
