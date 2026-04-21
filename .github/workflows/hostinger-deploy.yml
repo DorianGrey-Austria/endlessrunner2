@@ -8,151 +8,29 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
+
     - name: Prepare Production Files
       run: |
-        echo "🚀 Preparing SubwayRunner for production..."
-        
-        # Copy production HTML as main index
-        cp SubwayRunner/index.html index.html
-        
-        # Create deployment directory
         mkdir -p deploy
-        
-        # Copy all necessary files
-        cp index.html deploy/
-        
-        # Copy JavaScript modules for gesture control
-        echo "📁 Copying JavaScript modules..."
+        cp SubwayRunner/index.html deploy/
         cp -r SubwayRunner/js deploy/
-        
-        # Copy CSS files if they exist
-        if [ -d "SubwayRunner/css" ]; then
-            cp -r SubwayRunner/css deploy/
-        fi
-        
-        # Create .htaccess for production security and performance
-        cat > deploy/.htaccess << 'EOF'
-        # Force HTTPS for secure gaming
-        RewriteEngine On
-        RewriteCond %{HTTPS} !=on
-        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-        
-        # Enable compression for faster loading
-        <ifModule mod_deflate.c>
-            AddOutputFilterByType DEFLATE text/plain
-            AddOutputFilterByType DEFLATE text/html
-            AddOutputFilterByType DEFLATE text/css
-            AddOutputFilterByType DEFLATE application/javascript
-            AddOutputFilterByType DEFLATE image/svg+xml
-        </ifModule>
-        
-        # Cache static assets for better performance
-        <ifModule mod_expires.c>
-            ExpiresActive On
-            ExpiresByType text/css "access plus 1 month"
-            ExpiresByType application/javascript "access plus 1 month"
-            ExpiresByType image/png "access plus 1 month"
-            ExpiresByType image/jpg "access plus 1 month"
-        </ifModule>
-        
-        # Security headers for gaming
-        Header always set X-Content-Type-Options nosniff
-        Header always set X-Frame-Options DENY
-        Header always set X-XSS-Protection "1; mode=block"
-        Header always set Referrer-Policy "strict-origin-when-cross-origin"
-        
-        # Content Security Policy for Three.js and external resources
-        Header always set Content-Security-Policy "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https: https://fonts.gstatic.com;"
-        EOF
-        
-        # Create README for the deployment
-        cat > deploy/README.md << 'EOF'
-        # 🎮 SubwayRunner 3D - V3.6.3-MERGED
-        
-        **3D Endless Runner with Progressive Difficulty System**
-        
-        ## 🚀 Features
-        - ✅ **30 Kiwis & 7 Broccolis**: Collect delicious fruits and vegetables
-        - ✅ **Jump Magic Effects**: Visual particle effects on jump and landing
-        - ✅ **Minimal UI Design**: Clean, distraction-free gameplay
-        - ✅ **Obstacle Variety**: 7+ different obstacle types
-        - ✅ **Speed Progression**: Game speeds up as you collect more
-        - ✅ **3D Graphics**: Three.js powered 3D visuals
-        - ✅ **Smooth Controls**: Responsive lane switching and jumping
-        - ✅ **Performance Optimized**: 60+ FPS on all devices
-        
-        ## 🎯 Gameplay
-        **Controls**: A/D or ←/→ (Lane Switch), W/Space (Jump), S/↓ (Duck)
-        **Goal**: Collect 30 Kiwis to win!
-        **Challenge**: Avoid obstacles while collecting fruits
-        
-        ## 🔧 Tech Stack
-        - **Three.js**: 3D Graphics Engine
-        - **Vanilla JS**: Performance-optimized gameplay
-        - **Modular Architecture**: GameCore system
-        - **Particle Effects**: Beautiful jump animations
-        
-        🚀 **Generated with Claude Code** | 🎮 **Ready to Play!**
-        EOF
-        
-        echo "✅ Production files prepared"
-        echo "📁 Deployment structure:"
-        ls -la deploy/
-        echo "📁 JavaScript modules:"
-        ls -la deploy/js/ || echo "❌ JS modules not found"
-        
-    - name: Validate Deployment Configuration
+        if [ -d "SubwayRunner/css" ]; then cp -r SubwayRunner/css deploy/; fi
+        echo "Deploy contents:"
+        find deploy -type f | head -30
+
+    - name: Deploy to VPS via rsync
       run: |
-        echo "🔍 Validating deployment setup..."
-        echo "📋 Repository: endlessrunner2"
-        echo "🎯 Target: https://endlessrunner.vibecoding.company/"
-        echo "📁 Source: SubwayRunner/index.html"
-        echo "✅ Configuration validated"
-        
-    - name: Deploy to Hostinger via FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./deploy/
-        server-dir: /
-        dry-run: false
-        log-level: verbose
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          **/.DS_Store
-          **/Thumbs.db
-          
+        sudo apt-get install -y -qq sshpass > /dev/null 2>&1
+        sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -rlgoDzvc --delete \
+          -e "ssh -o StrictHostKeyChecking=no -p 22" \
+          deploy/ root@${{ secrets.VPS_HOST }}:/var/www/endlessrunner.vibecoding.company/
+      env:
+        SSHPASS: ${{ secrets.VPS_PASSWORD }}
+
     - name: Verify Deployment
       run: |
-        echo "🎯 SubwayRunner 3D Deployment completed successfully!"
-        echo ""
-        echo "🌐 Game is now live at:"
-        echo "https://endlessrunner.vibecoding.company/"
-        echo ""
-        echo "🎮 Features deployed:"
-        echo "• ✅ 30 Kiwis & 7 Broccolis Collection System"
-        echo "• ✅ Jump Particle Effects & Animations" 
-        echo "• ✅ Gesture Control System (MediaPipe)"
-        echo "• ✅ 7+ Different Obstacle Types"
-        echo "• ✅ Speed-based Difficulty Progression"
-        echo "• ✅ 3D Bounding Box Collision Detection"
-        echo "• ✅ Performance Optimized (60+ FPS)"
-        echo "• ✅ HTTPS security headers"
-        echo "• ✅ Performance optimizations"
-        echo ""
-        echo "🔥 SubwayRunner 3D V3.6.3-MERGED is ready to play!"
-        echo "🎯 Challenge: Collect 30 Kiwis and avoid obstacles!"
+        echo "Deployed to https://endlessrunner.vibecoding.company/"
