@@ -212,7 +212,7 @@ function init() {
 ## 🚀 Deployment Verification
 
 After deployment, check:
-- [ ] https://ki-revolution.at/SubwayRunner/js/core/GameCore.js loads
+- [ ] https://endlessrunner.vibecoding.company/SubwayRunner/js/core/GameCore.js loads
 - [ ] No CSP errors in console
 - [ ] Game initializes without errors
 - [ ] Level 2 can be selected and loaded

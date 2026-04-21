@@ -17,8 +17,8 @@ const { chromium } = require('playwright');
 
     // Load game with cache-busting
     const timestamp = Date.now();
-    console.log(`📡 Loading: https://ki-revolution.at/?v=${timestamp}`);
-    await page.goto(`https://ki-revolution.at/?v=${timestamp}`, {
+    console.log(`📡 Loading: https://endlessrunner.vibecoding.company/?v=${timestamp}`);
+    await page.goto(`https://endlessrunner.vibecoding.company/?v=${timestamp}`, {
         waitUntil: 'networkidle',
         timeout: 15000
     });

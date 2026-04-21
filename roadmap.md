@@ -476,7 +476,7 @@ MAIN BRANCH STATUS:
 
 ### **PRODUCTION VERSION IDENTIFIED** 🎖️
 
-**ACTUAL CURRENT PRODUCTION** (on ki-revolution.at):
+**ACTUAL CURRENT PRODUCTION** (on endlessrunner.vibecoding.company):
 - **Branch**: `working-monolithic-baseline`
 - **Commit**: `868e954` - "🎯 FOUND WORKING VERSION: V3.6.1-COLLECTIBLE-BUGFIX"
 - **Status**: ✅ STABLE & WORKING (deployed via GitHub Actions)

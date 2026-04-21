@@ -3,7 +3,7 @@
 ## 🚨 PROBLEM: Gestensteuerung nicht sichtbar/funktioniert nicht
 
 ### **STATUS: V3.4-GESTURE-DEBUG deployed**
-**Live URL**: https://ki-revolution.at/
+**Live URL**: https://endlessrunner.vibecoding.company/
 
 ---
 

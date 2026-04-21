@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 
 async function testLiveVersion() {
-    console.log('🌐 Testing LIVE version at https://ki-revolution.at/\n');
+    console.log('🌐 Testing LIVE version at https://endlessrunner.vibecoding.company/\n');
     
     const browser = await chromium.launch({
         headless: false,
@@ -38,9 +38,9 @@ async function testLiveVersion() {
     });
     
     // Navigate to live site
-    console.log('📍 Loading https://ki-revolution.at/ ...');
+    console.log('📍 Loading https://endlessrunner.vibecoding.company/ ...');
     try {
-        await page.goto('https://ki-revolution.at/', {
+        await page.goto('https://endlessrunner.vibecoding.company/', {
             waitUntil: 'networkidle',
             timeout: 30000
         });

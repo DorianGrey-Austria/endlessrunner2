@@ -8,11 +8,11 @@ Multi-project endless runner game collection. **SubwayRunner** is the actively d
 
 | Project | Tech Stack | Status |
 |---------|-----------|--------|
-| **SubwayRunner** | Vanilla JS + Three.js (monolithic) | PRODUCTION - deployed to ki-revolution.at |
+| **SubwayRunner** | Vanilla JS + Three.js (monolithic) | PRODUCTION - deployed to endlessrunner.vibecoding.company |
 | SubwayRunner/src/ | React + R3F + Zustand + TypeScript | EXPERIMENTAL - not deployed |
 | EndlessRunner-MVP | (empty directory) | Historical reference only |
 
-**Live**: https://ki-revolution.at/
+**Live**: https://endlessrunner.vibecoding.company/
 
 ---
 
@@ -46,10 +46,10 @@ npx playwright show-report                             # View HTML report
 
 ### Deployment
 
-**FTP (ki-revolution.at)**: Auto-deploys on git push to main via GitHub Actions → FTP → Hostinger.
+**FTP (endlessrunner.vibecoding.company)**: Auto-deploys on git push to main via GitHub Actions → FTP → Hostinger.
 ```bash
 git add . && git commit -m "VX.Y.Z: description" && git push
-# Live in ~2-3 minutes at ki-revolution.at
+# Live in ~2-3 minutes at endlessrunner.vibecoding.company
 ```
 
 **VPS (endlessrunner.vibecoding.company)**: Manual deploy via rsync + Nginx.

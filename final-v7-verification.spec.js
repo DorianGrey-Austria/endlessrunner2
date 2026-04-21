@@ -7,7 +7,7 @@ test.describe('V7.0.0-BEST-OF Final Verification', () => {
 
         // Load game with cache-busting
         const timestamp = Date.now();
-        await page.goto(`https://ki-revolution.at/?v=${timestamp}`, {
+        await page.goto(`https://endlessrunner.vibecoding.company/?v=${timestamp}`, {
             waitUntil: 'networkidle',
             timeout: 15000
         });

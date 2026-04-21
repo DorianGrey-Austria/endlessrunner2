@@ -1,8 +1,8 @@
-# 🚀 Deployment Guide: EndlessRunner mit Head Tracking auf ki-revolution.at
+# 🚀 Deployment Guide: EndlessRunner mit Head Tracking auf endlessrunner.vibecoding.company
 
 ## 📋 Übersicht
 
-Dieses Dokument beschreibt, wie das EndlessRunner-MVP Spiel mit der neuen Head Tracking Funktion auf ki-revolution.at deployed wird.
+Dieses Dokument beschreibt, wie das EndlessRunner-MVP Spiel mit der neuen Head Tracking Funktion auf endlessrunner.vibecoding.company deployed wird.
 
 ## 🔧 Vorbereitung
 
@@ -35,7 +35,7 @@ Value: [IP-Adresse aus Hostinger, z.B. 145.223.112.234]
 #### FTP_USERNAME
 ```
 Name: FTP_USERNAME
-Value: [FTP-Username aus Hostinger, z.B. u265545399.ki-revolution.at]
+Value: [FTP-Username aus Hostinger, z.B. u265545399.endlessrunner.vibecoding.company]
 ```
 
 #### FTP_PASSWORD
@@ -59,16 +59,16 @@ git push origin main
 ### Manuelles Deployment
 
 1. Gehe zu GitHub Actions
-2. Wähle "Deploy EndlessRunner to ki-revolution.at"
+2. Wähle "Deploy EndlessRunner to endlessrunner.vibecoding.company"
 3. Klicke "Run workflow"
 
 ## 🌐 Live URLs
 
 Nach erfolgreichem Deployment:
 
-- **Hauptspiel**: https://ki-revolution.at/endless-runner-mobile/
-- **Head Tracking Demo**: https://ki-revolution.at/endless-runner-mobile/head-tracking-demo.html
-- **README**: https://ki-revolution.at/endless-runner-mobile/HEAD_TRACKING_README.md
+- **Hauptspiel**: https://endlessrunner.vibecoding.company/endless-runner-mobile/
+- **Head Tracking Demo**: https://endlessrunner.vibecoding.company/endless-runner-mobile/head-tracking-demo.html
+- **README**: https://endlessrunner.vibecoding.company/endless-runner-mobile/HEAD_TRACKING_README.md
 
 ## 📱 Head Tracking Features
 
@@ -163,6 +163,6 @@ git push origin main
 
 ## 🎉 Fertig!
 
-Das Spiel mit Head Tracking ist jetzt live auf ki-revolution.at!
+Das Spiel mit Head Tracking ist jetzt live auf endlessrunner.vibecoding.company!
 
 Bei Fragen oder Problemen, siehe die ausführliche Dokumentation in `github.hostinger.connection.md`.

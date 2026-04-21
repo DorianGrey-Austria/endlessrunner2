@@ -134,7 +134,7 @@ jobs:
         echo "🎯 SubwayRunner Deployment completed successfully!"
         echo ""
         echo "🌐 Game is now live at:"
-        echo "https://ki-revolution.at/"
+        echo "https://endlessrunner.vibecoding.company/"
         echo ""
         echo "✅ All tests passed before deployment:"
         echo "• Static code analysis"

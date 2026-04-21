@@ -201,7 +201,7 @@ git commit -m "🔧 V3.7-LOOP-FIX: Behebt kritische Endlosschleife bei Level-Wec
 git push
 ```
 
-**Live auf:** https://ki-revolution.at/
+**Live auf:** https://endlessrunner.vibecoding.company/
 
 ---
 

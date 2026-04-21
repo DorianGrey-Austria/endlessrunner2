@@ -139,7 +139,7 @@ git push origin v5.0-STABLE
 
 ## 🚀 **DEPLOYMENT STATUS**
 
-**Live Version**: https://ki-revolution.at/
+**Live Version**: https://endlessrunner.vibecoding.company/
 **GitHub Repo**: https://github.com/DorianGrey-Austria/endlessrunner2
 **Automatisches Deployment**: Via GitHub Actions
 

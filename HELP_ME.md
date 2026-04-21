@@ -7,7 +7,7 @@
 
 Wir haben ein kritisches Problem mit einem Three.js-basierten Endless Runner Spiel, das nach umfangreichen Feature-Erweiterungen nicht mehr startet. Die 3D Engine (Three.js) kann nicht geladen werden, obwohl das Spiel vor 12-14 Stunden noch einwandfrei funktionierte.
 
-**Website:** https://ki-revolution.at/  
+**Website:** https://endlessrunner.vibecoding.company/  
 **GitHub Repo:** https://github.com/DorianGrey-Austria/endlessrunner2  
 **Deployment:** GitHub Actions → Hostinger FTP  
 **Technologie:** Vanilla JavaScript + Three.js (Single HTML File mit embedded JS/CSS)
@@ -360,7 +360,7 @@ Header set Content-Security-Policy "script-src 'self' 'unsafe-inline' 'unsafe-ev
 
 ### Environment Details:
 - **Hosting:** Hostinger (Shared Hosting)
-- **Domain:** ki-revolution.at
+- **Domain:** endlessrunner.vibecoding.company
 - **SSL:** HTTPS aktiv
 - **Server:** Apache mit .htaccess Support
 - **Deployment:** GitHub Actions mit FTP
@@ -420,13 +420,13 @@ git push
 
 2. **Deployment Status prüfen:**
    ```bash
-   curl -I https://ki-revolution.at/
+   curl -I https://endlessrunner.vibecoding.company/
    # Check Last-Modified header
    ```
 
 3. **CSP Header analysieren:**
    ```bash
-   curl -I https://ki-revolution.at/ | grep -i security
+   curl -I https://endlessrunner.vibecoding.company/ | grep -i security
    ```
 
 4. **Three.js direkt testen:**

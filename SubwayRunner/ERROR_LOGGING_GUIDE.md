@@ -104,7 +104,7 @@ curl -X POST https://[YOUR_PROJECT_ID].supabase.co/functions/v1/get-errors \
       "error_type": "javascript",
       "message": "Cannot read property 'x' of undefined",
       "stack": "Error: Cannot read property...",
-      "source_url": "https://ki-revolution.at/",
+      "source_url": "https://endlessrunner.vibecoding.company/",
       "line_number": 1234,
       "column_number": 56,
       "game_version": "V3.7.1-HOTFIX",

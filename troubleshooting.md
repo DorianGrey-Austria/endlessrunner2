@@ -1321,7 +1321,7 @@ NACHHER: Spawn → Sammeln → collectedKiwis++ → Bei 30+7: STOP → Korrekte 
 #### **Lösung**:
 ```yaml
 # Vorher: Falscher Pfad
-server-dir: /domains/ki-revolution.at/public_html/
+server-dir: /domains/endlessrunner.vibecoding.company/public_html/
 
 # Nachher: Korrekter Root-Pfad
 server-dir: /

@@ -147,7 +147,7 @@ e.preventDefault()
 
 ### **Testing URLs**
 - **Lokal**: `http://localhost:8001/` (Mobile im gleichen Netzwerk)
-- **Production**: `https://ki-revolution.at/`
+- **Production**: `https://endlessrunner.vibecoding.company/`
 
 ### **Mobile Debug Console**
 ```javascript

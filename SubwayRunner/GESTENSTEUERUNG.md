@@ -144,7 +144,7 @@ python3 -m http.server 8001
 
 ### **Production Test (FAILED)**
 ```
-https://ki-revolution.at/
+https://endlessrunner.vibecoding.company/
 - Button sichtbar ✅
 - Module Loading ❌
 - Kamera Start ❌

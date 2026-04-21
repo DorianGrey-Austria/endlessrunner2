@@ -542,16 +542,16 @@ Local Development → Git Push → GitHub Actions → FTP Upload → Live Game
 
 ---
 
-## 📌 **16. Aktuelle Deployments auf ki-revolution.at**
+## 📌 **16. Aktuelle Deployments auf endlessrunner.vibecoding.company**
 
 ### **Bestehende GitHub Repositories mit funktionierender CI/CD Pipeline:**
 
 #### **1. endlessrunner2** ✅
 - **Repository**: https://github.com/DorianGrey-Austria/endlessrunner2
-- **Live URL**: https://ki-revolution.at/
+- **Live URL**: https://endlessrunner.vibecoding.company/
 - **GitHub Actions**: "Deploy EndlessRunner MVP with Head Tracking"
 - **Status**: Aktiv, letzte erfolgreiche Deployments heute
-- **Secrets**: Bereits konfiguriert für ki-revolution.at
+- **Secrets**: Bereits konfiguriert für endlessrunner.vibecoding.company
 
 ### **🔧 KRITISCHER DEPLOYMENT-PFAD (30.06.2025)**
 
@@ -561,11 +561,11 @@ server-dir: /public_html/
 ```
 
 **NICHT**:
-- ❌ `/domains/ki-revolution.at/public_html/`
-- ❌ `/ki-revolution.at/public_html/`
-- ❌ `/public_html/ki-revolution.at/`
+- ❌ `/domains/endlessrunner.vibecoding.company/public_html/`
+- ❌ `/endlessrunner.vibecoding.company/public_html/`
+- ❌ `/public_html/endlessrunner.vibecoding.company/`
 
-**Grund**: Die FTP-Credentials in GitHub Secrets sind bereits für die spezifische Domain `ki-revolution.at` konfiguriert, deshalb führt der Login direkt ins Domain-Verzeichnis.
+**Grund**: Die FTP-Credentials in GitHub Secrets sind bereits für die spezifische Domain `endlessrunner.vibecoding.company` konfiguriert, deshalb führt der Login direkt ins Domain-Verzeichnis.
 
 ### **📁 Korrekte Verzeichnisstruktur nach Deployment:**
 ```

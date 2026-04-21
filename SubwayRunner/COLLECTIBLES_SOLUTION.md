@@ -298,7 +298,7 @@ function animateCollection(collectible) {
 - [ ] Test: 30 Kiwis sammelbar?
 - [ ] Test: 7 Broccolis sammelbar?
 - [ ] Test: Keine Kollision mit Hindernissen?
-- [ ] Deploy und testen auf https://ki-revolution.at/
+- [ ] Deploy und testen auf https://endlessrunner.vibecoding.company/
 
 ## ⚠️ WICHTIG
 
