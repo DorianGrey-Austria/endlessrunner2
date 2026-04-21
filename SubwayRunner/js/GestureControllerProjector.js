@@ -11,7 +11,7 @@
  * - Advanced performance optimizations
  */
 
-import { FaceLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+import { FaceLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/vision_bundle.mjs";
 
 export class GestureControllerProjector {
     constructor(options = {}) {
@@ -155,7 +155,7 @@ export class GestureControllerProjector {
     async initializeMediaPipe() {
         try {
             const vision = await FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm"
             );
             
             this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {

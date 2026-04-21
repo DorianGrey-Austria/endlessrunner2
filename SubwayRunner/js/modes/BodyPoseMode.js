@@ -19,6 +19,7 @@
  */
 
 import { BaseGestureMode } from './BaseGestureMode.js';
+import { createPoseLandmarker, getDrawingUtils, getConstants } from '../utils/MediaPipeLoader.js';
 
 // MediaPipe Pose Landmark indices
 const POSE = {
@@ -37,8 +38,10 @@ export class BodyPoseMode extends BaseGestureMode {
     constructor(options = {}) {
         super(options);
 
-        // MediaPipe Pose instance
-        this.pose = null;
+        // PoseLandmarker instance (Tasks Vision API)
+        this.poseLandmarker = null;
+        this.drawingUtils = null;
+        this.poseConnections = null;
 
         // Floor tracking (for jump detection)
         this.floorHistory = [];
@@ -93,24 +96,22 @@ export class BodyPoseMode extends BaseGestureMode {
     async initialize(video, canvas) {
         await super.initialize(video, canvas);
 
-        // Load MediaPipe Pose
-        if (typeof Pose === 'undefined') {
-            throw new Error('MediaPipe Pose not loaded. Include the CDN scripts.');
-        }
-
-        this.pose = new Pose({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
-        });
-
-        this.pose.setOptions({
-            modelComplexity: 1,           // 0=lite, 1=full, 2=heavy
-            smoothLandmarks: true,
-            enableSegmentation: false,
+        // Load PoseLandmarker via Tasks Vision API (shared WASM singleton)
+        this.onStatusChange('loading', 'Lade Body-Tracking Modell...');
+        this.poseLandmarker = await createPoseLandmarker({
             minDetectionConfidence: 0.7,
             minTrackingConfidence: 0.7
         });
 
-        this.pose.onResults(this.onResults.bind(this));
+        // Load drawing utilities
+        try {
+            const DrawingUtils = await getDrawingUtils();
+            this.drawingUtils = new DrawingUtils(this.ctx);
+            const constants = await getConstants();
+            this.poseConnections = constants.PoseLandmarker.POSE_CONNECTIONS;
+        } catch (e) {
+            // Drawing is cosmetic, not critical
+        }
 
         this.onStatusChange('initialized', 'Body Pose bereit');
     }
@@ -166,19 +167,20 @@ export class BodyPoseMode extends BaseGestureMode {
         }
 
         // Cleanup MediaPipe
-        if (this.pose) {
-            this.pose.close();
-            this.pose = null;
+        if (this.poseLandmarker) {
+            this.poseLandmarker.close();
+            this.poseLandmarker = null;
         }
 
         super.destroy();
     }
 
-    async detectLoop() {
+    detectLoop() {
         if (!this.isRunning) return;
 
         if (this.video.readyState >= 2) {
-            await this.pose.send({ image: this.video });
+            const results = this.poseLandmarker.detectForVideo(this.video, performance.now());
+            this.onResults(results);
         }
 
         this.animationId = requestAnimationFrame(() => this.detectLoop());
@@ -201,15 +203,18 @@ export class BodyPoseMode extends BaseGestureMode {
         // Mirror the image
         this.ctx.translate(this.canvas.width, 0);
         this.ctx.scale(-1, 1);
-        this.ctx.drawImage(results.image, 0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
-        if (results.poseLandmarks) {
-            const landmarks = results.poseLandmarks;
+        // Tasks Vision API: results.landmarks is an array of pose arrays
+        if (results.landmarks && results.landmarks[0]) {
+            const landmarks = results.landmarks[0];
 
             // Draw pose skeleton
-            if (typeof drawConnectors !== 'undefined') {
-                drawConnectors(this.ctx, landmarks, POSE_CONNECTIONS, { color: '#ff6b35', lineWidth: 3 });
-                drawLandmarks(this.ctx, landmarks, { color: '#fff', lineWidth: 1, radius: 4 });
+            if (this.drawingUtils && this.poseConnections) {
+                try {
+                    this.drawingUtils.drawConnectors(landmarks, this.poseConnections, { color: '#ff6b35', lineWidth: 3 });
+                    this.drawingUtils.drawLandmarks(landmarks, { color: '#fff', lineWidth: 1, radius: 4 });
+                } catch (e) { /* drawing is cosmetic */ }
             }
 
             this.ctx.restore();
@@ -229,7 +234,7 @@ export class BodyPoseMode extends BaseGestureMode {
                 this.onError({
                     type: 'BODY_NOT_VISIBLE',
                     suggestedMode: 'adaptive',
-                    message: 'Körper nicht sichtbar - zum Kopf-Tracking wechseln?'
+                    message: 'Koerper nicht sichtbar - zum Kopf-Tracking wechseln?'
                 });
             }
         }
