@@ -2652,3 +2652,47 @@ Das Multi-Jump System ist so designed, dass es mit allen geplanten 10 Levels kom
 **WICHTIG**: Diese Mechanik ist jetzt Core-Gameplay und darf bei Level-Integration NICHT gebrochen werden!
 
 ---
+
+## INF-013: Gesture Dead Zone relativ zu Neutral (2026-04-21)
+
+### Problem
+AdaptiveCalibrationMode Dead Zone pruefte `Math.abs(yaw) < deadZone` — also relativ zu Yaw=0. Nach Kalibrierung liegt die Neutral-Position aber z.B. bei Yaw=5. Bewegungen nahe der Neutral-Position (z.B. Yaw=4, nur 1° entfernt) wurden NICHT als Dead Zone erkannt (|4|=4 > 2).
+
+### Loesung
+Dead Zone relativ zur kalibrierten Neutral-Position:
+```js
+const effectiveYaw = Math.abs(yaw - neutralYaw) < deadZone ? neutralYaw : yaw;
+```
+**Commit:** 2c8422b
+
+### Betrifft
+Nur `AdaptiveCalibrationMode.js`. OneEuroFilterMode subtrahiert Neutral bereits beim Filtern (`rawYaw - calibration.yaw`), daher ist dort `Math.abs(currentYaw) < deadZone` korrekt.
+
+---
+
+## INF-014: Velocity Jump False Positives (2026-04-21)
+
+### Problem
+BodyPoseMode Velocity-basierte Jump-Detection konnte durch einzelne verrauschte Frames (Landmark-Sprung) false Jumps triggern. Die Velocity war ungeglaettet: `velocity = prevY - currentY`.
+
+### Loesung
+EMA (Exponential Moving Average) auf die Velocity:
+```js
+const rawVelocity = prevShoulderY - shoulderY;
+shoulderVelocity = alpha * rawVelocity + (1 - alpha) * shoulderVelocity;
+// alpha = 0.4 — reagiert schnell auf echte Jumps, glaettet Spikes
+```
+**Commit:** 2c8422b
+
+---
+
+## INF-015: Face-Modi melden nicht wenn Gesicht verloren (2026-04-21)
+
+### Problem
+Wenn die Kamera blockiert oder das Gesicht nicht sichtbar war, gaben AdaptiveCalibrationMode und OneEuroFilterMode kein Feedback. BodyPoseMode hatte bereits `noBodyFrames` mit Warnung.
+
+### Loesung
+`noFaceFrames` Counter analog zu BodyPoseMode. Nach ~2 Sekunden (60 Frames bei 30fps) wird `onStatusChange('warning', ...)` emittiert.
+**Commit:** 2c8422b
+
+---

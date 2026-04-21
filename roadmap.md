@@ -639,6 +639,38 @@ Tested variants in `sandbox-gesture/`:
 
 ---
 
+### Phase 9: Gesture Best Practice Optimization (2026-04-21)
+**Goal**: Bring all gesture modes to April 2026 best practices
+
+#### Session 1: Core Optimization (T2, acf132e)
+- OneEuroFilter statt SimpleFilter fuer beide Face-Modi (minCutoff=1.5, beta=0.01)
+- Action Cooldowns (300-400ms) mit Auto-Clear
+- Konsistente Params zwischen AdaptiveCalibration und OneEuroFilter
+- BodyPoseMode: Lean + Walk Detection (dual-lane-methode)
+- BodyPoseMode: Thresholds tuned fuer 2-4m (jump 6%, crouch 75%, lean 10%, walk 8%)
+- BodyPoseMode: Floor-Tracking schneller (15 Frames statt 30, Top-5 Average)
+- BodyPoseMode: Jump-Cooldown 400ms (war 500ms)
+- Hysteresis (30%) in allen 3 Modi
+
+#### Session 2: Gap-Closing (T3, 12c479c → 2c8422b)
+Research-basiert gegen aktuelle MediaPipe Best Practices:
+
+| Gap | Fix | Commit |
+|-----|-----|--------|
+| Dead Zone fehlt | 2° bei Face-Modi | 12c479c |
+| Frame Skipping fehlt | Jedes 2. Frame (GPU-Konkurrenz mit Three.js) | 12c479c |
+| Velocity Jump fehlt | Hybrid Position + Velocity (~100ms schneller) | 12c479c |
+| Body Camera 1280x720 | Runter auf 640x480 (MediaPipe skaliert intern) | 12c479c |
+| Confidence Filtering fehlt | Face: geometrische Plausibilitaet, Body: Visibility ≥ 0.6 | b2f605d |
+| Dead Zone Bug | Relativ zu kalibrierter Neutral-Position, nicht zu 0 | 2c8422b |
+| Face-Lost Tracking fehlt | noFaceFrames Counter + Warning nach 2s | 2c8422b |
+| Velocity-Spike False Jumps | EMA-Smoothing (alpha=0.4) auf Shoulder-Velocity | 2c8422b |
+
+#### Resultat
+Alle Best Practices April 2026 implementiert. Dokumentiert in `bestPractice_gestensteuerung.md`.
+
+---
+
 ### **Success Metrics (2 Weeks)**
 - **UI Response Time**: < 16ms for all interactions
 - **Cross-Platform Consistency**: 100% feature parity across devices
