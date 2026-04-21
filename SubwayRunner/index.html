@@ -73,8 +73,9 @@
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             z-index: 100;
+            display: none;
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -84,6 +85,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
             text-align: right;
             z-index: 100;
+            display: none;
         }
         
         #menu {
@@ -91,33 +93,158 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(10, 10, 20, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             color: white;
-            padding: 40px;
-            border-radius: 16px;
+            padding: 36px 32px 28px;
+            border-radius: 20px;
             text-align: center;
             z-index: 200;
-            min-width: 300px;
+            min-width: 340px;
+            max-width: 420px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
         }
-        
+
         #menu h1 {
-            margin-bottom: 20px;
-            font-size: 32px;
+            margin: 0 0 4px;
+            font-size: 28px;
+            letter-spacing: -0.5px;
         }
-        
-        #menu button {
-            background: #4CAF50;
+
+        #menu .menu-subtitle {
+            color: #f0c040;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 16px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #menu .menu-info {
+            font-size: 13px;
+            color: #aab;
+            margin: 0 0 6px;
+            line-height: 1.5;
+        }
+
+        #menu .menu-section {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        #menu .menu-section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #667;
+            margin: 0 0 10px;
+        }
+
+        #menu .start-btn {
+            display: block;
+            width: 100%;
+            font-size: 20px;
+            padding: 14px 0;
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 18px;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-top: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
         }
-        
-        #menu button:hover {
-            background: #45a049;
+
+        #menu .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(76, 175, 80, 0.45);
+        }
+
+        #menu .start-btn:active {
+            transform: translateY(0);
+        }
+
+        #menu .gesture-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #menu .gesture-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s, border-color 0.15s, transform 0.15s;
+        }
+
+        #menu .gesture-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+        #menu .gesture-btn .gesture-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #menu .gesture-btn .gesture-label {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        #menu .gesture-btn .gesture-desc {
+            font-size: 10px;
+            color: #889;
+            margin-top: 2px;
+        }
+
+        #menu .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        #menu .toggle-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: #aab;
+            padding: 6px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #menu .toggle-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        #menu .toggle-btn.active {
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        #menu .controls-hint {
+            font-size: 11px;
+            color: #556;
+            margin: 12px 0 0;
         }
         
         #timer {
@@ -130,7 +257,7 @@
             top: 20px !important;
             right: 20px !important;
             z-index: 9999 !important;
-            display: block !important;
+            display: none;
         }
         
         #gestureControlBtn {
@@ -394,31 +521,36 @@
         <canvas id="gestureCanvas"></canvas>
         
         <div id="menu">
-            <h1>🚇 Subway Runner 3D</h1>
-            <h2>⏱️ 60-Sekunden Challenge!</h2>
-            <p>Überlebe 60 Sekunden bei stetig steigender Geschwindigkeit!</p>
-            <p><strong>🎯 Ziel:</strong> 60 Sekunden überleben</p>
-            <p><strong>⚡ Warnung:</strong> Wird sehr schnell!</p>
-            <p><strong>🎮 Steuerung:</strong></p>
-            <p>A/D: Spurwechsel | W/Space: Springen (bis zu 4x!) | S: Ducken</p>
-            <button onclick="startGame()" style="font-size: 24px; padding: 15px 30px; margin-top: 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                🎮 SPIEL STARTEN
-            </button>
-            <p style="margin-top: 10px; color: #888;">Multi-Jump: Springe bis zu 4x in der Luft!</p>
+            <h1>Subway Runner 3D</h1>
+            <p class="menu-subtitle">60-Sekunden Challenge</p>
 
-            <div id="gestureStartSelection" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px;">
-                <p style="color: #aaa; margin-bottom: 10px;">Oder mit Gestensteuerung spielen:</p>
-                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="selectGestureAndStart('head')" style="font-size: 16px; padding: 12px 20px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; min-width: 180px;">
-                        🧠 Kopfsteuerung
-                        <br><span style="font-size: 11px; opacity: 0.8;">Kopf neigen = Steuern</span>
+            <p class="menu-info">Ueberlebe 60 Sekunden — die Geschwindigkeit steigt immer weiter!</p>
+
+            <button class="start-btn" onclick="startGame()">SPIEL STARTEN</button>
+
+            <div class="settings-row">
+                <button class="toggle-btn active" id="soundToggleBtn" onclick="toggleSound()">
+                    <span id="soundIcon">&#x1f50a;</span> Sound
+                </button>
+            </div>
+
+            <div class="menu-section">
+                <p class="menu-section-label">Gestensteuerung</p>
+                <div class="gesture-btns">
+                    <button class="gesture-btn" onclick="selectGestureAndStart('head')">
+                        <span class="gesture-icon">&#x1f9e0;</span>
+                        <span class="gesture-label">Kopf</span>
+                        <div class="gesture-desc">Kopf neigen</div>
                     </button>
-                    <button onclick="selectGestureAndStart('body')" style="font-size: 16px; padding: 12px 20px; background: #e8710a; color: white; border: none; border-radius: 8px; cursor: pointer; min-width: 180px;">
-                        🏃 Koerpersteuerung
-                        <br><span style="font-size: 11px; opacity: 0.8;">Springen + Ducken + Lehnen</span>
+                    <button class="gesture-btn" onclick="selectGestureAndStart('body')">
+                        <span class="gesture-icon">&#x1f3c3;</span>
+                        <span class="gesture-label">Koerper</span>
+                        <div class="gesture-desc">Springen + Ducken</div>
                     </button>
                 </div>
             </div>
+
+            <p class="controls-hint">Tastatur: A/D Spur &middot; W/Space Springen (4x!) &middot; S Ducken</p>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -716,11 +848,26 @@
                     this.audioContext.resume();
                 }
             }
+
+            mute() {
+                if (this.masterGain) {
+                    this.masterGain.gain.value = 0;
+                }
+                this.isMuted = true;
+            }
+
+            unmute() {
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.masterVolume;
+                }
+                this.isMuted = false;
+            }
         }
 
         const audioManager = new AudioManager();
         audioManager.ambientPlaying = false;
-        
+        audioManager.isMuted = false;
+
         // Auto-start ambient sounds when game starts
         let ambientStarted = false;
 
@@ -830,6 +977,20 @@
         const highscoreManager = new HighscoreManager();
 
         // Make functions globally available for onclick handlers
+        window.toggleSound = function() {
+            const btn = document.getElementById('soundToggleBtn');
+            const icon = document.getElementById('soundIcon');
+            if (audioManager.isMuted) {
+                audioManager.unmute();
+                btn.classList.add('active');
+                icon.textContent = '\u{1F50A}';
+            } else {
+                audioManager.mute();
+                btn.classList.remove('active');
+                icon.textContent = '\u{1F507}';
+            }
+        };
+
         window.startGame = function() {
             console.log('startGame called');
             try {
@@ -1042,33 +1203,97 @@
             }
         };
 
-        // ==================== LEVEL DEFINITIONS ====================
-        
-        // Level 1: Classic Subway
+        // ==================== LEVEL DEFINITIONS (V2 — Optimized) ====================
+        // Shared dispose helper for all levels — prevents memory leaks
+        function disposeLevelObjects(objects) {
+            Object.keys(objects).forEach(key => {
+                const arr = objects[key];
+                if (Array.isArray(arr)) {
+                    arr.forEach(obj => {
+                        if (!obj) return;
+                        if (obj.parent) obj.parent.remove(obj);
+                        if (obj.traverse) obj.traverse(child => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                                else child.material.dispose();
+                            }
+                        });
+                        if (obj.geometry) obj.geometry.dispose();
+                        if (obj.material) {
+                            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+                            else obj.material.dispose();
+                        }
+                    });
+                    objects[key] = [];
+                } else if (arr) {
+                    if (arr.parent) arr.parent.remove(arr);
+                    if (arr.geometry) arr.geometry.dispose();
+                    if (arr.material) arr.material.dispose();
+                    objects[key] = null;
+                }
+            });
+        }
+
+        // Level 1: Classic Subway — Enhanced with tunnel lights and pipes
         const Level1 = {
             id: 1,
             name: "Classic Subway",
             description: "Classic underground subway environment",
             fogColor: 0x222222,
             fogDensity: 0.015,
-            
+            objects: { lights: [], pipes: [] },
+
             load: function(scene, renderer) {
-                console.log('🚇 Loading Level 1: Subway Tunnel');
-                
-                // Set fog and background
+                console.log('Loading Level 1: Subway Tunnel');
                 scene.fog = new THREE.FogExp2(this.fogColor, this.fogDensity);
                 renderer.setClearColor(this.fogColor);
-                
-                // Level 1 uses existing environment (buildings, street lamps, etc.)
-                // No additional setup needed as it's the default
+
+                // Tunnel ceiling pipes (shared geometry)
+                const pipeGeo = new THREE.CylinderGeometry(0.08, 0.08, 40, 6);
+                const pipeMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+                for (let i = 0; i < 6; i++) {
+                    const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                    pipe.rotation.x = Math.PI / 2;
+                    pipe.position.set(-4 + i * 1.6, 6.5, -20);
+                    scene.add(pipe);
+                    this.objects.pipes.push(pipe);
+                    LevelManager.addLevelObject(pipe);
+                }
+
+                // Flickering tunnel strip lights (shared geometry, no PointLights)
+                const lightGeo = new THREE.BoxGeometry(0.8, 0.1, 0.15);
+                const lightMat = new THREE.MeshBasicMaterial({ color: 0xFFEECC });
+                for (let i = 0; i < 15; i++) {
+                    const light = new THREE.Mesh(lightGeo, lightMat);
+                    light.position.set(0, 6.2, -i * 12);
+                    light.userData.flicker = Math.random() * Math.PI * 2;
+                    scene.add(light);
+                    this.objects.lights.push(light);
+                    LevelManager.addLevelObject(light);
+                }
+
+                // Single warm ambient light for tunnel feel
+                const tunnelLight = new THREE.DirectionalLight(0xFFDDAA, 0.3);
+                tunnelLight.position.set(0, 8, -10);
+                scene.add(tunnelLight);
+                LevelManager.addLevelObject(tunnelLight);
             },
-            
+
             update: function(deltaTime) {
-                // Level 1 has no special updates
+                // Flicker tunnel lights
+                this.objects.lights.forEach(light => {
+                    light.material.opacity = 0.7 + Math.sin(Date.now() * 0.005 + light.userData.flicker) * 0.3;
+                });
+                // Move pipes forward for parallax
+                this.objects.pipes.forEach(pipe => {
+                    pipe.position.z += gameState.speed * 0.3;
+                    if (pipe.position.z > 10) pipe.position.z -= 40;
+                });
             },
-            
+
             cleanup: function() {
-                // Level 1 doesn't need special cleanup
+                try { disposeLevelObjects(this.objects); } catch(e) { console.error('L1 cleanup:', e); }
             }
         };
 
@@ -1174,38 +1399,7 @@
             },
             
             cleanup: function() {
-                try {
-                    console.log('Neon level cleanup started');
-                    
-                    // Clear level objects safely with full error handling
-                    if (this.objects) {
-                        // Safe cleanup of arrays
-                        ['cyberpunkBuildings', 'neonLights'].forEach(key => {
-                            if (this.objects[key] && Array.isArray(this.objects[key])) {
-                                this.objects[key].forEach(obj => {
-                                    if (obj && obj.parent) {
-                                        try { scene.remove(obj); } catch(e) {}
-                                    }
-                                });
-                                this.objects[key] = [];
-                            }
-                        });
-                        
-                        // Safe cleanup of single objects
-                        if (this.objects.gridFloor) {
-                            try {
-                                if (this.objects.gridFloor.parent) {
-                                    scene.remove(this.objects.gridFloor);
-                                }
-                            } catch(e) {}
-                            this.objects.gridFloor = null;
-                        }
-                    }
-                    console.log('Neon level cleanup completed');
-                } catch (error) {
-                    console.error('Error during cleanup, but continuing:', error);
-                    // Game continues even if cleanup fails
-                }
+                try { disposeLevelObjects(this.objects); } catch(e) { console.error('L2 cleanup:', e); }
             }
         };
 
@@ -3222,6 +3416,9 @@
             audioManager.play('powerup');
             
             document.getElementById('menu').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('gestureControl').style.display = 'block';
             updateUI();
         }
 
@@ -3351,6 +3548,8 @@
             }
             
             menu.style.display = 'block';
+            document.getElementById('ui').style.display = 'none';
+            document.getElementById('instructions').style.display = 'none';
         }
 
         async function submitHighscoreInternal() {
