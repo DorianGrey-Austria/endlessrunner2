@@ -204,6 +204,9 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
                 this.ctx.restore();
             }
 
+            // Confidence check — skip frame if landmarks are unreliable
+            if (!this.isFaceConfident(landmarks)) return;
+
             // Calculate values with One Euro adaptive smoothing
             const rawYaw = this.calculateYaw(landmarks);
             const rawPitch = this.calculatePitch(landmarks);

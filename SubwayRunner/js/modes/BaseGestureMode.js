@@ -146,6 +146,33 @@ export class BaseGestureMode {
     }
 
     /**
+     * Check if face landmarks are trustworthy (best practice 2026)
+     * Validates geometric plausibility rather than per-landmark visibility
+     * @param {Array} landmarks - MediaPipe face landmarks
+     * @returns {boolean} - true if landmarks are reliable enough for gesture detection
+     */
+    isFaceConfident(landmarks) {
+        const noseTip = landmarks[1];
+        const leftCheek = landmarks[234];
+        const rightCheek = landmarks[454];
+        const forehead = landmarks[10];
+        const chin = landmarks[152];
+
+        // Face must have reasonable width (> 3% of frame)
+        const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+        if (faceWidth < 0.03) return false;
+
+        // Face must have reasonable height
+        const faceHeight = chin.y - forehead.y;
+        if (faceHeight < 0.03) return false;
+
+        // Nose must be between cheeks (not wildly outside face)
+        if (noseTip.x < leftCheek.x - faceWidth * 0.5 || noseTip.x > rightCheek.x + faceWidth * 0.5) return false;
+
+        return true;
+    }
+
+    /**
      * Calculate yaw (head left/right) from face landmarks
      * @param {Array} landmarks - MediaPipe face landmarks
      * @returns {number} - Yaw angle in degrees (roughly)

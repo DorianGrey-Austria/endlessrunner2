@@ -262,6 +262,13 @@ export class BodyPoseMode extends BaseGestureMode {
         const leftHip = landmarks[POSE.LEFT_HIP];
         const rightHip = landmarks[POSE.RIGHT_HIP];
 
+        // Confidence check — skip frame if key landmarks have low visibility
+        // PoseLandmarker provides .visibility (0-1) per landmark
+        const minVisibility = 0.6;
+        const keyLandmarks = [leftShoulder, rightShoulder, leftHip, rightHip];
+        const allVisible = keyLandmarks.every(lm => (lm.visibility ?? 1) >= minVisibility);
+        if (!allVisible) return;
+
         // Calculate positions
         this.shoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
         this.shoulderY = (leftShoulder.y + rightShoulder.y) / 2;

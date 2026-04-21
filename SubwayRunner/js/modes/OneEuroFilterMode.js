@@ -209,6 +209,9 @@ export class OneEuroFilterMode extends BaseGestureMode {
                 this.ctx.restore();
             }
 
+            // Confidence check — skip frame if landmarks are unreliable
+            if (!this.isFaceConfident(landmarks)) return;
+
             // Calculate raw yaw and pitch
             this.rawYaw = this.calculateYaw(landmarks);
             this.rawPitch = this.calculatePitch(landmarks);
