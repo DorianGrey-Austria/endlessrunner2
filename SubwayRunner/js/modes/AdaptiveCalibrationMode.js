@@ -75,6 +75,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         // Process every Nth frame when GPU is busy; 2 = every other frame ≈ 30fps detection
         this.frameSkip = options.frameSkip || 2;
         this.frameCounter = 0;
+
+        // Face-lost tracking (like BodyPoseMode's noBodyFrames)
+        this.noFaceFrames = 0;
+        this.noFaceThreshold = 60; // ~2 seconds at 30fps — emit warning
     }
 
     get name() {
@@ -192,6 +196,7 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
         if (results.faceLandmarks && results.faceLandmarks[0]) {
             const landmarks = results.faceLandmarks[0];
+            this.noFaceFrames = 0;
 
             // Draw face mesh overlay
             if (this.drawingUtils && this.faceConnections) {
@@ -224,6 +229,13 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
             // Draw head indicator
             this.drawHeadIndicator();
+        } else {
+            // Face lost — track and warn
+            this.noFaceFrames++;
+            if (this.noFaceFrames >= this.noFaceThreshold) {
+                this.onStatusChange('warning', 'Gesicht nicht erkannt — schau in die Kamera');
+                this.noFaceFrames = 0; // Reset to avoid spam
+            }
         }
     }
 
@@ -310,9 +322,11 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         const pitch = this.currentPitch;
         const now = Date.now();
 
-        // Dead zone — ignore micro-movements near neutral position
-        const effectiveYaw = Math.abs(yaw) < this.deadZone ? 0 : yaw;
-        const effectivePitch = Math.abs(pitch) < this.deadZone ? 0 : pitch;
+        // Dead zone — ignore micro-movements near CALIBRATED neutral (not zero!)
+        const neutralYaw = this.calibration.neutralYaw || 0;
+        const neutralPitch = this.calibration.neutralPitch || 0;
+        const effectiveYaw = Math.abs(yaw - neutralYaw) < this.deadZone ? neutralYaw : yaw;
+        const effectivePitch = Math.abs(pitch - neutralPitch) < this.deadZone ? neutralPitch : pitch;
 
         // Lane detection with hysteresis (prevents flickering at threshold)
         let newLane = 'center';

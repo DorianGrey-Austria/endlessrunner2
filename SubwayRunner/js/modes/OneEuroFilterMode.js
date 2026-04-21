@@ -70,6 +70,10 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
         this.frameSkip = options.frameSkip || 2;
         this.frameCounter = 0;
+
+        // Face-lost tracking
+        this.noFaceFrames = 0;
+        this.noFaceThreshold = 60; // ~2 seconds at 30fps
     }
 
     get name() {
@@ -192,6 +196,7 @@ export class OneEuroFilterMode extends BaseGestureMode {
 
         if (results.faceLandmarks && results.faceLandmarks[0]) {
             const landmarks = results.faceLandmarks[0];
+            this.noFaceFrames = 0;
 
             // Draw face mesh overlay
             if (this.drawingUtils) {
@@ -226,6 +231,12 @@ export class OneEuroFilterMode extends BaseGestureMode {
 
             // Draw direction indicator
             this.drawDirectionIndicator();
+        } else {
+            this.noFaceFrames++;
+            if (this.noFaceFrames >= this.noFaceThreshold) {
+                this.onStatusChange('warning', 'Gesicht nicht erkannt — schau in die Kamera');
+                this.noFaceFrames = 0;
+            }
         }
     }
 

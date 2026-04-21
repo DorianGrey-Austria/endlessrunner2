@@ -78,7 +78,8 @@ export class BodyPoseMode extends BaseGestureMode {
         // Detects upward MOVEMENT, not just absolute position → faster reaction
         this.prevShoulderY = 0;
         this.shoulderVelocity = 0;
-        this.velocityJumpThreshold = 0.015; // upward velocity threshold (negative Y = upward)
+        this.velocitySmoothing = 0.4; // EMA alpha — smooths single-frame spikes
+        this.velocityJumpThreshold = 0.015; // upward velocity threshold
 
         // Hysteresis for lane detection
         this.lastLane = 'center';
@@ -278,8 +279,10 @@ export class BodyPoseMode extends BaseGestureMode {
         // Torso height (distance from shoulders to hips)
         this.torsoHeight = this.hipY - this.shoulderY;
 
-        // Velocity tracking (negative = upward movement = jumping)
-        this.shoulderVelocity = this.prevShoulderY - this.shoulderY;
+        // Velocity tracking with EMA smoothing (prevents single-frame spike false jumps)
+        const rawVelocity = this.prevShoulderY - this.shoulderY;
+        this.shoulderVelocity = this.velocitySmoothing * rawVelocity +
+            (1 - this.velocitySmoothing) * this.shoulderVelocity;
         this.prevShoulderY = this.shoulderY;
 
         // Calibrate normal torso height and center position on first detection
