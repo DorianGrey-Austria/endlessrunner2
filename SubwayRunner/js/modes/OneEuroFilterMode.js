@@ -74,6 +74,14 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Face-lost tracking
         this.noFaceFrames = 0;
         this.noFaceThreshold = 60; // ~2 seconds at 30fps
+
+        // Debug / Logging (April 2026)
+        this.lastSkipReason = null;
+        this.skippedFrames = 0;
+        this.totalFrames = 0;
+
+        // Configurable pitch baseline (April 2026)
+        this.pitchBaseline = options.pitchBaseline || 0.4;
     }
 
     get name() {
@@ -175,6 +183,8 @@ export class OneEuroFilterMode extends BaseGestureMode {
     }
 
     onResults(results) {
+        this.totalFrames++;
+
         // Update FPS counter
         this.frameCount++;
         const now = Date.now();
@@ -215,11 +225,17 @@ export class OneEuroFilterMode extends BaseGestureMode {
             }
 
             // Confidence check — skip frame if landmarks are unreliable
-            if (!this.isFaceConfident(landmarks)) return;
+            if (!this.isFaceConfident(landmarks)) {
+                this.lastSkipReason = 'confidence check failed (face too small or distorted)';
+                this.skippedFrames++;
+                return;
+            }
 
-            // Calculate raw yaw and pitch
+            this.lastSkipReason = null;
+
+            // Calculate raw yaw and pitch (with configurable pitchBaseline)
             this.rawYaw = this.calculateYaw(landmarks);
-            this.rawPitch = this.calculatePitch(landmarks);
+            this.rawPitch = this.calculatePitch(landmarks, this.pitchBaseline);
 
             // Apply One Euro Filter
             const timestamp = performance.now();
@@ -232,6 +248,7 @@ export class OneEuroFilterMode extends BaseGestureMode {
             // Draw direction indicator
             this.drawDirectionIndicator();
         } else {
+            this.lastSkipReason = 'no face detected';
             this.noFaceFrames++;
             if (this.noFaceFrames >= this.noFaceThreshold) {
                 this.onStatusChange('warning', 'Gesicht nicht erkannt — schau in die Kamera');
@@ -345,14 +362,45 @@ export class OneEuroFilterMode extends BaseGestureMode {
         this.onStatusChange('ready', 'Kalibrierung geladen');
     }
 
-    // Get debug info for UI
+    /**
+     * Apply config from Config Panel (April 2026)
+     */
+    applyConfig(config) {
+        if (!config) return;
+        if (config.deadZone !== undefined) this.deadZone = config.deadZone;
+        if (config.pitchBaseline !== undefined) this.pitchBaseline = config.pitchBaseline;
+        if (config.hysteresis !== undefined) this.hysteresis = config.hysteresis;
+    }
+
+    /**
+     * Get current config for Config Panel
+     */
+    getConfig() {
+        return {
+            deadZone: this.deadZone,
+            pitchBaseline: this.pitchBaseline,
+            hysteresis: this.hysteresis
+        };
+    }
+
+    /**
+     * Get debug info for UI overlay (April 2026 — extended)
+     */
     getDebugInfo() {
         return {
+            mode: 'oneEuro',
             fps: this.fps,
             rawYaw: this.rawYaw,
             rawPitch: this.rawPitch,
             filteredYaw: this.currentYaw,
             filteredPitch: this.currentPitch,
+            thresholds: { ...this.thresholds },
+            deadZone: this.deadZone,
+            hysteresis: this.hysteresis,
+            pitchBaseline: this.pitchBaseline,
+            lastSkipReason: this.lastSkipReason,
+            skippedFrames: this.skippedFrames,
+            totalFrames: this.totalFrames,
             lane: this.currentLane,
             action: this.currentAction
         };

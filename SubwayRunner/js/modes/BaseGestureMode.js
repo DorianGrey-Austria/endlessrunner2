@@ -174,28 +174,35 @@ export class BaseGestureMode {
 
     /**
      * Calculate yaw (head left/right) from face landmarks
+     * Normalized by face width → distance-independent (April 2026 fix)
      * @param {Array} landmarks - MediaPipe face landmarks
-     * @returns {number} - Yaw angle in degrees (roughly)
+     * @returns {number} - Yaw angle (roughly degrees, distance-independent)
      */
     calculateYaw(landmarks) {
         const noseTip = landmarks[1];
         const leftCheek = landmarks[234];
         const rightCheek = landmarks[454];
         const faceCenter = (leftCheek.x + rightCheek.x) / 2;
-        return (noseTip.x - faceCenter) * 100;
+        const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+        if (faceWidth < 0.01) return 0; // safety: face too small
+        // Normalize by face width → same yaw value at any camera distance
+        return ((noseTip.x - faceCenter) / faceWidth) * 50;
     }
 
     /**
      * Calculate pitch (head up/down) from face landmarks
+     * Configurable baseline → adapts to different face proportions (April 2026 fix)
      * @param {Array} landmarks - MediaPipe face landmarks
-     * @returns {number} - Pitch angle in degrees (roughly)
+     * @param {number} pitchBaseline - Expected nose position ratio (default 0.4)
+     * @returns {number} - Pitch angle (roughly degrees)
      */
-    calculatePitch(landmarks) {
+    calculatePitch(landmarks, pitchBaseline = 0.4) {
         const forehead = landmarks[10];
         const noseTip = landmarks[1];
         const chin = landmarks[152];
         const faceHeight = chin.y - forehead.y;
+        if (faceHeight < 0.01) return 0; // safety: face too small
         const noseRelative = (noseTip.y - forehead.y) / faceHeight;
-        return (noseRelative - 0.4) * 100;
+        return (noseRelative - pitchBaseline) * 100;
     }
 }

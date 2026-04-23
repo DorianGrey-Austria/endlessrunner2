@@ -1,295 +1,138 @@
-# 🔍 GESTURE CONTROL TROUBLESHOOTING GUIDE
+# Gesture Control Troubleshooting Guide
 
-## 🚨 PROBLEM: Gestensteuerung nicht sichtbar/funktioniert nicht
-
-### **STATUS: V3.4-GESTURE-DEBUG deployed**
-**Live URL**: https://endlessrunner.vibecoding.company/
+**Updated**: April 2026 — covers GestureManager 3-mode architecture
 
 ---
 
-## 📋 DEBUGGING CHECKLISTE
+## Step 1: Use the Debug Overlay (recommended)
 
-### **1. BROWSER-KONSOLE ÖFFNEN (F12)**
-Nach dem Laden der Seite sollten folgende Meldungen erscheinen:
-```javascript
-🎮 SubwayRunner V3.4-GESTURE-DEBUG loaded
-🎮 === GESTURE CONTROL DEBUG INFO ===
-Button Element: [object]
-Canvas Element: [object]
-Video Element: [object]
-Status Element: [object]
-Module Loaded: true/false
-Controller Instance: null
-Gesture Enabled: false
-```
+The fastest way to diagnose gesture issues is the **real-time debug overlay**:
 
-### **2. MANUELLE DEBUG-COMMANDS**
-In der Browser-Konsole eingeben:
-```javascript
-// Debug Info anzeigen
-debugGesture()
+1. Add `?gestureDebug=1` to the URL: `http://localhost:8001?gestureDebug=1`
+2. Or: Click the gear icon next to "Neu kalibrieren" > Debug tab > toggle "Show Debug Overlay"
+3. The overlay shows:
+   - **SKIP reason**: Why frames are being dropped (e.g. "visibility: LS=0.31 < 0.40")
+   - **Raw vs Filtered values**: Whether filtering is too aggressive
+   - **Thresholds**: Whether they match your actual movement range
+   - **FPS**: Whether detection is running at expected ~30fps
 
-// Button manuell suchen
-document.getElementById('gestureControlBtn')
+## Step 2: Console Debug Commands
 
-// Button sichtbar machen (falls versteckt)
-document.getElementById('gestureControlBtn').style.display = 'block'
-document.getElementById('gestureControlBtn').style.visibility = 'visible'
-document.getElementById('gestureControlBtn').style.position = 'fixed'
-document.getElementById('gestureControlBtn').style.top = '20px'
-document.getElementById('gestureControlBtn').style.right = '20px'
-document.getElementById('gestureControlBtn').style.zIndex = '99999'
+```js
+// Full debug info from active mode
+gestureManager.getExtendedDebugInfo()
 
-// Module manuell laden
-import('./js/GestureControllerProjector.js').then(m => {
-    window.GestureControllerProjector = m.GestureControllerProjector || m.default;
-    console.log('Module loaded:', !!window.GestureControllerProjector);
-})
+// Current config values
+gestureManager.getConfig()
+
+// Force recalibration
+gestureManager.startCalibration()
+
+// Switch mode at runtime
+gestureManager.switchMode('bodyPose')  // or 'adaptive' or 'oneEuro'
+
+// Adjust thresholds live
+gestureManager.applyConfig({ jumpThreshold: 0.08, minVisibility: 0.3 })
 ```
 
 ---
 
-## 🔴 HÄUFIGE FEHLER & LÖSUNGEN
+## Common Issues
 
-### **FEHLER 1: Button nicht sichtbar**
-**Symptome**: 
-- Kein grüner Button oben rechts
-- `document.getElementById('gestureControlBtn')` gibt `null` zurück
+### Head Mode: No lane changes detected
 
-**Mögliche Ursachen**:
-1. HTML-Element nicht im DOM
-2. CSS versteckt das Element
-3. JavaScript-Fehler beim Initialisieren
+**Symptoms**: Head turns don't register as left/right lane changes.
 
-**LÖSUNGEN**:
-```javascript
-// 1. Prüfe ob HTML vorhanden
-document.querySelector('#gestureControl')
+**Debug**: Check overlay for `filteredYaw` values while turning head. Compare with `THRESH L/R`.
 
-// 2. Force-Display
-const btn = document.getElementById('gestureControlBtn');
-if (btn) {
-    btn.style.cssText = 'display: block !important; visibility: visible !important; position: fixed !important; top: 20px !important; right: 20px !important; z-index: 99999 !important;';
-}
+**Causes & Fixes**:
+1. **Range too small during calibration** → Overlay shows "Bewegungsbereich zu klein!" → Recalibrate, move head further
+2. **Dead zone too large** → Config Panel > Head > reduce Dead Zone from 2.0 to 1.0
+3. **Sensitivity too low** → Config Panel > Head > increase Sensitivity from 0.45 to 0.6
+4. **Face too far from camera** → Yaw is now distance-normalized (April 2026), but face must be > 3% of frame
 
-// 3. Button manuell erstellen (Notfall)
-if (!document.getElementById('gestureControlBtn')) {
-    const div = document.createElement('div');
-    div.id = 'gestureControl';
-    div.innerHTML = '<button id="gestureControlBtn" style="position:fixed;top:20px;right:20px;z-index:99999;background:#00ff88;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">🎮 Gestensteuerung aktivieren</button>';
-    document.body.appendChild(div);
-}
-```
+### Head Mode: Jump/duck not triggering
 
-### **FEHLER 2: Module Loading Failed**
-**Symptome**:
-- Konsole zeigt: `Failed to load module`
-- 404 Error für `GestureControllerProjector.js`
+**Symptoms**: Looking up/down doesn't trigger jump/duck.
 
-**Mögliche Ursachen**:
-1. Datei nicht auf Server
-2. Falscher Pfad
-3. CORS/MIME-Type Problem
+**Debug**: Check overlay for `filteredPitch` values while nodding. Compare with `THRESH U/D`.
 
-**LÖSUNGEN**:
-```javascript
-// 1. Prüfe ob Datei existiert
-fetch('./js/GestureControllerProjector.js')
-    .then(r => console.log('File exists:', r.ok, r.status))
-    .catch(e => console.error('File not found:', e))
+**Causes & Fixes**:
+1. **Pitch baseline wrong** → Config Panel > Head > adjust Pitch Baseline (default 0.4). Try 0.35-0.45.
+2. **Cooldown active** → Wait 350ms between actions (normal behavior)
+3. **Old calibration data** → After April 2026 update, old calibration is auto-discarded. Force recalibrate.
 
-// 2. Alternative Pfade testen
-const paths = [
-    './js/GestureControllerProjector.js',
-    '/js/GestureControllerProjector.js',
-    'js/GestureControllerProjector.js',
-    './SubwayRunner/js/GestureControllerProjector.js'
-];
+### Body Mode: No detection at all
 
-paths.forEach(path => {
-    fetch(path).then(r => {
-        if (r.ok) console.log('✅ Found at:', path);
-    });
-});
+**Symptoms**: Nothing happens, no lane changes, no jump/duck.
 
-// 3. Module direkt als Script laden
-const script = document.createElement('script');
-script.type = 'module';
-script.src = './js/GestureControllerProjector.js';
-document.head.appendChild(script);
-```
+**Debug**: Check overlay for `VIS` section — shows landmark visibility scores.
 
-### **FEHLER 3: MediaPipe Loading Failed**
-**Symptome**:
-- Fehler beim Kamera-Start
-- `FaceLandmarker is not defined`
+**Causes & Fixes**:
+1. **Visibility too low** → If all VIS values < 0.4, the mode skips ALL frames. Fix:
+   - Move closer to camera or improve lighting
+   - Config Panel > Body > reduce Min Visibility to 0.3
+   - Check `SKIP` reason in overlay
+2. **Only shoulders visible** → Progressive detection activates lean-only mode. Jump/crouch requires hips visible.
+3. **Not calibrated** → Check overlay for `cal: NO`. Recalibrate: stand straight for 4 seconds.
+4. **Camera too close** → Body mode needs 2-4m distance. At < 1m, use head mode instead.
 
-**Mögliche Ursachen**:
-1. CDN nicht erreichbar
-2. Netzwerk-Timeout
-3. Browser-Inkompatibilität
+### Body Mode: Jump not registering
 
-**LÖSUNGEN**:
-```javascript
-// 1. MediaPipe manuell laden
-const script = document.createElement('script');
-script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0';
-document.head.appendChild(script);
+**Symptoms**: Actually jumping but game doesn't react.
 
-// 2. Prüfe Browser-Kompatibilität
-console.log('Browser:', navigator.userAgent);
-console.log('ES6 Modules:', 'noModule' in HTMLScriptElement.prototype);
-console.log('Async/Await:', typeof (async () => {}) === 'function');
-console.log('WebRTC:', !!navigator.mediaDevices?.getUserMedia);
-```
+**Debug**: Check overlay for `HEIGHT` value and threshold. Check `vel` for velocity.
 
-### **FEHLER 4: Kamera-Zugriff verweigert**
-**Symptome**:
-- "Permission denied" Fehler
-- Kamera startet nicht
+**Causes & Fixes**:
+1. **Jump threshold too high** → Config Panel > Body > reduce Jump Threshold (try 0.07)
+2. **Floor tracking drifted** → Recalibrate to reset floor level
+3. **Too far from camera** → At 4m+, shoulder movement is < 6% of frame. Use "Far" distance preset.
+4. **Velocity threshold not met** → Config Panel > Body > reduce Velocity Jump threshold
 
-**LÖSUNGEN**:
-1. **HTTPS verwenden** (nicht HTTP)
-2. **Kamera-Berechtigung prüfen**:
-   - Chrome: chrome://settings/content/camera
-   - Edge: edge://settings/content/camera
-3. **Andere Apps schließen** die Kamera verwenden
+### Body Mode: Crouch not registering
+
+**Symptoms**: Ducking doesn't trigger.
+
+**Debug**: Check overlay for `TORSO ratio` value. Must drop below threshold (default 0.82).
+
+**Causes & Fixes**:
+1. **Threshold too aggressive** → Config Panel > Body > increase Crouch Threshold to 0.88
+2. **Only bending forward, not down** → Crouch measures shoulder-to-hip distance, not head height
+3. **Normal torso height miscalibrated** → Recalibrate while standing fully upright
+
+### Camera permission denied
+
+1. Ensure **HTTPS** (or localhost) — camera requires secure context
+2. Check browser permissions: Chrome > Settings > Privacy > Camera
+3. Close other apps using the camera
+4. Try incognito mode to rule out extensions
+
+### MediaPipe loading failed
+
+1. Check network: CDN `cdn.jsdelivr.net` must be reachable
+2. Check console for WASM errors
+3. Try hard-refresh: Cmd+Shift+R (Mac) / Ctrl+Shift+R (Windows)
+4. GPU fallback: If WebGL fails, MediaPipeLoader auto-falls back to CPU delegate
 
 ---
 
-## 🛠️ VOLLSTÄNDIGE NEUINITIALISIERUNG
+## Distance Presets (Body Mode)
 
-Falls nichts funktioniert, führe diese Schritte aus:
+| Preset | Jump | Crouch | Lean | Visibility | Velocity |
+|--------|------|--------|------|------------|----------|
+| Close (< 1.5m) | 0.14 | 0.85 | 0.12 | 0.35 | 0.020 |
+| Medium (2-3m) | 0.10 | 0.82 | 0.10 | 0.40 | 0.015 |
+| Far (3-5m) | 0.07 | 0.78 | 0.08 | 0.45 | 0.010 |
 
-```javascript
-// SCHRITT 1: Cleanup
-if (window.gestureController) {
-    window.gestureController.stop();
-    window.gestureController = null;
-}
-
-// SCHRITT 2: Button erstellen
-const container = document.createElement('div');
-container.innerHTML = `
-    <div id="gestureControl" style="position:fixed;top:20px;right:20px;z-index:99999;">
-        <button id="gestureControlBtn" style="background:#00ff88;color:#000;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">
-            🎮 Gestensteuerung Test
-        </button>
-    </div>
-    <video id="gestureVideo" style="display:none;" autoplay playsinline></video>
-    <canvas id="gestureCanvas" style="position:fixed;bottom:20px;left:20px;width:180px;height:135px;border:2px solid #00ff88;display:none;"></canvas>
-`;
-document.body.appendChild(container);
-
-// SCHRITT 3: Module laden
-import('./js/GestureControllerProjector.js').then(module => {
-    const GestureControllerProjector = module.GestureControllerProjector || module.default;
-    
-    // SCHRITT 4: Event Handler
-    document.getElementById('gestureControlBtn').onclick = async () => {
-        try {
-            const controller = new GestureControllerProjector({
-                videoElement: document.getElementById('gestureVideo'),
-                canvasElement: document.getElementById('gestureCanvas'),
-                onGestureDetected: (gesture) => console.log('Gesture:', gesture),
-                onError: (error) => console.error('Error:', error)
-            });
-            
-            await controller.start();
-            document.getElementById('gestureCanvas').style.display = 'block';
-            alert('✅ Gestensteuerung gestartet!');
-            
-        } catch (error) {
-            alert('❌ Fehler: ' + error.message);
-        }
-    };
-    
-    console.log('✅ Gesture Control reinitialized!');
-}).catch(error => {
-    console.error('❌ Module loading failed:', error);
-    alert('Module konnte nicht geladen werden. Siehe Konsole für Details.');
-});
-```
+Select via Config Panel > Body > Distance Presets.
 
 ---
 
-## 📊 ERWARTETE KONSOLEN-AUSGABE (bei Erfolg)
-
-```
-🎮 SubwayRunner V3.4-GESTURE-DEBUG loaded
-🎮 === GESTURE CONTROL DEBUG INFO ===
-Button Element: <button id="gestureControlBtn">
-Canvas Element: <canvas id="gestureCanvas">
-Video Element: <video id="gestureVideo">
-Status Element: <div id="gestureStatus">
-Module Loaded: true
-Controller Instance: null
-Gesture Enabled: false
-Button Position: {top: 20, right: 1880, width: 200, height: 40}
-Button Display: block
-Button Visibility: visible
-Button Z-Index: 9999
-=====================================
-🎮 Gesture Control Button found!
-```
-
----
-
-## 🚀 LOKALER TEST
+## Local Testing
 
 ```bash
-# 1. Server starten
 cd SubwayRunner
-python3 -m http.server 8001
-
-# 2. Browser öffnen (Chrome/Edge)
-http://localhost:8001/
-
-# 3. Konsole öffnen (F12)
-# 4. Fehler analysieren
-# 5. Debug-Commands ausführen
+lsof -ti:8001 | xargs kill -9 2>/dev/null || true
+npm run serve
+# Open: http://localhost:8001?gestureDebug=1
 ```
-
----
-
-## 💡 QUICK FIX ATTEMPT
-
-In Browser-Konsole copy-pasten:
-```javascript
-// QUICK FIX - Alles in einem
-(async () => {
-    // Button sichtbar machen
-    const btn = document.getElementById('gestureControlBtn');
-    if (btn) {
-        btn.style.cssText = 'display:block !important;visibility:visible !important;position:fixed !important;top:20px !important;right:20px !important;z-index:99999 !important;background:#00ff88 !important;';
-        console.log('✅ Button visible');
-    } else {
-        console.log('❌ Button not found - creating new one');
-        const div = document.createElement('div');
-        div.innerHTML = '<button id="gestureControlBtn" style="position:fixed;top:20px;right:20px;z-index:99999;background:#00ff88;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;">🎮 Gesture Test</button>';
-        document.body.appendChild(div);
-    }
-    
-    // Module laden
-    try {
-        const module = await import('./js/GestureControllerProjector.js');
-        window.GestureControllerProjector = module.GestureControllerProjector || module.default;
-        console.log('✅ Module loaded');
-    } catch (e) {
-        console.error('❌ Module failed:', e);
-    }
-})();
-```
-
----
-
-## 📞 WEITERE HILFE
-
-Wenn nichts funktioniert, bitte folgende Informationen sammeln:
-1. Browser & Version (chrome://version)
-2. Konsolen-Fehler (vollständig)
-3. Netzwerk-Tab Screenshot (F12 → Network)
-4. debugGesture() Output
-5. window.location.href (aktuelle URL)
-
-Diese Informationen helfen bei der weiteren Fehlersuche!

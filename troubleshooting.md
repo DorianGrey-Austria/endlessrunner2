@@ -2696,3 +2696,44 @@ Wenn die Kamera blockiert oder das Gesicht nicht sichtbar war, gaben AdaptiveCal
 **Commit:** 2c8422b
 
 ---
+
+## INF-016: Body Mode verwirft fast alle Frames (2026-04-23)
+
+### Problem
+BodyPoseMode funktionierte praktisch nicht — fast alle Frames wurden still verworfen. Kein Feedback warum.
+
+### Ursache
+1. `minVisibility = 0.6` war zu strikt. PoseLandmarker Lite liefert oft nur 0.3-0.5 Visibility fuer teilweise sichtbare Landmarks.
+2. ALLE 4 Key-Landmarks (Schultern + Hueften) mussten den Threshold erreichen. Bei partieller Sichtbarkeit (z.B. nur Oberkoerper) wurden 100% der Frames verworfen.
+3. Kein `lastSkipReason` — Benutzer und Entwickler konnten nicht sehen WARUM nichts funktionierte.
+
+### Loesung
+1. `minVisibility` auf 0.4 gesenkt (konfigurierbar via Config Panel)
+2. Progressive Detection implementiert: Schultern reichen fuer Lane-Wechsel, voller Koerper nur fuer Jump/Crouch
+3. `lastSkipReason` String mit exakten Visibility-Werten fuer Debug Overlay
+4. One Euro Filter auf alle Body-Positionen (shoulderY, hipY, shoulderCenterX)
+5. Jump Threshold von 0.06 auf 0.10, Crouch von 0.75 auf 0.82
+6. Kalibrierung von 2s auf 4s mit Qualitaetscheck (min. 15 Frames)
+
+---
+
+## INF-017: Head Mode distanzabhaengig (2026-04-23)
+
+### Problem
+Kopfsteuerung reagierte unterschiedlich je nach Kamera-Distanz. Nah = ueberempfindlich, weit weg = kaum Reaktion.
+
+### Ursache
+Yaw-Berechnung in `BaseGestureMode.calculateYaw()` war `(noseTip.x - faceCenter) * 100`. Der Faktor 100 auf die rohe X-Koordinaten-Differenz ist distanzabhaengig — bei nahem Gesicht ist die Differenz gross, bei fernem Gesicht klein.
+
+### Loesung
+Yaw durch Gesichtsbreite normalisieren:
+```js
+// Neu (distanzunabhaengig):
+const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+return ((noseTip.x - faceCenter) / faceWidth) * 50;
+```
+Zusaetzlich: Pitch-Baseline konfigurierbar gemacht (war hardcoded 0.4), wird jetzt waehrend Kalibrierung automatisch erkannt.
+
+**Schema-Migration:** Alte Kalibrierungsdaten (schemaVersion < 2) werden automatisch verworfen, Neu-Kalibrierung erzwungen.
+
+---

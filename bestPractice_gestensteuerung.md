@@ -1,6 +1,6 @@
 # Best Practices Gestensteuerung — April 2026
 
-Stand: 2026-04-21 | Projekt: SubwayRunner | MediaPipe Tasks Vision @0.10.34
+Stand: 2026-04-23 | Projekt: SubwayRunner | MediaPipe Tasks Vision @0.10.34
 
 ---
 
@@ -50,10 +50,11 @@ Mikro-Bewegungen nahe der Neutralposition ignorieren. Verhindert False Positives
 
 ```js
 this.deadZone = 2.0; // Grad — Bewegungen kleiner als das werden ignoriert
-const effectiveYaw = Math.abs(yaw) < this.deadZone ? 0 : yaw;
+// WICHTIG: Relativ zur kalibrierten Neutralposition, NICHT zu Null!
+const effectiveYaw = Math.abs(yaw - neutralYaw) < this.deadZone ? neutralYaw : yaw;
 ```
 
-**Wichtig:** Dead Zone VOR Threshold-Check anwenden, nicht danach.
+**Wichtig:** Dead Zone relativ zu `neutralYaw` (nicht 0), VOR Threshold-Check anwenden. Bug INF-013 war genau dieses Problem.
 
 ---
 
@@ -152,13 +153,16 @@ if (heightAboveFloor > jumpThreshold || velocityJump) {
 
 ## 9. Tuned Thresholds (2-4m Distanz)
 
-| Parameter | Wert | Erklaerung |
+| Parameter | Wert (April 2026) | Erklaerung |
 |-----------|------|------------|
-| jumpThreshold | 0.06 (6%) | Frame-Hoehe ueber Floor |
-| crouchThreshold | 0.75 (75%) | Torso schrumpft auf 75% |
+| jumpThreshold | **0.10 (10%)** | Frame-Hoehe ueber Floor (war 0.06 — zu nah an Noise-Floor) |
+| crouchThreshold | **0.82 (82%)** | Torso schrumpft auf 82% (war 0.75 — brauchte Vollhocke) |
 | leanThreshold | 0.10 (10%) | Lean-Offset fuer Lane-Wechsel |
 | walkThreshold | 0.08 (8%) | Laterale Verschiebung fuer Lane-Wechsel |
 | velocityJumpThreshold | 0.015 | Aufwaerts-Geschwindigkeit |
+| minVisibility | **0.4** | Body Landmark Sichtbarkeit (war 0.6 — zu strikt fuer PoseLandmarker Lite) |
+
+Alle Werte konfigurierbar ueber Config Panel oder `gestureManager.applyConfig()`.
 
 ---
 
@@ -198,15 +202,60 @@ isFaceConfident(landmarks) {
 
 Implementiert in `BaseGestureMode.isFaceConfident()` — beide Face-Modi rufen das vor Yaw/Pitch-Berechnung auf.
 
-### Body-Modus (Landmark Visibility)
-PoseLandmarker liefert `.visibility` (0-1) pro Landmark. Key-Landmarks (Schultern + Hueften) muessen >= 0.6 sein.
+### Body-Modus (Progressive Detection — April 2026)
+PoseLandmarker liefert `.visibility` (0-1) pro Landmark. Threshold: 0.4 (konfigurierbar).
+
+**Progressiver Ansatz:** Nicht alles verwerfen wenn ein Landmark fehlt.
+- Schultern sichtbar (>= 0.4): Lane-Detection via Lean
+- Schultern + Hueften sichtbar: Alle Gesten (Jump, Crouch, Lean)
+- Nichts sichtbar: Frame verwerfen, `lastSkipReason` loggen
 
 ```js
-const minVisibility = 0.6;
-const allVisible = [leftShoulder, rightShoulder, leftHip, rightHip]
-    .every(lm => (lm.visibility ?? 1) >= minVisibility);
-if (!allVisible) return; // Frame verwerfen
+const shouldersVisible = (ls.visibility >= 0.4) && (rs.visibility >= 0.4);
+const hipsVisible = (lh.visibility >= 0.4) && (rh.visibility >= 0.4);
+if (!shouldersVisible) { this.lastSkipReason = `visibility too low`; return; }
+this.detectBodyLean(); // Immer wenn Schultern sichtbar
+if (hipsVisible && this.isFloorCalibrated) {
+    this.detectJump();
+    this.detectCrouch();
+}
 ```
+
+---
+
+## 12. Yaw-Normalisierung (April 2026)
+
+Yaw muss durch Gesichtsbreite geteilt werden — sonst ist der Wert distanzabhaengig.
+
+```js
+// ALT (distanzabhaengig — nah = wild, fern = kaum Bewegung):
+return (noseTip.x - faceCenter) * 100;
+
+// NEU (distanzunabhaengig):
+const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
+return ((noseTip.x - faceCenter) / faceWidth) * 50;
+```
+
+Gleiche Kopfdrehung ergibt jetzt den gleichen Yaw-Wert bei 30cm und bei 1m Distanz.
+
+**Achtung:** Schema-Migration noetig — alte Kalibrierungsdaten (schemaVersion < 2) werden automatisch verworfen.
+
+---
+
+## 13. Config Panel + Debug Overlay (April 2026)
+
+### Config Panel
+In-Game Settings Panel mit Slider fuer alle Parameter. Getrennt von Kalibrierung in `localStorage['subwayRunner_gestureConfig']`.
+
+Drei Tabs: Head (Sensitivity, Dead Zone, Pitch Baseline, Hysteresis), Body (Jump/Crouch/Lean Thresholds, Visibility, Distance Presets), Debug (Overlay Toggle, Console Logging).
+
+### Debug Overlay
+Real-time Anzeige aller Werte + Skip-Gruende + Action-History. Aktivieren via `?gestureDebug=1` URL-Param.
+
+**Wichtigste Diagnose-Info:** `lastSkipReason` — zeigt WARUM ein Frame verworfen wurde. Das fehlte zuvor komplett und machte Debugging unmoeglich.
+
+### One Euro Filter fuer Body Mode
+Body-Positionen (shoulderY, hipY, shoulderCenterX) werden jetzt durch One Euro Filter geglaettet (minCutoff=1.0, beta=0.005). Reduziert Landmark-Jitter erheblich.
 
 ---
 

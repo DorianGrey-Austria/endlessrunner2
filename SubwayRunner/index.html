@@ -29,6 +29,7 @@
                 document.head.appendChild(script);
             });
     </script>
+    <link rel="stylesheet" href="css/gesture-config.css">
     <style>
         * {
             margin: 0;
@@ -549,14 +550,16 @@
                     <option value="bodyPose">Ganzkörper-Tracking</option>
                 </select>
                 <button id="recalibrateBtn">🎯 Neu kalibrieren</button>
+                <button id="gestureConfigBtn" title="Gesture Settings">&#9881;</button>
                 <div id="calibrationProgress">
                     <div id="calibrationProgressFill"></div>
                 </div>
             </div>
         </div>
-        
+
         <video id="gestureVideo" style="display: none;" autoplay playsinline></video>
         <canvas id="gestureCanvas"></canvas>
+        <div id="gestureDebugOverlay"></div>
         
         <div id="menu">
             <h1>Subway Runner 3D</h1>
@@ -5238,6 +5241,64 @@
                         gestureManager.startCalibration();
                     }
                 });
+            }
+
+            // Config Panel + Debug Overlay (April 2026)
+            // Load lazily after gesture system is ready
+            let gestureConfigPanel = null;
+            let gestureDebugOverlay = null;
+
+            const gestureDebugRequested = new URLSearchParams(window.location.search).get('gestureDebug') === '1';
+
+            const initGestureUI = async () => {
+                try {
+                    const [overlayModule, panelModule] = await Promise.all([
+                        import('./js/ui/GestureDebugOverlay.js'),
+                        import('./js/ui/GestureConfigPanel.js')
+                    ]);
+
+                    gestureDebugOverlay = new overlayModule.GestureDebugOverlay(
+                        gestureManager,
+                        document.getElementById('gestureDebugOverlay')
+                    );
+
+                    gestureConfigPanel = new panelModule.GestureConfigPanel(
+                        gestureManager,
+                        gestureDebugOverlay
+                    );
+
+                    if (gestureDebugRequested) {
+                        gestureDebugOverlay.show();
+                    }
+
+                    console.log('✅ Gesture Config Panel + Debug Overlay loaded');
+                } catch (e) {
+                    console.warn('⚠️ Gesture UI modules failed to load:', e);
+                }
+            };
+
+            // Config button toggles the panel
+            const configBtn = document.getElementById('gestureConfigBtn');
+            if (configBtn) {
+                configBtn.addEventListener('click', async () => {
+                    if (!gestureConfigPanel) {
+                        await initGestureUI();
+                    }
+                    if (gestureConfigPanel) {
+                        gestureConfigPanel.toggle();
+                    }
+                });
+            }
+
+            // Auto-init if debug URL param is set
+            if (gestureDebugRequested) {
+                const waitForManager = setInterval(() => {
+                    if (gestureManager) {
+                        clearInterval(waitForManager);
+                        initGestureUI();
+                    }
+                }, 500);
+                setTimeout(() => clearInterval(waitForManager), 10000);
             }
         } else {
             console.warn('⚠️ Gesture Control Button not found');

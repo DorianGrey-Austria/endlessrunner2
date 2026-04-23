@@ -3,22 +3,31 @@
  *
  * Uses MediaPipe Pose Landmarker (33 landmarks) for full-body tracking.
  *
- * Jump Detection Strategy (from GitHub issue #3909):
- * - Track floor position by averaging hip Y positions over time
- * - When shoulders suddenly rise above floor threshold → jump detected
+ * Jump Detection Strategy (hybrid — best practice April 2026):
+ * - Track floor position by recency-weighted averaging of hip Y positions
+ * - Position-based: shoulders above floor threshold → jump detected
+ * - Velocity-based: rapid upward movement → faster jump reaction
+ * - One Euro Filters on all position signals for noise reduction
  *
  * Crouch Detection:
- * - Measure shoulder-to-hip ratio
- * - When ratio shrinks significantly → crouch detected
+ * - Measure shoulder-to-hip ratio vs calibrated normal
+ * - When ratio shrinks below threshold → crouch detected
  *
  * Lean Detection:
- * - Compare nose X position to shoulder center X
- * - Offset beyond threshold → lean left/right
+ * - Compare nose X position to shoulder center X (lean)
+ * - Compare shoulder center to calibrated neutral (walk)
+ * - Use whichever detects movement first
+ *
+ * Progressive Detection (April 2026):
+ * - Full body visible → all gestures (jump, crouch, lean, walk)
+ * - Only shoulders visible → lean-only lane detection
+ * - Nothing visible → skip frame, log reason
  *
  * Best for: TV/Beamer setup with 2-4m distance, real jumping.
  */
 
 import { BaseGestureMode } from './BaseGestureMode.js';
+import { OneEuroFilter } from '../utils/OneEuroFilter.js';
 import { createPoseLandmarker, getDrawingUtils, getConstants } from '../utils/MediaPipeLoader.js';
 
 // MediaPipe Pose Landmark indices
@@ -43,25 +52,41 @@ export class BodyPoseMode extends BaseGestureMode {
         this.drawingUtils = null;
         this.poseConnections = null;
 
+        // One Euro Filters for position smoothing (April 2026 best practice)
+        // Body landmarks are noisier than face → slightly more aggressive smoothing
+        this.shoulderYFilter = new OneEuroFilter(1.0, 0.005, 1.0);
+        this.hipYFilter = new OneEuroFilter(1.0, 0.005, 1.0);
+        this.shoulderXFilter = new OneEuroFilter(1.0, 0.005, 1.0);
+        this.noseXFilter = new OneEuroFilter(1.0, 0.005, 1.0);
+
         // Floor tracking (for jump detection)
         this.floorHistory = [];
         this.floorLevel = 0;
-        this.floorSamples = 15; // 15 frames (~0.5s) — faster reaction than 30
+        this.floorSamples = 15; // 15 frames (~0.5s)
+        this.lastJumpDetectedTime = 0; // for floor drift correction
 
-        // Pose data
+        // Pose data (filtered)
         this.shoulderY = 0;
         this.hipY = 0;
         this.torsoHeight = 0;
         this.noseX = 0;
         this.shoulderCenterX = 0;
 
-        // Thresholds (tuned for 2-4m distance from screen)
+        // Raw pose data (pre-filter, for debug)
+        this.rawShoulderY = 0;
+        this.rawHipY = 0;
+        this.rawShoulderCenterX = 0;
+
+        // Thresholds (tuned for 2-4m distance — April 2026 values)
         this.thresholds = {
-            jumpThreshold: 0.06,   // 6% of frame height above floor (more sensitive)
-            crouchThreshold: 0.75, // Torso shrinks to 75% of normal (easier to trigger)
+            jumpThreshold: 0.10,   // 10% of frame height above floor (was 0.06 — too tight)
+            crouchThreshold: 0.82, // Torso shrinks to 82% of normal (was 0.75 — required full squat)
             leanThreshold: 0.10,   // 10% lean for lane change via leaning
             walkThreshold: 0.08    // 8% lateral shift for lane change via walking
         };
+
+        // Visibility threshold (configurable via Config Panel)
+        this.minVisibility = options.minVisibility || 0.4; // was 0.6 — too strict for PoseLandmarker Lite
 
         // Cooldowns
         this.lastJumpTime = 0;
@@ -73,9 +98,10 @@ export class BodyPoseMode extends BaseGestureMode {
         this.normalTorsoHeight = 0;
         this.neutralX = 0.5;       // Center position (normalized 0-1)
         this.isFloorCalibrated = false;
+        this.calibrationFrames = 0; // count valid frames during calibration
+        this.calibrationMinFrames = 15; // require at least 15 valid frames
 
         // Velocity-based jump detection (hybrid — best practice 2026)
-        // Detects upward MOVEMENT, not just absolute position → faster reaction
         this.prevShoulderY = 0;
         this.shoulderVelocity = 0;
         this.velocitySmoothing = 0.4; // EMA alpha — smooths single-frame spikes
@@ -88,6 +114,12 @@ export class BodyPoseMode extends BaseGestureMode {
         // Body not visible tracking
         this.noBodyFrames = 0;
         this.noBodyThreshold = 30; // 30 frames = ~1 second
+
+        // Debug / Logging (April 2026)
+        this.lastSkipReason = null;
+        this.landmarkVisibility = { ls: 0, rs: 0, lh: 0, rh: 0 };
+        this.skippedFrames = 0;
+        this.totalFrames = 0;
 
         // FPS
         this.fps = 0;
@@ -256,6 +288,9 @@ export class BodyPoseMode extends BaseGestureMode {
     }
 
     processPose(landmarks) {
+        this.totalFrames++;
+        const timestamp = performance.now();
+
         // Get key landmarks
         const nose = landmarks[POSE.NOSE];
         const leftShoulder = landmarks[POSE.LEFT_SHOULDER];
@@ -263,21 +298,43 @@ export class BodyPoseMode extends BaseGestureMode {
         const leftHip = landmarks[POSE.LEFT_HIP];
         const rightHip = landmarks[POSE.RIGHT_HIP];
 
-        // Confidence check — skip frame if key landmarks have low visibility
-        // PoseLandmarker provides .visibility (0-1) per landmark
-        const minVisibility = 0.6;
-        const keyLandmarks = [leftShoulder, rightShoulder, leftHip, rightHip];
-        const allVisible = keyLandmarks.every(lm => (lm.visibility ?? 1) >= minVisibility);
-        if (!allVisible) return;
+        // Track visibility for debug overlay
+        this.landmarkVisibility = {
+            ls: leftShoulder.visibility ?? 0,
+            rs: rightShoulder.visibility ?? 0,
+            lh: leftHip.visibility ?? 0,
+            rh: rightHip.visibility ?? 0
+        };
 
-        // Calculate positions
-        this.shoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
-        this.shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
-        this.hipY = (leftHip.y + rightHip.y) / 2;
-        this.noseX = nose.x;
+        // Progressive detection (April 2026 best practice):
+        // Check shoulders and hips separately for partial detection
+        const shouldersVisible = (this.landmarkVisibility.ls >= this.minVisibility) &&
+                                  (this.landmarkVisibility.rs >= this.minVisibility);
+        const hipsVisible = (this.landmarkVisibility.lh >= this.minVisibility) &&
+                            (this.landmarkVisibility.rh >= this.minVisibility);
 
-        // Torso height (distance from shoulders to hips)
-        this.torsoHeight = this.hipY - this.shoulderY;
+        if (!shouldersVisible) {
+            this.lastSkipReason = `visibility: LS=${this.landmarkVisibility.ls.toFixed(2)} RS=${this.landmarkVisibility.rs.toFixed(2)} < ${this.minVisibility}`;
+            this.skippedFrames++;
+            return;
+        }
+
+        this.lastSkipReason = null;
+
+        // Calculate raw positions
+        this.rawShoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
+        this.rawShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+        this.rawHipY = hipsVisible ? (leftHip.y + rightHip.y) / 2 : this.hipY;
+
+        // Apply One Euro Filters for noise reduction
+        this.shoulderCenterX = this.shoulderXFilter.filter(this.rawShoulderCenterX, timestamp);
+        this.shoulderY = this.shoulderYFilter.filter(this.rawShoulderY, timestamp);
+        this.noseX = this.noseXFilter.filter(nose.x, timestamp);
+
+        if (hipsVisible) {
+            this.hipY = this.hipYFilter.filter(this.rawHipY, timestamp);
+            this.torsoHeight = this.hipY - this.shoulderY;
+        }
 
         // Velocity tracking with EMA smoothing (prevents single-frame spike false jumps)
         const rawVelocity = this.prevShoulderY - this.shoulderY;
@@ -285,35 +342,71 @@ export class BodyPoseMode extends BaseGestureMode {
             (1 - this.velocitySmoothing) * this.shoulderVelocity;
         this.prevShoulderY = this.shoulderY;
 
-        // Calibrate normal torso height and center position on first detection
-        if (!this.isFloorCalibrated && this.torsoHeight > 0) {
-            this.normalTorsoHeight = this.torsoHeight;
-            this.neutralX = this.shoulderCenterX;
-            this.isFloorCalibrated = true;
+        // Calibrate on first full body detection (shoulders + hips)
+        if (!this.isFloorCalibrated && hipsVisible && this.torsoHeight > 0) {
+            if (this.isCalibrating) {
+                this.calibrationFrames++;
+            } else {
+                // Auto-calibrate on first valid frame
+                this.normalTorsoHeight = this.torsoHeight;
+                this.neutralX = this.shoulderCenterX;
+                this.isFloorCalibrated = true;
+            }
         }
 
-        // Update floor tracking (use hip Y as floor reference)
-        this.updateFloorTracking(this.hipY);
+        // Update floor tracking (only when hips visible)
+        if (hipsVisible) {
+            this.updateFloorTracking(this.hipY);
+        }
 
-        // Detect gestures
+        // Always detect lane changes (shoulders-only is sufficient)
         this.detectBodyLean();
-        this.detectJump();
-        this.detectCrouch();
+
+        // Jump and crouch require full body (hips visible + calibrated)
+        if (hipsVisible && this.isFloorCalibrated) {
+            this.detectJump();
+            this.detectCrouch();
+        }
     }
 
     updateFloorTracking(hipY) {
-        // Add to history
-        this.floorHistory.push(hipY);
+        const now = Date.now();
+
+        // Add to history with timestamp for recency weighting
+        this.floorHistory.push({ y: hipY, time: now });
 
         // Keep only last N samples
         if (this.floorHistory.length > this.floorSamples) {
             this.floorHistory.shift();
         }
 
-        // Calculate floor level (average of LOWEST positions = highest Y values)
-        const sorted = [...this.floorHistory].sort((a, b) => b - a);
+        // Recency-weighted averaging: recent samples count more
+        // Sort by Y value descending (highest Y = lowest physical position = floor)
+        const sorted = [...this.floorHistory].sort((a, b) => b.y - a.y);
         const topN = Math.min(5, sorted.length);
-        this.floorLevel = sorted.slice(0, topN).reduce((a, b) => a + b, 0) / topN;
+        const topSamples = sorted.slice(0, topN);
+
+        let weightedSum = 0;
+        let weightTotal = 0;
+        for (const sample of topSamples) {
+            // Recency weight: exponential decay, half-life ~500ms
+            const age = (now - sample.time) / 1000;
+            const weight = Math.exp(-age * 1.4); // ln(2)/0.5 ≈ 1.4
+            weightedSum += sample.y * weight;
+            weightTotal += weight;
+        }
+
+        if (weightTotal > 0) {
+            this.floorLevel = weightedSum / weightTotal;
+        }
+
+        // Slow drift correction: if no jump for 5 seconds, gradually adjust floor
+        // toward current hipY (prevents permanent drift after user repositions)
+        const timeSinceJump = now - this.lastJumpDetectedTime;
+        if (timeSinceJump > 5000 && this.isFloorCalibrated) {
+            const driftAlpha = 0.02; // very slow correction
+            this.floorLevel = this.floorLevel * (1 - driftAlpha) + hipY * driftAlpha;
+        }
     }
 
     detectBodyLean() {
@@ -368,6 +461,7 @@ export class BodyPoseMode extends BaseGestureMode {
 
         if (heightAboveFloor > this.thresholds.jumpThreshold || velocityJump) {
             this.lastJumpTime = now;
+            this.lastJumpDetectedTime = now; // for floor drift correction
             this.emitGesture('action', 'jump');
 
             // Auto-clear after cooldown
@@ -400,6 +494,7 @@ export class BodyPoseMode extends BaseGestureMode {
     startCalibration() {
         super.startCalibration();
 
+        // Reset all state
         this.floorHistory = [];
         this.floorLevel = 0;
         this.isFloorCalibrated = false;
@@ -408,14 +503,55 @@ export class BodyPoseMode extends BaseGestureMode {
         this.lastLane = 'center';
         this.prevShoulderY = 0;
         this.shoulderVelocity = 0;
+        this.calibrationFrames = 0;
+        this.lastSkipReason = null;
+        this.skippedFrames = 0;
 
-        this.onStatusChange('calibrating', 'Boden wird kalibriert - Steh gerade!');
+        // Reset One Euro Filters
+        this.shoulderYFilter.reset();
+        this.hipYFilter.reset();
+        this.shoulderXFilter.reset();
+        this.noseXFilter.reset();
 
-        setTimeout(() => {
+        this.onStatusChange('calibrating', 'Steh gerade und schau in die Kamera (4 Sekunden)');
+
+        const calibrationDuration = 4000; // 4 seconds (was 2s — too short)
+        const startTime = Date.now();
+
+        const checkCalibration = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / calibrationDuration, 1);
+            this.onCalibrationProgress(progress, progress < 1 ? 'calibrating' : 'complete');
+
+            if (elapsed < calibrationDuration) {
+                requestAnimationFrame(checkCalibration);
+                return;
+            }
+
+            // Calibration time is up — check quality
             this.isCalibrating = false;
-            this.onStatusChange('ready', 'Boden kalibriert!');
+
+            if (this.calibrationFrames >= this.calibrationMinFrames && this.torsoHeight > 0) {
+                // Good calibration
+                this.normalTorsoHeight = this.torsoHeight;
+                this.neutralX = this.shoulderCenterX;
+                this.isFloorCalibrated = true;
+                this.onStatusChange('ready', `Kalibriert! (${this.calibrationFrames} Frames erfasst)`);
+            } else if (this.calibrationFrames > 0) {
+                // Partial calibration — use what we have but warn
+                this.normalTorsoHeight = this.torsoHeight;
+                this.neutralX = this.shoulderCenterX;
+                this.isFloorCalibrated = true;
+                this.onStatusChange('warning', `Kalibrierung instabil (nur ${this.calibrationFrames}/${this.calibrationMinFrames} Frames). Erneut versuchen empfohlen.`);
+            } else {
+                // No valid frames at all
+                this.onStatusChange('error', 'Kein Koerper erkannt. Bitte sichtbar vor die Kamera stellen.');
+            }
+
             this.onCalibrationProgress(1, 'done');
-        }, 2000);
+        };
+
+        requestAnimationFrame(checkCalibration);
     }
 
     getCalibrationData() {
@@ -423,7 +559,8 @@ export class BodyPoseMode extends BaseGestureMode {
             floorLevel: this.floorLevel,
             normalTorsoHeight: this.normalTorsoHeight,
             neutralX: this.neutralX,
-            thresholds: { ...this.thresholds }
+            thresholds: { ...this.thresholds },
+            minVisibility: this.minVisibility
         };
     }
 
@@ -441,18 +578,74 @@ export class BodyPoseMode extends BaseGestureMode {
         if (data.thresholds) {
             this.thresholds = { ...this.thresholds, ...data.thresholds };
         }
+        if (data.minVisibility !== undefined) {
+            this.minVisibility = data.minVisibility;
+        }
         this.onStatusChange('ready', 'Kalibrierung geladen');
     }
 
-    // Get debug info for UI
+    /**
+     * Apply config from Config Panel (April 2026)
+     */
+    applyConfig(config) {
+        if (!config) return;
+        if (config.jumpThreshold !== undefined) this.thresholds.jumpThreshold = config.jumpThreshold;
+        if (config.crouchThreshold !== undefined) this.thresholds.crouchThreshold = config.crouchThreshold;
+        if (config.leanThreshold !== undefined) this.thresholds.leanThreshold = config.leanThreshold;
+        if (config.walkThreshold !== undefined) this.thresholds.walkThreshold = config.walkThreshold;
+        if (config.minVisibility !== undefined) this.minVisibility = config.minVisibility;
+        if (config.velocityJumpThreshold !== undefined) this.velocityJumpThreshold = config.velocityJumpThreshold;
+    }
+
+    /**
+     * Get current config for Config Panel
+     */
+    getConfig() {
+        return {
+            jumpThreshold: this.thresholds.jumpThreshold,
+            crouchThreshold: this.thresholds.crouchThreshold,
+            leanThreshold: this.thresholds.leanThreshold,
+            walkThreshold: this.thresholds.walkThreshold,
+            minVisibility: this.minVisibility,
+            velocityJumpThreshold: this.velocityJumpThreshold
+        };
+    }
+
+    /**
+     * Get debug info for UI overlay (April 2026 — extended)
+     */
     getDebugInfo() {
         return {
+            mode: 'bodyPose',
             fps: this.fps,
+            // Raw values (pre-filter)
+            rawShoulderY: this.rawShoulderY,
+            rawHipY: this.rawHipY,
+            rawShoulderCenterX: this.rawShoulderCenterX,
+            // Filtered values
             shoulderY: this.shoulderY,
             hipY: this.hipY,
+            shoulderCenterX: this.shoulderCenterX,
+            noseX: this.noseX,
+            // Derived metrics
             floorLevel: this.floorLevel,
+            torsoHeight: this.torsoHeight,
             torsoRatio: this.normalTorsoHeight > 0 ? this.torsoHeight / this.normalTorsoHeight : 0,
             heightAboveFloor: this.floorLevel - this.shoulderY,
+            velocity: this.shoulderVelocity,
+            // Thresholds (for overlay visualization)
+            thresholds: { ...this.thresholds },
+            // Landmark visibility
+            landmarkVisibility: { ...this.landmarkVisibility },
+            minVisibility: this.minVisibility,
+            // Diagnostic
+            lastSkipReason: this.lastSkipReason,
+            skippedFrames: this.skippedFrames,
+            totalFrames: this.totalFrames,
+            isFloorCalibrated: this.isFloorCalibrated,
+            normalTorsoHeight: this.normalTorsoHeight,
+            neutralX: this.neutralX,
+            // Current state
             lane: this.currentLane,
             action: this.currentAction
         };

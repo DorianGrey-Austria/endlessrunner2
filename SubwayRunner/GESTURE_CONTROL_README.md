@@ -1,178 +1,158 @@
-# 🎮 SubwayRunner Gesture Control System
+# SubwayRunner Gesture Control System
 
-## Overview
+**Version**: April 2026 (3-Mode Architecture)
+**Last Updated**: 2026-04-23
 
-This is a professional implementation of face-based gesture control for SubwayRunner using MediaPipe Face Landmarks. The system tracks head movements to control game actions without requiring hands.
+## Architecture
 
-## Features
+Strategy Pattern with `GestureManager` orchestrator and 3 interchangeable modes:
 
-### Core Functionality
-- **Head Movement Tracking**: Uses 468 face landmarks for precise tracking
-- **4 Gesture Types**: 
-  - Head tilt left → Move left lane
-  - Head tilt right → Move right lane  
-  - Head up → Jump
-  - Head down → Duck
-- **Kalman Filtering**: Smooth gesture detection without jitter
-- **Auto-Calibration**: Automatically calibrates to user's neutral position
-- **Performance Optimized**: Frame skipping and GPU acceleration
-
-### User Experience
-- **Visual Feedback**: Real-time webcam preview with gesture indicators
-- **Debug Mode**: Full landmark visualization for testing
-- **Adjustable Sensitivity**: Slider control for gesture responsiveness
-- **Error Handling**: Graceful fallback when camera unavailable
-- **FPS Monitoring**: Real-time performance metrics
-
-## Technical Implementation
-
-### Architecture
 ```
-GestureController
-├── MediaPipe Face Landmarks (468 points)
-├── Head Pose Estimation (Yaw/Pitch)
-├── Kalman Filter Smoothing
-├── Gesture Detection Logic
-├── Calibration System
-└── Performance Optimization
+GestureManager.js (Orchestrator)
+  ├── AdaptiveCalibrationMode.js  (HEAD - DEFAULT, 5s auto-learning, 45% sensitivity)
+  ├── OneEuroFilterMode.js        (HEAD - Mobile, 1.5s snapshot, fast response)
+  └── BodyPoseMode.js             (BODY - TV/Beamer, real jumping at 2-4m)
+
+Supporting:
+  ├── BaseGestureMode.js          (Abstract base class, yaw/pitch calculation)
+  ├── utils/MediaPipeLoader.js    (WASM singleton, GPU/CPU fallback)
+  ├── utils/OneEuroFilter.js      (Adaptive signal smoothing)
+  ├── ui/GestureDebugOverlay.js   (Real-time debug overlay)
+  └── ui/GestureConfigPanel.js    (In-game settings panel)
 ```
 
 ### Key Technologies
-- **MediaPipe Tasks Vision**: v0.10.0 for face detection
-- **GPU Acceleration**: WebGL-based processing
-- **Kalman Filtering**: Reduces noise in head tracking
-- **Frame Skipping**: Maintains game performance
+- **MediaPipe Tasks Vision** v0.10.34 (FaceLandmarker + PoseLandmarker Lite)
+- **One Euro Filter** (adaptive smoothing — fast response, stable at rest)
+- **GPU delegate** with CPU fallback (WebGL auto-detection)
+- **Camera**: 640x480, front-facing, ~30fps detection at 60fps rendering
 
-### Performance Targets
-| Device Type | Tracking FPS | Game Impact |
-|------------|--------------|-------------|
-| High-end   | 30 FPS       | < 5% CPU    |
-| Mid-range  | 15-20 FPS    | < 10% CPU   |
-| Low-end    | 10-15 FPS    | < 15% CPU   |
+## Modes
+
+### Head: AdaptiveCalibrationMode (DEFAULT)
+- 5-second calibration: records min/max yaw/pitch, sets thresholds at 45% of user's range
+- Yaw normalized by face width (distance-independent since April 2026)
+- Auto-detects pitch baseline from face proportions
+- Dead zone: 2.0 deg, hysteresis: 30%, frame skip: every 2nd frame
+- One Euro Filter (minCutoff=1.5, beta=0.01)
+
+### Head: OneEuroFilterMode (Mobile)
+- 1.5-second calibration: snapshot of neutral position
+- Same One Euro Filter parameters
+- Fixed thresholds (yaw: +/-12, pitch: -15/+20)
+- Best for quick-start mobile gaming
+
+### Body: BodyPoseMode (TV/Beamer)
+- PoseLandmarker Lite (33 body landmarks)
+- Hybrid jump detection: position-based + velocity-based
+- One Euro Filters on all position signals (since April 2026)
+- Progressive detection: shoulders-only = lean-only, full body = all gestures
+- 4-second calibration with quality validation (min 15 frames)
+- Floor tracking with recency-weighted averaging + drift correction
+- Visibility threshold: 0.4 (configurable)
+
+## Config Panel
+
+Gear icon button next to recalibrate. Three tabs:
+
+**Head**: Sensitivity (0.2-0.8), Dead Zone (0.5-5.0 deg), Pitch Baseline (0.3-0.5), Hysteresis (0.1-0.5)
+
+**Body**: Jump/Crouch/Lean thresholds, Min Visibility, Velocity Jump, Distance Presets (close/medium/far)
+
+**Debug**: Toggle overlay, toggle console logging
+
+Settings persist in `localStorage['subwayRunner_gestureConfig']` (separate from calibration data in `localStorage['subwayRunner_gestureCalibration']`).
+
+## Debug Overlay
+
+Activate via URL: `?gestureDebug=1` or toggle in Config Panel > Debug tab.
+
+Shows real-time:
+- Raw vs filtered values
+- Thresholds and dead zones
+- Frame skip reasons (why detection didn't trigger)
+- Landmark visibility (body mode)
+- Action history (last 5 with timestamps)
+- FPS counter
+
+Console commands:
+```js
+// Extended debug info
+gestureManager.getExtendedDebugInfo()
+
+// Current config
+gestureManager.getConfig()
+
+// Apply config at runtime
+gestureManager.applyConfig({ sensitivity: 0.5, deadZone: 3.0 })
+```
 
 ## Usage
 
-### Testing the Gesture Control
-1. Open `gesture-test.html` in Chrome/Edge/Safari
-2. Click "Kamera starten" to enable webcam
-3. Wait 2 seconds for auto-calibration
-4. Move your head to control the test character
+```js
+// New GestureManager API (current)
+import { GestureManager } from './js/GestureManager.js';
 
-### Integration with Main Game
-```javascript
-// Import the controller
-import { GestureController } from './js/GestureController.js';
-
-// Initialize
-const gestureController = new GestureController({
-    videoElement: document.getElementById('video'),
-    canvasElement: document.getElementById('canvas'),
+const manager = new GestureManager({
+    defaultMode: 'adaptive',
+    video: document.getElementById('gestureVideo'),
+    canvas: document.getElementById('gestureCanvas'),
     onGestureDetected: (gesture) => {
-        // Handle gesture in game
-        switch(gesture) {
-            case 'MOVE_LEFT': movePlayerLeft(); break;
-            case 'MOVE_RIGHT': movePlayerRight(); break;
-            case 'JUMP': playerJump(); break;
-            case 'DUCK': playerDuck(); break;
-            case 'NONE': playerNormal(); break;
-        }
-    }
+        // gesture.type: 'lane' | 'action'
+        // gesture.lane: 'left' | 'center' | 'right'
+        // gesture.action: 'jump' | 'duck' | 'none'
+    },
+    onStatusChange: (status, message) => console.log(status, message),
+    onCalibrationProgress: (progress, step) => { /* update UI */ }
 });
 
-// Start tracking
-await gestureController.start();
+await manager.start();
+manager.switchMode('bodyPose');
+manager.startCalibration();
 ```
 
-### Configuration Options
-```javascript
-// Adjust sensitivity (0.1 - 1.0)
-gestureController.setSensitivity(0.7);
+## Best Practices for Detection
 
-// Change smoothing frames (1-10)
-gestureController.setSmoothingFrames(3);
+1. **Lighting**: Face the light source, avoid backlighting
+2. **Camera**: At eye level, 40-80cm for head, 2-4m for body
+3. **Background**: Plain background improves landmark detection
+4. **Browser**: Chrome/Edge recommended (best WebGL performance)
+5. **Calibrate**: Always recalibrate when changing position or distance
 
-// Enable debug visualization
-gestureController.setDebugMode(true);
+## Threshold Defaults (April 2026)
 
-// Adjust frame skip rate for performance
-gestureController.setFrameSkipRate(2);
+| Parameter | Head (Adaptive) | Head (OneEuro) | Body |
+|-----------|----------------|----------------|------|
+| Yaw L/R | 45% of range | +/-12 | -- |
+| Pitch U/D | 45% of range | -15/+20 | -- |
+| Jump | -- | -- | 0.10 (10% frame height) |
+| Crouch | -- | -- | 0.82 (torso ratio) |
+| Lean | -- | -- | 0.10 (10% offset) |
+| Dead Zone | 2.0 deg | 2.0 deg | -- |
+| Cooldown | 350ms | 300ms | 400ms jump, 300ms crouch |
+| Visibility | face geometry | face geometry | 0.4 per landmark |
+| Frame Skip | 2 (every other) | 2 | 2 |
+
+## File Structure
+
 ```
-
-## Best Practices
-
-### For Optimal Detection
-1. **Good Lighting**: Face the light source, avoid backlighting
-2. **Camera Position**: Place camera at eye level
-3. **Distance**: Stay 40-80cm from camera
-4. **Background**: Plain background improves tracking
-
-### Performance Optimization
-1. Use frame skipping on weaker devices
-2. Reduce video resolution if needed
-3. Disable debug mode in production
-4. Monitor FPS and adjust settings
-
-### User Onboarding
-1. Show tutorial on first use
-2. Guide through calibration process
-3. Provide visual feedback for gestures
-4. Allow sensitivity customization
-
-## Browser Compatibility
-
-| Browser | Support | Notes |
-|---------|---------|-------|
-| Chrome 91+ | ✅ Full | Best performance |
-| Edge 91+ | ✅ Full | Good performance |
-| Safari 15.4+ | ✅ Full | Requires permissions |
-| Firefox | ⚠️ Limited | May have issues |
-
-## Known Limitations
-
-1. **Face Accessories**: Glasses OK, masks may interfere
-2. **Multiple Faces**: Only tracks primary face
-3. **Extreme Angles**: Best within ±45° head rotation
-4. **Low Light**: Reduced accuracy in poor lighting
-
-## Troubleshooting
-
-### Camera Not Working
-- Check browser permissions
-- Ensure HTTPS connection
-- Try different browser
-- Check camera not in use
-
-### Poor Gesture Detection
-- Recalibrate position
-- Adjust sensitivity
-- Check lighting conditions
-- Clean camera lens
-
-### Performance Issues
-- Increase frame skip rate
-- Reduce video resolution
-- Close other tabs
-- Check GPU acceleration
-
-## Future Enhancements
-
-- [ ] Eye tracking for fine control
-- [ ] Facial expression triggers
-- [ ] Multi-face support
-- [ ] Offline model caching
-- [ ] Mobile optimization
-- [ ] Hand gesture combination
-
-## Credits
-
-Built with:
-- MediaPipe by Google
-- Kalman filter algorithm
-- Professional UX/UI design principles
-- Performance-first architecture
-
----
-
-**Version**: 1.0.0  
-**Last Updated**: June 30, 2025  
-**Author**: SubwayRunner Development Team
+js/
+  GestureManager.js           # Orchestrator (Strategy Pattern + localStorage)
+  GestureController.js        # Legacy fallback (not used by default)
+  GestureControllerProjector.js  # Legacy projector (not used by default)
+  modes/
+    BaseGestureMode.js        # Abstract base (lifecycle, yaw/pitch, confidence)
+    AdaptiveCalibrationMode.js  # Default head mode
+    OneEuroFilterMode.js      # Mobile head mode
+    BodyPoseMode.js           # Full body mode
+  utils/
+    MediaPipeLoader.js        # WASM singleton (FaceLandmarker + PoseLandmarker)
+    OneEuroFilter.js          # Adaptive signal filter
+  ui/
+    GestureDebugOverlay.js    # Real-time debug overlay
+    GestureConfigPanel.js     # Settings panel with sliders
+    LevelSelector.js          # Level selection UI
+css/
+  gesture-overlay.css         # Canvas overlay styles
+  gesture-config.css          # Config panel + debug overlay styles
+```

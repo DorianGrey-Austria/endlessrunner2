@@ -79,6 +79,22 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         // Face-lost tracking (like BodyPoseMode's noBodyFrames)
         this.noFaceFrames = 0;
         this.noFaceThreshold = 60; // ~2 seconds at 30fps — emit warning
+
+        // Debug / Logging (April 2026)
+        this.lastSkipReason = null;
+        this.skippedFrames = 0;
+        this.totalFrames = 0;
+        this.rawYaw = 0;
+        this.rawPitch = 0;
+
+        // Configurable pitch baseline (April 2026)
+        // Auto-detected during calibration, or set via Config Panel
+        this.pitchBaseline = options.pitchBaseline || 0.4;
+
+        // FPS tracking
+        this.fps = 0;
+        this.fpsFrameCount = 0;
+        this.lastFpsUpdate = Date.now();
     }
 
     get name() {
@@ -185,6 +201,17 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
     }
 
     onResults(results) {
+        this.totalFrames++;
+
+        // FPS tracking
+        this.fpsFrameCount++;
+        const now = Date.now();
+        if (now - this.lastFpsUpdate >= 1000) {
+            this.fps = this.fpsFrameCount;
+            this.fpsFrameCount = 0;
+            this.lastFpsUpdate = now;
+        }
+
         this.ctx.save();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -210,19 +237,26 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
             }
 
             // Confidence check — skip frame if landmarks are unreliable
-            if (!this.isFaceConfident(landmarks)) return;
+            if (!this.isFaceConfident(landmarks)) {
+                this.lastSkipReason = 'confidence check failed (face too small or distorted)';
+                this.skippedFrames++;
+                return;
+            }
+
+            this.lastSkipReason = null;
 
             // Calculate values with One Euro adaptive smoothing
-            const rawYaw = this.calculateYaw(landmarks);
-            const rawPitch = this.calculatePitch(landmarks);
+            // Use configurable pitchBaseline (April 2026)
+            this.rawYaw = this.calculateYaw(landmarks);
+            this.rawPitch = this.calculatePitch(landmarks, this.pitchBaseline);
             const timestamp = performance.now();
 
-            this.currentYaw = this.yawFilter.filter(rawYaw, timestamp);
-            this.currentPitch = this.pitchFilter.filter(rawPitch, timestamp);
+            this.currentYaw = this.yawFilter.filter(this.rawYaw, timestamp);
+            this.currentPitch = this.pitchFilter.filter(this.rawPitch, timestamp);
 
             // Handle phases
             if (this.isCalibrating) {
-                this.handleCalibration();
+                this.handleCalibration(landmarks);
             } else if (this.isRunning) {
                 this.detectGestures();
             }
@@ -231,6 +265,7 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
             this.drawHeadIndicator();
         } else {
             // Face lost — track and warn
+            this.lastSkipReason = 'no face detected';
             this.noFaceFrames++;
             if (this.noFaceFrames >= this.noFaceThreshold) {
                 this.onStatusChange('warning', 'Gesicht nicht erkannt — schau in die Kamera');
@@ -259,7 +294,7 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         this.onCalibrationProgress(0, 'start');
     }
 
-    handleCalibration() {
+    handleCalibration(landmarks) {
         const elapsed = Date.now() - this.calibrationStartTime;
         const progress = Math.min(elapsed / this.calibrationDuration, 1);
 
@@ -268,6 +303,21 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
             yaw: this.currentYaw,
             pitch: this.currentPitch
         });
+
+        // Collect raw noseRelative for auto-pitchBaseline detection
+        if (landmarks && landmarks[10] && landmarks[1] && landmarks[152]) {
+            const forehead = landmarks[10];
+            const noseTip = landmarks[1];
+            const chin = landmarks[152];
+            const faceHeight = chin.y - forehead.y;
+            if (faceHeight > 0.01) {
+                const noseRelative = (noseTip.y - forehead.y) / faceHeight;
+                if (!this.calibration.noseRelativeSamples) {
+                    this.calibration.noseRelativeSamples = [];
+                }
+                this.calibration.noseRelativeSamples.push(noseRelative);
+            }
+        }
 
         // Update min/max
         this.calibration.minYaw = Math.min(this.calibration.minYaw, this.currentYaw);
@@ -302,9 +352,22 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         this.calibration.neutralYaw = yaws[mid] || 0;
         this.calibration.neutralPitch = pitches[mid] || 0;
 
+        // Auto-detect pitchBaseline from actual face proportions (April 2026)
+        if (this.calibration.noseRelativeSamples && this.calibration.noseRelativeSamples.length > 5) {
+            const sorted = [...this.calibration.noseRelativeSamples].sort((a, b) => a - b);
+            const median = sorted[Math.floor(sorted.length / 2)];
+            // Clamp to reasonable range (0.3 - 0.5)
+            this.pitchBaseline = Math.max(0.3, Math.min(0.5, median));
+        }
+
         // Calculate range
         const yawRange = this.calibration.maxYaw - this.calibration.minYaw;
         const pitchRange = this.calibration.maxPitch - this.calibration.minPitch;
+
+        // Quality check: warn if range is too small (user didn't move enough)
+        if (yawRange < 5 || pitchRange < 5) {
+            this.onStatusChange('warning', 'Bewegungsbereich zu klein! Bewege den Kopf weiter beim Kalibrieren.');
+        }
 
         // Set thresholds at sensitivity% of range (default 45%)
         const sens = this.sensitivity;
@@ -389,13 +452,22 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
     getCalibrationData() {
         return {
+            schemaVersion: 2, // April 2026: normalized yaw
             calibration: { ...this.calibration },
             thresholds: { ...this.thresholds },
-            sensitivity: this.sensitivity
+            sensitivity: this.sensitivity,
+            pitchBaseline: this.pitchBaseline
         };
     }
 
     setCalibrationData(data) {
+        // Schema migration: v1 (pre-April 2026) used non-normalized yaw
+        // Discard old calibration and force re-calibration
+        if (!data.schemaVersion || data.schemaVersion < 2) {
+            this.onStatusChange('info', 'Alte Kalibrierung verworfen — bitte neu kalibrieren');
+            return;
+        }
+
         if (data.calibration) {
             this.calibration = { ...this.calibration, ...data.calibration };
         }
@@ -404,6 +476,9 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         }
         if (data.sensitivity !== undefined) {
             this.sensitivity = data.sensitivity;
+        }
+        if (data.pitchBaseline !== undefined) {
+            this.pitchBaseline = data.pitchBaseline;
         }
         this.isCalibrating = false;
         this.onStatusChange('ready', 'Kalibrierung geladen');
@@ -423,5 +498,59 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
             this.thresholds.pitchUp = this.calibration.neutralPitch - (pitchRange * sens / 2);
             this.thresholds.pitchDown = this.calibration.neutralPitch + (pitchRange * sens / 2);
         }
+    }
+
+    /**
+     * Apply config from Config Panel (April 2026)
+     */
+    applyConfig(config) {
+        if (!config) return;
+        if (config.sensitivity !== undefined) this.setSensitivity(config.sensitivity);
+        if (config.deadZone !== undefined) this.deadZone = config.deadZone;
+        if (config.pitchBaseline !== undefined) this.pitchBaseline = config.pitchBaseline;
+        if (config.hysteresis !== undefined) this.hysteresis = config.hysteresis;
+    }
+
+    /**
+     * Get current config for Config Panel
+     */
+    getConfig() {
+        return {
+            sensitivity: this.sensitivity,
+            deadZone: this.deadZone,
+            pitchBaseline: this.pitchBaseline,
+            hysteresis: this.hysteresis
+        };
+    }
+
+    /**
+     * Get debug info for UI overlay (April 2026)
+     */
+    getDebugInfo() {
+        return {
+            mode: 'adaptive',
+            fps: this.fps,
+            rawYaw: this.rawYaw,
+            rawPitch: this.rawPitch,
+            filteredYaw: this.currentYaw,
+            filteredPitch: this.currentPitch,
+            thresholds: { ...this.thresholds },
+            calibration: {
+                neutralYaw: this.calibration.neutralYaw,
+                neutralPitch: this.calibration.neutralPitch,
+                yawRange: this.calibration.maxYaw - this.calibration.minYaw,
+                pitchRange: this.calibration.maxPitch - this.calibration.minPitch,
+                sampleCount: this.calibration.samples.length
+            },
+            pitchBaseline: this.pitchBaseline,
+            deadZone: this.deadZone,
+            hysteresis: this.hysteresis,
+            sensitivity: this.sensitivity,
+            lastSkipReason: this.lastSkipReason,
+            skippedFrames: this.skippedFrames,
+            totalFrames: this.totalFrames,
+            lane: this.currentLane,
+            action: this.currentAction
+        };
     }
 }

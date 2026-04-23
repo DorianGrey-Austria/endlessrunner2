@@ -165,6 +165,9 @@ export class GestureManager {
             this.activeMode.setCalibrationData(savedCalibration);
         }
 
+        // Apply saved config for this mode (April 2026)
+        this._loadConfigFromLocalStorage();
+
         // Start if we were running
         if (this.isRunning) {
             await this.activeMode.start();
@@ -293,12 +296,79 @@ export class GestureManager {
     }
 
     /**
+     * Get extended debug info (mode info + manager state) — April 2026
+     */
+    getExtendedDebugInfo() {
+        const modeDebug = this.getDebugInfo();
+        return {
+            ...modeDebug,
+            manager: {
+                activeModeKey: this.activeModeKey,
+                isRunning: this.isRunning,
+                isCalibrating: this.activeMode ? this.activeMode.isCalibrating : false,
+                currentLane: this.currentLane,
+                currentAction: this.currentAction
+            }
+        };
+    }
+
+    /**
      * Set sensitivity (for adaptive mode)
      */
     setSensitivity(value) {
         if (this.activeMode && typeof this.activeMode.setSensitivity === 'function') {
             this.activeMode.setSensitivity(value);
         }
+    }
+
+    /**
+     * Apply config to active mode — April 2026
+     */
+    applyConfig(config) {
+        if (this.activeMode && typeof this.activeMode.applyConfig === 'function') {
+            this.activeMode.applyConfig(config);
+        }
+        // Persist config
+        this._saveConfigToLocalStorage(config);
+    }
+
+    /**
+     * Get config from active mode — April 2026
+     */
+    getConfig() {
+        if (this.activeMode && typeof this.activeMode.getConfig === 'function') {
+            return this.activeMode.getConfig();
+        }
+        return {};
+    }
+
+    /**
+     * Save gesture config to localStorage (separate from calibration)
+     * @private
+     */
+    _saveConfigToLocalStorage(config) {
+        try {
+            const key = 'subwayRunner_gestureConfig';
+            const stored = JSON.parse(localStorage.getItem(key) || '{}');
+            const modeKey = this.activeModeKey || 'default';
+            stored[modeKey] = { ...stored[modeKey], ...config };
+            localStorage.setItem(key, JSON.stringify(stored));
+        } catch (e) { /* silent */ }
+    }
+
+    /**
+     * Load and apply gesture config from localStorage
+     * @private
+     */
+    _loadConfigFromLocalStorage() {
+        try {
+            const key = 'subwayRunner_gestureConfig';
+            const stored = JSON.parse(localStorage.getItem(key) || '{}');
+            const modeKey = this.activeModeKey || 'default';
+            if (stored[modeKey] && this.activeMode && typeof this.activeMode.applyConfig === 'function') {
+                this.activeMode.applyConfig(stored[modeKey]);
+            }
+        } catch (e) { /* silent */ }
     }
 
     /**

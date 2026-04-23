@@ -128,9 +128,12 @@ All modes share: One Euro / Kalman filtering, dead zone (2°), hysteresis (30%),
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Current production version (package.json v4.5.10) |
-| `index.html.V4.3-BALANCED.html` | Stable balanced version (rollback target) |
+| `index.html` | Current production version (v4.5.10) |
+| `index.html.V4.3-BALANCED.html` | Stable balanced version (primary rollback target) |
+| `index.html.backup-stable-v4.6.2` | Alternative rollback target |
 | `index-v3.6.2-working.html` | Verified working baseline |
+
+Additional timestamped backups exist (`index.html.backup-*`). Check with `ls SubwayRunner/index*.html*`.
 
 ---
 
@@ -168,6 +171,7 @@ Outputs `pre-deployment-report.json`.
 |-----------|---------|
 | `game-start-health.spec.js` | Canvas/WebGL verification, startup errors, 404 detection |
 | `game-startup-critical.spec.js` | Critical startup validation |
+| `game-start-guard.spec.js` | Game-start guard validation (35 tests) |
 | `game-stability.spec.js` | FPS and memory stability |
 | `sound-system.spec.js` | Audio system validation |
 | `intelligent-gameplay.spec.js` | Reactive gameplay with obstacle detection |
@@ -177,7 +181,9 @@ Outputs `pre-deployment-report.json`.
 
 **Test utilities** in `tests/utils/`: `game-test-utils.js` (WebGL error filtering, shared helpers), `gameplay-simulator.js`, `obstacle-detector.js`
 
-**Playwright config** (`playwright.config.cjs`): Auto-starts `live-server` on port 8001, 60s timeout, single worker (sequential), headless Chromium at 1280x720, 100ms slowMo. Reports to `tests/playwright-report/`.
+**Playwright config** (`playwright.config.cjs`): Auto-starts `http-server` on port 8001, 60s timeout, single worker (sequential), headless Chromium at 1280x720, 100ms slowMo. Screenshots on every test, video/trace retained on failure. Reports to `tests/playwright-report/`. Retries: 0 local, 2 in CI.
+
+**Note**: `npm run serve` uses `live-server` (with live-reload), but Playwright uses `http-server` (static, no reload). Both serve on port 8001 — kill the port before switching between them.
 
 **Critical**: E2E tests use 5-second settle time for 3D rendering stabilization.
 
