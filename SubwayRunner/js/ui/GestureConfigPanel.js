@@ -82,19 +82,46 @@ export class GestureConfigPanel {
             this._consoleLogging = e.target.checked;
         });
 
+        // Gesture test mode — activates gesture detection without starting the game
+        this.el.querySelector('#gestureTestToggle')?.addEventListener('change', (e) => {
+            if (!this.manager) return;
+            if (e.target.checked) {
+                // Show large canvas for testing
+                const canvas = document.getElementById('gestureCanvas');
+                if (canvas) {
+                    canvas.classList.add('active');
+                    canvas.style.width = '320px';
+                    canvas.style.height = '240px';
+                    canvas.style.bottom = '10px';
+                    canvas.style.left = '10px';
+                }
+                // Show debug overlay
+                if (this.debugOverlay) this.debugOverlay.show();
+                const overlayToggle = this.el.querySelector('#debugOverlayToggle');
+                if (overlayToggle) overlayToggle.checked = true;
+            } else {
+                // Restore canvas size
+                const canvas = document.getElementById('gestureCanvas');
+                if (canvas) {
+                    canvas.style.width = '';
+                    canvas.style.height = '';
+                }
+            }
+        });
+
         document.body.appendChild(this.el);
     }
 
     _renderHeadTab() {
         return `
             <div class="config-tab-content active" data-content="head">
-                ${this._slider('headSensitivity', 'Sensitivity', 0.2, 0.8, 0.05, 0.45)}
-                ${this._slider('headDeadZone', 'Dead Zone', 0.5, 5.0, 0.5, 2.0, 'deg')}
-                ${this._slider('headPitchBaseline', 'Pitch Baseline', 0.3, 0.5, 0.01, 0.4)}
-                ${this._slider('headHysteresis', 'Hysteresis', 0.1, 0.5, 0.05, 0.3)}
+                ${this._slider('headSensitivity', 'Empfindlichkeit', 0.2, 0.8, 0.05, 0.45, '', 'Wie weit du den Kopf drehen musst')}
+                ${this._slider('headDeadZone', 'Ruhezone', 0.5, 5.0, 0.5, 2.0, 'deg', 'Ignoriert kleine Kopfbewegungen')}
+                ${this._slider('headPitchBaseline', 'Kopfhaltung', 0.3, 0.5, 0.01, 0.4, '', 'Anpassen falls Nicken nicht reagiert')}
+                ${this._slider('headHysteresis', 'Spurhaltung', 0.1, 0.5, 0.05, 0.3, '', 'Verhindert Flackern zwischen Spuren')}
                 <div class="config-actions">
-                    <button class="config-btn primary config-btn-recalibrate">Recalibrate</button>
-                    <button class="config-btn config-btn-reset">Reset Defaults</button>
+                    <button class="config-btn primary config-btn-recalibrate">Neu kalibrieren</button>
+                    <button class="config-btn config-btn-reset">Werkseinstellung</button>
                 </div>
             </div>
         `;
@@ -103,22 +130,22 @@ export class GestureConfigPanel {
     _renderBodyTab() {
         return `
             <div class="config-tab-content" data-content="body">
-                ${this._slider('bodyJumpThreshold', 'Jump Threshold', 0.04, 0.20, 0.01, 0.10)}
-                ${this._slider('bodyCrouchThreshold', 'Crouch Threshold', 0.65, 0.95, 0.01, 0.82)}
-                ${this._slider('bodyLeanThreshold', 'Lean Threshold', 0.05, 0.20, 0.01, 0.10)}
-                ${this._slider('bodyMinVisibility', 'Min Visibility', 0.2, 0.8, 0.05, 0.4)}
-                ${this._slider('bodyVelocityJump', 'Velocity Jump', 0.005, 0.040, 0.005, 0.015)}
+                ${this._slider('bodyJumpThreshold', 'Sprung-Schwelle', 0.04, 0.20, 0.01, 0.10, '', 'Wie hoch du springen musst')}
+                ${this._slider('bodyCrouchThreshold', 'Duck-Schwelle', 0.65, 0.95, 0.01, 0.82, '', 'Wie tief du dich ducken musst')}
+                ${this._slider('bodyLeanThreshold', 'Neige-Schwelle', 0.05, 0.20, 0.01, 0.10, '', 'Wie weit du dich neigen musst')}
+                ${this._slider('bodyMinVisibility', 'Erkennungs-Qualitaet', 0.2, 0.8, 0.05, 0.4, '', 'Senken wenn Koerper schlecht erkannt')}
+                ${this._slider('bodyVelocityJump', 'Sprung-Geschwindigkeit', 0.005, 0.040, 0.005, 0.015, '', 'Wie schnell die Aufwaertsbewegung sein muss')}
                 <div class="preset-group">
-                    <label>Distance Presets</label>
+                    <label>Entfernung zur Kamera</label>
                     <div class="preset-buttons">
-                        <button class="preset-btn" data-preset="close">Close (&lt;1.5m)</button>
-                        <button class="preset-btn active" data-preset="medium">Medium (2-3m)</button>
-                        <button class="preset-btn" data-preset="far">Far (3-5m)</button>
+                        <button class="preset-btn" data-preset="close">Nah (&lt;1.5m)</button>
+                        <button class="preset-btn active" data-preset="medium">Mittel (2-3m)</button>
+                        <button class="preset-btn" data-preset="far">Weit (3-5m)</button>
                     </div>
                 </div>
                 <div class="config-actions">
-                    <button class="config-btn primary config-btn-recalibrate">Recalibrate</button>
-                    <button class="config-btn config-btn-reset">Reset Defaults</button>
+                    <button class="config-btn primary config-btn-recalibrate">Neu kalibrieren</button>
+                    <button class="config-btn config-btn-reset">Werkseinstellung</button>
                 </div>
             </div>
         `;
@@ -128,16 +155,23 @@ export class GestureConfigPanel {
         return `
             <div class="config-tab-content" data-content="debug">
                 <div class="toggle-group">
-                    <label>Show Debug Overlay</label>
+                    <label>Debug Overlay anzeigen</label>
                     <label class="toggle-switch">
                         <input type="checkbox" id="debugOverlayToggle">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
                 <div class="toggle-group">
-                    <label>Log to Console</label>
+                    <label>Konsolen-Logging</label>
                     <label class="toggle-switch">
                         <input type="checkbox" id="debugConsoleToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-group">
+                    <label>Gesten-Test (ohne Spiel)</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="gestureTestToggle">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -145,13 +179,14 @@ export class GestureConfigPanel {
         `;
     }
 
-    _slider(id, label, min, max, step, defaultVal, unit = '') {
+    _slider(id, label, min, max, step, defaultVal, unit = '', hint = '') {
         return `
             <div class="slider-group">
                 <div class="slider-label">
                     <span>${label}</span>
                     <span class="slider-value" id="${id}Value">${defaultVal}${unit}</span>
                 </div>
+                ${hint ? `<div style="font-size: 10px; color: #6e7681; margin: -2px 0 4px 0;">${hint}</div>` : ''}
                 <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${defaultVal}" data-unit="${unit}" data-default="${defaultVal}">
             </div>
         `;

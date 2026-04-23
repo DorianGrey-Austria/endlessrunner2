@@ -575,6 +575,26 @@
                 </button>
             </div>
 
+            <div class="settings-row" style="flex-direction: column; gap: 6px; margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <select id="musicSelect" style="flex:1; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 8px; font-size: 12px; cursor: pointer;">
+                        <option value="none">Keine Musik</option>
+                        <option value="synthwave-runner" selected>Synthwave Runner</option>
+                        <option value="chiptune-classic">Chiptune Classic</option>
+                        <option value="ambient-subway">Ambient Subway</option>
+                        <option value="drum-and-bass">Drum & Bass</option>
+                        <option value="lofi-chill">Lo-Fi Chill</option>
+                        <option value="epic-orchestral">Epic Orchestral</option>
+                    </select>
+                    <button onclick="previewSelectedMusic()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 11px;" title="5s Vorhoeren">&#9654;</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <span style="font-size: 11px; color: rgba(255,255,255,0.5); min-width: 40px;">Musik</span>
+                    <input type="range" id="musicVolume" min="0" max="0.4" step="0.02" value="0.15" style="flex: 1; accent-color: #58a6ff;" oninput="setMusicVol(this.value)">
+                    <span id="musicVolLabel" style="font-size: 11px; color: rgba(255,255,255,0.5); min-width: 28px;">15%</span>
+                </div>
+            </div>
+
             <div class="quality-toggle">
                 <button class="quality-btn" id="qualityPerfBtn" onclick="setQualityMode('performance')">
                     <span class="quality-icon">&#x26A1;</span>
@@ -898,6 +918,74 @@
                 }
                 this.isMuted = false;
             }
+
+            // Background Music System (April 2026)
+            async loadMusic(trackId) {
+                if (!this.audioContext) return;
+                const url = `sounds/music/${trackId}.mp3`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) return null;
+                    const buffer = await response.arrayBuffer();
+                    return await this.audioContext.decodeAudioData(buffer);
+                } catch (e) {
+                    console.warn('Music load failed:', trackId, e);
+                    return null;
+                }
+            }
+
+            async playMusic(trackId, volume = 0.15) {
+                if (!this.audioContext || this.isMuted) return;
+                this.stopMusic();
+
+                const buffer = await this.loadMusic(trackId);
+                if (!buffer) return;
+
+                this._musicSource = this.audioContext.createBufferSource();
+                this._musicGain = this.audioContext.createGain();
+                this._musicSource.buffer = buffer;
+                this._musicSource.loop = true;
+                this._musicSource.connect(this._musicGain);
+                this._musicGain.connect(this.audioContext.destination);
+
+                // Fade in over 1s
+                this._musicGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                this._musicGain.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 1);
+                this._musicVolume = volume;
+                this._musicSource.start();
+                this._currentTrack = trackId;
+            }
+
+            stopMusic() {
+                if (this._musicSource) {
+                    try {
+                        if (this._musicGain) {
+                            this._musicGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.5);
+                        }
+                        setTimeout(() => {
+                            try { this._musicSource.stop(); } catch(e) {}
+                            this._musicSource = null;
+                            this._musicGain = null;
+                        }, 600);
+                    } catch(e) {}
+                }
+                this._currentTrack = null;
+            }
+
+            previewMusic(trackId) {
+                this.playMusic(trackId, 0.2);
+                // Stop preview after 5 seconds
+                setTimeout(() => {
+                    if (this._currentTrack === trackId) this.stopMusic();
+                }, 5000);
+            }
+
+            setMusicVolume(vol) {
+                this._musicVolume = vol;
+                if (this._musicGain && this.audioContext) {
+                    this._musicGain.gain.linearRampToValueAtTime(vol, this.audioContext.currentTime + 0.1);
+                }
+            }
         }
 
         const audioManager = new AudioManager();
@@ -1026,6 +1114,29 @@
                 icon.textContent = '\u{1F507}';
             }
         };
+
+        // Music selector functions (April 2026)
+        window.previewSelectedMusic = function() {
+            const sel = document.getElementById('musicSelect');
+            if (sel && sel.value !== 'none') {
+                audioManager.resume();
+                audioManager.previewMusic(sel.value);
+            }
+        };
+
+        window.setMusicVol = function(val) {
+            const v = parseFloat(val);
+            audioManager.setMusicVolume(v);
+            const label = document.getElementById('musicVolLabel');
+            if (label) label.textContent = Math.round(v * 100 / 0.4 * 100 / 100) + '%';
+        };
+
+        // Save/restore music preference
+        const savedTrack = localStorage.getItem('subwayRunner_musicTrack');
+        if (savedTrack) {
+            const sel = document.getElementById('musicSelect');
+            if (sel) sel.value = savedTrack;
+        }
 
         // setQualityMode is defined after QUALITY_PRESETS (deferred via window binding)
         window.setQualityMode = function(mode) {
@@ -3475,11 +3586,19 @@
 
             // Resume audio context
             audioManager.resume();
-            
+
             // Start ambient city sounds
             if (!ambientStarted) {
                 audioManager.play('ambient');
                 ambientStarted = true;
+            }
+
+            // Start background music if selected (April 2026)
+            const musicSel = document.getElementById('musicSelect');
+            if (musicSel && musicSel.value !== 'none') {
+                const vol = parseFloat(document.getElementById('musicVolume')?.value || 0.15);
+                audioManager.playMusic(musicSel.value, vol);
+                localStorage.setItem('subwayRunner_musicTrack', musicSel.value);
             }
             
             gameState.isPlaying = true;
@@ -3634,6 +3753,7 @@
         }
 
         function showGameOverMenu(isVictory) {
+            audioManager.stopMusic(); // Stop background music on game over
             const menu = document.getElementById('menu');
             
             if (isVictory) {
