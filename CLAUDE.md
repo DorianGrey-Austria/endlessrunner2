@@ -32,7 +32,6 @@ npm run test                   # Run test-runner.js (validates index.html) — h
 npm run test:watch             # Watch mode with nodemon
 npm run build                  # Production build - React version only
 npm run lint                   # ESLint (0 warnings allowed)
-# npm run predeploy            # Runs tests + confirms readiness (used by CI)
 ```
 
 ### Playwright E2E Tests
@@ -46,22 +45,29 @@ npx playwright show-report                             # View HTML report
 
 ### Deployment
 
-**FTP (endlessrunner.vibecoding.company)**: Auto-deploys on git push to main via GitHub Actions → FTP → Hostinger.
+Two CI workflows run on `git push main`:
+
+1. **`hostinger-deploy.yml`** (primary): rsync via SSH to VPS → live in ~2 min
+2. **`test-before-deploy.yml`**: Static tests + Playwright E2E → FTP deploy to Hostinger (legacy)
+
 ```bash
+# Auto-deploy (triggers both workflows)
 git add . && git commit -m "VX.Y.Z: description" && git push
-# Live in ~2-3 minutes at endlessrunner.vibecoding.company
+
+# Manual VPS deploy
+./deploy.sh
 ```
 
-**VPS (endlessrunner.vibecoding.company)**: Manual deploy via rsync + Nginx.
-```bash
-./deploy.sh
-# Deploys SubwayRunner/{index.html,js/,css/} to VPS
-# Live at: https://endlessrunner.vibecoding.company
-```
-Credentials in `.env` (gitignored). VPS-Doku: `~/Desktop/coding/_INFO/deployment/VPS_tips.md`
+**Deploy whitelist**: Only `index.html`, `js/`, `css/` are deployed. `sounds/` is NOT in the deploy pipeline — music files must be deployed manually or the pipeline must be updated when adding audio assets.
+
+**Required Secrets**: `VPS_HOST`, `VPS_PASSWORD` (rsync workflow), `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (FTP workflow)
+
+Credentials in `.env` (gitignored). VPS docs: `~/Desktop/coding/_INFO/deployment/VPS_tips.md`
 
 ### Versioning
 Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for features, MAJOR for breaking changes. Update version in both `index.html` and `package.json`.
+
+**Note**: `package.json` version and `index.html` `<title>` version can drift apart — always check both when bumping.
 
 ---
 
@@ -112,17 +118,24 @@ All modes share: One Euro / Kalman filtering, dead zone (2°), hysteresis (30%),
 
 **Utilities**: `utils/MediaPipeLoader.js` (shared WASM singleton for MediaPipe Tasks Vision @0.10.34), `utils/OneEuroFilter.js` (adaptive signal filtering).
 
-**Styles**: `css/gesture-overlay.css` (video canvas overlay, gesture status, debug mode).
+**UI Modules** (`js/ui/`):
+- `GestureConfigPanel.js` (16KB) — mode selection, sensitivity sliders, calibration trigger, music track selector
+- `GestureDebugOverlay.js` (10KB) — real-time yaw/pitch/confidence visualization, threshold markers, FPS
+- `LevelSelector.js` (9.5KB) — level selection interface
 
-**UI**: `ui/LevelSelector.js` (level selection interface).
+**Styles**: `css/gesture-overlay.css` (video canvas overlay, gesture status, debug mode), `css/gesture-config.css` (config panel styling).
 
-### Player Controls
+### Sound/Audio System
 
-| Action | Keys |
-|--------|------|
-| Lane switch | A/D or Arrow Left/Right |
-| Jump | W or Space |
-| Duck | S or Arrow Down |
+**Web Audio API** for all game audio — no `<audio>` elements. Two subsystems:
+
+1. **SFX** (procedural): Oscillator-based sounds for jump, crash, coin, level-up. Generated in real-time via `AudioContext`.
+2. **Music** (file-based): 6 MP3 tracks in `sounds/music/` (each ~241KB, generated via ElevenLabs):
+   `ambient-subway`, `chiptune-classic`, `drum-and-bass`, `epic-orchestral`, `lofi-chill`, `synthwave-runner`
+
+Music selection persisted via `localStorage` key `subwayRunner_musicTrack`. The config panel (`GestureConfigPanel.js`) includes a track selector with preview playback.
+
+**Deployment gap**: `sounds/` is not in the deploy whitelist — see Deployment section.
 
 ### Version Files
 
@@ -139,16 +152,20 @@ Additional timestamped backups exist (`index.html.backup-*`). Check with `ls Sub
 
 ## Deployment Pipeline
 
-**GitHub Actions** (`.github/workflows/hostinger-deploy.yml`):
-1. Copies `SubwayRunner/index.html` → `deploy/index.html`
-2. Copies `SubwayRunner/js/` → `deploy/js/`
-3. Copies `SubwayRunner/css/` → `deploy/css/`
-4. Generates `.htaccess` (HTTPS, compression, caching, CSP headers)
-5. FTP uploads to Hostinger root
+**Primary** (`.github/workflows/hostinger-deploy.yml`):
+1. Copies `SubwayRunner/{index.html, js/, css/}` → `deploy/`
+2. rsync via SSH to VPS at `/var/www/endlessrunner.vibecoding.company/`
+3. Triggers on push to `main` or manual dispatch
 
-**CI Pipeline** (`.github/workflows/test-before-deploy.yml`): Runs on every push/PR to main — `npm run test` (static) + Playwright E2E → deploy only if all tests pass. Test artifacts and failure screenshots uploaded automatically.
+**CI + Legacy FTP** (`.github/workflows/test-before-deploy.yml`):
+1. `npm run test` (static validation) + Playwright E2E
+2. On success: FTP deploy to Hostinger with generated `.htaccess` (HTTPS, compression, CSP headers)
+3. Triggers on push/PR to `main`
+4. Uploads test artifacts and failure screenshots
 
-**Required Secrets**: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
+**Manual** (`deploy.sh`): rsync + Nginx config. Cleans remote dir, uploads whitelist, reloads Nginx. Verifies via HTTP.
+
+**Required Secrets**: `VPS_HOST`, `VPS_PASSWORD` (primary), `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (legacy)
 
 ---
 
@@ -240,12 +257,13 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 
 ---
 
-## Workflow Conventions (from CLAUDE_CODE_RULES.md)
+## Workflow Conventions
 
-- **Auto-deploy after every feature/fix**: `git add . && git commit -m "VX.Y.Z: description" && git push`
-- **Chrome only**: Never use Safari for testing — use Chrome with hard-refresh (Cmd+Shift+R)
-- **60+ FPS**: Performance target for gameplay
-- **Version bumps**: Update in both `index.html` and `package.json`
+See `CLAUDE_CODE_RULES.md` for full rules. Key points:
+- **Auto-deploy after every feature/fix** — commit and push triggers CI
+- **Chrome only** for testing — never Safari (Cmd+Shift+R to hard-refresh)
+- **60+ FPS** performance target
+- **Version bumps** in both `index.html` and `package.json`
 
 ---
 
@@ -253,8 +271,9 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 
 - **Safari**: Lower FPS compared to Chrome
 - **Headless Testing**: WebGL context errors are expected in CI (filter in tests)
-- **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see TROUBLESHOOTING.md #11)
-- **Browser Cache**: Different browsers can show different game versions due to cache conflicts — always hard-refresh (Cmd+Shift+R) when testing. Use Chrome, not Safari
+- **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see troubleshooting.md #11)
+- **Browser Cache**: Always hard-refresh (Cmd+Shift+R) when testing — different browsers can show stale versions
+- **Sounds not deployed**: `sounds/` directory is not in deploy whitelist. Music tracks won't work on production unless manually deployed or pipeline updated
 
 ---
 
