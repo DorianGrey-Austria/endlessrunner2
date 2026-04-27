@@ -259,7 +259,32 @@ Body-Positionen (shoulderY, hipY, shoulderCenterX) werden jetzt durch One Euro F
 
 ---
 
+## 14. Front-Camera Spiegelung (CRITICAL — April 2026)
+
+Front-facing Kameras spiegeln das Bild horizontal. MediaPipe Tasks Vision Landmarks sind in **Original-Koordinaten** (NICHT gespiegelt). Das Display wird via `ctx.scale(-1, 1)` korrekt gespiegelt, aber die **Richtungsberechnung muss negiert werden**:
+
+- `calculateYaw()`: `(faceCenter - noseTip.x)` — NICHT `(noseTip.x - faceCenter)`
+- `detectBodyLean()`: `shoulderCenterX - noseX` fuer Lean, `neutralX - shoulderCenterX` fuer Walk
+
+**Konvention:** Positive Werte = User bewegt sich nach RECHTS, Negative = nach LINKS.
+
+**Test-Absicherung:** `gesture-unit-tests.spec.js` — 12 Unit-Tests mit synthetischen Landmarks. MUSS gruene Tests liefern bei jeder Aenderung.
+
+## 15. TDD-Pattern fuer Gestensteuerung (April 2026)
+
+Gestensteuerung kann NICHT nur mit E2E-Smoke-Tests abgesichert werden:
+
+1. **Landmark-Unit-Tests:** Synthetische 478-Punkt Arrays → `calculateYaw/Pitch` → Assert Vorzeichen
+2. **Detection-Pipeline-Tests:** Mock-Kalibrierung + Thresholds → `detectGestures` → Assert Lane/Action
+3. **Confidence-Tests:** Unplausible Landmarks → `isFaceConfident` → Assert false
+
+Pattern: Playwright `page.evaluate()` mit dynamischem `import()` der Gesture-Module. Kein echtes Video noetig.
+
+---
+
 ## Offene Optimierungen (Nice-to-Have)
 
 - **Adaptive Frame Skipping:** Frame Skip dynamisch anpassen basierend auf GPU-Last (z.B. via `performance.now()` Delta)
 - **WebWorker fuer MediaPipe:** Detection in separatem Thread → kein Main-Thread-Blocking. Komplex wegen Canvas-Zugriff
+- **Detection Area Config:** User soll einstellen koennen in welchem Bereich des Kamerabilds Gesten erkannt werden (ROI)
+- **Fake-Webcam E2E:** Playwright `--use-fake-device-for-media-stream` + Y4M Video-Fixtures fuer volle Pipeline-Tests

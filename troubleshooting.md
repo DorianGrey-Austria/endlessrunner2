@@ -2737,3 +2737,43 @@ Zusaetzlich: Pitch-Baseline konfigurierbar gemacht (war hardcoded 0.4), wird jet
 **Schema-Migration:** Alte Kalibrierungsdaten (schemaVersion < 2) werden automatisch verworfen, Neu-Kalibrierung erzwungen.
 
 ---
+
+## INF-018: Gestensteuerung invertierte Richtung — alle Modi (2026-04-27)
+
+**Symptom:** Kopf nach RECHTS drehen bewegt Spieler nach LINKS (und umgekehrt). Nur sporadisch erkannt, nur bei Kopfsteuerung. User meldet "funktioniert nur hin und wieder und in die falsche Richtung".
+
+**Root Cause:** `BaseGestureMode.calculateYaw()` berechnete `(noseTip.x - faceCenter)`. Front-facing Kameras spiegeln das Bild horizontal — MediaPipe Landmarks sind aber in Original-Koordinaten (nicht gespiegelt). Wenn User den Kopf nach RECHTS dreht, sinkt `noseTip.x` in Kamera-Koordinaten, ergibt negativen Yaw, mappt zu LEFT Lane.
+
+Gleiches Problem in `BodyPoseMode.detectBodyLean()`: `noseX - shoulderCenterX` und `shoulderCenterX - neutralX` waren ebenfalls invertiert.
+
+**Fix:**
+- `BaseGestureMode.calculateYaw()`: `(noseTip.x - faceCenter)` → `(faceCenter - noseTip.x)` — wirkt auf AdaptiveCalibrationMode + OneEuroFilterMode (erben calculateYaw)
+- `BodyPoseMode.detectBodyLean()`: `noseX - shoulderCenterX` → `shoulderCenterX - noseX`, `shoulderCenterX - neutralX` → `neutralX - shoulderCenterX`
+- Schema-Version auf v3 erhoeht — alle v1/v2 Kalibrierungsdaten in localStorage werden automatisch verworfen
+
+**TDD-Tests erstellt:** 12 Unit-Tests in `tests/e2e/gesture-unit-tests.spec.js` die mit synthetischen Landmarks die Richtungszuordnung testen. Bewiesen den Bug vor dem Fix (RED), bestanden nach dem Fix (GREEN).
+
+**Lessons Learned:**
+1. Front-facing-Camera-Inversion ist ein klassischer Bug — MUSS immer mit automatisierten Tests abgesichert werden
+2. Bisherige Tests (game-start-health, game-startup-critical) prueften nur ob das System LAEDT, nicht ob es KORREKT funktioniert
+3. Gestensteuerung braucht Unit-Tests auf Landmark-Ebene, nicht nur E2E-Smoke-Tests
+
+---
+
+## INF-019: Gesture-Tests waren unzureichend (2026-04-27)
+
+**Symptom:** Invertierte Richtung blieb monatelang unentdeckt obwohl umfangreiche E2E-Tests existieren.
+
+**Root Cause:** Bestehende Tests (game-start-health, game-startup-critical, sound-system etc.) testen ob Systeme LADEN, nicht ob sie KORREKT funktionieren. Kein Test verifizierte dass "Kopf nach rechts = Spieler nach rechts".
+
+**Fix:** Neue Test-Schicht eingefuehrt — Playwright-basierte Unit-Tests die Gesture-Module direkt importieren und mit synthetischen Landmark-Arrays fuettern:
+- `gesture-unit-tests.spec.js`: 12 Tests (Yaw-Richtung, Pitch-Richtung, Confidence, Detection-Pipeline, Filter-Responsiveness)
+- Test-Pattern: `createSyntheticLandmarks()` Helper erzeugt 478-Punkt Arrays mit kontrollierbaren Key-Landmarks
+- Tests laufen im Browser via `page.evaluate(async () => { const { Module } = await import('./...'); ... })`
+
+**Best Practice fuer Gesture-TDD ohne menschliches Video:**
+1. **Unit-Tests (Landmark-Ebene):** Synthetische Landmarks → `calculateYaw/Pitch` → Assert Richtung
+2. **Integration-Tests (page.evaluate):** Mock-Landmarks → GestureManager → Assert Lane/Action Events
+3. **E2E mit Fake-Webcam (future):** Playwright `--use-fake-device-for-media-stream` + Y4M Video-Fixtures
+
+---
