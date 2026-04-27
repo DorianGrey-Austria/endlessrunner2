@@ -413,8 +413,10 @@ export class BodyPoseMode extends BaseGestureMode {
         // Two lane detection methods (best of both):
         // 1. Lean: nose offset from shoulder center (works when standing still)
         // 2. Walk: shoulder center offset from calibrated neutral (works when moving)
-        const lean = this.noseX - this.shoulderCenterX;
-        const walk = this.shoulderCenterX - this.neutralX;
+        // IMPORTANT: Negate both — front-facing camera mirrors horizontally.
+        // Camera coords are non-mirrored, so user's LEFT = camera's RIGHT = higher x.
+        const lean = this.shoulderCenterX - this.noseX;
+        const walk = this.neutralX - this.shoulderCenterX;
 
         let leanLane = 'center';
         let walkLane = 'center';
@@ -436,6 +438,7 @@ export class BodyPoseMode extends BaseGestureMode {
 
         if (this.lastLane === 'left' && newLane === 'center') {
             // Stay left until lean AND walk are both clearly past hysteresis
+            // lean/walk are now corrected: negative = user left, positive = user right
             if (lean < -(this.thresholds.leanThreshold - hyst) || walk < -(this.thresholds.walkThreshold - hyst)) {
                 newLane = 'left';
             }

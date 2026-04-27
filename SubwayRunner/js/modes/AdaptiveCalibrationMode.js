@@ -452,7 +452,7 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
     getCalibrationData() {
         return {
-            schemaVersion: 2, // April 2026: normalized yaw
+            schemaVersion: 3, // v3: corrected yaw direction (front-camera mirror fix)
             calibration: { ...this.calibration },
             thresholds: { ...this.thresholds },
             sensitivity: this.sensitivity,
@@ -461,10 +461,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
     }
 
     setCalibrationData(data) {
-        // Schema migration: v1 (pre-April 2026) used non-normalized yaw
-        // Discard old calibration and force re-calibration
-        if (!data.schemaVersion || data.schemaVersion < 2) {
-            this.onStatusChange('info', 'Alte Kalibrierung verworfen — bitte neu kalibrieren');
+        // Schema migration: v1 used non-normalized yaw, v2 had inverted yaw direction
+        // Both must be discarded and re-calibrated
+        if (!data.schemaVersion || data.schemaVersion < 3) {
+            this.onStatusChange('info', 'Alte Kalibrierung verworfen (Richtungsfix) — bitte neu kalibrieren');
             return;
         }
 

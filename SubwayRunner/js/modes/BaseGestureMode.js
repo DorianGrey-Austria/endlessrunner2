@@ -175,8 +175,14 @@ export class BaseGestureMode {
     /**
      * Calculate yaw (head left/right) from face landmarks
      * Normalized by face width → distance-independent (April 2026 fix)
+     *
+     * IMPORTANT: Front-facing camera mirrors the image. MediaPipe landmarks
+     * are in the original (non-mirrored) frame. When user turns head RIGHT,
+     * noseTip.x DECREASES in camera coords. We negate to correct for this,
+     * so positive yaw = user turned right, negative = user turned left.
+     *
      * @param {Array} landmarks - MediaPipe face landmarks
-     * @returns {number} - Yaw angle (roughly degrees, distance-independent)
+     * @returns {number} - Yaw angle (positive=right, negative=left, distance-independent)
      */
     calculateYaw(landmarks) {
         const noseTip = landmarks[1];
@@ -185,8 +191,9 @@ export class BaseGestureMode {
         const faceCenter = (leftCheek.x + rightCheek.x) / 2;
         const faceWidth = Math.abs(rightCheek.x - leftCheek.x);
         if (faceWidth < 0.01) return 0; // safety: face too small
-        // Normalize by face width → same yaw value at any camera distance
-        return ((noseTip.x - faceCenter) / faceWidth) * 50;
+        // Negate: front-facing camera mirrors horizontally
+        // faceCenter - noseTip.x: positive when nose is LEFT of center in camera = user turned RIGHT
+        return ((faceCenter - noseTip.x) / faceWidth) * 50;
     }
 
     /**

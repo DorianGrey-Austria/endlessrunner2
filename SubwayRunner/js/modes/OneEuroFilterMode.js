@@ -347,12 +347,18 @@ export class OneEuroFilterMode extends BaseGestureMode {
 
     getCalibrationData() {
         return {
+            schemaVersion: 3, // v3: corrected yaw direction (front-camera mirror fix)
             calibration: { ...this.calibration },
             thresholds: { ...this.thresholds }
         };
     }
 
     setCalibrationData(data) {
+        // Discard old calibration with inverted yaw direction
+        if (!data.schemaVersion || data.schemaVersion < 3) {
+            this.onStatusChange('info', 'Alte Kalibrierung verworfen (Richtungsfix) — bitte neu kalibrieren');
+            return;
+        }
         if (data.calibration) {
             this.calibration = { ...this.calibration, ...data.calibration };
         }
