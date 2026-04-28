@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V4.3-STABLE-MULTIJUMP</title>
+    <title>Subway Runner 3D - V5.0-10LEVEL</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <!-- MediaPipe: All modes now use Tasks Vision API @0.10.34 via js/utils/MediaPipeLoader.js (ES module, loaded on demand) -->
     <!-- Supabase SDK ENTFERNT (TROUBLESHOOTING #12):
@@ -563,9 +563,9 @@
         
         <div id="menu">
             <h1>Subway Runner 3D</h1>
-            <p class="menu-subtitle">60-Sekunden Challenge</p>
+            <p class="menu-subtitle">10 Level Challenge</p>
 
-            <p class="menu-info">Ueberlebe 60 Sekunden — die Geschwindigkeit steigt immer weiter!</p>
+            <p class="menu-info">10 Level mit steigender Schwierigkeit — schaffst du alle?</p>
 
             <button class="start-btn" onclick="startGame()">SPIEL STARTEN</button>
 
@@ -1222,7 +1222,10 @@
             activeCollectibles: [],
             maxActiveCollectibles: 10, // Increased from 8
             collectedApples: 0,
-            collectedBroccolis: 0
+            collectedBroccolis: 0,
+            // LEVEL DIFFICULTY SYSTEM (V5.0)
+            levelStartTime: 0,
+            levelTimeElapsed: 0
         };
         
         // STABILITY LIMITS
@@ -1418,10 +1421,114 @@
             updateQualityUI();
         })();
 
-        // ==================== LEVEL SYSTEM V3.3 ====================
+        // ==================== LEVEL SYSTEM V5.0 — Progressive Difficulty ====================
         let currentLevel = 1;
-        const LEVEL_PROGRESSION_THRESHOLD = 300; // Points needed per level (lowered for 60s games)
+        const LEVEL_PROGRESSION_THRESHOLD = 300; // Legacy — kept for test compatibility
         let nextLevelScore = LEVEL_PROGRESSION_THRESHOLD;
+
+        // Per-level difficulty configuration
+        // Speed ramps gently within each level; big jumps happen at level transitions
+        const LEVEL_CONFIGS = {
+            1: {
+                baseSpeed: 0.08, maxSpeed: 0.12,
+                speedExponent: 1.0, speedMultiplierMax: 0.5,
+                baseSpawnRate: 0.004, spawnScaleWithSpeed: 0.3,
+                movingObstacleChance: 0.0,
+                obstacleTypes: ['lowbarrier', 'jumpblock'],
+                scoreToAdvance: 200,
+                gestureSpeedReduction: 0.25, gestureSpawnReduction: 0.40
+            },
+            2: {
+                baseSpeed: 0.09, maxSpeed: 0.14,
+                speedExponent: 1.0, speedMultiplierMax: 0.55,
+                baseSpawnRate: 0.005, spawnScaleWithSpeed: 0.4,
+                movingObstacleChance: 0.0,
+                obstacleTypes: ['lowbarrier', 'jumpblock', 'highbarrier', 'duckbeam'],
+                scoreToAdvance: 300,
+                gestureSpeedReduction: 0.25, gestureSpawnReduction: 0.38
+            },
+            3: {
+                baseSpeed: 0.10, maxSpeed: 0.16,
+                speedExponent: 1.1, speedMultiplierMax: 0.6,
+                baseSpawnRate: 0.005, spawnScaleWithSpeed: 0.5,
+                movingObstacleChance: 0.0,
+                obstacleTypes: ['lowbarrier', 'jumpblock', 'highbarrier', 'duckbeam', 'spikes'],
+                scoreToAdvance: 500,
+                gestureSpeedReduction: 0.25, gestureSpawnReduction: 0.35
+            },
+            4: {
+                baseSpeed: 0.11, maxSpeed: 0.18,
+                speedExponent: 1.2, speedMultiplierMax: 0.65,
+                baseSpawnRate: 0.006, spawnScaleWithSpeed: 0.5,
+                movingObstacleChance: 0.05,
+                obstacleTypes: ['lowbarrier', 'jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'spikes'],
+                scoreToAdvance: 600,
+                gestureSpeedReduction: 0.22, gestureSpawnReduction: 0.35
+            },
+            5: {
+                baseSpeed: 0.13, maxSpeed: 0.20,
+                speedExponent: 1.2, speedMultiplierMax: 0.7,
+                baseSpawnRate: 0.006, spawnScaleWithSpeed: 0.6,
+                movingObstacleChance: 0.08,
+                obstacleTypes: ['lowbarrier', 'jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade'],
+                scoreToAdvance: 700,
+                gestureSpeedReduction: 0.22, gestureSpawnReduction: 0.33
+            },
+            6: {
+                baseSpeed: 0.15, maxSpeed: 0.23,
+                speedExponent: 1.3, speedMultiplierMax: 0.8,
+                baseSpawnRate: 0.007, spawnScaleWithSpeed: 0.6,
+                movingObstacleChance: 0.10,
+                obstacleTypes: ['lowbarrier', 'jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer'],
+                scoreToAdvance: 800,
+                gestureSpeedReduction: 0.22, gestureSpawnReduction: 0.30
+            },
+            7: {
+                baseSpeed: 0.17, maxSpeed: 0.26,
+                speedExponent: 1.3, speedMultiplierMax: 0.9,
+                baseSpawnRate: 0.007, spawnScaleWithSpeed: 0.7,
+                movingObstacleChance: 0.12,
+                obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall'],
+                scoreToAdvance: 900,
+                gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
+            },
+            8: {
+                baseSpeed: 0.19, maxSpeed: 0.30,
+                speedExponent: 1.4, speedMultiplierMax: 1.0,
+                baseSpawnRate: 0.008, spawnScaleWithSpeed: 0.7,
+                movingObstacleChance: 0.15,
+                obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball'],
+                scoreToAdvance: 1000,
+                gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
+            },
+            9: {
+                baseSpeed: 0.22, maxSpeed: 0.35,
+                speedExponent: 1.4, speedMultiplierMax: 1.2,
+                baseSpawnRate: 0.008, spawnScaleWithSpeed: 0.8,
+                movingObstacleChance: 0.18,
+                obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball', 'spinninglaser'],
+                scoreToAdvance: 1100,
+                gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
+            },
+            10: {
+                baseSpeed: 0.25, maxSpeed: 0.40,
+                speedExponent: 1.5, speedMultiplierMax: 1.5,
+                baseSpawnRate: 0.009, spawnScaleWithSpeed: 0.8,
+                movingObstacleChance: 0.20,
+                obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball', 'spinninglaser'],
+                scoreToAdvance: Infinity,
+                gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
+            }
+        };
+
+        // Helper: get cumulative score needed to reach a given level
+        function getCumulativeScoreForLevel(level) {
+            let total = 0;
+            for (let i = 1; i < level; i++) {
+                total += (LEVEL_CONFIGS[i] ? LEVEL_CONFIGS[i].scoreToAdvance : 0);
+            }
+            return total;
+        }
         
         // Level Manager
         const LevelManager = {
@@ -1450,7 +1557,17 @@
                         
                         // Update game state
                         currentLevel = levelId;
-                        
+
+                        // Apply level difficulty config (V5.0)
+                        const lvlCfg = LEVEL_CONFIGS[levelId];
+                        if (lvlCfg) {
+                            gameState.baseSpeed = lvlCfg.baseSpeed;
+                            gameState.maxSpeed = lvlCfg.maxSpeed;
+                            gameState.speed = lvlCfg.baseSpeed;
+                            gameState.levelStartTime = Date.now();
+                            gameState.levelTimeElapsed = 0;
+                        }
+
                         // Clear loading flag on success
                         this.loadingLevel = null;
                     } catch (error) {
@@ -1504,16 +1621,18 @@
                 if (gameState.isGameOver || gameState.isVictory || this.loadingLevel) {
                     return;
                 }
-                
+
                 // Prevent rapid-fire level changes
                 const now = Date.now();
                 if (this.lastLevelChange && (now - this.lastLevelChange) < 2000) {
                     return; // Wait at least 2 seconds between level changes
                 }
-                
+
                 nextLevelScore = currentLevel * 1000; // Update for test compatibility
-                const nextLevelThreshold = currentLevel * LEVEL_PROGRESSION_THRESHOLD;
-                if (gameState.score >= nextLevelThreshold && currentLevel < 10 && this.levels[currentLevel + 1]) {
+
+                // V5.0: cumulative score thresholds from LEVEL_CONFIGS
+                const cumulativeNeeded = getCumulativeScoreForLevel(currentLevel + 1);
+                if (gameState.score >= cumulativeNeeded && currentLevel < 10 && this.levels[currentLevel + 1]) {
                     this.lastLevelChange = now;
                     currentLevel++; // INCREMENT BEFORE LOADING!
                     audioManager.play('levelup');
@@ -3757,10 +3876,15 @@
             gameState.isGameOver = false;
             gameState.isVictory = false;
             gameState.score = 0;
+            // Apply Level 1 config (V5.0)
+            gameState.baseSpeed = LEVEL_CONFIGS[1].baseSpeed;
+            gameState.maxSpeed = LEVEL_CONFIGS[1].maxSpeed;
             gameState.speed = gameState.baseSpeed;
             gameState.lives = 3;
-            gameState.timeRemaining = gameState.gameTime;
+            gameState.timeRemaining = 0;
             gameState.gameStartTime = Date.now();
+            gameState.levelStartTime = Date.now();
+            gameState.levelTimeElapsed = 0;
             gameState.playerLane = 1;
             gameState.playerAction = 'running';
             gameState.playerY = 0;
@@ -3814,7 +3938,7 @@
             ambientStarted = false;
             
             currentScore = gameState.score;
-            currentSurvivalTime = Math.max(0, gameState.gameTime - Math.ceil(gameState.timeRemaining));
+            currentSurvivalTime = Math.floor((Date.now() - gameState.gameStartTime) / 1000); // Actual play time
             
             // Check for highscore
             if (highscoreManager.isHighscore(currentScore)) {
@@ -3839,7 +3963,7 @@
             ambientStarted = false;
             
             currentScore = gameState.score;
-            currentSurvivalTime = 60; // Full 60 seconds survived!
+            currentSurvivalTime = Math.floor((Date.now() - gameState.gameStartTime) / 1000); // Actual total play time
             
             // Victory celebration!
             audioManager.play('powerup');
@@ -3865,27 +3989,32 @@
             document.getElementById('lives').textContent = gameState.lives;
             document.getElementById('apples').textContent = gameState.collectedApples;
             document.getElementById('broccolis').textContent = gameState.collectedBroccolis;
-            
-            // Update timer with visual warnings
+
+            // Update timer display (V5.0 — context-dependent)
             const timeElement = document.getElementById('timeRemaining');
             const timerElement = document.getElementById('timer');
-            timeElement.textContent = Math.max(0, Math.ceil(gameState.timeRemaining));
-            
-            // Timer visual states with audio warnings
-            const timeLeft = Math.ceil(gameState.timeRemaining);
-            if (timeLeft <= 10) {
-                timerElement.className = 'timer-critical';
-                // Final countdown beeps
-                if (timeLeft <= 5 && timeLeft > 0 && Math.ceil(gameState.timeRemaining) !== Math.ceil(gameState.timeRemaining + 0.016)) {
-                    audioManager.play('coin'); // High pitched beep
-                }
-            } else if (timeLeft <= 20) {
-                timerElement.className = 'timer-warning';
-                // Warning at 20 seconds
-                if (timeLeft === 20 && Math.abs(gameState.timeRemaining - 20) < 0.1) {
-                    audioManager.play('duck'); // Warning sound
+
+            if (currentLevel === 10) {
+                // Level 10: survival countdown with warnings
+                const timeLeft = Math.max(0, Math.ceil(gameState.timeRemaining));
+                timeElement.textContent = timeLeft;
+                if (timeLeft <= 10) {
+                    timerElement.className = 'timer-critical';
+                    if (timeLeft <= 5 && timeLeft > 0) {
+                        audioManager.play('coin');
+                    }
+                } else if (timeLeft <= 20) {
+                    timerElement.className = 'timer-warning';
+                } else {
+                    timerElement.className = '';
                 }
             } else {
+                // Levels 1-9: show "Lv X" + score progress to next level
+                const nextThreshold = getCumulativeScoreForLevel(currentLevel + 1);
+                const prevThreshold = getCumulativeScoreForLevel(currentLevel);
+                const levelProgress = Math.min(gameState.score - prevThreshold, nextThreshold - prevThreshold);
+                const needed = nextThreshold - prevThreshold;
+                timeElement.textContent = `Lv${currentLevel}`;
                 timerElement.className = '';
             }
         }
@@ -3911,7 +4040,7 @@
             if (isVictory) {
                 menu.innerHTML = `
                     <h1>🎉 VICTORY! 🎉</h1>
-                    <h2>Du hast 60 Sekunden überlebt!</h2>
+                    <h2>Alle 10 Level geschafft!</h2>
                     <p>Final Score: ${currentScore}</p>
                     <p>Du bist ein Subway Runner Champion! 🏆</p>
                     <button onclick="startGame()">🎮 Nochmal versuchen</button>
@@ -5184,38 +5313,58 @@
                 // Spawn collectibles with 4-second interval
                 spawnCollectible();
                 
-                // Spawn obstacles - REDUCED frequency for better balance
-                const baseSpawnRate = 0.008; // Reduced from 0.012 (33% less obstacles)
-                const spawnSpeedMultiplier = 1 + (gameState.speed / gameState.maxSpeed) * 1.0; // Reduced from 1.5
-                const spawnRate = baseSpawnRate * spawnSpeedMultiplier;
-                
-                if (Math.random() < spawnRate) {
-                    const jumpObstacles = ['lowbarrier', 'jumpblock', 'hurdleset'];
-                    const duckObstacles = ['highbarrier', 'duckbeam', 'wallgap'];
-                    const flexibleObstacles = ['spikes'];
-                    const movingObstacles = ['rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball', 'spinninglaser'];
-                    
+                // Spawn obstacles — per-level config (V5.0)
+                const spawnCfg = LEVEL_CONFIGS[currentLevel] || LEVEL_CONFIGS[10];
+                let effectiveSpawnRate = spawnCfg.baseSpawnRate;
+                const spawnSpeedFactor = 1 + (gameState.speed / spawnCfg.maxSpeed) * spawnCfg.spawnScaleWithSpeed;
+                effectiveSpawnRate *= spawnSpeedFactor;
+
+                // Anti-double-punishment: reduce spawns at top 30% of level speed
+                const speedRatioInLevel = (gameState.speed - spawnCfg.baseSpeed) / Math.max(0.01, spawnCfg.maxSpeed - spawnCfg.baseSpeed);
+                if (speedRatioInLevel > 0.7) {
+                    effectiveSpawnRate *= 1 - ((speedRatioInLevel - 0.7) / 0.3 * 0.20);
+                }
+
+                // Gesture mode: fewer obstacles
+                if (gestureEnabled) {
+                    effectiveSpawnRate *= (1 - spawnCfg.gestureSpawnReduction);
+                }
+
+                if (Math.random() < effectiveSpawnRate) {
+                    const allJump = ['lowbarrier', 'jumpblock', 'hurdleset'];
+                    const allDuck = ['highbarrier', 'duckbeam', 'wallgap'];
+                    const allFlex = ['spikes'];
+                    const allMoving = ['rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball', 'spinninglaser'];
+
+                    // Filter to only types allowed in this level
+                    const allowed = spawnCfg.obstacleTypes;
+                    const jumpPool = allJump.filter(t => allowed.includes(t));
+                    const duckPool = allDuck.filter(t => allowed.includes(t));
+                    const flexPool = allFlex.filter(t => allowed.includes(t));
+                    const movingPool = allMoving.filter(t => allowed.includes(t));
+
                     let type;
                     const rand = Math.random();
-                    const speedRatio = gameState.speed / gameState.maxSpeed;
-                    
-                    // Increase moving obstacle chance as speed increases
-                    const movingChance = 0.05 + speedRatio * 0.15; // 5% to 20% chance
-                    
-                    if (rand < movingChance) {
-                        // Moving obstacles (more frequent at higher speeds)
-                        type = movingObstacles[Math.floor(Math.random() * movingObstacles.length)];
-                    } else if (rand < 0.4 + movingChance) {
-                        // Jump obstacles
-                        type = jumpObstacles[Math.floor(Math.random() * jumpObstacles.length)];
-                    } else if (rand < 0.8 + movingChance) {
-                        // Duck obstacles
-                        type = duckObstacles[Math.floor(Math.random() * duckObstacles.length)];
+                    const movingChance = movingPool.length > 0 ? spawnCfg.movingObstacleChance : 0;
+
+                    if (rand < movingChance && movingPool.length > 0) {
+                        type = movingPool[Math.floor(Math.random() * movingPool.length)];
                     } else {
-                        // Flexible obstacles
-                        type = flexibleObstacles[Math.floor(Math.random() * flexibleObstacles.length)];
+                        // Distribute remaining probability: 45% jump, 35% duck, 20% flex
+                        const adjustedRand = (rand - movingChance) / (1 - movingChance || 1);
+                        if (adjustedRand < 0.45 && jumpPool.length > 0) {
+                            type = jumpPool[Math.floor(Math.random() * jumpPool.length)];
+                        } else if (adjustedRand < 0.80 && duckPool.length > 0) {
+                            type = duckPool[Math.floor(Math.random() * duckPool.length)];
+                        } else if (flexPool.length > 0) {
+                            type = flexPool[Math.floor(Math.random() * flexPool.length)];
+                        } else if (jumpPool.length > 0) {
+                            type = jumpPool[Math.floor(Math.random() * jumpPool.length)];
+                        } else {
+                            type = allowed[Math.floor(Math.random() * allowed.length)];
+                        }
                     }
-                    
+
                     const lane = Math.floor(Math.random() * 3);
                     createObstacle(type, lane, -30);
                 }
@@ -5236,23 +5385,43 @@
                 
                 camera.lookAt(player.position.x * 0.2, 1, -3);
                 
-                // Update game timer
+                // Update game timer (V5.0 — per-level timing)
                 const currentTime = Date.now();
-                const elapsedTime = (currentTime - gameState.gameStartTime) / 1000;
-                gameState.timeRemaining = Math.max(0, gameState.gameTime - elapsedTime);
-                
-                // Check for victory (survived 60 seconds!)
-                if (gameState.timeRemaining <= 0 && !gameState.isVictory && !gameState.isGameOver) {
-                    console.log('Victory condition met - calling victoryGame()');
+                const totalElapsed = (currentTime - gameState.gameStartTime) / 1000;
+                gameState.levelTimeElapsed = (currentTime - gameState.levelStartTime) / 1000;
+
+                // Level 10: 60-second survival countdown → victory
+                if (currentLevel === 10) {
+                    gameState.timeRemaining = Math.max(0, 60 - gameState.levelTimeElapsed);
+                    if (gameState.timeRemaining <= 0 && !gameState.isVictory && !gameState.isGameOver) {
+                        console.log('Victory condition met - Level 10 survived!');
+                        victoryGame();
+                        return;
+                    }
+                } else {
+                    // Levels 1-9: show total elapsed time (no countdown pressure)
+                    gameState.timeRemaining = Math.ceil(totalElapsed);
+                }
+
+                // Safety net: auto-victory after 10 minutes total (prevents infinite games)
+                if (totalElapsed > 600 && !gameState.isVictory && !gameState.isGameOver) {
+                    console.log('Safety timeout — 10 minute max reached');
                     victoryGame();
                     return;
                 }
                 
-                // Progressive speed increase - exponential curve for dramatic effect
-                const timeProgress = 1 - (gameState.timeRemaining / gameState.gameTime); // 0 to 1
-                const speedMultiplier = 1 + Math.pow(timeProgress, 1.5) * 4.5; // 1x to 5.5x speed
-                gameState.speed = gameState.baseSpeed * speedMultiplier;
-                gameState.speed = Math.min(gameState.speed, gameState.maxSpeed);
+                // Per-level speed progression (V5.0 — gentle within level, big jumps between levels)
+                const lvlConfig = LEVEL_CONFIGS[currentLevel] || LEVEL_CONFIGS[10];
+                const timeProgress = gameState.levelTimeElapsed / 60; // 0→1 over ~60s within level
+                const clampedProgress = Math.min(timeProgress, 1);
+                const levelSpeedMult = 1 + Math.pow(clampedProgress, lvlConfig.speedExponent) * lvlConfig.speedMultiplierMax;
+                let targetSpeed = lvlConfig.baseSpeed * levelSpeedMult;
+                targetSpeed = Math.min(targetSpeed, lvlConfig.maxSpeed);
+                // Gesture mode: reduce speed for playability
+                if (gestureEnabled) {
+                    targetSpeed *= (1 - lvlConfig.gestureSpeedReduction);
+                }
+                gameState.speed = targetSpeed;
                 
                 // Update environment movement with parallax
                 updateEnvironmentMovement(deltaTime);

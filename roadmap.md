@@ -669,6 +669,24 @@ Research-basiert gegen aktuelle MediaPipe Best Practices:
 #### Resultat
 Alle Best Practices April 2026 implementiert. Dokumentiert in `bestPractice_gestensteuerung.md`.
 
+### Phase 10: Difficulty Rebalance — 10-Level Progressive System (2026-04-28)
+
+#### Session 1: V5.0 Rebalance (T1, d9e157e → current)
+
+| Change | Details |
+|--------|---------|
+| LEVEL_CONFIGS table | 10 levels with per-level speed, spawn rate, obstacle types, gesture modifier |
+| Speed system | Per-level ranges (L1: 0.08-0.12, L10: 0.25-0.40) instead of global 5.5x |
+| Obstacle filtering | L1: jump-only, L2: +duck, L4: +moving — progressive introduction |
+| Gesture mode modifier | 20-25% speed reduction, 30-40% spawn reduction |
+| Anti-double-punishment | Spawn rate decreases at top 30% of level speed |
+| Timer rework | L1-9: no countdown, L10: 60s survival finale |
+| Victory condition | Complete Level 10 survival instead of 60s timer |
+| Version bump | V4.5.10 → V5.0.0 |
+
+#### Resultat
+Schwierigkeit von "unmöglich mit Tastatur" auf progressive 10-Level-Kurve rebalanced. Level 1 easy, Level 10 ≈ altes Endgame. Gestensteuerung mit eigenen Modifiern.
+
 ---
 
 ### **Success Metrics (2 Weeks)**
