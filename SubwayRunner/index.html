@@ -5128,6 +5128,13 @@
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
         
+        // Global safety net: catch unhandled promise rejections from gesture system
+        // Prevents silent crashes on tablets when camera/MediaPipe fails unexpectedly
+        window.addEventListener('unhandledrejection', (event) => {
+            console.warn('Unhandled promise rejection (caught by safety net):', event.reason);
+            event.preventDefault(); // Prevent browser from killing the page
+        });
+
         // Gesture Control Integration with GestureManager (Multi-Mode Support)
         let gestureManager = null;
         let gestureEnabled = false;
@@ -5222,7 +5229,13 @@
                     });
                 }
 
-                await gestureManager.start();
+                // Timeout: gesture init must complete within 20s or game starts with keyboard
+                await Promise.race([
+                    gestureManager.start(),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Gesture-Init Timeout (20s)')), 20000)
+                    )
+                ]);
                 gestureEnabled = true;
                 currentGestureMode = mode;
 
@@ -5240,7 +5253,7 @@
                 startGameInternal();
             } catch (error) {
                 console.error('Gesture start failed:', error);
-                alert('Kamera-Zugriff fehlgeschlagen: ' + error.message + '\n\nStarte mit Tastatur...');
+                console.warn('Starte mit Tastatur-Steuerung...');
                 startGameInternal();
             }
         };
@@ -5270,7 +5283,7 @@
                                     onStatsUpdate: updateGestureStats,
                                     onError: handleGestureError,
                                     onCalibrationComplete: () => {
-                                        gestureStatusText.textContent = 'Kalibriert';
+                                        if (gestureStatusText) gestureStatusText.textContent = 'Kalibriert';
                                     },
                                     debugMode: false,
                                     projectorMode: true
@@ -5285,21 +5298,23 @@
                                     canvas: gestureCanvas,
                                     onGestureDetected: handleGestureEvent,
                                     onModeChange: (modeKey, modeName) => {
-                                        gestureModeText.textContent = modeName;
-                                        gestureModeSelect.value = modeKey;
+                                        if (gestureModeText) gestureModeText.textContent = modeName;
+                                        if (gestureModeSelect) gestureModeSelect.value = modeKey;
                                         console.log(`🎮 Mode changed: ${modeName}`);
                                     },
                                     onStatusChange: (status, message) => {
-                                        gestureStatusText.textContent = message;
+                                        if (gestureStatusText) gestureStatusText.textContent = message;
                                         console.log(`🎮 Status: ${status} - ${message}`);
                                     },
                                     onCalibrationProgress: (progress, step) => {
-                                        calibrationProgress.classList.add('active');
-                                        calibrationProgressFill.style.width = (progress * 100) + '%';
-                                        if (progress >= 1) {
-                                            setTimeout(() => {
-                                                calibrationProgress.classList.remove('active');
-                                            }, 1000);
+                                        if (calibrationProgress) {
+                                            calibrationProgress.classList.add('active');
+                                            if (calibrationProgressFill) calibrationProgressFill.style.width = (progress * 100) + '%';
+                                            if (progress >= 1) {
+                                                setTimeout(() => {
+                                                    calibrationProgress.classList.remove('active');
+                                                }, 1000);
+                                            }
                                         }
                                     },
                                     onError: handleGestureError
@@ -5309,16 +5324,16 @@
 
                         await gestureManager.start();
                         gestureEnabled = true;
-                        gestureBtn.textContent = '🛑 Gestensteuerung stoppen';
-                        gestureBtn.classList.add('active');
-                        gestureCanvas.classList.add('active');
-                        gestureStatus.classList.add('active');
-                        gestureModeSelector.classList.add('active');
-                        gestureStatusText.textContent = 'Aktiv';
-                        console.log('✅ Gesture Control activated');
+                        if (gestureBtn) gestureBtn.textContent = 'Gestensteuerung stoppen';
+                        if (gestureBtn) gestureBtn.classList.add('active');
+                        if (gestureCanvas) gestureCanvas.classList.add('active');
+                        if (gestureStatus) gestureStatus.classList.add('active');
+                        if (gestureModeSelector) gestureModeSelector.classList.add('active');
+                        if (gestureStatusText) gestureStatusText.textContent = 'Aktiv';
+                        console.log('Gesture Control activated');
 
                     } catch (error) {
-                        console.error('❌ Failed to start gesture control:', error);
+                        console.error('Failed to start gesture control:', error);
                         alert(`Gestensteuerung Fehler: ${error.message}\n\nBitte stelle sicher dass:\n1. Kamera-Zugriff erlaubt ist\n2. HTTPS verwendet wird\n3. Chrome/Edge Browser verwendet wird`);
                     }
                 } else {
@@ -5327,13 +5342,13 @@
                         gestureManager.stop();
                     }
                     gestureEnabled = false;
-                    gestureBtn.textContent = '🎮 Gestensteuerung aktivieren';
-                    gestureBtn.classList.remove('active');
-                    gestureCanvas.classList.remove('active');
-                    gestureStatus.classList.remove('active');
-                    gestureModeSelector.classList.remove('active');
-                    gestureStatusText.textContent = 'Gestoppt';
-                    gestureCurrentText.textContent = 'NONE';
+                    if (gestureBtn) gestureBtn.textContent = 'Gestensteuerung aktivieren';
+                    if (gestureBtn) gestureBtn.classList.remove('active');
+                    if (gestureCanvas) gestureCanvas.classList.remove('active');
+                    if (gestureStatus) gestureStatus.classList.remove('active');
+                    if (gestureModeSelector) gestureModeSelector.classList.remove('active');
+                    if (gestureStatusText) gestureStatusText.textContent = 'Gestoppt';
+                    if (gestureCurrentText) gestureCurrentText.textContent = 'NONE';
                 }
             });
 
@@ -5437,7 +5452,7 @@
                         handleGestureInput('MOVE_RIGHT');
                         break;
                     case 'center':
-                        gestureCurrentText.textContent = 'CENTER';
+                        if (gestureCurrentText) gestureCurrentText.textContent = 'CENTER';
                         break;
                 }
             } else if (gesture.type === 'action') {
@@ -5457,8 +5472,8 @@
         
         function handleGestureInput(gesture) {
             if (!gameState.isPlaying) return;
-            
-            gestureCurrentText.textContent = gesture;
+
+            if (gestureCurrentText) gestureCurrentText.textContent = gesture;
             
             switch (gesture) {
                 case 'MOVE_LEFT':
@@ -5514,7 +5529,7 @@
         
         function handleGestureError(error) {
             console.error('Gesture control error:', error);
-            gestureStatusText.textContent = 'Fehler';
+            if (gestureStatusText) gestureStatusText.textContent = 'Fehler';
         }
 
         // Debug function for testing

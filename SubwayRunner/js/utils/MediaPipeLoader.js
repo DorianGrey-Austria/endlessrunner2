@@ -21,7 +21,13 @@ let visionInstance = null;
  */
 async function getModule() {
     if (!tasksVisionModule) {
-        tasksVisionModule = await import(`${TASKS_VISION_CDN}/vision_bundle.mjs`);
+        // Timeout: abort if CDN takes >15s (tablets on slow WiFi)
+        tasksVisionModule = await Promise.race([
+            import(`${TASKS_VISION_CDN}/vision_bundle.mjs`),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('MediaPipe CDN Timeout (15s) — pruefe Internetverbindung')), 15000)
+            )
+        ]);
     }
     return tasksVisionModule;
 }

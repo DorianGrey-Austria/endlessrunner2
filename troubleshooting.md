@@ -2777,3 +2777,33 @@ Gleiches Problem in `BodyPoseMode.detectBodyLean()`: `noseX - shoulderCenterX` u
 3. **E2E mit Fake-Webcam (future):** Playwright `--use-fake-device-for-media-stream` + Y4M Video-Fixtures
 
 ---
+
+## INF-020: Spiel bricht auf Tablet komplett ab (2026-04-28)
+
+**Symptom:** Auf Tablet (iPad/Android) kann weder gespielt noch Gestensteuerung genutzt werden. Spiel "bricht einfach ab". Keine Fehlermeldung sichtbar.
+
+**Root Cause (3-fach):**
+
+1. **Null DOM Crashes:** `handleGestureEvent()`, `handleGestureInput()`, `handleGestureError()` in index.html greifen auf `gestureCurrentText.textContent` und `gestureStatusText.textContent` zu OHNE null-check. Auf Tablets koennen diese Elemente null sein → TypeError → Game tot.
+
+2. **getUserMedia() haengt:** Kein Timeout auf `navigator.mediaDevices.getUserMedia()`. Auf Tablets kann der Kamera-Berechtigungsdialog ewig haengen (User wischt weg, Browser fragt nicht nochmal). Promise resolved/rejects NIE → Game-Start blockiert.
+
+3. **MediaPipe CDN haengt:** 14MB WASM-Download ueber CDN ohne Timeout. Tablets auf schwachem WiFi haengen endlos.
+
+**Zusaetzlich:** Die 6 Commits vom Gesture-Direction-Fix (INF-018) waren nie gepusht worden — Produktion lief noch die alte, invertierte Version.
+
+**Fix:**
+- Alle DOM-Zugriffe in Gesture-Handlern null-safe gemacht (15+ Stellen)
+- `getUserMedia()` mit 5s `Promise.race()` Timeout in allen 3 Modi
+- MediaPipe CDN Import mit 15s Timeout
+- `selectGestureAndStart()` mit 20s Gesamttimeout — Spiel startet mit Tastatur wenn Gesten scheitern
+- Globaler `unhandledrejection` Handler als Sicherheitsnetz
+- Alert-Popups bei Gesture-Fehler entfernt (stoerten auf Tablets)
+
+**Lessons Learned:**
+1. IMMER `git push` nach Fixes — lokale Commits nuetzen nichts auf Produktion
+2. Alle DOM-Zugriffe in Event-Handlern MUESSEN null-safe sein
+3. Jedes `await` in der Game-Start-Pipeline braucht einen Timeout
+4. Tablets sind der haerteste Testfall — Camera/Network unreliable
+
+---
