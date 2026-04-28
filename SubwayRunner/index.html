@@ -596,13 +596,21 @@
             </div>
 
             <div class="quality-toggle">
-                <button class="quality-btn" id="qualityPerfBtn" onclick="setQualityMode('performance')">
+                <button class="quality-btn" data-quality="low" onclick="setQualityMode('low')">
                     <span class="quality-icon">&#x26A1;</span>
-                    <span class="quality-label">Performance</span>
+                    <span class="quality-label">Niedrig</span>
                 </button>
-                <button class="quality-btn active" id="qualityHighBtn" onclick="setQualityMode('high')">
+                <button class="quality-btn" data-quality="medium" onclick="setQualityMode('medium')">
+                    <span class="quality-icon">&#x2696;</span>
+                    <span class="quality-label">Mittel</span>
+                </button>
+                <button class="quality-btn" data-quality="high" onclick="setQualityMode('high')">
                     <span class="quality-icon">&#x2728;</span>
-                    <span class="quality-label">High Quality</span>
+                    <span class="quality-label">Hoch</span>
+                </button>
+                <button class="quality-btn" id="qualityAutoBtn" onclick="setQualityAuto()" style="border: 1px solid #58a6ff;">
+                    <span class="quality-icon">A</span>
+                    <span class="quality-label">Auto</span>
                 </button>
             </div>
 
@@ -1138,12 +1146,18 @@
             if (sel) sel.value = savedTrack;
         }
 
-        // setQualityMode is defined after QUALITY_PRESETS (deferred via window binding)
+        // Quality mode switching (called from UI buttons)
         window.setQualityMode = function(mode) {
-            qualityMode = mode;
-            localStorage.setItem('qualityMode', mode);
-            document.getElementById('qualityPerfBtn').classList.toggle('active', mode === 'performance');
-            document.getElementById('qualityHighBtn').classList.toggle('active', mode === 'high');
+            if (mode === 'performance') mode = 'low'; // legacy compat
+            qualityAutoMode = false;
+            localStorage.setItem('qualityAutoMode', 'false');
+            applyQualityRuntime(mode);
+        };
+
+        window.setQualityAuto = function() {
+            qualityAutoMode = !qualityAutoMode;
+            localStorage.setItem('qualityAutoMode', qualityAutoMode ? 'true' : 'false');
+            updateQualityUI();
         };
 
         window.startGame = function() {
@@ -1219,51 +1233,189 @@
             HEALTH_CHECK_INTERVAL: 5000 // 5 seconds
         };
 
-        // ==================== QUALITY MODE SYSTEM ====================
+        // ==================== QUALITY MODE SYSTEM (Adaptive, April 2026) ====================
+        const QUALITY_TIERS = ['low', 'medium', 'high'];
         const QUALITY_PRESETS = {
-            performance: {
-                label: 'Performance',
+            low: {
+                label: 'Niedrig',
                 pixelRatio: 1.0,
+                antialias: false,
+                shadowMapSize: 256,
+                shadowMapType: 'BasicShadowMap',
+                shadowsEnabled: false,
+                objectMultiplier: 0.3,
+                maxPointLights: 1,
+                fogDensity: 1.8,
+                maxSceneObjects: 200,
+                particleMultiplier: 0.3,
+                toneMapping: false,
+                drawDistance: 40
+            },
+            medium: {
+                label: 'Mittel',
+                pixelRatio: Math.min(window.devicePixelRatio || 1.0, 1.5),
                 antialias: false,
                 shadowMapSize: 512,
                 shadowMapType: 'PCFShadowMap',
-                objectMultiplier: 0.5,
-                maxPointLights: 2,
-                fogDensity: 1.4,
-                maxSceneObjects: 300
+                shadowsEnabled: true,
+                objectMultiplier: 0.7,
+                maxPointLights: 4,
+                fogDensity: 1.0,
+                maxSceneObjects: 500,
+                particleMultiplier: 0.6,
+                toneMapping: false,
+                drawDistance: 55
             },
             high: {
-                label: 'High Quality',
+                label: 'Hoch',
                 pixelRatio: window.devicePixelRatio || 2.0,
                 antialias: true,
-                shadowMapSize: 4096,
+                shadowMapSize: 2048,
                 shadowMapType: 'PCFSoftShadowMap',
+                shadowsEnabled: true,
                 objectMultiplier: 1.5,
                 maxPointLights: 12,
                 fogDensity: 0.7,
                 maxSceneObjects: 1200,
-                toneMapping: true
-            }
+                particleMultiplier: 1.0,
+                toneMapping: true,
+                drawDistance: 70
+            },
+            // Legacy alias so old localStorage values still work
+            performance: null // resolved in getQuality()
         };
+        QUALITY_PRESETS.performance = QUALITY_PRESETS.low; // backward compat
 
         let qualityMode = localStorage.getItem('qualityMode') || 'high';
+        // Migrate old 'performance' to 'low'
+        if (qualityMode === 'performance') qualityMode = 'low';
+
+        let qualityAutoMode = localStorage.getItem('qualityAutoMode') !== 'false'; // default: true
 
         function getQuality() {
-            return QUALITY_PRESETS[qualityMode] || QUALITY_PRESETS.high;
+            return QUALITY_PRESETS[qualityMode] || QUALITY_PRESETS.medium;
         }
 
         function scaledCount(baseCount) {
             return Math.max(2, Math.round(baseCount * getQuality().objectMultiplier));
         }
 
+        // ==================== FPS MONITOR + AUTO-ADAPTIVE ====================
+        const fpsMonitor = {
+            samples: new Float32Array(60), // rolling 60-frame buffer
+            index: 0,
+            filled: false,
+            lastTime: 0,
+            avg: 60,
+            // Auto-adaptive state
+            lowFpsSince: 0,      // timestamp when FPS dropped below 30
+            highFpsSince: 0,     // timestamp when FPS rose above 55
+            lastSwitch: 0,       // timestamp of last quality switch
+            switchCooldown: 10000, // 10s between switches
+
+            tick(now) {
+                if (this.lastTime > 0) {
+                    const dt = now - this.lastTime;
+                    if (dt > 0) {
+                        this.samples[this.index] = 1000 / dt;
+                        this.index = (this.index + 1) % 60;
+                        if (this.index === 0) this.filled = true;
+                    }
+                }
+                this.lastTime = now;
+
+                // Calculate average
+                const count = this.filled ? 60 : this.index;
+                if (count > 0) {
+                    let sum = 0;
+                    for (let i = 0; i < count; i++) sum += this.samples[i];
+                    this.avg = sum / count;
+                }
+            },
+
+            checkAutoAdapt(now) {
+                if (!qualityAutoMode) return;
+                if (now - this.lastSwitch < this.switchCooldown) return;
+
+                const tierIdx = QUALITY_TIERS.indexOf(qualityMode);
+
+                // Auto-downgrade: FPS < 30 for 3 seconds
+                if (this.avg < 30) {
+                    if (this.lowFpsSince === 0) this.lowFpsSince = now;
+                    else if (now - this.lowFpsSince > 3000 && tierIdx > 0) {
+                        const newTier = QUALITY_TIERS[tierIdx - 1];
+                        console.log(`Auto-downgrade: ${qualityMode} -> ${newTier} (FPS: ${this.avg.toFixed(0)})`);
+                        applyQualityRuntime(newTier);
+                        this.lastSwitch = now;
+                        this.lowFpsSince = 0;
+                    }
+                } else {
+                    this.lowFpsSince = 0;
+                }
+
+                // Auto-upgrade: FPS > 55 for 5 seconds
+                if (this.avg > 55) {
+                    if (this.highFpsSince === 0) this.highFpsSince = now;
+                    else if (now - this.highFpsSince > 5000 && tierIdx < QUALITY_TIERS.length - 1) {
+                        const newTier = QUALITY_TIERS[tierIdx + 1];
+                        console.log(`Auto-upgrade: ${qualityMode} -> ${newTier} (FPS: ${this.avg.toFixed(0)})`);
+                        applyQualityRuntime(newTier);
+                        this.lastSwitch = now;
+                        this.highFpsSince = 0;
+                    }
+                } else {
+                    this.highFpsSince = 0;
+                }
+            }
+        };
+
+        // Apply quality changes at runtime WITHOUT renderer restart
+        function applyQualityRuntime(newMode) {
+            qualityMode = newMode;
+            localStorage.setItem('qualityMode', newMode);
+            const q = getQuality();
+
+            // Fog density
+            if (scene && scene.fog) {
+                scene.fog.density = 0.025 * q.fogDensity;
+            }
+
+            // Shadows
+            if (renderer) {
+                renderer.shadowMap.enabled = q.shadowsEnabled;
+            }
+
+            // Tone mapping
+            if (renderer) {
+                if (q.toneMapping) {
+                    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                    renderer.toneMappingExposure = 1.1;
+                } else {
+                    renderer.toneMapping = THREE.NoToneMapping;
+                }
+            }
+
+            // Pixel ratio (smooth — no re-create)
+            if (renderer) {
+                renderer.setPixelRatio(q.pixelRatio);
+            }
+
+            // Update UI buttons
+            updateQualityUI();
+        }
+
+        function updateQualityUI() {
+            const btns = document.querySelectorAll('.quality-btn[data-quality]');
+            btns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.quality === qualityMode);
+            });
+            const autoBtn = document.getElementById('qualityAutoBtn');
+            if (autoBtn) autoBtn.classList.toggle('active', qualityAutoMode);
+        }
+
         // Restore saved quality button state on load
         (function() {
-            const perfBtn = document.getElementById('qualityPerfBtn');
-            const highBtn = document.getElementById('qualityHighBtn');
-            if (perfBtn && highBtn) {
-                perfBtn.classList.toggle('active', qualityMode === 'performance');
-                highBtn.classList.toggle('active', qualityMode === 'high');
-            }
+            updateQualityUI();
         })();
 
         // ==================== LEVEL SYSTEM V3.3 ====================
@@ -3965,8 +4117,11 @@
                     size = 0.05;
             }
             
+            // Scale particle count by quality tier
+            particleCount = Math.max(2, Math.round(particleCount * getQuality().particleMultiplier));
+
             const particles = new THREE.Group();
-            
+
             for (let i = 0; i < particleCount; i++) {
                 const particle = new THREE.Mesh(
                     new THREE.SphereGeometry(size, 6, 6),
@@ -4876,12 +5031,18 @@
         
         function animate() {
             requestAnimationFrame(animate);
-            
+
             // Calculate delta time for smooth movement
             const currentTime = performance.now();
             const deltaTime = currentTime - lastFrameTime;
             lastFrameTime = currentTime;
-            
+
+            // FPS tracking + auto-adaptive quality
+            fpsMonitor.tick(currentTime);
+            if (gameState.isPlaying) {
+                fpsMonitor.checkAutoAdapt(currentTime);
+            }
+
             // STABILITY: Reset score counter each frame
             gameState.scoreThisFrame = 0;
             gameState.frameCount++;
