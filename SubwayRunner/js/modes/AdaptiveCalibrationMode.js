@@ -132,9 +132,15 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         await super.start();
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, facingMode: 'user' }
-            });
+            // Timeout wrapper — tablets may hang on camera permission dialog
+            const stream = await Promise.race([
+                navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, facingMode: 'user' }
+                }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Kamera-Timeout (5s) — bitte Berechtigung pruefen')), 5000)
+                )
+            ]);
 
             this.video.srcObject = stream;
             await this.video.play();
