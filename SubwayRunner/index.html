@@ -5465,6 +5465,17 @@
             event.preventDefault(); // Prevent browser from killing the page
         });
 
+        // Pause gesture detection when tab is hidden (saves CPU/GPU)
+        // Resume when tab becomes visible again (best practice 2026)
+        document.addEventListener('visibilitychange', () => {
+            if (!gestureManager || !gestureEnabled) return;
+            if (document.hidden) {
+                gestureManager.stop();
+            } else {
+                gestureManager.start();
+            }
+        });
+
         // Gesture Control Integration with GestureManager (Multi-Mode Support)
         let gestureManager = null;
         let gestureEnabled = false;
@@ -5563,8 +5574,10 @@
                 }
 
                 // Timeout: gesture init must complete within 20s or game starts with keyboard
+                // Skip start() if switchMode already started the mode (prevents double camera)
+                const alreadyRunning = gestureManager.isRunning;
                 await Promise.race([
-                    gestureManager.start(),
+                    alreadyRunning ? Promise.resolve() : gestureManager.start(),
                     new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('Gesture-Init Timeout (20s)')), 20000)
                     )
@@ -5803,11 +5816,14 @@
             }
         }
         
+        // Gesture input handler — mirrors keyboard controls (same gameState properties)
+        // CRITICAL: Must set playerAction (not isJumping/isDucking) because
+        // the game physics engine reads playerAction exclusively.
         function handleGestureInput(gesture) {
             if (!gameState.isPlaying) return;
 
             if (gestureCurrentText) gestureCurrentText.textContent = gesture;
-            
+
             switch (gesture) {
                 case 'MOVE_LEFT':
                     if (gameState.playerLane > 0) {
@@ -5817,7 +5833,7 @@
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
                     break;
-                    
+
                 case 'MOVE_RIGHT':
                     if (gameState.playerLane < 2) {
                         gameState.playerLane++;
@@ -5826,28 +5842,48 @@
                         audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                     }
                     break;
-                    
+
                 case 'JUMP':
-                    if (!gameState.isJumping && gameState.jumpCount < 2) {
-                        gameState.isJumping = true;
-                        gameState.jumpCount++;
-                        gameState.jumpVelocity = config.jumpPower;
+                    if (gameState.playerAction === 'running') {
+                        // First jump — same state as keyboard (ArrowUp/W/Space)
+                        gameState.playerAction = 'jumping';
+                        gameState.jumpVelocity = 10;
+                        gameState.jumpStartTime = performance.now();
+                        gameState.jumpCount = 1;
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                            0xFFFF00, 'jump'
+                        );
+                    } else if (gameState.playerAction === 'jumping' &&
+                               gameState.jumpCount < gameState.maxJumps &&
+                               gameState.playerY > 0.5) {
+                        // Multi-jump — same diminishing force as keyboard
+                        gameState.jumpCount++;
+                        const jumpForce = 10 - (gameState.jumpCount - 1) * 1.5;
+                        gameState.jumpVelocity = Math.max(jumpForce, 6);
+                        gameState.jumpStartTime = performance.now();
+                        const speedMultiplier = gameState.score / 5000;
+                        audioManager.playSpeedDependentSound('jump', speedMultiplier);
+                        createParticleEffect(
+                            new THREE.Vector3(player.position.x, 0.1, player.position.z),
+                            0xFFFF00, 'jump'
+                        );
                     }
                     break;
-                    
+
                 case 'DUCK':
-                    if (!gameState.isDucking && !gameState.isJumping) {
-                        gameState.isDucking = true;
+                    if (gameState.playerAction === 'running') {
+                        gameState.playerAction = 'ducking';
                         const speedMultiplier = gameState.score / 5000;
                         audioManager.playSpeedDependentSound('duck', speedMultiplier);
                     }
                     break;
-                    
+
                 case 'NONE':
-                    if (gameState.isDucking) {
-                        gameState.isDucking = false;
+                    if (gameState.playerAction === 'ducking') {
+                        gameState.playerAction = 'running';
                     }
                     break;
             }
