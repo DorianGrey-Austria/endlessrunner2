@@ -169,19 +169,22 @@ export class BodyPoseMode extends BaseGestureMode {
         await super.start();
 
         try {
-            // 640x480 is sufficient — MediaPipe internally downscales to 256x256
-            // Higher resolutions waste GPU bandwidth without improving detection
-            const stream = await Promise.race([
-                navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 480, facingMode: 'user' }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Kamera-Timeout (5s)')), 5000)
-                )
-            ]);
+            // Skip camera init if already streaming (prevents double getUserMedia)
+            if (!this.video.srcObject || !this.video.srcObject.active) {
+                // 640x480 is sufficient — MediaPipe internally downscales to 256x256
+                // Higher resolutions waste GPU bandwidth without improving detection
+                const stream = await Promise.race([
+                    navigator.mediaDevices.getUserMedia({
+                        video: { width: 640, height: 480, facingMode: 'user' }
+                    }),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Kamera-Timeout (5s)')), 5000)
+                    )
+                ]);
 
-            this.video.srcObject = stream;
-            await this.video.play();
+                this.video.srcObject = stream;
+                await this.video.play();
+            }
 
             this.canvas.width = this.video.videoWidth || 640;
             this.canvas.height = this.video.videoHeight || 480;
