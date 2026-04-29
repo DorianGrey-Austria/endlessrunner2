@@ -5532,7 +5532,7 @@
                     return;
                 }
 
-                // Initialize GestureManager with chosen mode
+                // Initialize GestureManager with chosen mode (or switch mode if already running)
                 if (!gestureManager && window.GestureManager) {
                     gestureManager = new window.GestureManager({
                         defaultMode: mode,
@@ -5557,6 +5557,9 @@
                         },
                         onError: handleGestureError
                     });
+                } else if (gestureManager && gestureManager.activeModeKey !== mode) {
+                    // Manager already exists but user chose a different mode (e.g. restart)
+                    await gestureManager.switchMode(mode);
                 }
 
                 // Timeout: gesture init must complete within 20s or game starts with keyboard
@@ -5770,21 +5773,21 @@
         }
 
         // Handle gesture events from new GestureManager
+        // IMPORTANT: Gesture modes emit ABSOLUTE lane states (left/center/right).
+        // We map them directly to player lanes (0/1/2) — NOT relative MOVE_LEFT/RIGHT.
         function handleGestureEvent(gesture) {
             if (!gameState.isPlaying) return;
 
             if (gesture.type === 'lane') {
-                switch (gesture.lane) {
-                    case 'left':
-                        handleGestureInput('MOVE_LEFT');
-                        break;
-                    case 'right':
-                        handleGestureInput('MOVE_RIGHT');
-                        break;
-                    case 'center':
-                        if (gestureCurrentText) gestureCurrentText.textContent = 'CENTER';
-                        break;
+                const laneMap = { left: 0, center: 1, right: 2 };
+                const targetLane = laneMap[gesture.lane];
+                if (targetLane !== undefined && targetLane !== gameState.playerLane) {
+                    gameState.playerLane = targetLane;
+                    updatePlayerPosition();
+                    const speedMultiplier = gameState.score / 5000;
+                    audioManager.playSpeedDependentSound('whoosh', speedMultiplier);
                 }
+                if (gestureCurrentText) gestureCurrentText.textContent = gesture.lane.toUpperCase();
             } else if (gesture.type === 'action') {
                 switch (gesture.action) {
                     case 'jump':
@@ -5874,8 +5877,8 @@
             console.log('Canvas Element:', document.getElementById('gestureCanvas'));
             console.log('Video Element:', document.getElementById('gestureVideo'));
             console.log('Status Element:', document.getElementById('gestureStatus'));
-            console.log('Module Loaded:', !!window.GestureControllerProjector);
-            console.log('Controller Instance:', gestureController);
+            console.log('Module Loaded:', !!window.GestureManager);
+            console.log('Manager Instance:', gestureManager);
             console.log('Gesture Enabled:', gestureEnabled);
             
             // Check visibility
@@ -5892,7 +5895,7 @@
         
         // Auto-run debug on page load
         setTimeout(() => {
-            console.log('🎮 SubwayRunner V3.4-GESTURE-DEBUG loaded');
+            console.log('🎮 SubwayRunner Gesture System loaded');
             window.debugGesture();
         }, 2000);
 
