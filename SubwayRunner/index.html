@@ -2767,9 +2767,26 @@
         function init() {
             console.log('Initializing Three.js scene...');
             try {
-                // Enhanced Scene
+                // Enhanced Scene with gradient sky
                 scene = new THREE.Scene();
-                scene.fog = new THREE.FogExp2(0x101020, 0.025 * getQuality().fogDensity);
+                scene.fog = new THREE.Fog(0x0a0a1a, 10, 70 / getQuality().fogDensity);
+
+                // Procedural gradient sky background
+                const skyCanvas = document.createElement('canvas');
+                skyCanvas.width = 2;
+                skyCanvas.height = 512;
+                const skyCtx = skyCanvas.getContext('2d');
+                const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
+                skyGrad.addColorStop(0.0, '#020210');   // deep space top
+                skyGrad.addColorStop(0.3, '#0a0a2e');   // night blue
+                skyGrad.addColorStop(0.6, '#1a1040');   // purple horizon
+                skyGrad.addColorStop(0.85, '#2a1535');   // warm glow
+                skyGrad.addColorStop(1.0, '#1a0a20');    // ground fade
+                skyCtx.fillStyle = skyGrad;
+                skyCtx.fillRect(0, 0, 2, 512);
+                const skyTexture = new THREE.CanvasTexture(skyCanvas);
+                skyTexture.magFilter = THREE.LinearFilter;
+                scene.background = skyTexture;
 
             // Camera (Subway Surfers perspective)
             camera = new THREE.PerspectiveCamera(60, 4/3, 0.1, 1000);
@@ -2786,27 +2803,27 @@
             });
             renderer.setPixelRatio(q.pixelRatio);
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.setClearColor(0x0a0a0f);
+            renderer.setClearColor(0x020210);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE[q.shadowMapType];
             if (q.toneMapping) {
                 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                renderer.toneMappingExposure = 1.1;
+                renderer.toneMappingExposure = 1.3;
             }
 
-            // Better lighting (SAFE)
-            // Ambient light for overall illumination
-            const ambientLight = new THREE.AmbientLight(0x4040aa, 0.3);
+            // Cinematic urban night lighting
+            // Base ambient — cool blue night atmosphere
+            const ambientLight = new THREE.AmbientLight(0x202040, 0.35);
             scene.add(ambientLight);
-            
-            // Hemisphere light for natural look
-            const hemisphereLight = new THREE.HemisphereLight(0x8888ff, 0x444488, 0.5);
+
+            // Sky hemisphere — purple-blue night sky to warm ground bounce
+            const hemisphereLight = new THREE.HemisphereLight(0x3030aa, 0x332211, 0.6);
             hemisphereLight.position.set(0, 50, 0);
             scene.add(hemisphereLight);
 
-            // Main directional light (sun)
-            const directionalLight = new THREE.DirectionalLight(0xFFE4B5, 1.2);
-            directionalLight.position.set(10, 15, 5);
+            // Main directional (moonlight) — cool white from above-left
+            const directionalLight = new THREE.DirectionalLight(0xccccff, 0.9);
+            directionalLight.position.set(8, 20, 5);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = q.shadowMapSize;
             directionalLight.shadow.mapSize.height = q.shadowMapSize;
@@ -2819,18 +2836,19 @@
             directionalLight.shadow.bias = -0.0005;
             scene.add(directionalLight);
 
-            // Atmospheric sky light for gradient
-            const skyHemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x228B22, 0.6);
-            scene.add(skyHemisphereLight);
+            // Warm key light — front-right for player visibility
+            const keyLight = new THREE.DirectionalLight(0xFFE0C0, 0.8);
+            keyLight.position.set(5, 10, 8);
+            scene.add(keyLight);
 
-            // Rim lighting for urban atmosphere
-            const rimLight = new THREE.DirectionalLight(0x4A90E2, 0.3);
-            rimLight.position.set(-5, 8, -10);
+            // Cool rim light — back-left for depth separation
+            const rimLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+            rimLight.position.set(-6, 6, -10);
             scene.add(rimLight);
 
-            // Fill light from front-below to illuminate GLB model faces
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-            fillLight.position.set(0, 2, 10);
+            // Fill light — front-below to prevent dark faces on GLB models
+            const fillLight = new THREE.DirectionalLight(0xffeedd, 0.35);
+            fillLight.position.set(0, 1, 12);
             scene.add(fillLight);
 
             // Enable outputEncoding for correct PBR material display
@@ -3083,43 +3101,62 @@
 
         function createTrack() {
             const trackGroup = new THREE.Group();
-            
-            // Create track segments
+
+            // Create track segments with improved visuals
             for (let i = 0; i < 10; i++) {
                 const segmentGroup = new THREE.Group();
                 segmentGroup.position.z = -i * 10;
-                
-                // Main track
+
+                // Main track — darker asphalt with subtle texture
                 const trackGeometry = new THREE.BoxGeometry(8, 0.1, 10);
-                const trackMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                const trackMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x2a2a2a,
+                    specular: 0x111111,
+                    shininess: 5
+                });
                 const trackMesh = new THREE.Mesh(trackGeometry, trackMaterial);
                 trackMesh.receiveShadow = true;
                 segmentGroup.add(trackMesh);
-                
-                // Lane dividers
-                const dividerGeometry = new THREE.BoxGeometry(0.1, 0.05, 10);
-                const dividerMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFF00 });
-                
+
+                // Lane dividers — subtle dashed lines
+                const dividerGeometry = new THREE.BoxGeometry(0.08, 0.06, 10);
+                const dividerMaterial = new THREE.MeshLambertMaterial({ color: 0x888844, transparent: true, opacity: 0.6 });
+
                 const leftDivider = new THREE.Mesh(dividerGeometry, dividerMaterial);
                 leftDivider.position.x = -1;
                 segmentGroup.add(leftDivider);
-                
+
                 const rightDivider = new THREE.Mesh(dividerGeometry, dividerMaterial);
                 rightDivider.position.x = 1;
                 segmentGroup.add(rightDivider);
-                
+
+                // Neon edge strips — subway runner signature look
+                const edgeGeometry = new THREE.BoxGeometry(0.06, 0.08, 10);
+                const leftEdgeMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.7 });
+                const rightEdgeMat = new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.7 });
+
+                const leftEdge = new THREE.Mesh(edgeGeometry, leftEdgeMat);
+                leftEdge.position.set(-4, 0.05, 0);
+                segmentGroup.add(leftEdge);
+
+                const rightEdge = new THREE.Mesh(edgeGeometry, rightEdgeMat);
+                rightEdge.position.set(4, 0.05, 0);
+                segmentGroup.add(rightEdge);
+
                 trackGroup.add(segmentGroup);
             }
-            
+
             scene.add(trackGroup);
             track = trackGroup;
         }
 
         function createEnvironment() {
-            // Urban ground with asphalt texture
+            // Urban ground — dark asphalt with wet-look specular
             const groundGeometry = new THREE.PlaneGeometry(80, 120);
-            const groundMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x333333
+            const groundMaterial = new THREE.MeshPhongMaterial({
+                color: 0x1a1a1a,
+                specular: 0x222233,
+                shininess: 15
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
@@ -3127,10 +3164,12 @@
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // Sidewalks
+            // Sidewalks — slightly raised, lighter concrete
             const sidewalkGeometry = new THREE.PlaneGeometry(8, 120);
-            const sidewalkMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x999999
+            const sidewalkMaterial = new THREE.MeshPhongMaterial({
+                color: 0x555555,
+                specular: 0x111111,
+                shininess: 3
             });
             
             const leftSidewalk = new THREE.Mesh(sidewalkGeometry, sidewalkMaterial);
@@ -3241,13 +3280,15 @@
             
             for (let floor = 0; floor < floors; floor++) {
                 for (let w = 0; w < windowsPerFloor; w++) {
-                    // Window facing the street
+                    // Window facing the street — night city ambiance
                     const windowGeometry = new THREE.PlaneGeometry(0.8, 1.2);
-                    const isLit = Math.random() > 0.4;
-                    const windowMaterial = new THREE.MeshLambertMaterial({ 
-                        color: isLit ? 0xFFFF88 : 0x222244,
+                    const isLit = Math.random() > 0.35;
+                    const warmHues = [0xFFDD77, 0xFFCC55, 0xFFBB44, 0xEEDD88, 0xDDCC66];
+                    const litColor = warmHues[Math.floor(Math.random() * warmHues.length)];
+                    const windowMaterial = new THREE.MeshBasicMaterial({
+                        color: isLit ? litColor : 0x111122,
                         transparent: true,
-                        opacity: 0.9
+                        opacity: isLit ? 0.95 : 0.7
                     });
                     
                     const window = new THREE.Mesh(windowGeometry, windowMaterial);
@@ -3301,9 +3342,9 @@
                 const scale = 4.0 / (modelHeight || 1); // ~4 units tall
                 glbModel.scale.setScalar(scale);
                 glbModel.position.set(x, 0, z);
-                // Add point light (still needed for illumination)
-                const pointLight = new THREE.PointLight(0xFFFF88, 0.5, 10);
-                pointLight.position.y = 3;
+                // Add warm point light — urban night glow
+                const pointLight = new THREE.PointLight(0xFFCC66, 0.8, 15);
+                pointLight.position.y = 3.5;
                 glbModel.add(pointLight);
                 glbModel.userData = { type: 'streetLamp', initialZ: z, parallaxSpeed: 0.85 };
                 scene.add(glbModel);
@@ -3322,18 +3363,29 @@
             pole.castShadow = true;
             lampGroup.add(pole);
             
-            // Light fixture
+            // Light fixture — warm glow orb
             const lightGeometry = new THREE.SphereGeometry(0.3);
-            const lightMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xFFFF88,
-                emissive: 0x444400
+            const lightMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFFCC66
             });
             const light = new THREE.Mesh(lightGeometry, lightMaterial);
             light.position.y = 3;
             lampGroup.add(light);
-            
-            // Add point light
-            const pointLight = new THREE.PointLight(0xFFFF88, 0.5, 10);
+
+            // Glow halo around lamp
+            const haloGeometry = new THREE.SphereGeometry(0.6);
+            const haloMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFFCC66,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+            halo.position.y = 3;
+            lampGroup.add(halo);
+
+            // Warm point light
+            const pointLight = new THREE.PointLight(0xFFCC66, 0.8, 15);
             pointLight.position.y = 3;
             lampGroup.add(pointLight);
             
