@@ -19,6 +19,7 @@ jobs:
         cp SubwayRunner/index.html deploy/
         cp -r SubwayRunner/js deploy/
         if [ -d "SubwayRunner/css" ]; then cp -r SubwayRunner/css deploy/; fi
+        if [ -d "SubwayRunner/models" ]; then cp -r SubwayRunner/models deploy/; fi
         echo "Deploy contents:"
         find deploy -type f | head -30
 

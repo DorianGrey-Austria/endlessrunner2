@@ -61,6 +61,16 @@ sshpass -p "$VPS_PASS" rsync -avz --delete \
     -e "ssh $SSH_OPTS" \
     "$LOCAL_SRC/css/" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/css/"
 
+# models/ directory (GLB 3D assets — optional, skip if not present)
+if [ -d "$LOCAL_SRC/models" ] && [ "$(ls -A "$LOCAL_SRC/models"/*.glb 2>/dev/null)" ]; then
+    ssh_cmd "mkdir -p $REMOTE_DIR/models"
+    sshpass -p "$VPS_PASS" rsync -avz --delete \
+        --exclude='.DS_Store' \
+        -e "ssh $SSH_OPTS" \
+        "$LOCAL_SRC/models/" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/models/"
+    echo "  Models uploaded"
+fi
+
 echo "  Upload complete"
 
 # Step 4: Nginx config (idempotent — certbot blocks preserved)
@@ -79,9 +89,9 @@ server {
         try_files \$uri \$uri/ /index.html;
     }
 
-    location ~* \.(js|css)$ {
-        expires 7d;
-        add_header Cache-Control \"public\";
+    location ~* \.(js|css|glb)$ {
+        expires 30d;
+        add_header Cache-Control \"public, immutable\";
     }
 
     gzip on;

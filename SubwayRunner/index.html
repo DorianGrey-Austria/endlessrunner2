@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.0-10LEVEL</title>
+    <title>Subway Runner 3D - V5.1-GESTURE</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <!-- Import map: resolves bare "three" specifier for ESM loader modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.158.0/build/three.module.js"
+        }
+    }
+    </script>
+    <!-- AssetLoader: loads GLB models on capable devices, procedural fallback on weak devices.
+         GLTFLoader/DRACOLoader loaded dynamically via ESM import (examples/jsm/) -->
+    <script src="js/utils/AssetLoader.js"></script>
     <!-- MediaPipe: All modes now use Tasks Vision API @0.10.34 via js/utils/MediaPipeLoader.js (ES module, loaded on demand) -->
     <!-- Supabase SDK ENTFERNT (TROUBLESHOOTING #12):
          SDK erstellte globale 'supabase' Variable, Konflikt mit 'let supabase = null;' in Zeile ~633
@@ -1252,7 +1263,8 @@
                 maxSceneObjects: 200,
                 particleMultiplier: 0.3,
                 toneMapping: false,
-                drawDistance: 40
+                drawDistance: 40,
+                useGLBModels: false
             },
             medium: {
                 label: 'Mittel',
@@ -1267,7 +1279,8 @@
                 maxSceneObjects: 500,
                 particleMultiplier: 0.6,
                 toneMapping: false,
-                drawDistance: 55
+                drawDistance: 55,
+                useGLBModels: true
             },
             high: {
                 label: 'Hoch',
@@ -1282,7 +1295,8 @@
                 maxSceneObjects: 1200,
                 particleMultiplier: 1.0,
                 toneMapping: true,
-                drawDistance: 70
+                drawDistance: 70,
+                useGLBModels: true
             },
             // Legacy alias so old localStorage values still work
             performance: null // resolved in getQuality()
@@ -1401,6 +1415,11 @@
             // Pixel ratio (smooth — no re-create)
             if (renderer) {
                 renderer.setPixelRatio(q.pixelRatio);
+            }
+
+            // AssetLoader: enable/disable GLB models based on quality tier
+            if (window.AssetLoader) {
+                window.AssetLoader.setQuality(newMode);
             }
 
             // Update UI buttons
@@ -2813,6 +2832,11 @@
             // Removed tone mapping - can cause issues
             // Removed outputColorSpace - can cause issues
 
+            // Initialize AssetLoader (progressive enhancement — GLB models on capable devices)
+            if (window.AssetLoader) {
+                window.AssetLoader.init(qualityMode);
+            }
+
             // Create player
             createPlayer();
             
@@ -2834,6 +2858,24 @@
         }
 
         function createPlayer() {
+            // Try GLB model (progressive enhancement)
+            const glbModel = window.AssetLoader && window.AssetLoader.getModel('player');
+            if (glbModel) {
+                // Scale to match procedural player dimensions (~0.6 wide, ~1.7 tall)
+                const bbox = new THREE.Box3().setFromObject(glbModel);
+                const modelHeight = bbox.max.y - bbox.min.y;
+                const targetHeight = 1.7;
+                const scale = targetHeight / (modelHeight || 1);
+                glbModel.scale.setScalar(scale);
+                glbModel.position.set(LANE_POSITIONS[1], 0, 0);
+                glbModel.rotation.y = Math.PI;
+                scene.add(glbModel);
+                player = glbModel;
+                console.log('[AssetLoader] Player GLB loaded');
+                return;
+            }
+
+            // --- Procedural fallback (original code) ---
             const playerGroup = new THREE.Group();
             
             // Player body (torso) - Enhanced but SAFE
@@ -3097,6 +3139,25 @@
         }
 
         function createRealisticBuilding(x, z, side) {
+            // Try GLB building models (progressive enhancement — cycle through variants)
+            if (window.AssetLoader) {
+                const variants = ['env_building_1', 'env_building_2', 'env_building_3'];
+                const variantId = variants[Math.floor(Math.random() * variants.length)];
+                const glbModel = window.AssetLoader.getModel(variantId);
+                if (glbModel) {
+                    const height = 8 + Math.random() * 12;
+                    const bbox = new THREE.Box3().setFromObject(glbModel);
+                    const modelHeight = bbox.max.y - bbox.min.y;
+                    const scale = height / (modelHeight || 1);
+                    glbModel.scale.set(scale, scale, scale);
+                    glbModel.position.set(x, 0, z);
+                    glbModel.userData = { type: 'building', parallaxSpeed: 0.3 + Math.random() * 0.2 };
+                    scene.add(glbModel);
+                    return;
+                }
+            }
+
+            // --- Procedural fallback ---
             const buildingGroup = new THREE.Group();
             
             // Building dimensions
@@ -3176,6 +3237,25 @@
         }
 
         function createStreetLamp(x, z) {
+            // Try GLB model (progressive enhancement)
+            const glbModel = window.AssetLoader && window.AssetLoader.getModel('env_streetlamp');
+            if (glbModel) {
+                const bbox = new THREE.Box3().setFromObject(glbModel);
+                const modelHeight = bbox.max.y - bbox.min.y;
+                const scale = 4.0 / (modelHeight || 1); // ~4 units tall
+                glbModel.scale.setScalar(scale);
+                glbModel.position.set(x, 0, z);
+                // Add point light (still needed for illumination)
+                const pointLight = new THREE.PointLight(0xFFFF88, 0.5, 10);
+                pointLight.position.y = 3;
+                glbModel.add(pointLight);
+                glbModel.userData = { type: 'streetLamp', initialZ: z, parallaxSpeed: 0.85 };
+                scene.add(glbModel);
+                environmentObjects.streetLamps.push(glbModel);
+                return;
+            }
+
+            // --- Procedural fallback ---
             const lampGroup = new THREE.Group();
             
             // Pole
@@ -3212,6 +3292,22 @@
         }
 
         function createTrafficSign(x, z) {
+            // Try GLB model (progressive enhancement)
+            const glbModel = window.AssetLoader && window.AssetLoader.getModel('env_trafficsign');
+            if (glbModel) {
+                const bbox = new THREE.Box3().setFromObject(glbModel);
+                const modelHeight = bbox.max.y - bbox.min.y;
+                const scale = 2.5 / (modelHeight || 1);
+                glbModel.scale.setScalar(scale);
+                glbModel.position.set(x, 0, z);
+                glbModel.rotation.y = x < 0 ? Math.PI / 4 : -Math.PI / 4;
+                glbModel.userData = { type: 'trafficSign', initialZ: z, parallaxSpeed: 0.8 };
+                scene.add(glbModel);
+                environmentObjects.trafficSigns.push(glbModel);
+                return;
+            }
+
+            // --- Procedural fallback ---
             const signGroup = new THREE.Group();
             
             // Sign post
@@ -3247,10 +3343,41 @@
                 // Remove oldest obstacle
                 const oldest = obstacles.shift();
                 if (oldest && oldest.mesh) {
+                    if (window.AssetLoader) window.AssetLoader.releaseModel(oldest.mesh);
                     scene.remove(oldest.mesh);
                 }
             }
-            
+
+            // Try GLB model (progressive enhancement)
+            const glbModel = window.AssetLoader && window.AssetLoader.getObstacleModel(type);
+            if (glbModel) {
+                glbModel.position.set(LANE_POSITIONS[lane], 0, z);
+                scene.add(glbModel);
+                const obstacleData = {
+                    mesh: glbModel,
+                    type: type,
+                    lane: lane,
+                    z: z,
+                    height: glbModel.userData.height || 1.0,
+                    animationTime: 0,
+                    rotationSpeed: 0,
+                    swingAmplitude: 0,
+                    swingSpeed: 0,
+                    movementRange: 0,
+                    movementSpeed: 0,
+                    initialX: LANE_POSITIONS[lane]
+                };
+                // Animation properties for moving obstacles
+                if (type === 'rotatingblade') obstacleData.rotationSpeed = 3 + Math.random() * 2;
+                else if (type === 'swinginghammer') { obstacleData.swingAmplitude = Math.PI / 3; obstacleData.swingSpeed = 2 + Math.random(); }
+                else if (type === 'movingwall') { obstacleData.movementRange = 3; obstacleData.movementSpeed = 1.5 + Math.random() * 0.5; }
+                else if (type === 'bouncingball') { obstacleData.bounceHeight = 2.5; obstacleData.bounceSpeed = 3 + Math.random() * 1.5; }
+                else if (type === 'spinninglaser') { obstacleData.rotationSpeed = 2 + Math.random() * 1.5; obstacleData.pulseSpeed = 4; }
+                obstacles.push(obstacleData);
+                return;
+            }
+
+            // --- Procedural fallback (original code) ---
             const obstacleGroup = new THREE.Group();
             obstacleGroup.position.set(LANE_POSITIONS[lane], 0, z);
             
@@ -3672,6 +3799,20 @@
 
         // Create Apple collectible (red fruit) - DISTINCT from spikes!
         function createApple(lane, z) {
+            // Try GLB model (progressive enhancement)
+            const glbModel = window.AssetLoader && window.AssetLoader.getModel('apple');
+            if (glbModel) {
+                const bbox = new THREE.Box3().setFromObject(glbModel);
+                const modelHeight = bbox.max.y - bbox.min.y;
+                const scale = 0.7 / (modelHeight || 1); // target ~0.7 units tall
+                glbModel.scale.setScalar(scale);
+                glbModel.position.set(LANE_POSITIONS[lane], 0.5, z);
+                glbModel.userData = { type: 'apple', lane: lane };
+                scene.add(glbModel);
+                return glbModel;
+            }
+
+            // --- Procedural fallback ---
             const appleGroup = new THREE.Group();
             
             // Apple body - DISTINCTIVE APPLE SHAPE
@@ -3741,6 +3882,20 @@
 
         // Create Broccoli collectible (green vegetable)
         function createBroccoli(lane, z) {
+            // Try GLB model (progressive enhancement)
+            const glbModel = window.AssetLoader && window.AssetLoader.getModel('broccoli');
+            if (glbModel) {
+                const bbox = new THREE.Box3().setFromObject(glbModel);
+                const modelHeight = bbox.max.y - bbox.min.y;
+                const scale = 0.7 / (modelHeight || 1);
+                glbModel.scale.setScalar(scale);
+                glbModel.position.set(LANE_POSITIONS[lane], 0.3, z);
+                glbModel.userData = { type: 'broccoli', lane: lane };
+                scene.add(glbModel);
+                return glbModel;
+            }
+
+            // --- Procedural fallback ---
             const broccoliGroup = new THREE.Group();
             
             // Green stem
@@ -4451,6 +4606,7 @@
                             // Collision - not ducking and not high enough
                             console.log(`💥 DUCK COLLISION! Height: ${playerHeight.toFixed(1)}, needed: ${safeJumpHeight}`);
                             handleCollision(obstacle, obstacleBBox);
+                            if (window.AssetLoader) window.AssetLoader.releaseModel(obstacle.mesh);
                             scene.remove(obstacle.mesh);
                             obstacles.splice(index, 1);
                             return;
@@ -4616,13 +4772,15 @@
                         
                         // Score popup with precision indicator
                         showScorePopup(bonusScore, effectPos, precision > 0.8 ? 'PERFECT!' : 'NICE!');
-                        
+
+                        if (window.AssetLoader) window.AssetLoader.releaseModel(obstacle.mesh);
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
-                        
+
                     } else {
                         // COLLISION DETECTED!
                         handleCollision(obstacle, obstacleBBox);
+                        if (window.AssetLoader) window.AssetLoader.releaseModel(obstacle.mesh);
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
                     }
@@ -5286,6 +5444,7 @@
                     obstacle.z = obstacle.mesh.position.z;
                     
                     if (obstacle.z > 10) {
+                        if (window.AssetLoader) window.AssetLoader.releaseModel(obstacle.mesh);
                         scene.remove(obstacle.mesh);
                         obstacles.splice(index, 1);
                         // Only give score if obstacle was properly avoided (not hit)
