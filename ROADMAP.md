@@ -463,15 +463,107 @@ Create a **browser-based game that outperforms native apps** in both technical e
 
 ---
 
+## 🎯 **VERSION AUDIT & PRODUCTION STATUS (Nov 2, 2025)**
+
+### **Current Git Branches Analysis**
+```
+MAIN BRANCH STATUS:
+├─ main (HEAD) → Commit 0e1340e: V4.3-STABLE-MULTIJUMP ✅
+├─ stable-game-v8 → Commit 513565b: V3.6.1-COLLECTIBLE-BUGFIX (MOST STABLE)
+├─ working-monolithic-baseline → Commit 868e954: FOUND WORKING VERSION ✅
+└─ [10+ other experimental branches] → Not for production
+```
+
+### **PRODUCTION VERSION IDENTIFIED** 🎖️
+
+**ACTUAL CURRENT PRODUCTION** (on endlessrunner.vibecoding.company):
+- **Branch**: `working-monolithic-baseline`
+- **Commit**: `868e954` - "🎯 FOUND WORKING VERSION: V3.6.1-COLLECTIBLE-BUGFIX"
+- **Status**: ✅ STABLE & WORKING (deployed via GitHub Actions)
+- **Features**: 10 levels, multi-jump, collectibles, menu system
+
+**MAIN BRANCH** (what we're on):
+- **Commit**: `0e1340e` - V4.3-STABLE-MULTIJUMP
+- **Status**: ⚠️ Newer but not production
+- **Risk**: Experimental features, not thoroughly tested
+
+**RECOMMENDED WORKFLOW**:
+1. ✅ Continue development on `main` branch
+2. ✅ Test extensively before deployment
+3. ✅ When ready: Merge back to `working-monolithic-baseline`
+4. ✅ Then: Merge to `stable-game-v8` as fallback
+
+---
+
+## 🚨 **CRITICAL OPTIMIZATION: Speed Escalation Fix**
+
+### **Problem Statement (Nov 2, 2025)**
+**Current Behavior**: Game speed increases exponentially throughout 10 levels, becoming unplayable by the end.
+
+**Desired Behavior**:
+- **Level 1 Speed**: 0.08 baseSpeed (starting speed)
+- **Levels 1-5**: Progressive speed increase (125% → 175%)
+- **Levels 6-10**: Gradual speed curve flattening (asymptotic approach)
+- **Level 10 FINAL TARGET**: Speed stays constant at ~0.16 (200% of base)
+- **Design Intent**: User plays all 10 levels, masters the SAME speed they'll face in endless mode
+
+**Current Issues**:
+1. `speedMultiplier` grows exponentially instead of linearly
+2. No speed cap after certain level thresholds
+3. End-game speed is 2-3x higher than intended
+4. Player cannot control character at higher speeds (collision/reflex issues)
+5. Speed never plateaus - keeps escalating indefinitely
+
+**Solution Approach** (using BMAD Agents):
+- **Phase 1**: Level Balance Analyst analyzes progression curve
+- **Phase 2**: Data Analyst calculates optimal speed formula
+- **Phase 3**: Technical Evaluator plans implementation
+- **Phase 4**: Implement and test new curve
+
+**Target Speed Progression** (Goal):
+```
+Level 1:  0.08 (100%) ← Starting point
+Level 2:  0.10 (125%) ← Warmup
+Level 3:  0.12 (150%) ← Ramping up
+Level 4:  0.13 (162%)
+Level 5:  0.14 (175%) ← Midpoint (half difficulty)
+Level 6:  0.15 (187%) ← Curve starts flattening
+Level 7:  0.155 (194%)
+Level 8:  0.16 (200%) ← Approaching asymptote
+Level 9:  0.16 (200%) ← Held stable
+Level 10: 0.16 (200%) ← FINAL TARGET (hold for endless)
+```
+
+**Expected Impact**:
+- ✅ All 10 levels remain playable & fair
+- ✅ Difficulty progression feels natural & skill-based
+- ✅ Final level (Level 10) = Endless mode speed
+- ✅ Speed stops escalating - gives players time to master
+- ✅ Better player retention (not frustrated by impossible speed)
+
+---
+
 ## 📋 **NEXT 2 WEEKS: 20 CRITICAL TASKS**
 
-### **Week 1: UI/UX Revolution Foundation**
+### **Week 1: Speed Optimization + Version Resolution**
 
-#### **Day 1-2: Modern Interface Architecture**
-1. ✅ **[COMPLETED]** Implement Modern Component Design System
-2. **Responsive Layout Engine**: CSS Grid + Flexbox mastery
-3. **Micro-Animation Framework**: 60 FPS interactions library
-4. **Accessibility Foundation**: WCAG 2.1 AA compliance setup
+#### **Day 1-2: Find Production Version & Document Speed Fix**
+1. 🔄 **[IN PROGRESS]** Identify correct production version (stable-game-v8 vs main)
+2. **[PENDING]** Document speed progression formula in code
+3. **[PENDING]** Create BMAD Agent analysis plan
+4. **[PENDING]** Run Level Balance Analyst on current curve
+
+#### **Day 3-4: Speed Formula Optimization**
+5. **[PENDING]** Data Analyst: Calculate optimal speed progression
+6. **[PENDING]** Technical Evaluator: Plan implementation approach
+7. **[PENDING]** Implement new speed curve (lines 3791-3792)
+8. **[PENDING]** Test across all 10 levels with metrics
+
+#### **Day 5-7: Validation & UI/UX Polish**
+9. **[PENDING]** Gameplay testing: Speed feel at each level
+10. **[PENDING]** Performance validation: Frame rates stable at all speeds
+11. **[PENDING]** Player feedback iteration: Fine-tune curve
+12. **[PENDING]** Documentation: Update CLAUDE.md with new speed system
 
 #### **Day 3-4: Cross-Device Excellence**
 5. **iPad Pro Interface**: Multi-panel layout with gesture navigation
@@ -499,12 +591,111 @@ Create a **browser-based game that outperforms native apps** in both technical e
 19. **Performance Optimization**: Global CDN preparation and asset optimization
 20. **Analytics Enhancement**: International user behavior tracking
 
+### Phase: Multi-Mode Gesture Control System (Completed ✅ Feb 2026)
+**Goal**: Modular gesture control with runtime mode switching
+
+#### Architecture
+- ✅ **GestureManager.js**: Orchestrator with Strategy Pattern
+- ✅ **BaseGestureMode.js**: Interface for all gesture modes
+- ✅ **Mode-specific modules**: Lazy loading, calibration persistence
+
+#### Available Modes
+| Mode | Class | Best For |
+|------|-------|----------|
+| **Auto-Kalibrierung** (Default) | `AdaptiveCalibrationMode` | All users, learns movement range |
+| **One Euro Filter** | `OneEuroFilterMode` | Mobile/tablet, fast response |
+| **Ganzkörper-Tracking** | `BodyPoseMode` | TV/Beamer, real jumping |
+
+#### Features
+- ✅ **Runtime Mode Switching**: Change modes without restart
+- ✅ **Calibration Persistence**: Settings preserved across mode switches
+- ✅ **Graceful Degradation**: Body Pose falls back to head tracking
+- ✅ **45% Sensitivity Standard**: Optimal threshold for all users
+
+#### Technical Stack
+- **MediaPipe FaceMesh**: Head tracking (One Euro, Adaptive)
+- **MediaPipe Pose**: Full body tracking (33 landmarks)
+- **One Euro Filter**: Adaptive smoothing algorithm
+
+#### Files Added
+```
+SubwayRunner/js/
+├── GestureManager.js              # Orchestrator
+├── modes/
+│   ├── BaseGestureMode.js         # Interface
+│   ├── OneEuroFilterMode.js       # Fast mobile mode
+│   ├── AdaptiveCalibrationMode.js # Default mode
+│   └── BodyPoseMode.js            # Full body mode
+└── utils/
+    └── OneEuroFilter.js           # Smoothing algorithm
+```
+
+#### Sandbox Prototypes
+Tested variants in `sandbox-gesture/`:
+- `01-one-euro-filter.html` - Adaptive smoothing demo
+- `02-adaptive-calibration.html` - Auto-calibration demo
+- `03-body-pose.html` - Full body tracking demo
+- `SHOWCASE.html` - Comparison interface
+
+---
+
+### Phase 9: Gesture Best Practice Optimization (2026-04-21)
+**Goal**: Bring all gesture modes to April 2026 best practices
+
+#### Session 1: Core Optimization (T2, acf132e)
+- OneEuroFilter statt SimpleFilter fuer beide Face-Modi (minCutoff=1.5, beta=0.01)
+- Action Cooldowns (300-400ms) mit Auto-Clear
+- Konsistente Params zwischen AdaptiveCalibration und OneEuroFilter
+- BodyPoseMode: Lean + Walk Detection (dual-lane-methode)
+- BodyPoseMode: Thresholds tuned fuer 2-4m (jump 6%, crouch 75%, lean 10%, walk 8%)
+- BodyPoseMode: Floor-Tracking schneller (15 Frames statt 30, Top-5 Average)
+- BodyPoseMode: Jump-Cooldown 400ms (war 500ms)
+- Hysteresis (30%) in allen 3 Modi
+
+#### Session 2: Gap-Closing (T3, 12c479c → 2c8422b)
+Research-basiert gegen aktuelle MediaPipe Best Practices:
+
+| Gap | Fix | Commit |
+|-----|-----|--------|
+| Dead Zone fehlt | 2° bei Face-Modi | 12c479c |
+| Frame Skipping fehlt | Jedes 2. Frame (GPU-Konkurrenz mit Three.js) | 12c479c |
+| Velocity Jump fehlt | Hybrid Position + Velocity (~100ms schneller) | 12c479c |
+| Body Camera 1280x720 | Runter auf 640x480 (MediaPipe skaliert intern) | 12c479c |
+| Confidence Filtering fehlt | Face: geometrische Plausibilitaet, Body: Visibility ≥ 0.6 | b2f605d |
+| Dead Zone Bug | Relativ zu kalibrierter Neutral-Position, nicht zu 0 | 2c8422b |
+| Face-Lost Tracking fehlt | noFaceFrames Counter + Warning nach 2s | 2c8422b |
+| Velocity-Spike False Jumps | EMA-Smoothing (alpha=0.4) auf Shoulder-Velocity | 2c8422b |
+
+#### Resultat
+Alle Best Practices April 2026 implementiert. Dokumentiert in `bestPractice_gestensteuerung.md`.
+
+### Phase 10: Difficulty Rebalance — 10-Level Progressive System (2026-04-28)
+
+#### Session 1: V5.0 Rebalance (T1, d9e157e → current)
+
+| Change | Details |
+|--------|---------|
+| LEVEL_CONFIGS table | 10 levels with per-level speed, spawn rate, obstacle types, gesture modifier |
+| Speed system | Per-level ranges (L1: 0.08-0.12, L10: 0.25-0.40) instead of global 5.5x |
+| Obstacle filtering | L1: jump-only, L2: +duck, L4: +moving — progressive introduction |
+| Gesture mode modifier | 20-25% speed reduction, 30-40% spawn reduction |
+| Anti-double-punishment | Spawn rate decreases at top 30% of level speed |
+| Timer rework | L1-9: no countdown, L10: 60s survival finale |
+| Victory condition | Complete Level 10 survival instead of 60s timer |
+| Version bump | V4.5.10 → V5.0.0 |
+
+#### Resultat
+Schwierigkeit von "unmöglich mit Tastatur" auf progressive 10-Level-Kurve rebalanced. Level 1 easy, Level 10 ≈ altes Endgame. Gestensteuerung mit eigenen Modifiern.
+
+---
+
 ### **Success Metrics (2 Weeks)**
 - **UI Response Time**: < 16ms for all interactions
 - **Cross-Platform Consistency**: 100% feature parity across devices
 - **Accessibility Score**: WCAG 2.1 AA compliance achieved
 - **Performance**: 120 FPS on high-end devices, 60 FPS minimum on all targets
 - **International Ready**: Multi-language support with cultural adaptations
+- **Gesture Control**: 3 modes with < 50ms latency
 
 ---
 
