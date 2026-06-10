@@ -52,12 +52,12 @@ export class BodyPoseMode extends BaseGestureMode {
         this.drawingUtils = null;
         this.poseConnections = null;
 
-        // One Euro Filters for position smoothing (April 2026 best practice)
-        // Body landmarks are noisier than face → slightly more aggressive smoothing
-        this.shoulderYFilter = new OneEuroFilter(1.0, 0.005, 1.0);
-        this.hipYFilter = new OneEuroFilter(1.0, 0.005, 1.0);
-        this.shoulderXFilter = new OneEuroFilter(1.0, 0.005, 1.0);
-        this.noseXFilter = new OneEuroFilter(1.0, 0.005, 1.0);
+        // One Euro Filters for position smoothing (April 2026 v2)
+        // beta=0.01: 2x faster body signal tracking than v1 (was 0.005)
+        this.shoulderYFilter = new OneEuroFilter(1.0, 0.01, 1.0);
+        this.hipYFilter = new OneEuroFilter(1.0, 0.01, 1.0);
+        this.shoulderXFilter = new OneEuroFilter(1.0, 0.01, 1.0);
+        this.noseXFilter = new OneEuroFilter(1.0, 0.01, 1.0);
 
         // Floor tracking (for jump detection)
         this.floorHistory = [];
@@ -77,22 +77,22 @@ export class BodyPoseMode extends BaseGestureMode {
         this.rawHipY = 0;
         this.rawShoulderCenterX = 0;
 
-        // Thresholds (tuned for 2-4m distance — April 2026 values)
+        // Thresholds (tuned for 2-4m distance — April 2026 v2: responsiveness focus)
         this.thresholds = {
-            jumpThreshold: 0.10,   // 10% of frame height above floor (was 0.06 — too tight)
-            crouchThreshold: 0.82, // Torso shrinks to 82% of normal (was 0.75 — required full squat)
-            leanThreshold: 0.10,   // 10% lean for lane change via leaning
-            walkThreshold: 0.08    // 8% lateral shift for lane change via walking
+            jumpThreshold: 0.08,   // 8% of frame height above floor (v1=0.10 too strict, 0.06 was noise-floor)
+            crouchThreshold: 0.78, // Torso shrinks to 78% of normal (v1=0.82 too strict, 0.75 required full squat)
+            leanThreshold: 0.08,   // 8% lean for lane change via leaning (was 0.10)
+            walkThreshold: 0.06    // 6% lateral shift for lane change via walking (was 0.08)
         };
 
         // Visibility threshold (configurable via Config Panel)
         this.minVisibility = options.minVisibility || 0.4; // was 0.6 — too strict for PoseLandmarker Lite
 
-        // Cooldowns
+        // Cooldowns (2026 v2: reduced for faster re-triggers)
         this.lastJumpTime = 0;
         this.lastCrouchTime = 0;
-        this.jumpCooldown = 400;   // 400ms — faster re-jump for gameplay
-        this.crouchCooldown = 300;
+        this.jumpCooldown = 280;   // 280ms — ~3.5 jumps/sec (was 400ms)
+        this.crouchCooldown = 200; // 200ms — ~5 ducks/sec (was 300ms)
 
         // Calibration
         this.normalTorsoHeight = 0;
@@ -101,19 +101,20 @@ export class BodyPoseMode extends BaseGestureMode {
         this.calibrationFrames = 0; // count valid frames during calibration
         this.calibrationMinFrames = 15; // require at least 15 valid frames
 
-        // Velocity-based jump detection (hybrid — best practice 2026)
+        // Velocity-based jump detection (hybrid — best practice 2026 v2)
         this.prevShoulderY = 0;
+        this.prevTimestamp = 0; // for time-normalized velocity
         this.shoulderVelocity = 0;
-        this.velocitySmoothing = 0.4; // EMA alpha — smooths single-frame spikes
-        this.velocityJumpThreshold = 0.015; // upward velocity threshold
+        this.velocitySmoothing = 0.55; // EMA alpha — less dampening for earlier jump detection (was 0.4)
+        this.velocityJumpThreshold = 0.40; // per-second upward velocity (time-normalized, was 0.015 per-frame)
 
-        // Hysteresis for lane detection
+        // Hysteresis for lane detection (2026 v2: quicker lane transitions)
         this.lastLane = 'center';
-        this.hysteresis = 0.3;
+        this.hysteresis = 0.20;
 
         // Body not visible tracking
         this.noBodyFrames = 0;
-        this.noBodyThreshold = 30; // 30 frames = ~1 second
+        this.noBodyThreshold = 60; // 60 frames = ~1 second at 60fps (frameSkip=1)
 
         // Debug / Logging (April 2026)
         this.lastSkipReason = null;
@@ -129,8 +130,8 @@ export class BodyPoseMode extends BaseGestureMode {
         // Animation frame
         this.animationId = null;
 
-        // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
-        this.frameSkip = options.frameSkip || 2;
+        // Frame skipping — full frame rate for maximum responsiveness (2026 v2)
+        this.frameSkip = options.frameSkip || 1;
         this.frameCounter = 0;
     }
 
@@ -345,10 +346,13 @@ export class BodyPoseMode extends BaseGestureMode {
         }
 
         // Velocity tracking with EMA smoothing (prevents single-frame spike false jumps)
-        const rawVelocity = this.prevShoulderY - this.shoulderY;
+        // Time-normalized (per-second) — frame-rate-independent (2026 v2)
+        const dt = this.prevTimestamp > 0 ? (timestamp - this.prevTimestamp) / 1000 : 0;
+        const rawVelocity = dt > 0 ? (this.prevShoulderY - this.shoulderY) / dt : 0;
         this.shoulderVelocity = this.velocitySmoothing * rawVelocity +
             (1 - this.velocitySmoothing) * this.shoulderVelocity;
         this.prevShoulderY = this.shoulderY;
+        this.prevTimestamp = timestamp;
 
         // Calibrate on first full body detection (shoulders + hips)
         if (!this.isFloorCalibrated && hipsVisible && this.torsoHeight > 0) {
@@ -513,6 +517,7 @@ export class BodyPoseMode extends BaseGestureMode {
         this.neutralX = 0.5;
         this.lastLane = 'center';
         this.prevShoulderY = 0;
+        this.prevTimestamp = 0;
         this.shoulderVelocity = 0;
         this.calibrationFrames = 0;
         this.lastSkipReason = null;

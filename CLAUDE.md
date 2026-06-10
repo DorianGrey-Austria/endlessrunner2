@@ -110,7 +110,9 @@ All modes share: One Euro / Kalman filtering, dead zone (2°), hysteresis (30%),
 
 **Reference**: `bestPractice_gestensteuerung.md` — complete documentation of all gesture best practices.
 
-**Utilities**: `utils/MediaPipeLoader.js` (shared WASM singleton for MediaPipe Tasks Vision @0.10.34), `utils/OneEuroFilter.js` (adaptive signal filtering).
+**Utilities**: `utils/MediaPipeLoader.js` (shared WASM singleton for MediaPipe Tasks Vision @0.10.34), `utils/OneEuroFilter.js` (adaptive signal filtering), `utils/AssetLoader.js` (GLB model progressive enhancement).
+
+**GLB Asset System** (`js/utils/AssetLoader.js` + `models/*.glb`): Progressive enhancement — loads 20 Hyper3D-generated DRACO-compressed GLB models on MEDIUM/HIGH quality, procedural fallback on LOW or weak devices. ESM `import()` with import map for Three.js loaders. Player swapped async via `_trySwapPlayerGLB()` in game loop. Tri-budget: 25K (medium), 50K (high). Generation script: `scripts/rodin_generate.py`. To add a new GLB asset: register ID in `ASSET_MANIFEST` + `OBSTACLE_TYPE_MAP` in AssetLoader.js, add GLB to `models/`, add fallback check in the matching create-function.
 
 **UI Modules** (`js/ui/`):
 - `GestureConfigPanel.js` (16KB) — mode selection, sensitivity sliders, calibration trigger, music track selector

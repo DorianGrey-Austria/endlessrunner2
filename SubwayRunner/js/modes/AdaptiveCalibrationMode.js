@@ -22,10 +22,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
         this.drawingUtils = null;
         this.faceConnections = null;
 
-        // One Euro Filters (adaptive smoothing — best practice 2026)
-        // minCutoff=1.5 for less lag, beta=0.01 for fast response
-        this.yawFilter = new OneEuroFilter(1.5, 0.01, 1.0);
-        this.pitchFilter = new OneEuroFilter(1.5, 0.01, 1.0);
+        // One Euro Filters (adaptive smoothing — best practice 2026 v2)
+        // minCutoff=1.5 for less lag, beta=0.025 for fast response to sudden movements
+        this.yawFilter = new OneEuroFilter(1.5, 0.025, 1.0);
+        this.pitchFilter = new OneEuroFilter(1.5, 0.025, 1.0);
 
         // Calibration state
         this.calibrationStartTime = 0;
@@ -57,28 +57,28 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
         // Action cooldowns (prevents jump/duck spam)
         this.lastActionTime = 0;
-        this.actionCooldownMs = 350;
+        this.actionCooldownMs = 250;
 
-        // Dead zone — ignore micro-movements near neutral (best practice 2026)
-        // Prevents false positives from natural head sway
-        this.deadZone = options.deadZone || 2.0; // degrees — movements smaller than this are ignored
+        // Dead zone — ignore micro-movements near neutral (best practice 2026 v2)
+        // Natural sway ~1° — 1.5° still safe, 25% more responsive than 2.0°
+        this.deadZone = options.deadZone || 1.5; // degrees — movements smaller than this are ignored
 
-        // Hysteresis factor — once in a lane, require 30% return toward center to leave
-        // Prevents flickering at threshold boundaries
-        this.hysteresis = 0.3;
+        // Hysteresis factor — once in a lane, require 20% return toward center to leave
+        // Prevents flickering at threshold boundaries (filter smoothing handles the rest)
+        this.hysteresis = 0.20;
         this.lastLane = 'center';
 
         // Animation frame
         this.animationId = null;
 
-        // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
-        // Process every Nth frame when GPU is busy; 2 = every other frame ≈ 30fps detection
-        this.frameSkip = options.frameSkip || 2;
+        // Frame skipping — process every Nth frame (best practice 2026 v2)
+        // 1 = full frame rate detection for maximum responsiveness (M4 Pro handles it)
+        this.frameSkip = options.frameSkip || 1;
         this.frameCounter = 0;
 
         // Face-lost tracking (like BodyPoseMode's noBodyFrames)
         this.noFaceFrames = 0;
-        this.noFaceThreshold = 60; // ~2 seconds at 30fps — emit warning
+        this.noFaceThreshold = 120; // ~2 seconds at 60fps (frameSkip=1) — emit warning
 
         // Debug / Logging (April 2026)
         this.lastSkipReason = null;
@@ -460,7 +460,7 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
 
     getCalibrationData() {
         return {
-            schemaVersion: 3, // v3: corrected yaw direction (front-camera mirror fix)
+            schemaVersion: 4, // v4: responsive tuning — reduced thresholds, frameSkip=1, higher beta
             calibration: { ...this.calibration },
             thresholds: { ...this.thresholds },
             sensitivity: this.sensitivity,
@@ -469,10 +469,10 @@ export class AdaptiveCalibrationMode extends BaseGestureMode {
     }
 
     setCalibrationData(data) {
-        // Schema migration: v1 used non-normalized yaw, v2 had inverted yaw direction
-        // Both must be discarded and re-calibrated
-        if (!data.schemaVersion || data.schemaVersion < 3) {
-            this.onStatusChange('info', 'Alte Kalibrierung verworfen (Richtungsfix) — bitte neu kalibrieren');
+        // Schema migration: v1 non-normalized yaw, v2 inverted yaw, v3 old thresholds
+        // All must be discarded and re-calibrated
+        if (!data.schemaVersion || data.schemaVersion < 4) {
+            this.onStatusChange('info', 'Alte Kalibrierung verworfen (v4 Responsive Tuning) — bitte neu kalibrieren');
             return;
         }
 

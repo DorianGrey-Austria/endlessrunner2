@@ -116,9 +116,9 @@ export class GestureConfigPanel {
         return `
             <div class="config-tab-content active" data-content="head">
                 ${this._slider('headSensitivity', 'Empfindlichkeit', 0.2, 0.8, 0.05, 0.45, '', 'Wie weit du den Kopf drehen musst')}
-                ${this._slider('headDeadZone', 'Ruhezone', 0.5, 5.0, 0.5, 2.0, 'deg', 'Ignoriert kleine Kopfbewegungen')}
+                ${this._slider('headDeadZone', 'Ruhezone', 0.5, 5.0, 0.5, 1.5, 'deg', 'Ignoriert kleine Kopfbewegungen')}
                 ${this._slider('headPitchBaseline', 'Kopfhaltung', 0.3, 0.5, 0.01, 0.4, '', 'Anpassen falls Nicken nicht reagiert')}
-                ${this._slider('headHysteresis', 'Spurhaltung', 0.1, 0.5, 0.05, 0.3, '', 'Verhindert Flackern zwischen Spuren')}
+                ${this._slider('headHysteresis', 'Spurhaltung', 0.1, 0.5, 0.05, 0.20, '', 'Verhindert Flackern zwischen Spuren')}
                 <div class="config-actions">
                     <button class="config-btn primary config-btn-recalibrate">Neu kalibrieren</button>
                     <button class="config-btn config-btn-reset">Werkseinstellung</button>
@@ -130,11 +130,11 @@ export class GestureConfigPanel {
     _renderBodyTab() {
         return `
             <div class="config-tab-content" data-content="body">
-                ${this._slider('bodyJumpThreshold', 'Sprung-Schwelle', 0.04, 0.20, 0.01, 0.10, '', 'Wie hoch du springen musst')}
-                ${this._slider('bodyCrouchThreshold', 'Duck-Schwelle', 0.65, 0.95, 0.01, 0.82, '', 'Wie tief du dich ducken musst')}
-                ${this._slider('bodyLeanThreshold', 'Neige-Schwelle', 0.05, 0.20, 0.01, 0.10, '', 'Wie weit du dich neigen musst')}
+                ${this._slider('bodyJumpThreshold', 'Sprung-Schwelle', 0.04, 0.20, 0.01, 0.08, '', 'Wie hoch du springen musst')}
+                ${this._slider('bodyCrouchThreshold', 'Duck-Schwelle', 0.65, 0.95, 0.01, 0.78, '', 'Wie tief du dich ducken musst')}
+                ${this._slider('bodyLeanThreshold', 'Neige-Schwelle', 0.05, 0.20, 0.01, 0.08, '', 'Wie weit du dich neigen musst')}
                 ${this._slider('bodyMinVisibility', 'Erkennungs-Qualitaet', 0.2, 0.8, 0.05, 0.4, '', 'Senken wenn Koerper schlecht erkannt')}
-                ${this._slider('bodyVelocityJump', 'Sprung-Geschwindigkeit', 0.005, 0.040, 0.005, 0.015, '', 'Wie schnell die Aufwaertsbewegung sein muss')}
+                ${this._slider('bodyVelocityJump', 'Sprung-Geschwindigkeit', 0.20, 0.80, 0.05, 0.40, '', 'Wie schnell die Aufwaertsbewegung sein muss')}
                 <div class="preset-group">
                     <label>Entfernung zur Kamera</label>
                     <div class="preset-buttons">
@@ -225,9 +225,9 @@ export class GestureConfigPanel {
         });
 
         const presets = {
-            close: { bodyJumpThreshold: 0.14, bodyCrouchThreshold: 0.85, bodyLeanThreshold: 0.12, bodyMinVisibility: 0.35, bodyVelocityJump: 0.020 },
-            medium: { bodyJumpThreshold: 0.10, bodyCrouchThreshold: 0.82, bodyLeanThreshold: 0.10, bodyMinVisibility: 0.40, bodyVelocityJump: 0.015 },
-            far: { bodyJumpThreshold: 0.07, bodyCrouchThreshold: 0.78, bodyLeanThreshold: 0.08, bodyMinVisibility: 0.45, bodyVelocityJump: 0.010 }
+            close: { bodyJumpThreshold: 0.12, bodyCrouchThreshold: 0.85, bodyLeanThreshold: 0.10, bodyMinVisibility: 0.35, bodyVelocityJump: 0.50 },
+            medium: { bodyJumpThreshold: 0.08, bodyCrouchThreshold: 0.78, bodyLeanThreshold: 0.08, bodyMinVisibility: 0.40, bodyVelocityJump: 0.40 },
+            far: { bodyJumpThreshold: 0.06, bodyCrouchThreshold: 0.72, bodyLeanThreshold: 0.06, bodyMinVisibility: 0.45, bodyVelocityJump: 0.30 }
         };
 
         const values = presets[preset];

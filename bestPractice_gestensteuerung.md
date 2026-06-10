@@ -1,6 +1,8 @@
-# Best Practices Gestensteuerung — April 2026
+# Best Practices Gestensteuerung — April 2026 v2
 
-Stand: 2026-04-23 | Projekt: SubwayRunner | MediaPipe Tasks Vision @0.10.34
+Stand: 2026-04-30 | Projekt: SubwayRunner | MediaPipe Tasks Vision @0.10.34
+
+**v2 (2026-04-30):** Retuned fuer Responsiveness — reduzierte Dead Zones, Hysteresis, Cooldowns; erhoehte Filter-Beta; Velocity-Normalisierung nach Zeit; frameSkip=1 als Standard.
 
 ---
 
@@ -30,14 +32,14 @@ Immer `.close()` auf FaceLandmarker/PoseLandmarker aufrufen in `destroy()`. Verh
 ### One Euro Filter (empfohlen fuer Face-Modi)
 Adaptiver Filter — glaettet bei Stillstand, reagiert schnell bei Bewegung.
 
-**Tuned Params:**
+**Tuned Params (v2):**
 ```js
-minCutoff = 1.5   // weniger Smoothing bei Stillstand → weniger Lag
-beta = 0.01        // Speed-Coefficient → schnelle Antwort
+minCutoff = 1.5    // weniger Smoothing bei Stillstand → weniger Lag
+beta = 0.025       // Speed-Coefficient → 2.5x schnellere Antwort als v1 (war 0.01)
 dCutoff = 1.0      // Derivative Cutoff
 ```
 
-Referenzwerte aus der Literatur: `minCutoff=1.0, beta=0.007`. Unsere Werte sind etwas aggressiver fuer Gaming-Reaktionszeit.
+Referenzwerte aus der Literatur: `minCutoff=1.0, beta=0.007`. Unsere v2-Werte sind deutlich aggressiver fuer Gaming-Reaktionszeit. Die v1-Werte (beta=0.01) waren zu konservativ — schnelle Kopfdrehungen wurden zu stark geglaettet.
 
 ### Kalman Filter (Alternative fuer Projector-Modus)
 `GestureControllerProjector.js` nutzt AdvancedKalmanFilter mit `processNoise=0.008, measurementNoise=0.8`. Gut fuer statischere Setups.
@@ -49,7 +51,7 @@ Referenzwerte aus der Literatur: `minCutoff=1.0, beta=0.007`. Unsere Werte sind 
 Mikro-Bewegungen nahe der Neutralposition ignorieren. Verhindert False Positives durch natuerliches Kopfwackeln.
 
 ```js
-this.deadZone = 2.0; // Grad — Bewegungen kleiner als das werden ignoriert
+this.deadZone = 1.5; // Grad — natuerliche Kopfschwankung ~1° (v2: war 2.0 — zu viel verschluckt)
 // WICHTIG: Relativ zur kalibrierten Neutralposition, NICHT zu Null!
 const effectiveYaw = Math.abs(yaw - neutralYaw) < this.deadZone ? neutralYaw : yaw;
 ```
@@ -60,10 +62,10 @@ const effectiveYaw = Math.abs(yaw - neutralYaw) < this.deadZone ? neutralYaw : y
 
 ## 4. Hysteresis
 
-Einmal in einer Lane angekommen, braucht es 30% Rueckbewegung Richtung Center um die Lane zu verlassen. Verhindert Flickern an Threshold-Grenzen.
+Einmal in einer Lane angekommen, braucht es 20% Rueckbewegung Richtung Center um die Lane zu verlassen. Verhindert Flickern an Threshold-Grenzen.
 
 ```js
-this.hysteresis = 0.3; // 30% der Threshold-Range
+this.hysteresis = 0.20; // 20% der Threshold-Range (v2: war 0.3 — zu klebrig)
 ```
 
 ### Face-Modi (Yaw-basiert)
@@ -84,9 +86,9 @@ Verhindert Jump/Duck-Spam durch wiederholtes Triggern.
 
 | Modus | Jump | Duck | Lane |
 |-------|------|------|------|
-| AdaptiveCalibration | 350ms | 350ms | kein Cooldown (Hysteresis genuegt) |
-| OneEuroFilter | 300ms | 300ms | kein Cooldown |
-| BodyPose | 400ms | 300ms | kein Cooldown |
+| AdaptiveCalibration | 250ms | 250ms | kein Cooldown (Hysteresis genuegt) |
+| OneEuroFilter | 200ms | 200ms | kein Cooldown |
+| BodyPose | 280ms | 200ms | kein Cooldown |
 
 **Auto-Clear:** Nach Cooldown-Ende wird `action: 'none'` emittiert → Game-Loop bekommt sauberen Reset.
 
@@ -94,23 +96,19 @@ Verhindert Jump/Duck-Spam durch wiederholtes Triggern.
 
 ## 6. Frame Skipping (GPU-Konkurrenz)
 
-Three.js und MediaPipe teilen sich den WebGL-Kontext. Ohne Frame Skipping blockieren sie sich gegenseitig.
+Three.js und MediaPipe teilen sich den WebGL-Kontext.
 
 ```js
-this.frameSkip = 2; // Jedes 2. Frame → ~30fps Detection bei 60fps Rendering
-this.frameCounter = 0;
-
-detectLoop() {
-    this.frameCounter++;
-    if (this.frameCounter % this.frameSkip === 0 && video.readyState >= 2) {
-        // MediaPipe Detection nur wenn Three.js nicht gerade rendert
-        const results = landmarker.detectForVideo(video, performance.now());
-    }
-    requestAnimationFrame(() => this.detectLoop());
-}
+this.frameSkip = 1; // Volle Framerate fuer maximale Responsiveness (v2)
+// v1 hatte frameSkip=2 → ~30fps — verpasste Bewegungsspitzen
+// Auf M4 Pro kein GPU-Bottleneck bei frameSkip=1
 ```
 
-30fps Gesture-Detection reicht fuer Gaming — menschliche Reaktionszeit liegt bei ~200ms.
+**WICHTIG:** Bei frameSkip=1 muessen frame-basierte Counter angepasst werden:
+- `noFaceThreshold`: 120 (statt 60) → weiterhin ~2s Wartezeit
+- `noBodyThreshold`: 60 (statt 30) → weiterhin ~1s Wartezeit
+
+Fuer schwaechere Hardware: `frameSkip=2` als Fallback ueber Config.
 
 ---
 
@@ -139,28 +137,34 @@ Zwei komplementaere Methoden:
 2. **Velocity-basiert:** Schnelle Aufwaertsbewegung erkannt → reagiert FRUEHER (waehrend des Springens, nicht erst oben)
 
 ```js
+// Velocity ist jetzt ZEIT-normalisiert (per-second) — frame-rate-unabhaengig (v2)
+const dt = (timestamp - this.prevTimestamp) / 1000;
+const rawVelocity = dt > 0 ? (this.prevShoulderY - this.shoulderY) / dt : 0;
+// EMA-Smoothing mit alpha=0.55 (v2: war 0.4 — zu traege)
+this.shoulderVelocity = 0.55 * rawVelocity + 0.45 * this.shoulderVelocity;
+
 const heightAboveFloor = this.floorLevel - this.shoulderY;
-const velocityJump = this.shoulderVelocity > 0.015;
+const velocityJump = this.shoulderVelocity > 0.40; // per-second (v2: war 0.015 per-frame)
 
 if (heightAboveFloor > jumpThreshold || velocityJump) {
     // Jump erkannt
 }
 ```
 
-**Vorteil:** ~100ms schnellere Reaktion als rein positionsbasiert.
+**Vorteil v2:** Velocity-Erkennung funktioniert jetzt bei JEDER Framerate gleich (frameSkip=1 oder 2). ~100ms schnellere Reaktion als rein positionsbasiert.
 
 ---
 
 ## 9. Tuned Thresholds (2-4m Distanz)
 
-| Parameter | Wert (April 2026) | Erklaerung |
-|-----------|------|------------|
-| jumpThreshold | **0.10 (10%)** | Frame-Hoehe ueber Floor (war 0.06 — zu nah an Noise-Floor) |
-| crouchThreshold | **0.82 (82%)** | Torso schrumpft auf 82% (war 0.75 — brauchte Vollhocke) |
-| leanThreshold | 0.10 (10%) | Lean-Offset fuer Lane-Wechsel |
-| walkThreshold | 0.08 (8%) | Laterale Verschiebung fuer Lane-Wechsel |
-| velocityJumpThreshold | 0.015 | Aufwaerts-Geschwindigkeit |
-| minVisibility | **0.4** | Body Landmark Sichtbarkeit (war 0.6 — zu strikt fuer PoseLandmarker Lite) |
+| Parameter | Wert (v2) | Wert (v1) | Erklaerung |
+|-----------|-----------|-----------|------------|
+| jumpThreshold | **0.08 (8%)** | 0.10 | Sicher ueber Noise-Floor (0.06), responsiver (v1=0.10 zu strikt) |
+| crouchThreshold | **0.78 (78%)** | 0.82 | Leichteres Ducken (v1=0.82 brauchte zu tiefes Ducken) |
+| leanThreshold | **0.08 (8%)** | 0.10 | Lean-Offset fuer Lane-Wechsel |
+| walkThreshold | **0.06 (6%)** | 0.08 | Laterale Verschiebung fuer Lane-Wechsel |
+| velocityJumpThreshold | **0.40/s** | 0.015/frame | Per-Second (zeit-normalisiert, frame-rate-unabhaengig) |
+| minVisibility | **0.4** | 0.4 | Body Landmark Sichtbarkeit (unveraendert) |
 
 Alle Werte konfigurierbar ueber Config Panel oder `gestureManager.applyConfig()`.
 
@@ -255,7 +259,7 @@ Real-time Anzeige aller Werte + Skip-Gruende + Action-History. Aktivieren via `?
 **Wichtigste Diagnose-Info:** `lastSkipReason` — zeigt WARUM ein Frame verworfen wurde. Das fehlte zuvor komplett und machte Debugging unmoeglich.
 
 ### One Euro Filter fuer Body Mode
-Body-Positionen (shoulderY, hipY, shoulderCenterX) werden jetzt durch One Euro Filter geglaettet (minCutoff=1.0, beta=0.005). Reduziert Landmark-Jitter erheblich.
+Body-Positionen (shoulderY, hipY, shoulderCenterX) werden durch One Euro Filter geglaettet (minCutoff=1.0, beta=0.01 — v2: war 0.005). Reduziert Landmark-Jitter, reagiert aber schneller auf echte Bewegungen.
 
 ---
 

@@ -384,20 +384,20 @@ test.describe('One Euro Filter Responsiveness', () => {
         const result = await page.evaluate(async () => {
             const { OneEuroFilter } = await import('./js/utils/OneEuroFilter.js');
 
-            // Current params: minCutoff=1.5, beta=0.01
-            const filter = new OneEuroFilter(1.5, 0.01, 1.0);
+            // 2026 v2 params: minCutoff=1.5, beta=0.025 (was 0.01 — too sluggish)
+            const filter = new OneEuroFilter(1.5, 0.025, 1.0);
 
             // Simulate: 5 frames at 0, then sudden jump to 20
             const values = [];
             let t = 0;
             for (let i = 0; i < 5; i++) {
                 values.push(filter.filter(0, t));
-                t += 33; // ~30fps
+                t += 16; // ~60fps (frameSkip=1)
             }
             // Sudden movement to 20
             for (let i = 0; i < 5; i++) {
                 values.push(filter.filter(20, t));
-                t += 33;
+                t += 16;
             }
 
             // After 3 frames of "20" input, filter should be at least 50% there (>10)
@@ -407,7 +407,7 @@ test.describe('One Euro Filter Responsiveness', () => {
         });
 
         // Filter should reach >50% of target within 3 frames of fast movement
-        // With beta=0.01 this will likely FAIL (filter too sluggish)
+        // With beta=0.025 this passes comfortably (2026 v2 responsive tuning)
         expect(result.thirdFrameAfterJump).toBeGreaterThan(10);
     });
 });

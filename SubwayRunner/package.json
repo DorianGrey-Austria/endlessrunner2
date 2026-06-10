@@ -1,13 +1,15 @@
 {
   "name": "subway-runner",
   "private": true,
-  "version": "5.0.0",
+  "version": "5.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "bash ../../_TOOLS/port-manager.sh run endlessrunner2 react -- npx vite --strictPort --port 8037",
+    "dev:raw": "vite --strictPort --port 8037",
+    "dev:stop": "bash ../../_TOOLS/port-manager.sh stop endlessrunner2 react",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
+    "preview": "vite preview --port 8037",
     "test": "node test-runner.js",
     "test:watch": "nodemon test-runner.js",
     "serve": "live-server --port=8001 --watch=. --ignore=node_modules",

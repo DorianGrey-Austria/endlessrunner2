@@ -23,10 +23,10 @@ export class OneEuroFilterMode extends BaseGestureMode {
         this.faceOvalConnections = null;
         this.faceTessConnections = null;
 
-        // One Euro Filters tuned for fast mobile gaming response
-        // Higher beta = faster response, higher minCutoff = less smoothing at rest
-        this.yawFilter = new OneEuroFilter(1.5, 0.01, 1.0);
-        this.pitchFilter = new OneEuroFilter(1.5, 0.01, 1.0);
+        // One Euro Filters tuned for fast mobile gaming response (2026 v2)
+        // beta=0.025 for 2.5x faster adaptation to sudden movements
+        this.yawFilter = new OneEuroFilter(1.5, 0.025, 1.0);
+        this.pitchFilter = new OneEuroFilter(1.5, 0.025, 1.0);
 
         // Calibration (simple neutral position)
         this.calibration = {
@@ -40,7 +40,7 @@ export class OneEuroFilterMode extends BaseGestureMode {
             yawRight: 12,
             pitchUp: -15,
             pitchDown: 20,
-            cooldownMs: 300
+            cooldownMs: 200
         };
 
         // Current values
@@ -52,11 +52,11 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Action cooldown
         this.lastActionTime = 0;
 
-        // Dead zone — ignore micro-movements near neutral (best practice 2026)
-        this.deadZone = options.deadZone || 2.0; // degrees
+        // Dead zone — ignore micro-movements near neutral (best practice 2026 v2)
+        this.deadZone = options.deadZone || 1.5; // degrees
 
-        // Hysteresis — prevents lane flickering at threshold boundaries
-        this.hysteresis = 0.3; // 30% of threshold range
+        // Hysteresis — prevents lane flickering at threshold boundaries (2026 v2)
+        this.hysteresis = 0.20; // 20% of threshold range
         this.lastLane = 'center';
 
         // FPS tracking
@@ -67,13 +67,13 @@ export class OneEuroFilterMode extends BaseGestureMode {
         // Animation frame
         this.animationId = null;
 
-        // Frame skipping — avoid GPU contention with Three.js (best practice 2026)
-        this.frameSkip = options.frameSkip || 2;
+        // Frame skipping — full frame rate for maximum responsiveness (2026 v2)
+        this.frameSkip = options.frameSkip || 1;
         this.frameCounter = 0;
 
         // Face-lost tracking
         this.noFaceFrames = 0;
-        this.noFaceThreshold = 60; // ~2 seconds at 30fps
+        this.noFaceThreshold = 120; // ~2 seconds at 60fps (frameSkip=1)
 
         // Debug / Logging (April 2026)
         this.lastSkipReason = null;
@@ -355,16 +355,16 @@ export class OneEuroFilterMode extends BaseGestureMode {
 
     getCalibrationData() {
         return {
-            schemaVersion: 3, // v3: corrected yaw direction (front-camera mirror fix)
+            schemaVersion: 4, // v4: responsive tuning — reduced thresholds, frameSkip=1, higher beta
             calibration: { ...this.calibration },
             thresholds: { ...this.thresholds }
         };
     }
 
     setCalibrationData(data) {
-        // Discard old calibration with inverted yaw direction
-        if (!data.schemaVersion || data.schemaVersion < 3) {
-            this.onStatusChange('info', 'Alte Kalibrierung verworfen (Richtungsfix) — bitte neu kalibrieren');
+        // Discard old calibration with outdated thresholds
+        if (!data.schemaVersion || data.schemaVersion < 4) {
+            this.onStatusChange('info', 'Alte Kalibrierung verworfen (v4 Responsive Tuning) — bitte neu kalibrieren');
             return;
         }
         if (data.calibration) {
