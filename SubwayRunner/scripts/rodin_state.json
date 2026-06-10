@@ -1,0 +1,126 @@
+{
+  "models": {
+    "player": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 678,
+      "timestamp": "2026-06-10T20:45:56"
+    },
+    "apple": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 685,
+      "timestamp": "2026-06-10T20:47:13"
+    },
+    "broccoli": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 840,
+      "timestamp": "2026-06-10T20:49:09"
+    },
+    "obstacle_lowbarrier": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 912,
+      "timestamp": "2026-06-10T20:52:26"
+    },
+    "obstacle_jumpblock": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 1185,
+      "timestamp": "2026-06-10T20:54:11"
+    },
+    "obstacle_duckbeam": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 498,
+      "timestamp": "2026-06-10T20:56:27"
+    },
+    "env_streetlamp": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 467,
+      "timestamp": "2026-06-10T20:57:54"
+    },
+    "env_trafficsign": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 590,
+      "timestamp": "2026-06-10T20:59:00"
+    },
+    "obstacle_spikes": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 288,
+      "timestamp": "2026-06-10T21:01:56"
+    },
+    "obstacle_hurdleset": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 298,
+      "timestamp": "2026-06-10T21:03:05"
+    },
+    "obstacle_wallgap": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 1114,
+      "timestamp": "2026-06-10T21:04:39"
+    },
+    "obstacle_rotatingblade": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 450,
+      "timestamp": "2026-06-10T21:06:25"
+    },
+    "obstacle_swinghammer": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 372,
+      "timestamp": "2026-06-10T21:07:40"
+    },
+    "obstacle_bouncingball": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 919,
+      "timestamp": "2026-06-10T21:08:50"
+    },
+    "env_building_1": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 1255,
+      "timestamp": "2026-06-10T21:13:09"
+    },
+    "obstacle_movingwall": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 951,
+      "timestamp": "2026-06-10T21:14:33"
+    },
+    "obstacle_spinninglaser": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 661,
+      "timestamp": "2026-06-10T21:15:37"
+    },
+    "env_building_2": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 1090,
+      "timestamp": "2026-06-10T21:18:41"
+    },
+    "env_building_3": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 749,
+      "timestamp": "2026-06-10T21:20:30"
+    },
+    "env_tunnelpipe": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output_size_kb": 468,
+      "timestamp": "2026-06-10T21:21:57"
+    }
+  },
+  "credits_used": 10.0,
+  "balance_start": 166.5
+}
