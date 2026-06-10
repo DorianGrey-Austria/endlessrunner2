@@ -132,8 +132,8 @@ class AssetLoaderSingleton {
             this.state = 'ready';
             console.log(`[AssetLoader] Ready — quality: ${this.qualityTier}, tri budget: ${this._getTriBudget()}`);
 
-            // Start preloading tier 1 assets
-            this._preloadTier(1);
+            // Preload all tiers immediately (staggered to avoid network congestion)
+            this._preloadTier(3);
         } catch (err) {
             this.state = 'disabled';
             console.log('[AssetLoader] Disabled — CDN loader import failed:', err.message);
@@ -270,9 +270,9 @@ class AssetLoaderSingleton {
         const ids = Object.entries(ASSET_MANIFEST)
             .filter(([, def]) => def.tier <= tier)
             .map(([id]) => id);
-        // Stagger loads to avoid network congestion
+        // Stagger loads (100ms intervals, tier 1 first)
         ids.forEach((id, i) => {
-            setTimeout(() => this._loadModel(id), i * 200);
+            setTimeout(() => this._loadModel(id), i * 100);
         });
     }
 

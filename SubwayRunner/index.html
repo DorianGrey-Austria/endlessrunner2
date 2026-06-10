@@ -2828,9 +2828,17 @@
             rimLight.position.set(-5, 8, -10);
             scene.add(rimLight);
 
-            // Enhance renderer for better visuals
-            // Removed tone mapping - can cause issues
-            // Removed outputColorSpace - can cause issues
+            // Fill light from front-below to illuminate GLB model faces
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, 2, 10);
+            scene.add(fillLight);
+
+            // Enable outputEncoding for correct PBR material display
+            if (renderer.outputEncoding !== undefined) {
+                renderer.outputEncoding = THREE.sRGBEncoding;
+            } else if (renderer.outputColorSpace !== undefined) {
+                renderer.outputColorSpace = 'srgb';
+            }
 
             // Initialize AssetLoader (progressive enhancement — GLB models on capable devices)
             if (window.AssetLoader) {
@@ -2857,22 +2865,70 @@
             }
         }
 
+        // Swap procedural player with GLB when model becomes available
+        function _trySwapPlayerGLB() {
+            if (!window.AssetLoader || window.AssetLoader.state !== 'ready') return;
+            if (!player || player.userData._isGLB) return; // already swapped
+            const glbModel = window.AssetLoader.getModel('player');
+            if (!glbModel) return;
+
+            const bbox = new THREE.Box3().setFromObject(glbModel);
+            const modelHeight = bbox.max.y - bbox.min.y;
+            const targetHeight = 1.8;
+            const scale = targetHeight / Math.max(modelHeight, 0.01);
+            glbModel.scale.setScalar(scale);
+            const groundOffset = -bbox.min.y * scale;
+            // Copy position/lane from current player
+            glbModel.position.set(player.position.x, groundOffset, player.position.z);
+            glbModel.rotation.y = Math.PI;
+            glbModel.userData._isGLB = true;
+            // Enhance materials
+            glbModel.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    if (child.material && child.material.metalness !== undefined) {
+                        child.material.metalness = Math.min(child.material.metalness, 0.3);
+                        child.material.roughness = Math.max(child.material.roughness, 0.5);
+                    }
+                }
+            });
+            // Remove old procedural player, add GLB
+            scene.remove(player);
+            scene.add(glbModel);
+            player = glbModel;
+            console.log(`[AssetLoader] Player swapped to GLB (scale: ${scale.toFixed(2)})`);
+        }
+
         function createPlayer() {
-            // Try GLB model (progressive enhancement)
-            const glbModel = window.AssetLoader && window.AssetLoader.getModel('player');
-            if (glbModel) {
-                // Scale to match procedural player dimensions (~0.6 wide, ~1.7 tall)
-                const bbox = new THREE.Box3().setFromObject(glbModel);
-                const modelHeight = bbox.max.y - bbox.min.y;
-                const targetHeight = 1.7;
-                const scale = targetHeight / (modelHeight || 1);
-                glbModel.scale.setScalar(scale);
-                glbModel.position.set(LANE_POSITIONS[1], 0, 0);
-                glbModel.rotation.y = Math.PI;
-                scene.add(glbModel);
-                player = glbModel;
-                console.log('[AssetLoader] Player GLB loaded');
-                return;
+            // Try GLB model (progressive enhancement) — may not be ready yet (async load)
+            if (window.AssetLoader && window.AssetLoader.state === 'ready') {
+                const glbModel = window.AssetLoader.getModel('player');
+                if (glbModel) {
+                    const bbox = new THREE.Box3().setFromObject(glbModel);
+                    const modelHeight = bbox.max.y - bbox.min.y;
+                    const targetHeight = 1.8;
+                    const scale = targetHeight / Math.max(modelHeight, 0.01);
+                    glbModel.scale.setScalar(scale);
+                    const groundOffset = -bbox.min.y * scale;
+                    glbModel.position.set(LANE_POSITIONS[1], groundOffset, 0);
+                    glbModel.rotation.y = Math.PI;
+                    glbModel.userData._isGLB = true;
+                    glbModel.traverse(child => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            if (child.material && child.material.metalness !== undefined) {
+                                child.material.metalness = Math.min(child.material.metalness, 0.3);
+                                child.material.roughness = Math.max(child.material.roughness, 0.5);
+                            }
+                        }
+                    });
+                    scene.add(glbModel);
+                    player = glbModel;
+                    console.log(`[AssetLoader] Player GLB loaded (scale: ${scale.toFixed(2)})`);
+                    return;
+                }
             }
 
             // --- Procedural fallback (original code) ---
@@ -3351,14 +3407,37 @@
             // Try GLB model (progressive enhancement)
             const glbModel = window.AssetLoader && window.AssetLoader.getObstacleModel(type);
             if (glbModel) {
-                glbModel.position.set(LANE_POSITIONS[lane], 0, z);
+                // Scale GLB to match expected obstacle dimensions
+                const expectedHeights = {
+                    lowbarrier: 0.8, highbarrier: 0.4, spikes: 0.6, jumpblock: 1.2,
+                    duckbeam: 0.3, hurdleset: 0.7, wallgap: 2.5, rotatingblade: 1.5,
+                    swinghammer: 3.0, movingwall: 2.0, bouncingball: 1.2, spinninglaser: 1.8
+                };
+                const targetH = expectedHeights[type] || 1.0;
+                const bbox = new THREE.Box3().setFromObject(glbModel);
+                const rawH = bbox.max.y - bbox.min.y;
+                const scale = targetH / Math.max(rawH, 0.01);
+                glbModel.scale.setScalar(scale);
+                // Ground-align + type-specific Y offset
+                const groundY = -bbox.min.y * scale;
+                let yPos = groundY;
+                if (type === 'duckbeam' || type === 'highbarrier') yPos = 1.4; // overhead
+                else if (type === 'rotatingblade' || type === 'spinninglaser') yPos = groundY + 0.5;
+                glbModel.position.set(LANE_POSITIONS[lane], yPos, z);
+                // Enhance materials
+                glbModel.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
                 scene.add(glbModel);
                 const obstacleData = {
                     mesh: glbModel,
                     type: type,
                     lane: lane,
                     z: z,
-                    height: glbModel.userData.height || 1.0,
+                    height: targetH,
                     animationTime: 0,
                     rotationSpeed: 0,
                     swingAmplitude: 0,
@@ -3804,10 +3883,11 @@
             if (glbModel) {
                 const bbox = new THREE.Box3().setFromObject(glbModel);
                 const modelHeight = bbox.max.y - bbox.min.y;
-                const scale = 0.7 / (modelHeight || 1); // target ~0.7 units tall
+                const scale = 0.6 / Math.max(modelHeight, 0.01);
                 glbModel.scale.setScalar(scale);
-                glbModel.position.set(LANE_POSITIONS[lane], 0.5, z);
-                glbModel.userData = { type: 'apple', lane: lane };
+                const groundY = -bbox.min.y * scale;
+                glbModel.position.set(LANE_POSITIONS[lane], groundY + 0.5, z); // float above ground
+                glbModel.userData = { type: 'apple', lane: lane, isGLB: true };
                 scene.add(glbModel);
                 return glbModel;
             }
@@ -3887,10 +3967,11 @@
             if (glbModel) {
                 const bbox = new THREE.Box3().setFromObject(glbModel);
                 const modelHeight = bbox.max.y - bbox.min.y;
-                const scale = 0.7 / (modelHeight || 1);
+                const scale = 0.6 / Math.max(modelHeight, 0.01);
                 glbModel.scale.setScalar(scale);
-                glbModel.position.set(LANE_POSITIONS[lane], 0.3, z);
-                glbModel.userData = { type: 'broccoli', lane: lane };
+                const groundY = -bbox.min.y * scale;
+                glbModel.position.set(LANE_POSITIONS[lane], groundY + 0.4, z);
+                glbModel.userData = { type: 'broccoli', lane: lane, isGLB: true };
                 scene.add(glbModel);
                 return glbModel;
             }
@@ -5329,6 +5410,9 @@
             if (gameState.isPlaying) {
                 fpsMonitor.checkAutoAdapt(currentTime);
             }
+
+            // Try swapping player to GLB model once loaded (async progressive enhancement)
+            if (player && !player.userData._isGLB) _trySwapPlayerGLB();
 
             // STABILITY: Reset score counter each frame
             gameState.scoreThisFrame = 0;
