@@ -156,7 +156,7 @@ Two CI workflows run on `git push main`:
 
 **Manual** (`deploy.sh`): rsync + Nginx config. Cleans remote dir, uploads whitelist, reloads Nginx. Verifies via HTTP.
 
-**Deploy whitelist**: `index.html`, `js/`, `css/`, `models/` (GLB 3D assets). `sounds/` is NOT in the deploy pipeline — music files must be deployed manually or the pipeline must be updated when adding audio assets.
+**Deploy whitelist**: `index.html`, `js/`, `css/`, `models/` (GLB 3D assets), `sounds/` (music tracks).
 
 **Required Secrets**: `VPS_HOST`, `VPS_PASSWORD` (primary), `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (legacy). Credentials in `.env` (gitignored).
 
@@ -250,7 +250,7 @@ See `CLAUDE_CODE_RULES.md` for full rules. Key points:
 - **Headless Testing**: WebGL context errors are expected in CI (filter in tests)
 - **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see troubleshooting.md #11)
 - **Browser Cache**: Always hard-refresh (Cmd+Shift+R) when testing — different browsers can show stale versions
-- **Sounds not deployed**: `sounds/` directory is not in deploy whitelist. Music tracks won't work on production unless manually deployed or pipeline updated
+- **Sounds**: `sounds/` now included in all 3 deploy pipelines (hostinger-deploy.yml, test-before-deploy.yml, deploy.sh). 6 tracks regenerated via ElevenLabs Sound Effects API (V5.2)
 
 ---
 

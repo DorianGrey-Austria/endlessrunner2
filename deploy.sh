@@ -65,10 +65,20 @@ sshpass -p "$VPS_PASS" rsync -avz --delete \
 if [ -d "$LOCAL_SRC/models" ] && [ "$(ls -A "$LOCAL_SRC/models"/*.glb 2>/dev/null)" ]; then
     ssh_cmd "mkdir -p $REMOTE_DIR/models"
     sshpass -p "$VPS_PASS" rsync -avz --delete \
-        --exclude='.DS_Store' \
+        --exclude='.DS_Store' --exclude='backup/' \
         -e "ssh $SSH_OPTS" \
         "$LOCAL_SRC/models/" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/models/"
     echo "  Models uploaded"
+fi
+
+# sounds/ directory (music tracks — optional)
+if [ -d "$LOCAL_SRC/sounds" ]; then
+    ssh_cmd "mkdir -p $REMOTE_DIR/sounds"
+    sshpass -p "$VPS_PASS" rsync -avz --delete \
+        --exclude='.DS_Store' --exclude='backup/' \
+        -e "ssh $SSH_OPTS" \
+        "$LOCAL_SRC/sounds/" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/sounds/"
+    echo "  Sounds uploaded"
 fi
 
 echo "  Upload complete"
@@ -89,7 +99,7 @@ server {
         try_files \$uri \$uri/ /index.html;
     }
 
-    location ~* \.(js|css|glb)$ {
+    location ~* \.(js|css|glb|mp3)$ {
         expires 30d;
         add_header Cache-Control \"public, immutable\";
     }

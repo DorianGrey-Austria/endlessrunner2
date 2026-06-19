@@ -74,6 +74,10 @@ jobs:
         # Create deployment directory
         mkdir -p deploy
         cp index.html deploy/
+        cp -r SubwayRunner/js deploy/ 2>/dev/null || true
+        cp -r SubwayRunner/css deploy/ 2>/dev/null || true
+        cp -r SubwayRunner/models deploy/ 2>/dev/null || true
+        cp -r SubwayRunner/sounds deploy/ 2>/dev/null || true
         
         # Create .htaccess with enhanced security
         cat > deploy/.htaccess << 'EOF'

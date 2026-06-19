@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.1-GESTURE</title>
+    <title>Subway Runner 3D - V5.2-CHARACTER</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <!-- Import map: resolves bare "three" specifier for ESM loader modules -->
     <script type="importmap">
@@ -253,6 +253,73 @@
             font-size: 11px;
             color: #556;
             margin: 12px 0 0;
+        }
+
+        #menu .char-selector {
+            margin: 10px 0 8px;
+        }
+
+        #menu .char-cards {
+            display: flex;
+            gap: 6px;
+        }
+
+        #menu .char-card {
+            flex: 1;
+            padding: 6px 4px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #menu .char-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.25);
+        }
+
+        #menu .char-card.active {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.15);
+        }
+
+        #menu .char-preview {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        #menu .char-3d-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: #58a6ff;
+            color: #000;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+
+        #menu .char-name {
+            font-size: 10px;
+            color: #aab;
+            font-weight: 600;
+        }
+
+        #menu .char-card.active .char-name {
+            color: #58a6ff;
+        }
+
+        #menu .char-card:focus-visible {
+            outline: 2px solid #58a6ff;
+            outline-offset: 2px;
         }
 
         #menu .quality-toggle {
@@ -577,6 +644,32 @@
             <p class="menu-subtitle">10 Level Challenge</p>
 
             <p class="menu-info">10 Level mit steigender Schwierigkeit — schaffst du alle?</p>
+
+            <div class="char-selector">
+                <p class="menu-section-label">Charakter</p>
+                <div class="char-cards" id="charCards">
+                    <div class="char-card active" data-char="runner-3d" role="button" tabindex="0" aria-label="3D Runner Charakter" onclick="selectCharacter('runner-3d')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCharacter('runner-3d')}">
+                        <div class="char-preview" style="background: linear-gradient(135deg, #4A90E2, #E74C3C);"><span class="char-3d-badge">3D</span></div>
+                        <div class="char-name">3D Runner</div>
+                    </div>
+                    <div class="char-card" data-char="urban" role="button" tabindex="0" aria-label="Urban Runner Charakter" onclick="selectCharacter('urban')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCharacter('urban')}">
+                        <div class="char-preview" style="background: linear-gradient(135deg, #4A90E2, #FF6B35);"></div>
+                        <div class="char-name">Urban</div>
+                    </div>
+                    <div class="char-card" data-char="neon" role="button" tabindex="0" aria-label="Neon Sprinter Charakter" onclick="selectCharacter('neon')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCharacter('neon')}">
+                        <div class="char-preview" style="background: linear-gradient(135deg, #00E676, #FFEB3B);"></div>
+                        <div class="char-name">Neon</div>
+                    </div>
+                    <div class="char-card" data-char="fire" role="button" tabindex="0" aria-label="Fire Dash Charakter" onclick="selectCharacter('fire')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCharacter('fire')}">
+                        <div class="char-preview" style="background: linear-gradient(135deg, #F44336, #FF9800);"></div>
+                        <div class="char-name">Fire</div>
+                    </div>
+                    <div class="char-card" data-char="cyber" role="button" tabindex="0" aria-label="Cyber Punk Charakter" onclick="selectCharacter('cyber')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCharacter('cyber')}">
+                        <div class="char-preview" style="background: linear-gradient(135deg, #E040FB, #00BCD4);"></div>
+                        <div class="char-name">Cyber</div>
+                    </div>
+                </div>
+            </div>
 
             <button class="start-btn" onclick="startGame()">SPIEL STARTEN</button>
 
@@ -1315,6 +1408,53 @@
 
         function scaledCount(baseCount) {
             return Math.max(2, Math.round(baseCount * getQuality().objectMultiplier));
+        }
+
+        // ==================== CHARACTER PRESETS ====================
+        const CHARACTER_PRESETS = {
+            'runner-3d': {
+                label: '3D Runner',
+                desc: 'GLB Modell',
+                useGLB: true,
+                colors: { body: 0x4A90E2, head: 0xF5B041, legs: 0x2C3E50, shoes: 0x1a1a1a, stripe: 0x00FF00, backpack: 0xE74C3C, cap: 0xFF6B35, glow: 0x6AB0FF }
+            },
+            'urban': {
+                label: 'Urban Runner',
+                desc: 'Blau + Rot',
+                useGLB: false,
+                colors: { body: 0x4A90E2, head: 0xF5B041, legs: 0x2C3E50, shoes: 0x1a1a1a, stripe: 0x00FF00, backpack: 0xE74C3C, cap: 0xFF6B35, glow: 0x6AB0FF }
+            },
+            'neon': {
+                label: 'Neon Sprinter',
+                desc: 'Gruen + Gelb',
+                useGLB: false,
+                colors: { body: 0x00E676, head: 0xFFD54F, legs: 0x1B5E20, shoes: 0x111111, stripe: 0x76FF03, backpack: 0xFFEB3B, cap: 0x00E676, glow: 0x69F0AE }
+            },
+            'fire': {
+                label: 'Fire Dash',
+                desc: 'Rot + Orange',
+                useGLB: false,
+                colors: { body: 0xF44336, head: 0xFFCC80, legs: 0x4E342E, shoes: 0x212121, stripe: 0xFF9800, backpack: 0x212121, cap: 0xFF5722, glow: 0xFF8A65 }
+            },
+            'cyber': {
+                label: 'Cyber Punk',
+                desc: 'Pink + Blau',
+                useGLB: false,
+                colors: { body: 0xE040FB, head: 0xB2EBF2, legs: 0x311B92, shoes: 0x0D0D0D, stripe: 0x00E5FF, backpack: 0x00BCD4, cap: 0xAA00FF, glow: 0xEA80FC }
+            }
+        };
+
+        let selectedCharacter = localStorage.getItem('subwayRunner_character') || 'runner-3d';
+        if (!CHARACTER_PRESETS[selectedCharacter]) selectedCharacter = 'runner-3d';
+
+        function selectCharacter(id) {
+            if (!CHARACTER_PRESETS[id]) return;
+            selectedCharacter = id;
+            localStorage.setItem('subwayRunner_character', id);
+            // Update UI
+            document.querySelectorAll('.char-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.char === id);
+            });
         }
 
         // ==================== FPS MONITOR + AUTO-ADAPTIVE ====================
@@ -2900,6 +3040,7 @@
             glbModel.position.set(player.position.x, groundOffset, player.position.z);
             glbModel.rotation.y = Math.PI;
             glbModel.userData._isGLB = true;
+            glbModel.userData._groundOffset = groundOffset;
             // Enhance materials
             glbModel.traverse(child => {
                 if (child.isMesh) {
@@ -2915,12 +3056,15 @@
             scene.remove(player);
             scene.add(glbModel);
             player = glbModel;
-            console.log(`[AssetLoader] Player swapped to GLB (scale: ${scale.toFixed(2)})`);
+            console.log(`[AssetLoader] Player swapped to GLB (scale: ${scale.toFixed(2)}, groundOffset: ${groundOffset.toFixed(3)})`);
         }
 
         function createPlayer() {
-            // Try GLB model (progressive enhancement) — may not be ready yet (async load)
-            if (window.AssetLoader && window.AssetLoader.state === 'ready') {
+            const preset = CHARACTER_PRESETS[selectedCharacter] || CHARACTER_PRESETS['urban'];
+            const c = preset.colors;
+
+            // Try GLB model only if '3D Runner' character selected
+            if (preset.useGLB && window.AssetLoader && window.AssetLoader.state === 'ready') {
                 const glbModel = window.AssetLoader.getModel('player');
                 if (glbModel) {
                     const bbox = new THREE.Box3().setFromObject(glbModel);
@@ -2932,6 +3076,8 @@
                     glbModel.position.set(LANE_POSITIONS[1], groundOffset, 0);
                     glbModel.rotation.y = Math.PI;
                     glbModel.userData._isGLB = true;
+                    glbModel.userData._groundOffset = groundOffset;
+                    glbModel.userData._characterId = selectedCharacter;
                     glbModel.traverse(child => {
                         if (child.isMesh) {
                             child.castShadow = true;
@@ -2944,20 +3090,19 @@
                     });
                     scene.add(glbModel);
                     player = glbModel;
-                    console.log(`[AssetLoader] Player GLB loaded (scale: ${scale.toFixed(2)})`);
+                    console.log(`[Character] GLB player loaded (${selectedCharacter}, scale: ${scale.toFixed(2)}, groundOffset: ${groundOffset.toFixed(3)})`);
                     return;
                 }
             }
 
-            // --- Procedural fallback (original code) ---
+            // --- Procedural character with preset colors ---
             const playerGroup = new THREE.Group();
-            
-            // Player body (torso) - Enhanced but SAFE
+
             const bodyGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.3);
-            const bodyMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x4A90E2,
-                emissive: 0x2A5090,
-                emissiveIntensity: 0.2,
+            const bodyMaterial = new THREE.MeshPhongMaterial({
+                color: c.body,
+                emissive: c.body,
+                emissiveIntensity: 0.15,
                 shininess: 50
             });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -2965,11 +3110,10 @@
             body.castShadow = true;
             body.receiveShadow = true;
             playerGroup.add(body);
-            
-            // Simple glow effect
+
             const glowGeometry = new THREE.BoxGeometry(0.65, 0.85, 0.35);
-            const glowMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x6AB0FF,
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: c.glow,
                 transparent: true,
                 opacity: 0.2,
                 side: THREE.BackSide
@@ -2978,11 +3122,10 @@
             glow.position.copy(body.position);
             playerGroup.add(glow);
 
-            // Player head - Better looking
             const headGeometry = new THREE.SphereGeometry(0.25, 16, 16);
-            const headMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0xF5B041,
-                emissive: 0xF5B041,
+            const headMaterial = new THREE.MeshPhongMaterial({
+                color: c.head,
+                emissive: c.head,
                 emissiveIntensity: 0.1,
                 shininess: 30
             });
@@ -2991,52 +3134,48 @@
             head.castShadow = true;
             playerGroup.add(head);
 
-            // Eyes
             const eyeGeometry = new THREE.SphereGeometry(0.05);
             const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-            
+
             const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
             leftEye.position.set(-0.08, 1.4, 0.2);
             playerGroup.add(leftEye);
-            
+
             const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
             rightEye.position.set(0.08, 1.4, 0.2);
             playerGroup.add(rightEye);
 
-            // Arms
             const armGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6);
-            const armMaterial = new THREE.MeshLambertMaterial({ color: 0xF5B041 });
-            
+            const armMaterial = new THREE.MeshLambertMaterial({ color: c.head });
+
             const leftArm = new THREE.Mesh(armGeometry, armMaterial);
             leftArm.position.set(-0.4, 0.8, 0);
             leftArm.rotation.z = 0.3;
             leftArm.castShadow = true;
             playerGroup.add(leftArm);
-            
+
             const rightArm = new THREE.Mesh(armGeometry, armMaterial);
             rightArm.position.set(0.4, 0.8, 0);
             rightArm.rotation.z = -0.3;
             rightArm.castShadow = true;
             playerGroup.add(rightArm);
 
-            // Legs
             const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.6);
-            const legMaterial = new THREE.MeshLambertMaterial({ color: 0x2C3E50 });
-            
+            const legMaterial = new THREE.MeshLambertMaterial({ color: c.legs });
+
             const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
             leftLeg.position.set(-0.15, 0.0, 0);
             leftLeg.castShadow = true;
             playerGroup.add(leftLeg);
-            
+
             const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
             rightLeg.position.set(0.15, 0.0, 0);
             rightLeg.castShadow = true;
             playerGroup.add(rightLeg);
 
-            // Cool Sneakers
             const shoeGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.4);
-            const shoeMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x1a1a1a,
+            const shoeMaterial = new THREE.MeshPhongMaterial({
+                color: c.shoes,
                 shininess: 80
             });
             
@@ -3050,11 +3189,10 @@
             rightShoe.castShadow = true;
             playerGroup.add(rightShoe);
             
-            // Shoe stripes (simple glow effect)
             const stripeGeometry = new THREE.BoxGeometry(0.22, 0.02, 0.42);
             const stripeMaterial = new THREE.MeshBasicMaterial({
-                color: 0x00FF00,
-                emissive: 0x00FF00
+                color: c.stripe,
+                emissive: c.stripe
             });
             
             const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
@@ -3065,25 +3203,22 @@
             rightStripe.position.set(0.15, -0.32, 0.1);
             playerGroup.add(rightStripe);
 
-            // Backpack
             const backpackGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.2);
-            const backpackMaterial = new THREE.MeshLambertMaterial({ color: 0xE74C3C });
+            const backpackMaterial = new THREE.MeshLambertMaterial({ color: c.backpack });
             const backpack = new THREE.Mesh(backpackGeometry, backpackMaterial);
             backpack.position.set(0, 0.7, -0.25);
             backpack.castShadow = true;
             playerGroup.add(backpack);
 
-            // Cap
             const capGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1);
-            const capMaterial = new THREE.MeshLambertMaterial({ color: 0xFF6B35 });
+            const capMaterial = new THREE.MeshLambertMaterial({ color: c.cap });
             const cap = new THREE.Mesh(capGeometry, capMaterial);
             cap.position.y = 1.55;
             cap.castShadow = true;
             playerGroup.add(cap);
 
-            // Cap visor
             const visorGeometry = new THREE.CylinderGeometry(0.35, 0.4, 0.02);
-            const visorMaterial = new THREE.MeshLambertMaterial({ color: 0xFF4500 });
+            const visorMaterial = new THREE.MeshLambertMaterial({ color: c.cap });
             const visor = new THREE.Mesh(visorGeometry, visorMaterial);
             visor.position.set(0, 1.48, 0.2);
             visor.rotation.x = -0.3;
@@ -3091,12 +3226,12 @@
             playerGroup.add(visor);
 
             playerGroup.position.set(LANE_POSITIONS[gameState.playerLane], 0, 0);
-            
-            // FIX: Player should look forward (negative Z direction)
             playerGroup.rotation.y = Math.PI;
-            
+            playerGroup.userData._characterId = selectedCharacter;
+
             scene.add(playerGroup);
             player = playerGroup;
+            console.log(`[Character] Procedural player created (${selectedCharacter})`);
         }
 
         function createTrack() {
@@ -4200,7 +4335,19 @@
             // Clear obstacles
             obstacles.forEach(obs => scene.remove(obs.mesh));
             obstacles = [];
-            
+
+            // Recreate player if character selection changed
+            if (player && player.userData._characterId !== selectedCharacter) {
+                scene.remove(player);
+                player = null;
+                createPlayer();
+            }
+            // Reset player position
+            if (player) {
+                player.position.x = LANE_POSITIONS[1];
+                player.position.y = player.userData._groundOffset || 0;
+            }
+
             // Start sound
             audioManager.play('powerup');
             
@@ -5463,8 +5610,8 @@
                 fpsMonitor.checkAutoAdapt(currentTime);
             }
 
-            // Try swapping player to GLB model once loaded (async progressive enhancement)
-            if (player && !player.userData._isGLB) _trySwapPlayerGLB();
+            // Try swapping player to GLB model once loaded (only for '3D Runner' character, only in menu)
+            if (player && !player.userData._isGLB && !gameState.isPlaying && selectedCharacter === 'runner-3d') _trySwapPlayerGLB();
 
             // STABILITY: Reset score counter each frame
             gameState.scoreThisFrame = 0;
@@ -5528,7 +5675,7 @@
                     player.scale.y = 1;
                 }
                 
-                player.position.y = gameState.playerY;
+                player.position.y = gameState.playerY + (player.userData._groundOffset || 0);
                 
                 // Handle invulnerability
                 if (gameState.invulnerable) {
@@ -6232,6 +6379,11 @@
 
         // Initialize game when DOM is ready — wait for user to click Start
         document.addEventListener('DOMContentLoaded', () => {
+            // Restore character selection from localStorage
+            document.querySelectorAll('.char-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.char === selectedCharacter);
+            });
+
             console.log('DOM ready, starting game initialization...');
             init();
         });

@@ -2807,3 +2807,26 @@ Gleiches Problem in `BodyPoseMode.detectBodyLean()`: `noseX - shoulderCenterX` u
 4. Tablets sind der haerteste Testfall — Camera/Network unreliable
 
 ---
+
+## INF-021: Hintergrundmusik fehlt auf Produktion + schlechte Qualitaet (2026-06-10)
+
+**Symptom:** Musik-Auswahl im Startmenue vorhanden, aber auf der Live-Seite (endlessrunner.vibecoding.company) kein Sound hoerbar. Lokal funktioniert die Musik.
+
+**Root Cause (2-fach):**
+
+1. **sounds/ nicht im Deploy-Whitelist:** Beide CI-Workflows (`hostinger-deploy.yml` und `test-before-deploy.yml`) kopierten nur `index.html`, `js/`, `css/`, `models/` — NICHT `sounds/`. Musik-Dateien existierten lokal aber nie auf dem Server.
+
+2. **Tracks zu kurz und schlecht:** Alle 6 originalen MP3-Tracks waren identisch 241KB (~10 Sekunden bei 192kbps). Bei Loop-Wiedergabe extrem repetitiv und stoerend. Tracks waren mit ElevenLabs Sound Effects API generiert aber mit viel zu kurzem `duration_seconds` Parameter.
+
+**Fix:**
+- `sounds/` zu beiden Deploy-Workflows hinzugefuegt (hostinger-deploy.yml Zeile 22, test-before-deploy.yml Zeile 77)
+- Alle 6 Musik-Tracks mit ElevenLabs Sound Effects API neu generiert: 353KB, 22 Sekunden, 128kbps, 44.1kHz Stereo
+- Tracks: synthwave-runner, chiptune-classic, ambient-subway, drum-and-bass, lofi-chill, epic-orchestral
+- Alte Tracks gesichert in `sounds/music/backup/`
+
+**Lessons Learned:**
+1. Deploy-Whitelist IMMER pruefen wenn neue Asset-Typen hinzugefuegt werden
+2. Generierte Audio-Tracks muessen ausreichend lang sein (min. 20s fuer Loops)
+3. Sound-Funktionalitaet kann nur mit echtem Browser getestet werden (Playwright headless hat kein Audio)
+
+---

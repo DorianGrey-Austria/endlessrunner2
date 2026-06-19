@@ -33,6 +33,7 @@ build/
 # Backup files
 *.backup
 *.bak
+**/backup/
 
 # Local development
 .local/
