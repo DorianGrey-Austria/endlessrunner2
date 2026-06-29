@@ -48,3 +48,9 @@ test-results/
 
 # Multi-terminal session data
 _multi/
+
+# --- dirty-file hygiene sweep 2026-06-26 (generated/session artifacts) ---
+.agents/
+WELLEN_3TERM_PROMPT*
+WELLEN_3TERM_PROMPTS_INDEX*
+NEXT_WELLE_CLAUDE_CODE_PROMPT.md
