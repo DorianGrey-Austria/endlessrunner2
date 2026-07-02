@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.2-CHARACTER</title>
+    <title>Subway Runner 3D - V5.3-WORLDS</title>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <!-- Import map: resolves bare "three" specifier for ESM loader modules -->
     <script type="importmap">
@@ -1594,7 +1594,7 @@
                 baseSpawnRate: 0.004, spawnScaleWithSpeed: 0.3,
                 movingObstacleChance: 0.0,
                 obstacleTypes: ['lowbarrier', 'jumpblock'],
-                scoreToAdvance: 200,
+                scoreToAdvance: 120,
                 gestureSpeedReduction: 0.25, gestureSpawnReduction: 0.40
             },
             2: {
@@ -1603,7 +1603,7 @@
                 baseSpawnRate: 0.005, spawnScaleWithSpeed: 0.4,
                 movingObstacleChance: 0.0,
                 obstacleTypes: ['lowbarrier', 'jumpblock', 'highbarrier', 'duckbeam'],
-                scoreToAdvance: 300,
+                scoreToAdvance: 130,
                 gestureSpeedReduction: 0.25, gestureSpawnReduction: 0.38
             },
             3: {
@@ -1612,7 +1612,7 @@
                 baseSpawnRate: 0.005, spawnScaleWithSpeed: 0.5,
                 movingObstacleChance: 0.0,
                 obstacleTypes: ['lowbarrier', 'jumpblock', 'highbarrier', 'duckbeam', 'spikes'],
-                scoreToAdvance: 500,
+                scoreToAdvance: 150,
                 gestureSpeedReduction: 0.25, gestureSpawnReduction: 0.35
             },
             4: {
@@ -1621,7 +1621,7 @@
                 baseSpawnRate: 0.006, spawnScaleWithSpeed: 0.5,
                 movingObstacleChance: 0.05,
                 obstacleTypes: ['lowbarrier', 'jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'spikes'],
-                scoreToAdvance: 600,
+                scoreToAdvance: 170,
                 gestureSpeedReduction: 0.22, gestureSpawnReduction: 0.35
             },
             5: {
@@ -1630,7 +1630,7 @@
                 baseSpawnRate: 0.006, spawnScaleWithSpeed: 0.6,
                 movingObstacleChance: 0.08,
                 obstacleTypes: ['lowbarrier', 'jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade'],
-                scoreToAdvance: 700,
+                scoreToAdvance: 190,
                 gestureSpeedReduction: 0.22, gestureSpawnReduction: 0.33
             },
             6: {
@@ -1639,7 +1639,7 @@
                 baseSpawnRate: 0.007, spawnScaleWithSpeed: 0.6,
                 movingObstacleChance: 0.10,
                 obstacleTypes: ['lowbarrier', 'jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer'],
-                scoreToAdvance: 800,
+                scoreToAdvance: 210,
                 gestureSpeedReduction: 0.22, gestureSpawnReduction: 0.30
             },
             7: {
@@ -1648,7 +1648,7 @@
                 baseSpawnRate: 0.007, spawnScaleWithSpeed: 0.7,
                 movingObstacleChance: 0.12,
                 obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall'],
-                scoreToAdvance: 900,
+                scoreToAdvance: 230,
                 gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
             },
             8: {
@@ -1657,7 +1657,7 @@
                 baseSpawnRate: 0.008, spawnScaleWithSpeed: 0.7,
                 movingObstacleChance: 0.15,
                 obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball'],
-                scoreToAdvance: 1000,
+                scoreToAdvance: 250,
                 gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
             },
             9: {
@@ -1666,7 +1666,7 @@
                 baseSpawnRate: 0.008, spawnScaleWithSpeed: 0.8,
                 movingObstacleChance: 0.18,
                 obstacleTypes: ['jumpblock', 'hurdleset', 'highbarrier', 'duckbeam', 'wallgap', 'spikes', 'rotatingblade', 'swinginghammer', 'movingwall', 'bouncingball', 'spinninglaser'],
-                scoreToAdvance: 1100,
+                scoreToAdvance: 270,
                 gestureSpeedReduction: 0.20, gestureSpawnReduction: 0.30
             },
             10: {
@@ -1836,6 +1836,19 @@
                 this.levelObjects.push(obj);
             }
         };
+
+        // DEBUG helper: jump directly to any world (1-10) for testing/demo.
+        // Score is set to that world's threshold so progression holds there.
+        function jumpToLevel(n) {
+            if (!gameState.isPlaying) return;
+            n = Math.max(1, Math.min(10, Math.round(n)));
+            LevelManager.lastLevelChange = Date.now();
+            currentLevel = n;
+            gameState.score = getCumulativeScoreForLevel(n);
+            LevelManager.loadLevel(n);
+            console.log(`⏭️ Debug: jumped to World ${n}`);
+        }
+        window.jumpToLevel = jumpToLevel;
 
         // ==================== LEVEL DEFINITIONS (V2 — Optimized) ====================
         // Shared dispose helper for all levels — prevents memory leaks
@@ -4315,6 +4328,9 @@
             // Load Level 1
             currentLevel = 1;
             LevelManager.loadLevel(1);
+            // DEBUG: ?level=N starts directly in world N (for testing/demo)
+            const _lvlParam = parseInt(new URLSearchParams(location.search).get('level'), 10);
+            if (_lvlParam >= 1 && _lvlParam <= 10) { setTimeout(() => jumpToLevel(_lvlParam), 150); }
             gameState.jumpVelocity = 0;
             gameState.jumpStartTime = 0; // Reset jump timer
             gameState.jumpCount = 0; // Reset jump counter
@@ -4552,7 +4568,15 @@
 
         function handleKeyDown(event) {
             if (!gameState.isPlaying) return;
-            
+
+            // DEBUG: Shift+1..9 jumps to world 1-9, Shift+0 jumps to world 10
+            if (event.shiftKey && event.code.startsWith('Digit')) {
+                const d = parseInt(event.code.slice(5), 10);
+                event.preventDefault();
+                jumpToLevel(d === 0 ? 10 : d);
+                return;
+            }
+
             switch (event.code) {
                 case 'ArrowLeft':
                 case 'KeyA':
@@ -5711,16 +5735,10 @@
                         segment.position.z -= 100;
                     }
                 });
-                
-                // Update environment movement with parallax
-                updateEnvironmentMovement(deltaTime);
-                
-                // Update current level
-                LevelManager.update(deltaTime);
-                
-                // Update visual effects based on speed
-                updateVisualEffects();
-                
+
+                // NOTE: environment/level/visual updates run once per frame below,
+                // after the per-level speed progression is computed (V5.0 pipeline).
+
                 // Move obstacles with smooth speed
                 obstacles.forEach((obstacle, index) => {
                     obstacle.mesh.position.z += visualSpeed;
