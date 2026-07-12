@@ -1,0 +1,12 @@
+{
+  "appId": "com.vibecoding.subwayrunner",
+  "appName": "Subway Runner 3D",
+  "webDir": "www",
+  "backgroundColor": "#0d1b3d",
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

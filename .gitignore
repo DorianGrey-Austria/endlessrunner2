@@ -54,3 +54,13 @@ _multi/
 WELLEN_3TERM_PROMPT*
 WELLEN_3TERM_PROMPTS_INDEX*
 NEXT_WELLE_CLAUDE_CODE_PROMPT.md
+
+# --- capacitor-app: generated artifacts (V5.4 store readiness) ---
+capacitor-app/node_modules/
+capacitor-app/www/
+capacitor-app/ios/App/App/public/
+capacitor-app/ios/App/CapApp-SPM/.build/
+capacitor-app/android/app/src/main/assets/public/
+capacitor-app/android/.gradle/
+capacitor-app/android/build/
+capacitor-app/android/app/build/
