@@ -1,0 +1,202 @@
+{
+  "env_building_1.glb": {
+    "original_kb": 1042,
+    "optimized_kb": 979,
+    "reduction_pct": 6.1,
+    "verts_before": 19745,
+    "verts_after": 5453,
+    "faces_before": 24228,
+    "faces_after": 10902,
+    "meshes": 1
+  },
+  "env_building_2.glb": {
+    "original_kb": 903,
+    "optimized_kb": 847,
+    "reduction_pct": 6.2,
+    "verts_before": 17360,
+    "verts_after": 4718,
+    "faces_before": 21086,
+    "faces_after": 9488,
+    "meshes": 1
+  },
+  "obstacle_jumpblock.glb": {
+    "original_kb": 1053,
+    "optimized_kb": 1006,
+    "reduction_pct": 4.4,
+    "verts_before": 15713,
+    "verts_after": 5942,
+    "faces_before": 23756,
+    "faces_after": 11878,
+    "meshes": 1
+  },
+  "obstacle_wallgap.glb": {
+    "original_kb": 1054,
+    "optimized_kb": 1030,
+    "reduction_pct": 2.3,
+    "verts_before": 7764,
+    "verts_after": 2922,
+    "faces_before": 11680,
+    "faces_after": 5840,
+    "meshes": 1
+  },
+  "obstacle_movingwall.glb": {
+    "original_kb": 881,
+    "optimized_kb": 855,
+    "reduction_pct": 2.9,
+    "verts_before": 8158,
+    "verts_after": 2996,
+    "faces_before": 11975,
+    "faces_after": 5987,
+    "meshes": 1
+  },
+  "obstacle_bouncingball.glb": {
+    "original_kb": 802,
+    "optimized_kb": 764,
+    "reduction_pct": 4.6,
+    "verts_before": 12932,
+    "verts_after": 6754,
+    "faces_before": 24554,
+    "faces_after": 13504,
+    "meshes": 1
+  },
+  "obstacle_lowbarrier.glb": {
+    "original_kb": 829,
+    "optimized_kb": 800,
+    "reduction_pct": 3.5,
+    "verts_before": 9140,
+    "verts_after": 3600,
+    "faces_before": 14394,
+    "faces_after": 7196,
+    "meshes": 1
+  },
+  "broccoli.glb": {
+    "original_kb": 653,
+    "optimized_kb": 598,
+    "reduction_pct": 8.4,
+    "verts_before": 21647,
+    "verts_after": 10152,
+    "faces_before": 36910,
+    "faces_after": 20300,
+    "meshes": 1
+  },
+  "apple.glb": {
+    "original_kb": 559,
+    "optimized_kb": 519,
+    "reduction_pct": 7.1,
+    "verts_before": 14190,
+    "verts_after": 7156,
+    "faces_before": 26016,
+    "faces_after": 14308,
+    "meshes": 1
+  },
+  "env_building_3.glb": {
+    "original_kb": 597,
+    "optimized_kb": 551,
+    "reduction_pct": 7.7,
+    "verts_before": 16841,
+    "verts_after": 5211,
+    "faces_before": 20838,
+    "faces_after": 10418,
+    "meshes": 1
+  },
+  "obstacle_spinninglaser.glb": {
+    "original_kb": 525,
+    "optimized_kb": 485,
+    "reduction_pct": 7.7,
+    "verts_before": 15844,
+    "verts_after": 6660,
+    "faces_before": 24221,
+    "faces_after": 13321,
+    "meshes": 1
+  },
+  "player.glb": {
+    "original_kb": 499,
+    "optimized_kb": 450,
+    "reduction_pct": 9.8,
+    "verts_before": 22633,
+    "verts_after": 10960,
+    "faces_before": 36542,
+    "faces_after": 21924,
+    "meshes": 1
+  },
+  "env_trafficsign.glb": {
+    "original_kb": 513,
+    "optimized_kb": 496,
+    "reduction_pct": 3.5,
+    "verts_before": 6946,
+    "verts_after": 2727,
+    "faces_before": 9914,
+    "faces_after": 5450,
+    "meshes": 1
+  },
+  "obstacle_duckbeam.glb": {
+    "original_kb": 450,
+    "optimized_kb": 435,
+    "reduction_pct": 3.3,
+    "verts_before": 5707,
+    "verts_after": 2228,
+    "faces_before": 8098,
+    "faces_after": 4452,
+    "meshes": 1
+  },
+  "env_streetlamp.glb": {
+    "original_kb": 368,
+    "optimized_kb": 340,
+    "reduction_pct": 7.6,
+    "verts_before": 10397,
+    "verts_after": 4450,
+    "faces_before": 16178,
+    "faces_after": 8894,
+    "meshes": 1
+  },
+  "env_tunnelpipe.glb": {
+    "original_kb": 364,
+    "optimized_kb": 333,
+    "reduction_pct": 8.7,
+    "verts_before": 12233,
+    "verts_after": 5218,
+    "faces_before": 18970,
+    "faces_after": 10432,
+    "meshes": 1
+  },
+  "obstacle_rotatingblade.glb": {
+    "original_kb": 340,
+    "optimized_kb": 308,
+    "reduction_pct": 9.6,
+    "verts_before": 12088,
+    "verts_after": 5372,
+    "faces_before": 19530,
+    "faces_after": 10740,
+    "meshes": 1
+  },
+  "obstacle_swinghammer.glb": {
+    "original_kb": 304,
+    "optimized_kb": 283,
+    "reduction_pct": 6.8,
+    "verts_before": 7749,
+    "verts_after": 3376,
+    "faces_before": 12361,
+    "faces_after": 6797,
+    "meshes": 1
+  },
+  "obstacle_hurdleset.glb": {
+    "original_kb": 238,
+    "optimized_kb": 211,
+    "reduction_pct": 11.2,
+    "verts_before": 9500,
+    "verts_after": 4545,
+    "faces_before": 16519,
+    "faces_after": 9085,
+    "meshes": 1
+  },
+  "obstacle_spikes.glb": {
+    "original_kb": 228,
+    "optimized_kb": 211,
+    "reduction_pct": 7.5,
+    "verts_before": 5970,
+    "verts_after": 2977,
+    "faces_before": 10820,
+    "faces_after": 5950,
+    "meshes": 1
+  }
+}
