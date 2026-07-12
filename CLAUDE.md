@@ -61,7 +61,7 @@ git add . && git commit -m "VX.Y.Z: description" && git push
 ### Versioning
 Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for features, MAJOR for breaking changes. Update version in both `index.html` and `package.json`.
 
-**Note**: `package.json` version and `index.html` `<title>` version can drift apart — always check both when bumping.
+**Note**: `package.json` version and `index.html` `<title>` version can drift apart — always check both when bumping. Since V5.4 also bump `CACHE_VERSION` in `sw.js` on every deploy that changes cached files, otherwise returning players get stale content from the service worker.
 
 ---
 
@@ -99,6 +99,8 @@ External JS modules deployed alongside `index.html`. Loaded as ES6 modules.
 **10-World Progression (V5.3, inline in `index.html` — NOT `js/levels/`)**: The production level system lives entirely inside `index.html`: `LEVEL_CONFIGS` (~line 1590) holds per-world speed/spawn config plus `scoreToAdvance`; an inline `LevelManager` (~line 1698) computes cumulative score thresholds and drives `load()`/`update()`/`cleanup()` per world; all 10 worlds are registered at startup (~line 2824). The external `js/levels/` modules (LevelManager.js, Level2.js) are a legacy system that `index.html` does not load — do not edit them expecting production changes.
 
 **Debug world jump** (three ways, all in `index.html`): URL param `?level=N` starts directly in world N; `Shift+1`..`Shift+9` / `Shift+0` during play jumps to world 1-9 / 10; `window.jumpToLevel(n)` from console (sets score to that world's threshold so progression holds).
+
+**Mobile/Store Readiness (V5.4, inline in `index.html` + root files)**: Touch controls (swipe = lane/jump/duck) live next to the keyboard handlers and dispatch synthetic KeyboardEvents onto them — change keyboard behavior and touch follows automatically. PWA: `manifest.webmanifest` + `sw.js` (bump `CACHE_VERSION` on deploy) + `icons/` (regenerate via `node scripts/generate_icons.cjs`). Legal: `privacy.html` (linked from menu; update Stand-Datum when data practices change). Store wrapper: `capacitor-app/` (Capacitor 8, iOS/Android; `node sync-www.cjs && npx cap sync` before builds). Store checklists: `SubwayRunner/docs/STORE_READINESS.md` + `MONETIZATION.md`.
 
 **Character Selection (V5.2, inline in `index.html`)**: `CHARACTER_PRESETS` (~line 1414) defines selectable characters; choice persisted via localStorage key `subwayRunner_character`. Player mesh is rebuilt when the selection changes (`userData._characterId` comparison in the update loop); GLB characters get per-preset scale + groundOffset.
 
@@ -170,7 +172,7 @@ Two CI workflows run on `git push main`:
 
 **Manual** (`deploy.sh`): rsync + Nginx config. Cleans remote dir, uploads whitelist, reloads Nginx. Verifies via HTTP.
 
-**Deploy whitelist**: `index.html`, `js/`, `css/`, `models/` (GLB 3D assets), `sounds/` (music tracks).
+**Deploy whitelist**: `index.html`, `js/`, `css/`, `models/` (GLB 3D assets), `sounds/` (music tracks), plus since V5.4: `manifest.webmanifest`, `sw.js`, `privacy.html`, `icons/`.
 
 **Required Secrets**: `VPS_HOST`, `VPS_PASSWORD` (primary), `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (legacy). Credentials in `.env` (gitignored).
 

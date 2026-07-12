@@ -10,7 +10,7 @@ Multi-project endless runner game collection. **SubwayRunner** is the actively d
 |---------|-----------|--------|
 | **SubwayRunner** | Vanilla JS + Three.js (monolithic) | PRODUCTION - deployed to endlessrunner.vibecoding.company |
 | SubwayRunner/src/ | React + R3F + Zustand + TypeScript | EXPERIMENTAL - not deployed |
-| EndlessRunner-MVP | (empty directory) | Historical reference only |
+| EndlessRunner-MVP, Endless3D, GestureRunnerPro | Various | Historical archives — ignore |
 
 **Live**: https://endlessrunner.vibecoding.company/
 
@@ -61,7 +61,7 @@ git add . && git commit -m "VX.Y.Z: description" && git push
 ### Versioning
 Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for features, MAJOR for breaking changes. Update version in both `index.html` and `package.json`.
 
-**Note**: `package.json` version and `index.html` `<title>` version can drift apart — always check both when bumping.
+**Note**: `package.json` version and `index.html` `<title>` version can drift apart — always check both when bumping. Since V5.4 also bump `CACHE_VERSION` in `sw.js` on every deploy that changes cached files, otherwise returning players get stale content from the service worker.
 
 ---
 
@@ -70,7 +70,7 @@ Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for featu
 ### Dual Architecture (CRITICAL)
 
 **Production (deployed)**: `SubwayRunner/index.html`
-- Monolithic vanilla JS (~5900 lines, 262 KB) with embedded Three.js
+- Monolithic vanilla JS (single large file) with embedded Three.js
 - Three.js v0.158.0 via CDN, MediaPipe Tasks Vision API @0.10.34 (loaded on demand via `js/utils/MediaPipeLoader.js`)
 - Global `gameState` object on `window` (score, lives, level, isPlaying)
 - Supabase SDK intentionally removed to prevent identifier conflicts
@@ -80,13 +80,29 @@ Format: `MAJOR.MINOR.PATCH` (e.g. 4.5.10). Bump PATCH for fixes, MINOR for featu
 - Never merged to production pipeline
 - `npm run dev` starts on port 8037
 
+### Navigating the SubwayRunner Root (IMPORTANT)
+
+The `SubwayRunner/` directory is heavily cluttered with historical scratch from rapid iteration. Treat most of it as noise:
+- **~26 loose `.md` files** (`CRASH_ANALYSIS.md`, `SENIOR_DEVELOPER_RECOVERY_PLAN.md`, `RESET-PLAN.md`, etc.) — point-in-time logs, NOT current docs. The authoritative docs are this `CLAUDE.md`, `ROADMAP.md`, `bestPractice_gestensteuerung.md`, `troubleshooting.md`, `CLAUDE_CODE_RULES.md`.
+- **~16 standalone `*-test.html` / scratch HTML pages** (`gesture-test.html`, `duck-collision-test.html`, etc.) — one-off manual debug harnesses, not part of the build or CI. The real tests live in `tests/e2e/`.
+- **~14 `index*.html*` backups** — rollback snapshots only. The single deployed file is `index.html`; primary rollback target is `index.html.V4.3-BALANCED.html`.
+- Loose `*.js`/`*.cjs` at root (`trace-export-error.js`, `find_syntax_error.js`, etc.) are ad-hoc diagnostics, superseded by `test-runner.js` + Playwright.
+
+When asked to "fix the game" or "update docs", default to `index.html` and the authoritative docs above — do not edit the scratch files unless explicitly told.
+
 ### Module System (`SubwayRunner/js/`)
 
 External JS modules deployed alongside `index.html`. Loaded as ES6 modules.
 
 **GameCore** (`js/core/GameCore.js`): Registry pattern — modules register themselves and get initialized in order: `utils → levels → characters → ui → effects`. Late-registered modules auto-initialize.
 
-**LevelManager** (`js/levels/LevelManager.js`): 10-level progression system. Level 1 is built into base game; Level 2+ registered dynamically via `registerLevel()`. Each level has `load()`, `update()`, `cleanup()` lifecycle.
+**10-World Progression (V5.3, inline in `index.html` — NOT `js/levels/`)**: The production level system lives entirely inside `index.html`: `LEVEL_CONFIGS` (~line 1590) holds per-world speed/spawn config plus `scoreToAdvance`; an inline `LevelManager` (~line 1698) computes cumulative score thresholds and drives `load()`/`update()`/`cleanup()` per world; all 10 worlds are registered at startup (~line 2824). The external `js/levels/` modules (LevelManager.js, Level2.js) are a legacy system that `index.html` does not load — do not edit them expecting production changes.
+
+**Debug world jump** (three ways, all in `index.html`): URL param `?level=N` starts directly in world N; `Shift+1`..`Shift+9` / `Shift+0` during play jumps to world 1-9 / 10; `window.jumpToLevel(n)` from console (sets score to that world's threshold so progression holds).
+
+**Mobile/Store Readiness (V5.4, inline in `index.html` + root files)**: Touch controls (swipe = lane/jump/duck) live next to the keyboard handlers and dispatch synthetic KeyboardEvents onto them — change keyboard behavior and touch follows automatically. PWA: `manifest.webmanifest` + `sw.js` (bump `CACHE_VERSION` on deploy) + `icons/` (regenerate via `node scripts/generate_icons.cjs`). Legal: `privacy.html` (linked from menu; update Stand-Datum when data practices change). Store wrapper: `capacitor-app/` (Capacitor 8, iOS/Android; `node sync-www.cjs && npx cap sync` before builds). Store checklists: `SubwayRunner/docs/STORE_READINESS.md` + `MONETIZATION.md`.
+
+**Character Selection (V5.2, inline in `index.html`)**: `CHARACTER_PRESETS` (~line 1414) defines selectable characters; choice persisted via localStorage key `subwayRunner_character`. Player mesh is rebuilt when the selection changes (`userData._characterId` comparison in the update loop); GLB characters get per-preset scale + groundOffset.
 
 **Gesture Control System** (3 root modules + Strategy Pattern modes):
 
@@ -110,7 +126,9 @@ All modes share: One Euro / Kalman filtering, dead zone (2°), hysteresis (30%),
 
 **Reference**: `bestPractice_gestensteuerung.md` — complete documentation of all gesture best practices.
 
-**Utilities**: `utils/MediaPipeLoader.js` (shared WASM singleton for MediaPipe Tasks Vision @0.10.34), `utils/OneEuroFilter.js` (adaptive signal filtering).
+**Utilities**: `utils/MediaPipeLoader.js` (shared WASM singleton for MediaPipe Tasks Vision @0.10.34), `utils/OneEuroFilter.js` (adaptive signal filtering), `utils/AssetLoader.js` (GLB model progressive enhancement).
+
+**GLB Asset System** (`js/utils/AssetLoader.js` + `models/*.glb`): Progressive enhancement — loads 20 Hyper3D-generated DRACO-compressed GLB models on MEDIUM/HIGH quality, procedural fallback on LOW or weak devices. ESM `import()` with import map for Three.js loaders. Player swapped async via `_trySwapPlayerGLB()` in game loop. Tri-budget: 25K (medium), 50K (high). Generation script: `scripts/rodin_generate.py`. Poly-reduction pipeline: `blender --background --python scripts/blender_optimize.py` decimates all 20 GLBs (per-model ratios defined in the script), keeps originals in `models/backup/`, writes `models/optimization_results.json`. To add a new GLB asset: register ID in `ASSET_MANIFEST` + `OBSTACLE_TYPE_MAP` in AssetLoader.js, add GLB to `models/`, add fallback check in the matching create-function.
 
 **UI Modules** (`js/ui/`):
 - `GestureConfigPanel.js` (16KB) — mode selection, sensitivity sliders, calibration trigger, music track selector
@@ -129,11 +147,9 @@ All modes share: One Euro / Kalman filtering, dead zone (2°), hysteresis (30%),
 
 Music selection persisted via `localStorage` key `subwayRunner_musicTrack`. The config panel (`GestureConfigPanel.js`) includes a track selector with preview playback.
 
-**Deployment gap**: `sounds/` is not in the deploy whitelist — see Deployment section.
-
 ### Version Files
 
-Production version lives in `index.html` `<title>` and `package.json` `version` (currently v5.1.0 — these can drift, always check both).
+Production version lives in `index.html` `<title>` tag and `package.json` `version` field. These can drift apart — always check both when bumping.
 
 Primary rollback target: `index.html.V4.3-BALANCED.html`. Additional timestamped backups exist — discover with `ls SubwayRunner/index*.html*`.
 
@@ -156,7 +172,7 @@ Two CI workflows run on `git push main`:
 
 **Manual** (`deploy.sh`): rsync + Nginx config. Cleans remote dir, uploads whitelist, reloads Nginx. Verifies via HTTP.
 
-**Deploy whitelist**: Only `index.html`, `js/`, `css/` are deployed. `sounds/` is NOT in the deploy pipeline — music files must be deployed manually or the pipeline must be updated when adding audio assets.
+**Deploy whitelist**: `index.html`, `js/`, `css/`, `models/` (GLB 3D assets), `sounds/` (music tracks), plus since V5.4: `manifest.webmanifest`, `sw.js`, `privacy.html`, `icons/`.
 
 **Required Secrets**: `VPS_HOST`, `VPS_PASSWORD` (primary), `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (legacy). Credentials in `.env` (gitignored).
 
@@ -177,18 +193,7 @@ Outputs `pre-deployment-report.json`.
 
 ### Playwright E2E Tests (`tests/e2e/`)
 
-| Test File | Purpose |
-|-----------|---------|
-| `game-start-health.spec.js` | Canvas/WebGL verification, startup errors, 404 detection |
-| `game-startup-critical.spec.js` | Critical startup validation |
-| `game-start-guard.spec.js` | Game-start guard validation (35 tests) |
-| `game-stability.spec.js` | FPS and memory stability |
-| `sound-system.spec.js` | Audio system validation |
-| `intelligent-gameplay.spec.js` | Reactive gameplay with obstacle detection |
-| `full-game-cycle.spec.js` | Start → Play → Game Over → Highscore → Restart |
-| `multi-round-stability.spec.js` | Memory leak detection, 3 consecutive games |
-| `gesture-unit-tests.spec.js` | 12 unit tests with synthetic landmarks |
-| `quick-supabase-check.spec.js` | Database integration check |
+~10 spec files covering: startup health, game-start guards, FPS/memory stability, sound system, gameplay simulation, full game cycle, multi-round leak detection, gesture unit tests (synthetic landmarks), and Supabase checks. Discover with `ls tests/e2e/*.spec.js`.
 
 **Test utilities** in `tests/utils/`: `game-test-utils.js` (WebGL error filtering, shared helpers), `gameplay-simulator.js`, `obstacle-detector.js`
 
@@ -226,14 +231,7 @@ git add . && git commit -m "ROLLBACK to V4.3" && git push
 ## Critical Development Rules
 
 ### MANDATORY: Console Error Detection in Tests
-```javascript
-const errors = [];
-page.on('console', m => { if(m.type()==='error') errors.push(m.text()); });
-page.on('pageerror', e => errors.push(e.message));
-page.on('requestfailed', r => errors.push(r.url()));
-// ... test ...
-expect(errors).toHaveLength(0);
-```
+Every E2E test must collect console errors, page errors, and failed requests — then assert zero at the end. See `tests/utils/game-test-utils.js` for the shared pattern.
 
 ### MANDATORY: 3D Game Testing Protocol
 1. Wait for canvas element (30s timeout)
@@ -254,10 +252,11 @@ Implement → npm run test → Playwright E2E → Fix ALL errors → Re-test GRE
 ## Workflow Conventions
 
 See `CLAUDE_CODE_RULES.md` for full rules. Key points:
-- **Auto-deploy after every feature/fix** — commit and push triggers CI
+- **Auto-deploy after every feature/fix** — commit and push to main triggers CI. No exceptions, even for small changes.
 - **Chrome only** for testing — never Safari (Cmd+Shift+R to hard-refresh)
 - **60+ FPS** performance target
-- **Version bumps** in both `index.html` and `package.json`
+- **Version bumps** in both `index.html` `<title>` and `package.json` `version`
+- **Two package.json files**: Root-level one is minimal (dev tooling only). `SubwayRunner/package.json` is the main one with all game dependencies and scripts.
 
 ---
 
@@ -267,13 +266,14 @@ See `CLAUDE_CODE_RULES.md` for full rules. Key points:
 - **Headless Testing**: WebGL context errors are expected in CI (filter in tests)
 - **Supabase SDK**: Removed from index.html to prevent identifier conflicts (see troubleshooting.md #11)
 - **Browser Cache**: Always hard-refresh (Cmd+Shift+R) when testing — different browsers can show stale versions
-- **Sounds not deployed**: `sounds/` directory is not in deploy whitelist. Music tracks won't work on production unless manually deployed or pipeline updated
+- **Sounds**: `sounds/` now included in all 3 deploy pipelines (hostinger-deploy.yml, test-before-deploy.yml, deploy.sh). 6 tracks regenerated via ElevenLabs Sound Effects API (V5.2)
 
 ---
 
 ## Project Context
 
-- **`roadmap.md`** (root): Project history (Phases 1-9), current tasks, branch analysis. Phase 9 = gesture optimization session (April 2026).
+- **`ROADMAP.md`** (root): Project history (Phases 1-9), current tasks. Phase 9 = gesture optimization (April 2026).
 - **`bestPractice_gestensteuerung.md`** (root): Complete gesture control best practices — 11 chapters covering MediaPipe setup, filtering, dead zones, hysteresis, calibration, frame skipping, confidence filtering.
-- **`troubleshooting.md`** (root): Known issues and solutions (INF-001 through INF-015). INF-013/14/15 = gesture-specific bugs found and fixed.
+- **`troubleshooting.md`** (root): Known issues and solutions (INF-001 through INF-015). INF-013/14/15 = gesture-specific bugs.
 - **`CLAUDE_CODE_RULES.md`** (root): Deployment and workflow conventions. Key rules summarized in "Workflow Conventions" above.
+- **`AGENTS.md`** (root): Mirrors CLAUDE.md for Codex agent compatibility.

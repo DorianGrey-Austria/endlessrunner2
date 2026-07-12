@@ -700,3 +700,26 @@ Schwierigkeit von "unmöglich mit Tastatur" auf progressive 10-Level-Kurve rebal
 ---
 
 *This international roadmap positions the project as a globally competitive gaming platform, leveraging cutting-edge web technologies to create experiences that rival and exceed native applications.*
+### Phase 11: Store Readiness & Monetarisierung (2026-07-12, Branch run/store-readiness-2026-07-12)
+
+Ziel: Aus dem Web-Spiel ein monetarisierbares Produkt fuer App Store + Google Play machen.
+
+#### Session 1: V5.4-MOBILE — Mobile-Grundlagen (erledigt)
+
+| Deliverable | Status | Details |
+|-------------|--------|---------|
+| Touch-Steuerung | DONE | Swipe links/rechts/hoch/runter + Tap; synthetische KeyboardEvents auf getestete Handler-Pfade; touch-action/overscroll-CSS |
+| PWA | DONE | manifest.webmanifest, sw.js (Shell-Precache + Runtime-Cache), Icons (Generator: scripts/generate_icons.cjs), iOS-Meta |
+| Datenschutz | DONE | privacy.html (DSGVO-Klartext, local-first), im Menue verlinkt |
+| Deploy-Whitelist | DONE | manifest/sw/privacy/icons in allen 3 Pipelines |
+| E2E | DONE | tests/e2e/mobile-touch-pwa.spec.js (6 Tests) + 38 Regressionstests gruen |
+| Capacitor-Wrapper | DONE | capacitor-app/ (Cap 8.4.1, iOS+Android Scaffold); iOS-Simulator: BUILD SUCCEEDED + App bootet |
+| Store-Docs | DONE | SubwayRunner/docs/STORE_READINESS.md (Master-Checkliste), MONETIZATION.md, store-listing DE/EN |
+
+#### Naechste Schritte (offen — Reihenfolge siehe docs/STORE_READINESS.md)
+
+1. Betreiber-Blocker: Apple Developer (99 USD/Jahr) + Play Console (25 USD) + EU-Trader-Daten
+2. three.js Vendoring (CDN raus fuer Store-Build), Safe-Area-Insets, Emoji-Icons durch SVG ersetzen (WKWebView)
+3. Echte Geraete-Tests, Store-Assets (Icon 1024, Screenshots), TestFlight/Internal Testing
+4. Monetarisierung als Update 1.1: AdMob + UMP-Consent, Rewarded "Weiterlaufen" (Plan: docs/MONETIZATION.md)
+5. Schnellschiene parallel: Web-Build bei CrazyGames/Poki/itch.io einreichen (Revenue-Share ohne Store-Accounts)
