@@ -21,6 +21,11 @@ jobs:
         if [ -d "SubwayRunner/css" ]; then cp -r SubwayRunner/css deploy/; fi
         if [ -d "SubwayRunner/models" ]; then cp -r SubwayRunner/models deploy/; fi
         if [ -d "SubwayRunner/sounds" ]; then cp -r SubwayRunner/sounds deploy/; fi
+        # PWA / store readiness (V5.4)
+        cp SubwayRunner/manifest.webmanifest deploy/
+        cp SubwayRunner/sw.js deploy/
+        cp SubwayRunner/privacy.html deploy/
+        if [ -d "SubwayRunner/icons" ]; then cp -r SubwayRunner/icons deploy/; fi
         echo "Deploy contents:"
         find deploy -type f | head -30
 

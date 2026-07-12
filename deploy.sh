@@ -46,8 +46,22 @@ ssh_cmd "mkdir -p $REMOTE_DIR/js $REMOTE_DIR/css"
 # Clean remote dir first, then upload only what's needed
 ssh_cmd "rm -rf $REMOTE_DIR/*"
 
-# index.html
+# index.html + PWA root files (manifest, service worker, privacy)
 sshpass -p "$VPS_PASS" scp $SSH_OPTS "$LOCAL_SRC/index.html" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/"
+for f in manifest.webmanifest sw.js privacy.html; do
+    if [ -f "$LOCAL_SRC/$f" ]; then
+        sshpass -p "$VPS_PASS" scp $SSH_OPTS "$LOCAL_SRC/$f" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/"
+    fi
+done
+
+# icons/ directory (PWA icons)
+if [ -d "$LOCAL_SRC/icons" ]; then
+    ssh_cmd "mkdir -p $REMOTE_DIR/icons"
+    sshpass -p "$VPS_PASS" rsync -avz --delete \
+        --exclude='.DS_Store' \
+        -e "ssh $SSH_OPTS" \
+        "$LOCAL_SRC/icons/" "$VPS_USER@$VPS_HOST:$REMOTE_DIR/icons/"
+fi
 
 # js/ directory (all modules)
 sshpass -p "$VPS_PASS" rsync -avz --delete \

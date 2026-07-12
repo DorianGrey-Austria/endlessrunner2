@@ -2,8 +2,28 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subway Runner 3D - V5.3-WORLDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Subway Runner 3D - V5.4-MOBILE</title>
+    <!-- PWA / Store Readiness (V5.4) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0d1b3d">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SubwayRunner">
+    <script>
+        // Service worker: offline shell + asset caching (see sw.js)
+        if ('serviceWorker' in navigator) {
+            window.__swRegistrationAttempted = true;
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((err) => {
+                    console.warn('[SW] Registration failed (non-fatal):', err.message);
+                });
+            });
+        }
+    </script>
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <!-- Import map: resolves bare "three" specifier for ESM loader modules -->
     <script type="importmap">
@@ -52,6 +72,8 @@
             background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
             font-family: Arial, sans-serif;
             overflow: hidden;
+            overscroll-behavior: none; /* no pull-to-refresh during swipes */
+            touch-action: manipulation; /* no double-tap zoom delay */
         }
 
         
@@ -70,6 +92,7 @@
             max-height: 75vw;
             border: 2px solid #333;
             border-radius: 8px;
+            touch-action: none; /* swipes belong to the game, not the browser */
         }
         
         #ui {
@@ -735,6 +758,10 @@
             </div>
 
             <p class="controls-hint">Tastatur: A/D Spur &middot; W/Space Springen (4x!) &middot; S Ducken</p>
+            <p class="controls-hint">Touch: Wischen links/rechts Spur &middot; hoch/Tippen Springen &middot; runter Ducken</p>
+            <p style="margin-top: 10px; font-size: 11px;">
+                <a href="privacy.html" style="color: rgba(255,255,255,0.55); text-decoration: underline;">Datenschutz</a>
+            </p>
         </div>
         
         <div id="highscorePanel" class="highscore-panel">
@@ -5917,6 +5944,70 @@
         // Event listeners
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keyup', handleKeyUp);
+
+        // ============ TOUCH CONTROLS (V5.4 — mobile/store readiness) ============
+        // Swipe left/right = lane change, swipe up or tap = jump, swipe down = duck.
+        // Dispatches synthetic KeyboardEvents so touch reuses the exact same
+        // (tested) code paths as keyboard input. Duck auto-releases via timer
+        // because touch has no keyup equivalent.
+        (function initTouchControls() {
+            const SWIPE_MIN_PX = 30;   // below this (but above tap) = ignored jitter
+            const SWIPE_MAX_MS = 600;  // slower gestures are not swipes
+            const TAP_MAX_PX = 12;     // tap tolerance -> jump
+            const DUCK_HOLD_MS = 700;  // matches typical duck obstacle pass time
+            let startX = 0, startY = 0, startT = 0, tracking = false;
+            let duckTimer = null;
+
+            function synthKey(type, code) {
+                document.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true, cancelable: true }));
+            }
+
+            function onTouchStart(e) {
+                if (!gameState.isPlaying) return;
+                // UI elements (pause, config panel, links) keep native touch behavior
+                if (e.target.closest && e.target.closest('button, a, input, select, label')) return;
+                const t = e.changedTouches[0];
+                startX = t.clientX;
+                startY = t.clientY;
+                startT = performance.now();
+                tracking = true;
+            }
+
+            function onTouchMove(e) {
+                // Block scroll/pull-to-refresh while a game swipe is in progress
+                if (tracking && gameState.isPlaying && e.cancelable) e.preventDefault();
+            }
+
+            function onTouchEnd(e) {
+                if (!tracking) return;
+                tracking = false;
+                if (!gameState.isPlaying) return;
+                const t = e.changedTouches[0];
+                const dx = t.clientX - startX;
+                const dy = t.clientY - startY;
+                const dt = performance.now() - startT;
+                if (dt > SWIPE_MAX_MS) return;
+                const ax = Math.abs(dx), ay = Math.abs(dy);
+                if (ax <= TAP_MAX_PX && ay <= TAP_MAX_PX) {
+                    synthKey('keydown', 'Space'); // tap = jump
+                    return;
+                }
+                if (ax < SWIPE_MIN_PX && ay < SWIPE_MIN_PX) return;
+                if (ax > ay) {
+                    synthKey('keydown', dx > 0 ? 'ArrowRight' : 'ArrowLeft');
+                } else if (dy < 0) {
+                    synthKey('keydown', 'Space');
+                } else {
+                    synthKey('keydown', 'ArrowDown');
+                    if (duckTimer) clearTimeout(duckTimer);
+                    duckTimer = setTimeout(() => synthKey('keyup', 'ArrowDown'), DUCK_HOLD_MS);
+                }
+            }
+
+            document.addEventListener('touchstart', onTouchStart, { passive: true });
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
+            document.addEventListener('touchend', onTouchEnd, { passive: true });
+        })();
         
         // Global safety net: catch unhandled promise rejections from gesture system
         // Prevents silent crashes on tablets when camera/MediaPipe fails unexpectedly

@@ -78,6 +78,11 @@ jobs:
         cp -r SubwayRunner/css deploy/ 2>/dev/null || true
         cp -r SubwayRunner/models deploy/ 2>/dev/null || true
         cp -r SubwayRunner/sounds deploy/ 2>/dev/null || true
+        # PWA / store readiness (V5.4)
+        cp SubwayRunner/manifest.webmanifest deploy/ 2>/dev/null || true
+        cp SubwayRunner/sw.js deploy/ 2>/dev/null || true
+        cp SubwayRunner/privacy.html deploy/ 2>/dev/null || true
+        cp -r SubwayRunner/icons deploy/ 2>/dev/null || true
         
         # Create .htaccess with enhanced security
         cat > deploy/.htaccess << 'EOF'
